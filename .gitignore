@@ -1,0 +1,19 @@
+# Virtual environment
+.venv/
+
+# Environment
+.env
+.env~
+
+# Python
+__pycache__/
+*.pyc
+*.egg
+*.egg-info/
+
+# Test
+.pytest_cache/
+
+# IDE
+.idea/
+.cursor/
