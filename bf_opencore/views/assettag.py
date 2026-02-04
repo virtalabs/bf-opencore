@@ -1,0 +1,43 @@
+"""Joint table for assets and vulns."""
+from rest_framework import viewsets, serializers
+from rest_framework.fields import IntegerField
+from waffle.mixins import WaffleSwitchMixin
+
+from bf_opencore.models import AssetTag
+from .tag import TagSerializer
+from .utils import HugeLimitOffsetPagination
+from .utils import ChangeReasonMixin
+
+
+class AssetTagSerializer(serializers.HyperlinkedModelSerializer):
+    """Serializes AssetTag objects."""
+
+    url = serializers.HyperlinkedIdentityField(view_name="api:assettag-detail")
+    tag = TagSerializer(read_only=True)
+    asset_id = IntegerField()
+    tag_id = IntegerField()
+
+    class Meta:  # noqa
+        model = AssetTag
+        fields = (
+            'id',
+            'asset_id',
+            'tag_id',
+            'date_added',
+            'provenance',
+
+            # Fields that are created (not stored directly in schema)
+            'tag',
+            'url',
+        )
+
+
+class AssetTagViewSet(WaffleSwitchMixin, ChangeReasonMixin, viewsets.ModelViewSet):
+    """An AssetTag links a tag to an asset."""
+
+    waffle_switch = "legacy"
+
+    # AssetTag model does have 'objects'
+    queryset = AssetTag.objects.all()
+    serializer_class = AssetTagSerializer
+    pagination_class = HugeLimitOffsetPagination

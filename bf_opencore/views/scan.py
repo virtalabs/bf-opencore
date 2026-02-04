@@ -1,0 +1,78 @@
+"""ViewSet for scans."""
+
+import logging
+
+import django_filters
+from rest_framework import viewsets, serializers
+from waffle.mixins import WaffleSwitchMixin
+
+from bf_opencore.models import Scan
+
+logger = logging.getLogger(__name__)
+
+
+class ScanSerializer(serializers.HyperlinkedModelSerializer):
+    """Serializes scans.
+
+    Teaches the rest_framework (the ViewSet) which fields to expect.
+    """
+
+    # Since we namespace with `api:` we have to specify the view-name.
+    # This is a little strange...
+    url = serializers.HyperlinkedIdentityField(view_name="api:scan-detail")
+    # page_url = serializers.HyperlinkedIdentityField(
+    #     view_name="blueflow:scan")
+    asset = serializers.HyperlinkedRelatedField(
+        #     many=True,
+        read_only=True,
+        view_name='api:asset-detail'
+        )
+    connector_task = serializers.HyperlinkedRelatedField(
+        #     many=True,
+        read_only=True,
+        view_name='api:connectortask-detail'
+        )
+    # connectortask_page_url = serializers.HyperlinkedRelatedField(
+    #     read_only=True,
+    #     view_name="blueflow:connectortask")
+
+    class Meta:  # noqa
+        """Wire this serializer to a model."""
+
+        model = Scan
+
+        # Fields defined in the schema
+        scan_fields = tuple(f.name for f in model._meta.fields)
+
+        # Fields that are computed (not stored directly in schema)
+        computed_fields = (
+            'url',
+            # 'connectortask_page_url',
+            # 'page_url',
+        )
+
+        fields = scan_fields + computed_fields
+
+
+class ScanFilter(django_filters.rest_framework.FilterSet):
+    """FilterSet."""
+
+    class Meta:  # noqa
+        model = Scan
+
+        # Documentation about lookups is here:
+        # https://docs.djangoproject.com/en/1.11/ref/models/querysets/#field-lookups
+        fields = {
+            'asset': ['exact'],
+            }
+
+
+class ScanViewSet(WaffleSwitchMixin, viewsets.ModelViewSet):
+    """Each scan represents one "Scan" of one asset."""
+
+    waffle_switch = "legacy"
+
+    # Scan model does have 'objects'
+    queryset = Scan.objects.all()
+    serializer_class = ScanSerializer
+    filterset_class = ScanFilter
