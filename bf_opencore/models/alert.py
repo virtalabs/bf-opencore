@@ -106,5 +106,12 @@ class Alert(models.Model):
         """Show the beginning and end of long text."""
         return "{} ... {}".format(self.text[:25], self.text[-15:])
 
+    @property
+    def riskmetrics(self) -> None:
+        """Return the riskmetrics of the alert.
+        Implementation is TBD the generalized algo 
+        """
+        return None
+
     def __str__(self):  # noqa
         return '{}:{}'.format(self.id, self.text)
