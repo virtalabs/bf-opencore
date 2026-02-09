@@ -17,3 +17,6 @@ dependencies = [
     "drf-spectacular<=0.29",
     "netaddr>=0.10.0",
 ]
+
+[tool.setuptools.packages.find]
+include = ["bf_opencore*"]
