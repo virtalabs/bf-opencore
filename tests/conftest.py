@@ -9,7 +9,7 @@ import pytest
 
 def pytest_configure(config):
     """Set Django settings module for pytest-django before Django is loaded."""
-    os.environ.setdefault("DJANGO_SETTINGS_MODULE", "tests.settings")
+    os.environ.setdefault("DJANGO_SETTINGS_MODULE", "project.settings.test")
 
 
 @pytest.fixture(scope="session")
