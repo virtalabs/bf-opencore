@@ -17,3 +17,6 @@ __pycache__/
 # IDE
 .idea/
 .cursor/
+
+# Proprietary code (must not be tracked in FOSS repo)
+blueflow/

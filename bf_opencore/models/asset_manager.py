@@ -15,7 +15,7 @@ from django.db.models.functions import Coalesce
 from django.core.exceptions import FieldError, ValidationError
 
 from django.apps import apps
-from utils import Created
+from bf_opencore.utils import Created
 
 from .network import Network
 

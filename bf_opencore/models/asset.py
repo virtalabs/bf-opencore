@@ -24,7 +24,7 @@ import packaging.version
 import netaddr
 
 from django.apps import apps
-from utils import NullUnlessChanged
+from bf_opencore.utils import NullUnlessChanged
 
 from .asset_manager import AssetManager, AssetQuerySet, _unflatten_json_field
 from .asset_custom_field import AssetCustomFieldName, AssetCustomField

@@ -8,7 +8,7 @@ from collections import OrderedDict
 from django.db import models
 from django_celery_beat.models import PeriodicTask
 from django.apps import apps
-from blueflow.exceptions import ConnectorConfigError
+from bf_opencore.exceptions import ConnectorConfigError
 
 logger = logging.getLogger(__name__)
 

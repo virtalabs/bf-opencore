@@ -10,7 +10,7 @@ from rest_framework.decorators import action
 from waffle.mixins import WaffleSwitchMixin
 
 from bf_opencore.models import Network, SavedSearch, Asset, Cidr
-from utils import ipset_from_network
+from bf_opencore.utils import ipset_from_network
 
 logger = logging.getLogger(__name__)
 
