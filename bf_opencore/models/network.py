@@ -12,7 +12,7 @@ from django.core import exceptions as d_ex
 from netfields import CidrAddressField, NetManager
 
 from django.apps import apps
-from utils import ipset_from_network
+from bf_opencore.utils import ipset_from_network
 
 logger = logging.getLogger(__name__)
 

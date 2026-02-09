@@ -14,7 +14,7 @@ import celery
 from django.db import models
 from django.db.models import F
 from django.utils import timezone
-from blueflow.exceptions import ConnectorTaskError
+from bf_opencore.exceptions import ConnectorTaskError
 from .connector import Connector
 
 logger = logging.getLogger(__name__)
