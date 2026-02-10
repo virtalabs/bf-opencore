@@ -3,7 +3,7 @@ requires = ["setuptools", "wheel"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "bf_opencore"
+name = "bf-opencore"
 version = "3.0.0"
 description = "BlueFlow open-core Django app"
 readme = "README.md"
@@ -16,7 +16,27 @@ dependencies = [
     "djangorestframework>=3.16,<3.17",
     "drf-spectacular<=0.29",
     "netaddr>=0.10.0",
+    "django-celery-beat",
+    "django-filter",
+    "django-jsx",
+    "django-netfields",
+    "django-simple-history",
+    "django-waffle>=4.0",
+    "dj-database-url",
+    "psycopg[binary]>=3",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest",
+    "pytest-django",
 ]
 
 [tool.setuptools.packages.find]
-include = ["bf_opencore*"]
+where = ["."]
+include = ["bf_opencore*", "project*"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests", "bf_opencore/tests"]
+addopts = "-ra"
+filterwarnings = ["ignore::DeprecationWarning"]
