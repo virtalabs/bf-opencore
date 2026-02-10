@@ -16,10 +16,6 @@ BlueFlow open-core Django app. Installable package containing the **bf_opencore*
   - `python project/manage.py runserver`
   - Uses `INSTALLED_APPS = ['bf_opencore', ...]`.
 
-- **blueflow/** in this repo exists only for reference during the epic
-  and will be removed when the epic is complete.
-  The plan and deliverables use **bf_opencore** only.
-
 ## Install
 
 ```bash
@@ -34,21 +30,22 @@ uv pip install -e ".[dev]"
 
 ## Package
 
-The installable app is the **bf_opencore** package. It can be added to any Django project via `INSTALLED_APPS` (e.g. `'bf_opencore'` or `'bf_opencore.apps.BfOpenCoreConfig'`).
+The installable app is the **bf_opencore** package. 
+It can be added to any Django project via `INSTALLED_APPS` (e.g. `'bf_opencore'` or `'bf_opencore.apps.BfOpenCoreConfig'`).
 
 ## Running tests
 
-Install with dev dependencies, then run pytest from the repo root. The test settings module is set automatically via `tests/conftest.py` (`DJANGO_SETTINGS_MODULE=project.settings.test`).
+Run `uv sync --all-extras` (or `uv pip install -e ".[dev]"`) so pytest-django is installed, then run tests with `uv run pytest`. Do not use a global or other `pytest` that might use a different interpreter or env. The test settings module is set automatically via `tests/conftest.py` (`DJANGO_SETTINGS_MODULE=project.settings.test`).
 
 ```bash
-uv pip install -e ".[dev]"
-pytest
+uv sync --all-extras
+uv run pytest
 ```
 
 To set the settings module explicitly:
 
 ```bash
-DJANGO_SETTINGS_MODULE=project.settings.test pytest
+uv run DJANGO_SETTINGS_MODULE=project.settings.test pytest
 ```
 
 ## Running open-core standalone via Docker
@@ -59,7 +56,8 @@ From the repo root:
 docker-compose up
 ```
 
-The web service runs migrations on startup (via `docker-entrypoint.sh`) and serves the app at **http://localhost:8000**. To run migrations manually (e.g. in a one-off container):
+The web service runs migrations on startup (via `docker-entrypoint.sh`) and serves the app at **http://localhost:8000**. 
+To run migrations manually (e.g. in a one-off container):
 
 ```bash
 docker-compose run web python project/manage.py migrate --noinput
@@ -67,7 +65,8 @@ docker-compose run web python project/manage.py migrate --noinput
 
 ## Running open-core standalone (local, no Docker)
 
-Use the minimal project and development settings. Ensure PostgreSQL is running and set `DATABASE_URL` (or `DB_*` env vars). Then:
+Use the minimal project and development settings. 
+Ensure PostgreSQL is running and set `DATABASE_URL` (or `DB_*` env vars). Then:
 
 ```bash
 uv pip install -e .

@@ -13,7 +13,6 @@ INSTALLED_APPS = [
     "django.contrib.staticfiles",
     "django_celery_beat",
     "django_filters",
-    "django_jsx",
     "netfields",
     "rest_framework",
     "rest_framework.authtoken",
