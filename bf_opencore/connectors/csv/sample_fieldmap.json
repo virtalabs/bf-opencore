@@ -1,0 +1,7 @@
+{
+    "serial_number": "Serial",
+    "mac_address": "MAC",
+    "ip_address": "IP",
+    "manufacturer": "Manufacturer",
+    "model": "Model"
+}

@@ -12,6 +12,7 @@ license = { text = "GPL-3.0" }
 authors = [{ name = "Virta Laboratories, Inc." }]
 
 dependencies = [
+    "celery<5.5",
     "django>=5.2,<5.3",
     "djangorestframework>=3.16,<3.17",
     "djangorestframework-csv>=3.0",

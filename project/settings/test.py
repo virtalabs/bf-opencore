@@ -17,6 +17,7 @@ _database_url = os.environ.get("DATABASE_URL")
 if not _database_url:
     raise RuntimeError("Tests require PostgreSQL; set DATABASE_URL (e.g. postgresql://blueflow:blueflow@localhost:5432/blueflow)")
 import dj_database_url
+
 DATABASES = {
     "default": dj_database_url.parse(
         _database_url,
