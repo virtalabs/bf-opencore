@@ -17,6 +17,9 @@ import warnings
 import os
 
 import pytest
+
+pytest.importorskip("connectors")
+
 import requests
 
 import blueflow.models as bf_mod

@@ -7,6 +7,9 @@ http://pytest-django.readthedocs.io/en/latest/helpers.html
 import json
 import django
 import pytest
+
+pytest.importorskip("connectors")
+
 from freezegun import freeze_time
 import blueflow.models as bf_mod
 from connectors.management.commands.create_connectors import create_connectors
