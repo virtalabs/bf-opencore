@@ -1,0 +1,37 @@
+# Copyright (C) 2026 Virta Laboratories, Inc.  All rights reserved.
+# Local dev: postgres + web (standalone bf-opencore).
+
+services:
+  db:
+    image: postgres:15
+    environment:
+      POSTGRES_DB: blueflow
+      POSTGRES_USER: blueflow
+      POSTGRES_PASSWORD: blueflow
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U blueflow"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  web:
+    build: .
+    command: python project/manage.py runserver 0.0.0.0:8000
+    volumes:
+      - .:/app
+    ports:
+      - "8000:8000"
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      DJANGO_SETTINGS_MODULE: project.settings.development
+      DATABASE_URL: postgresql://blueflow:blueflow@db:5432/blueflow
+      DJANGO_SECRET_KEY: dev-secret-key-not-for-production
+      DJANGO_DEBUG: "true"
+      DJANGO_ALLOWED_HOSTS: "localhost,127.0.0.1,*"
+
+volumes:
+  postgres_data:
