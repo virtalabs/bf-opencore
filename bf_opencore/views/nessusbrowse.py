@@ -8,7 +8,10 @@ from waffle.mixins import WaffleSwitchMixin
 
 from bf_opencore import exceptions
 
-from connectors.nessusimport.nessus_api import NessusConnection
+try:
+    from connectors.nessusimport.nessus_api import NessusConnection
+except ImportError:
+    NessusConnection = None
 
 
 logger = logging.getLogger(__name__)
@@ -77,6 +80,11 @@ class NessusBrowseViewSet(WaffleSwitchMixin, viewsets.ViewSet):
         you'd provide the history ID as a query parameter,
         `GET /scans/{scan_id}&history_id={history_id}`.)
         """
+        if NessusConnection is None:
+            return Response(
+                {"detail": "Connectors not available."},
+                status=status.HTTP_503_SERVICE_UNAVAILABLE,
+            )
         # history = request.query_params.get('history')
         try:
             action = request.query_params['action']

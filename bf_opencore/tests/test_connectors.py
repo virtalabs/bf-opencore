@@ -1,6 +1,11 @@
 """Connector and -Task API tests."""
 
 import json
+
+import pytest
+
+pytest.importorskip("connectors")
+
 from connectors.management.commands.create_connectors import create_connectors
 import blueflow.models as bf_mod
 
