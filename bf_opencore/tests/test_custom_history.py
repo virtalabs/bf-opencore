@@ -12,7 +12,7 @@ work going on, and some decisions being made, on whether custom fields
 should be accssed via the asset or via its own API.
 """
 
-import blueflow.models as bf_mod
+import bf_opencore.models as bf_mod
 
 
 def test_history_canonical_fields(asset_edit_client):

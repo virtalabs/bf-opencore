@@ -28,13 +28,14 @@ dependencies = [
 ]
 
 [project.optional-dependencies]
-dev = ["pytest", "pytest-django"]
+dev = ["pytest", "pytest-django", "model_bakery", "django-test-migrations", "freezegun>=1.0,<3"]
 
 [tool.setuptools.packages.find]
 where = ["."]
 include = ["bf_opencore*", "project*"]
 
 [tool.pytest.ini_options]
-testpaths = ["tests", "bf_opencore/tests"]
+# Tests require PostgreSQL; set DATABASE_URL. Run: pytest tests/ [bf_opencore/tests/]
+testpaths = ["tests"]
 addopts = "-ra"
 filterwarnings = ["ignore::DeprecationWarning"]

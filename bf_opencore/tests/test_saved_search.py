@@ -5,7 +5,7 @@ With special focus on perms.
 
 import json
 import pytest
-import blueflow.models as bf_mod
+import bf_opencore.models as bf_mod
 from .test_autocomplete import completables as acme_assets
 
 

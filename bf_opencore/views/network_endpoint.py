@@ -70,7 +70,7 @@ class NetworkEndpointSerializer(serializers.HyperlinkedModelSerializer):
 class NetworkEndpointViewSet(WaffleSwitchMixin, PaginateRelationsMixin, viewsets.ModelViewSet):
     """Viewset for Network Endpoints."""
 
-    waffle_switch = "legacy"
+    waffle_switch = "core"
 
     queryset = NetworkEndpoint.objects.order_by('-max_confidence')
     serializer_class = NetworkEndpointSerializer

@@ -65,7 +65,7 @@ class PulseFeedItemFilter(django_filters.rest_framework.FilterSet):
 class PulseFeedItemViewSet(WaffleSwitchMixin, PaginateRelationsMixin, viewsets.ModelViewSet):
     """View Pulse feed items."""
 
-    waffle_switch = "legacy"
+    waffle_switch = "core"
 
     # yes, there are objects
     queryset = PulseFeedItem.objects.order_by('-date_last_updated')

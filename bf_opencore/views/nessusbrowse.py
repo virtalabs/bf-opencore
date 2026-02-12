@@ -38,7 +38,7 @@ class NessusBrowseViewSet(WaffleSwitchMixin, viewsets.ViewSet):
     historical scans.
     """
 
-    waffle_switch = "legacy"
+    waffle_switch = "core"
 
     serializer = NessusBrowseSerializer
     # NOTE: if we want to use a "permission" (e.g., "edit connector" or

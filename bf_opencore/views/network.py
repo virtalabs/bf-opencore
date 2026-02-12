@@ -93,7 +93,7 @@ class NetworkFilter(django_filters.rest_framework.FilterSet):
 class NetworkViewSet(WaffleSwitchMixin, viewsets.ModelViewSet):
     """CIDR-based collection/network of Assets."""
 
-    waffle_switch = "legacy"
+    waffle_switch = "core"
 
     # Model does have objects...
     queryset = Network.objects.all()
@@ -165,7 +165,7 @@ class SavedSearchSerializer(serializers.HyperlinkedModelSerializer):
 class SavedSearchViewSet(WaffleSwitchMixin, viewsets.ModelViewSet):
     """CIDR-based collection/network of Assets."""
 
-    waffle_switch = "legacy"
+    waffle_switch = "core"
 
     # Model does have objects...
     queryset = SavedSearch.objects.all()

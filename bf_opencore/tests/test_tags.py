@@ -6,7 +6,7 @@ http://pytest-django.readthedocs.io/en/latest/helpers.html
 
 import json
 import pytest
-import blueflow.models as bf_mod
+import bf_opencore.models as bf_mod
 
 # Many functions use Model classes which *do* have an 'objects' member
 

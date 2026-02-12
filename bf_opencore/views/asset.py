@@ -427,7 +427,7 @@ class AssetViewSet(WaffleSwitchMixin, ChangeReasonMixin, PaginateRelationsMixin,
     partial_update: Modify the given asset
     """
 
-    waffle_switch = "legacy"
+    waffle_switch = "core"
 
     renderer_classes = (tuple(api_settings.DEFAULT_RENDERER_CLASSES) +
                         (drf_csv_renderers.PaginatedCSVRenderer, ))

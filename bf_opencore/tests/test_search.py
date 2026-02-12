@@ -4,7 +4,7 @@
 
 # These errors are endemic to pytest
 
-import blueflow.models as bf_mod
+import bf_opencore.models as bf_mod
 from .test_autocomplete import completables
 from .test_custom_field_names import cleandb, cfield
 

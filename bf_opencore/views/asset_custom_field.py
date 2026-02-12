@@ -75,7 +75,7 @@ class AssetCustomFieldNameSerializer(serializers.HyperlinkedModelSerializer):
 class AssetCustomFieldNameViewSet(WaffleSwitchMixin, viewsets.ModelViewSet):
     """Custom asset field (name)."""
 
-    waffle_switch = "legacy"
+    waffle_switch = "core"
 
     # AssetCustomFieldName model does have 'objects'
     queryset = AssetCustomFieldName.objects.all()
@@ -121,7 +121,7 @@ class AssetCustomFieldSerializer(serializers.HyperlinkedModelSerializer):
 class AssetCustomFieldViewSet(WaffleSwitchMixin, ChangeReasonMixin, viewsets.ModelViewSet):
     """Custom asset field (value)."""
 
-    waffle_switch = "legacy"
+    waffle_switch = "core"
 
     # AssetCustomField model does have 'objects'
     queryset = AssetCustomField.objects.all()
