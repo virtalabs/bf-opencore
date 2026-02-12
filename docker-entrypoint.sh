@@ -3,5 +3,9 @@
 # Run migrations then exec the container command (e.g. runserver).
 
 set -e
-python project/manage.py migrate --noinput
+# When docker-compose mounts .:/app, the host .venv may have invalid paths; ensure a working venv.
+if ! /app/.venv/bin/python -c "import sys" 2>/dev/null; then
+  uv sync --frozen --no-dev
+fi
+/app/.venv/bin/python project/manage.py migrate --noinput
 exec "$@"
