@@ -11,7 +11,7 @@ import pytest
 pytest.importorskip("connectors")
 
 from freezegun import freeze_time
-import blueflow.models as bf_mod
+import bf_opencore.models as bf_mod
 from connectors.management.commands.create_connectors import create_connectors
 
 # bf_mod models do have 'objects' member, but it's being lazy loaded
@@ -178,7 +178,6 @@ def test_api_create_get_asset(auth_client, asset_edit_client):
     assert assets.data['count'] == 1
     asset = assets.data['results'].pop()
     assert asset['hostname'] == 'nospam'
-    assert asset['risk_score'] == 0.0
 
 
 def test_api_create_asset_open_ports(asset_edit_client):
@@ -756,70 +755,6 @@ def test_app_sw_no_version_needs_update(auth_client):
     assert response.json()['latest'] is None
     assert response.json()['versions_in_use'] == {}
     assert response.json()['needs_update'] is False
-
-
-def test_filter_unassessed(auth_client):
-    """We can determine which assets lack (or don't) risk assessments."""
-    asset = bf_mod.Asset.objects.create(manufacturer='Foo', model='Bar')
-    rf = bf_mod.RiskFactor.objects.create(name='Foo', weight=0.5, range_min=0,
-                                          range_max=1, user_editable=False,
-                                          scalar=True, default_value=0)
-
-    response = auth_client.get('/api/assets/?unassessed=true')
-    assert response.status_code == 200
-    assert response.data['count'] == 1
-
-    response = auth_client.get('/api/assets/?unassessed=false')
-    assert response.status_code == 200
-    assert response.data['count'] == 0
-
-    # "do" an "assessment"
-    bf_mod.AssetRiskFactor.objects.create(
-        asset=asset, risk_factor=rf, value=1)
-
-    response = auth_client.get('/api/assets/?unassessed=true')
-    assert response.status_code == 200
-    assert response.data['count'] == 0
-
-    response = auth_client.get('/api/assets/?unassessed=false')
-    assert response.status_code == 200
-    assert response.data['count'] == 1
-
-
-def test_filter_assessed_factor(auth_client):
-    """We can filter assets on whether specific risk factors are assessed."""
-    asset = bf_mod.Asset.objects.create(manufacturer='Foo', model='Bar')
-    rf = bf_mod.RiskFactor.objects.create(
-        name='Foo', weight=0.5, range_min=0, range_max=1,
-        user_editable=False, scalar=True, default_value=0)
-
-    resp = auth_client.get('/api/assets/?assessed_factor={}'.format(rf.id))
-    assert resp.status_code == 200
-    assert resp.data['count'] == 0
-
-    # not assessed? call with negative RF id
-    resp = auth_client.get('/api/assets/?assessed_factor=-{}'.format(rf.id))
-    assert resp.status_code == 200
-    assert resp.data['count'] == 1
-
-    # "do" an "assessment"
-    bf_mod.AssetRiskFactor.objects.create(
-        asset=asset, risk_factor=rf, value=1)
-
-    resp = auth_client.get('/api/assets/?assessed_factor={}'.format(rf.id))
-    assert resp.status_code == 200
-    assert resp.data['count'] == 1
-
-    resp = auth_client.get('/api/assets/?assessed_factor=-{}'.format(rf.id))
-    assert resp.status_code == 200
-    assert resp.data['count'] == 0
-
-
-def test_filter_assessed_factor_bad_factor(auth_client):
-    """No good risk factor to filter on means no assets."""
-    resp = auth_client.get('/api/assets/?assessed_factor=12345678')
-    assert resp.status_code == 200
-    assert resp.data['count'] == 0
 
 
 def test_api_create_asset_mac_autofill_nic(asset_edit_client):

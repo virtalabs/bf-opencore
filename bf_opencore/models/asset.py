@@ -11,7 +11,6 @@ from collections import Counter
 
 from django.db import models, transaction
 from django.db.models import Q, Max, Count
-from django.db.models.signals import post_save, post_delete
 import django.contrib.postgres.fields as pg_fields
 from django.utils import timezone
 from django.core.exceptions import ValidationError
@@ -803,7 +802,3 @@ class Asset(models.Model):
                     break
 
         return needs_update, latest, dict(vcounts)
-
-
-post_save.connect(Asset.rescore_asset_on_save, sender=Asset)
-post_delete.connect(Asset.rescore_asset_on_delete, sender=Asset)
