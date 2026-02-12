@@ -72,7 +72,7 @@ class GroupFilter(django_filters.rest_framework.FilterSet):
 class GroupViewSet(WaffleSwitchMixin, viewsets.ModelViewSet):
     """Free-text group associated with one or more assets."""
 
-    waffle_switch = "legacy"
+    waffle_switch = "core"
 
     # Group model does have 'objects'
     queryset = Group.objects.all()

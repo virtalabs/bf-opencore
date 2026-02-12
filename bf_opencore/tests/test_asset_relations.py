@@ -6,7 +6,7 @@ http://pytest-django.readthedocs.io/en/latest/helpers.html
 
 import pytest
 import django.utils.timezone
-import blueflow.models as bf_mod
+import bf_opencore.models as bf_mod
 
 ################################################################
 #  Test routes for associated tables, e.g.,

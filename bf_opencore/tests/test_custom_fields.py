@@ -7,7 +7,7 @@ http://pytest-django.readthedocs.io/en/latest/helpers.html
 import json
 import pytest
 from django.db import IntegrityError
-import blueflow.models as bf_mod
+import bf_opencore.models as bf_mod
 from .test_custom_field_names import cleandb, cfield
 
 def test_custom_field_api(cleandb, auth_client):

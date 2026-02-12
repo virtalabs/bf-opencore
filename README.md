@@ -35,17 +35,34 @@ It can be added to any Django project via `INSTALLED_APPS` (e.g. `'bf_opencore'`
 
 ## Running tests
 
-Run `uv sync --all-extras` (or `uv pip install -e ".[dev]"`) so pytest-django is installed, then run tests with `uv run pytest`. Do not use a global or other `pytest` that might use a different interpreter or env. The test settings module is set automatically via `tests/conftest.py` (`DJANGO_SETTINGS_MODULE=project.settings.test`).
+All tests require PostgreSQL. Set `DATABASE_URL` to a Postgres URL (e.g. `postgresql://blueflow:blueflow@localhost:5432/blueflow`; with docker-compose use `postgresql://blueflow:blueflow@localhost:5432/blueflow` when the db service is exposed on localhost).
+
+Run `uv sync --all-extras` (or `uv pip install -e ".[dev]"`) so pytest-django and dev deps are installed. Do not use a global or other `pytest` that might use a different interpreter or env. The test settings module is set automatically via `tests/conftest.py` (`DJANGO_SETTINGS_MODULE=project.settings.test`).
+
+**Test layout**
+
+- **`tests/`** (project-level): Smoke and functional tests for the minimal project (schema, URL wiring, migrations). Default `pytest` run collects only this directory (`testpaths = ["tests"]`).
+- **`bf_opencore/tests/`** (app-level): Integration and functional tests for the bf_opencore app. Run explicitly when needed.
+
+**Run project-level tests only**
 
 ```bash
-uv sync --all-extras
-uv run pytest
+export DATABASE_URL=postgresql://blueflow:blueflow@localhost:5432/blueflow
+uv run pytest tests/
 ```
 
-To set the settings module explicitly:
+**Run project and app tests**
 
 ```bash
-uv run DJANGO_SETTINGS_MODULE=project.settings.test pytest
+export DATABASE_URL=postgresql://blueflow:blueflow@localhost:5432/blueflow
+uv run pytest tests/ bf_opencore/tests/
+```
+
+Or run only app tests:
+
+```bash
+export DATABASE_URL=postgresql://blueflow:blueflow@localhost:5432/blueflow
+uv run pytest bf_opencore/tests/
 ```
 
 ## Running open-core standalone via Docker

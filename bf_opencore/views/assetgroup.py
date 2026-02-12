@@ -57,7 +57,7 @@ class AssetGroupFilter(django_filters.rest_framework.FilterSet):
 class AssetGroupViewSet(WaffleSwitchMixin, viewsets.ModelViewSet):
     """An AssetGroup links a group to an asset."""
 
-    waffle_switch = "legacy"
+    waffle_switch = "core"
 
     # AssetGroup model does have 'objects'
     queryset = AssetGroup.objects.all()

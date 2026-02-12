@@ -129,7 +129,7 @@ class ConnectorViewSet(WaffleSwitchMixin, mixins.UpdateModelMixin, viewsets.Read
     but they may not be created (POST) nor destroyed (DELETE).
     """
 
-    waffle_switch = "legacy"
+    waffle_switch = "core"
 
     # Thus we can't use the regular ModelViewSet -- instead we inherit
     # from ReadOnlyModelViewSet but add the UpdateModel mixin.

@@ -6,7 +6,7 @@ With special focus on perms.
 import json
 import pytest
 from django.utils import timezone
-import blueflow.models as bf_mod
+import bf_opencore.models as bf_mod
 
 
 

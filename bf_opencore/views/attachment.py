@@ -74,7 +74,7 @@ class AttachmentSerializer(serializers.HyperlinkedModelSerializer):
 class AttachmentViewSet(WaffleSwitchMixin, ChangeReasonMixin, viewsets.ModelViewSet):
     """Attachment associated with one or more assets."""
 
-    waffle_switch = "legacy"
+    waffle_switch = "core"
 
     # Attachment model does have 'objects'
     queryset = Attachment.objects.order_by('-date_added')

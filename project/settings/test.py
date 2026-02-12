@@ -2,6 +2,8 @@
 
 """Minimal Django settings for bf-opencore tests (pytest). Use DJANGO_SETTINGS_MODULE=project.settings.test."""
 
+import os
+
 from .base import *
 
 SECRET_KEY = "test-secret-key-not-for-production"
@@ -9,9 +11,15 @@ DEBUG = True
 ALLOWED_HOSTS = ["*"]
 WSGI_APPLICATION = "project.wsgi.application"
 
+# Tests require PostgreSQL. Set DATABASE_URL (e.g. postgresql://blueflow:blueflow@localhost:5432/blueflow).
+_database_url = os.environ.get("DATABASE_URL")
+if not _database_url:
+    raise RuntimeError("Tests require PostgreSQL; set DATABASE_URL (e.g. postgresql://blueflow:blueflow@localhost:5432/blueflow)")
+import dj_database_url
 DATABASES = {
-    "default": {
-        "ENGINE": "django.db.backends.sqlite3",
-        "NAME": ":memory:",
-    }
+    "default": dj_database_url.parse(
+        _database_url,
+        conn_max_age=0,
+        conn_health_checks=False,
+    )
 }

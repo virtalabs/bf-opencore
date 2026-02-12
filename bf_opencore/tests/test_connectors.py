@@ -7,7 +7,7 @@ import pytest
 pytest.importorskip("connectors")
 
 from connectors.management.commands.create_connectors import create_connectors
-import blueflow.models as bf_mod
+import bf_opencore.models as bf_mod
 
 
 def test_get_connectors(admin_client):

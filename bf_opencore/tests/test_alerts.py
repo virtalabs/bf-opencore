@@ -6,7 +6,7 @@ http://pytest-django.readthedocs.io/en/latest/helpers.html
 
 from datetime import timedelta
 from django.utils import timezone
-from blueflow.models import Alert
+from bf_opencore.models import Alert
 
 # bf_mod models do have 'objects' member, but it's being lazy loaded
 

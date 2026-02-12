@@ -88,7 +88,7 @@ class AlertSerializer(serializers.HyperlinkedModelSerializer):
 class AlertViewSet(WaffleSwitchMixin, viewsets.ModelViewSet):
     """Alert."""
 
-    waffle_switch = "legacy"
+    waffle_switch = "core"
 
     # Alert model does have 'objects'
 

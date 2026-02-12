@@ -28,7 +28,7 @@ class UserSerializer(serializers.HyperlinkedModelSerializer):
 class UserViewSet(WaffleSwitchMixin, viewsets.ModelViewSet):
     """API endpoint that allows users to be viewed or edited."""
 
-    waffle_switch = "legacy"
+    waffle_switch = "core"
 
     queryset = User.objects.all()
     serializer_class = UserSerializer

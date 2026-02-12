@@ -6,7 +6,7 @@ import os
 import urllib
 import pytest
 from django.conf import settings as django_settings
-import blueflow.models as bf_mod
+import bf_opencore.models as bf_mod
 from .utils import AttrDict
 
 

@@ -48,7 +48,7 @@ class CrontabScheduleSerializer(serializers.HyperlinkedModelSerializer):
 class CrontabScheduleViewSet(WaffleSwitchMixin, viewsets.ModelViewSet):
     """Periodic (crontab) schedule."""
 
-    waffle_switch = "legacy"
+    waffle_switch = "core"
 
     # Model does have objects...
     queryset = CrontabSchedule.objects.all()
@@ -87,7 +87,7 @@ class IntervalScheduleSerializer(serializers.HyperlinkedModelSerializer):
 class IntervalScheduleViewSet(WaffleSwitchMixin, viewsets.ModelViewSet):
     """Periodic (interval) schedule."""
 
-    waffle_switch = "legacy"
+    waffle_switch = "core"
 
     # Model does have objects...
     queryset = IntervalSchedule.objects.all()
@@ -219,7 +219,7 @@ class PeriodicTaskFilter(django_filters.rest_framework.FilterSet):
 class PeriodicTaskViewSet(WaffleSwitchMixin, viewsets.ModelViewSet):
     """Periodic task."""
 
-    waffle_switch = "legacy"
+    waffle_switch = "core"
 
     # Include only BlueFlow connectors.  This will exclude the Celery Backend
     # Clean up task.

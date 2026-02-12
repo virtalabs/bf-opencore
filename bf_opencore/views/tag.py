@@ -89,7 +89,7 @@ class TagFilter(django_filters.rest_framework.FilterSet):
 class TagViewSet(WaffleSwitchMixin, ChangeReasonMixin, viewsets.ModelViewSet):
     """Free-text tag associated with one or more assets."""
 
-    waffle_switch = "legacy"
+    waffle_switch = "core"
 
     # Tag model does have 'objects'
     queryset = Tag.objects.order_by('name')

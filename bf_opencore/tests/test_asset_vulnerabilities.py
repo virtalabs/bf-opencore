@@ -1,7 +1,7 @@
 """Test asset vulnerability query strings."""
 
 import json
-import blueflow.models as bf_mod
+import bf_opencore.models as bf_mod
 
 from .test_asset_relations import asset_vulnerabilities
 

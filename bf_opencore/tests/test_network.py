@@ -2,7 +2,7 @@
 
 import json
 import pytest
-import blueflow.models as bf_mod
+import bf_opencore.models as bf_mod
 
 # bf_mod models do have 'objects' member, but it's being lazy loaded
 

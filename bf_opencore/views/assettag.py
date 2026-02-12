@@ -35,7 +35,7 @@ class AssetTagSerializer(serializers.HyperlinkedModelSerializer):
 class AssetTagViewSet(WaffleSwitchMixin, ChangeReasonMixin, viewsets.ModelViewSet):
     """An AssetTag links a tag to an asset."""
 
-    waffle_switch = "legacy"
+    waffle_switch = "core"
 
     # AssetTag model does have 'objects'
     queryset = AssetTag.objects.all()

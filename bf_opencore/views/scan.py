@@ -70,7 +70,7 @@ class ScanFilter(django_filters.rest_framework.FilterSet):
 class ScanViewSet(WaffleSwitchMixin, viewsets.ModelViewSet):
     """Each scan represents one "Scan" of one asset."""
 
-    waffle_switch = "legacy"
+    waffle_switch = "core"
 
     # Scan model does have 'objects'
     queryset = Scan.objects.all()

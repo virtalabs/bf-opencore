@@ -205,7 +205,7 @@ class ConnectorTaskFilter(django_filters.rest_framework.FilterSet):
 class ConnectorTaskViewSet(WaffleSwitchMixin, viewsets.ModelViewSet):
     """A ConnectorTask represents a "run" of a Connector."""
 
-    waffle_switch = "legacy"
+    waffle_switch = "core"
 
     queryset = ConnectorTask.objects.all()
     serializer_class = ConnectorTaskSerializer
