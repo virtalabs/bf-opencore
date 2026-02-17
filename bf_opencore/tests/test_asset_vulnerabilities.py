@@ -3,8 +3,6 @@
 import json
 from bf_opencore import models
 
-from .test_asset_relations import asset_vulnerabilities
-
 
 def test_get_asset_vulnerabilities(auth_client, asset_vulnerabilities):
     """Test /api/assetvulnerabilities/?asset=<id> route for asset_vulns.

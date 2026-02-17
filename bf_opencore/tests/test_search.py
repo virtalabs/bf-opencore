@@ -5,8 +5,6 @@
 # These errors are endemic to pytest
 
 from bf_opencore import models
-from .test_autocomplete import completables
-from .test_custom_field_names import cleandb, cfield
 
 
 def test_free_text_search_manufacturer(auth_client, completables):
