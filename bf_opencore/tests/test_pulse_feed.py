@@ -5,21 +5,7 @@ With special focus on perms.
 
 import json
 import pytest
-from django.utils import timezone
 from bf_opencore import models
-
-
-
-
-@pytest.fixture
-def pulse_feed_items():
-    """Set up some pulse feed items to play with."""
-    models.PulseFeedItem.objects.create(external_pulse_id=12,
-                                        date_last_updated=timezone.now())
-    models.PulseFeedItem.objects.create(external_pulse_id=23,
-                                        date_last_updated=timezone.now())
-    models.PulseFeedItem.objects.create(external_pulse_id=34,
-                                        date_last_updated=timezone.now())
 
 
 def test_get_pulse_feed_items(auth_client, pulse_feed_items):

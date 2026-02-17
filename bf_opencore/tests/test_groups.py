@@ -1,33 +1,9 @@
 """Test group access."""
 
 import json
-from collections import namedtuple
 import pytest
 from bf_opencore import models
 
-
-@pytest.fixture
-def asset_groups(db):
-    """Set up some assets and groups."""
-    # db is a virtual arg to gain access to database
-    asset_a = models.Asset.objects.create(hostname='foo.com')
-    asset_b = models.Asset.objects.create(hostname='bar.com')
-    group_red = models.Group.objects.create(name='red')
-    group_green = models.Group.objects.create(name='green')
-    group_yellow = models.Group.objects.create(name='yellow')
-    agra = models.AssetGroup.objects.create(group=group_red, asset=asset_a)
-    agga = models.AssetGroup.objects.create(group=group_green, asset=asset_a)
-    aggb = models.AssetGroup.objects.create(group=group_green, asset=asset_b)
-    ag = namedtuple('AssetGroups',
-                    'aa, ab, gr, gg, gy, agra, agga, aggb')
-    return ag(aa=asset_a, ab=asset_b,
-              gr=group_red, gg=group_green, gy=group_yellow,
-              agra=agra, agga=agga, aggb=aggb)
-
-
-# "redefine outer name" is how pytest fixtures work.
-
-# Get groups
 
 def test_get_asset_groups_obsolete(auth_client, asset_groups):
     """Test old /api/assets/<n>/groups way to get groups with asset.

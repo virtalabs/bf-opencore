@@ -4,48 +4,9 @@ Uses built-in pytest-django text fixtures from
 http://pytest-django.readthedocs.io/en/latest/helpers.html
 """
 
-from collections import namedtuple
 import json
 import pytest
 from bf_opencore import models
-
-################################################################
-# Fixtures
-
-
-@pytest.fixture
-def cleandb(db):
-    """Remove custom fields added by migrations.
-
-    For example, the "location" custom field is added by a migration.  These
-    tests assume starting without it.
-    """
-    models.AssetCustomFieldName.objects.all().delete()
-
-
-@pytest.fixture
-def cfield(cleandb):
-    """Prepare some things for reuse
-
-     - an asset
-     - a couple of custom fields (names)
-     - and a custom field (value)
-    """
-    asset = models.Asset.objects.create(hostname='foo.com')
-    sparkly_field = models.AssetCustomFieldName.objects.create(
-        field_name='sparkliness')
-    shiny_field = models.AssetCustomFieldName.objects.create(
-        field_name='shinyness')
-    custom_field = models.AssetCustomField.objects.create(
-        field=shiny_field, asset=asset, value_text='rather dull')
-    cfield_tuple = namedtuple(
-        'cfield_tuple',
-        ['asset', 'sparkly_field', 'shiny_field', 'custom_field'])
-    return cfield_tuple(asset, sparkly_field, shiny_field, custom_field)
-
-
-################################################################
-# Tests
 
 
 def test_custom_field_name(cleandb, auth_client):

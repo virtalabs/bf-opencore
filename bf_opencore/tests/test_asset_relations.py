@@ -31,12 +31,12 @@ def test_get_asset_tags_obsolete(auth_client):
     dummy_tag = models.Tag.objects.create(name='blue', color='blue')
     models.AssetTag.objects.create(tag=tag_red, asset=asset)
     models.AssetTag.objects.create(tag=tag_green, asset=asset)
-    response = auth_client.get('/api/assets/{}/tags/'.format(asset.id))
+    response = auth_client.get('/api/assets/{}/tags/'.format(asset.pk))
     # assert response.status_code == 405
     # assert response.status_text == "Method Not Allowed"
     tags = response.data['results']
     assert len(tags) == 2
-    assert {t['id'] for t in tags} == {tag_red.id, tag_green.id}
+    assert {t['id'] for t in tags} == {tag_red.pk, tag_green.pk}
 
 
 def test_get_asset_tags_new(auth_client):
@@ -47,35 +47,11 @@ def test_get_asset_tags_new(auth_client):
     dummy_tag = models.Tag.objects.create(name='blue', color='blue')
     models.AssetTag.objects.create(tag=tag_red, asset=asset)
     models.AssetTag.objects.create(tag=tag_green, asset=asset)
-    response = auth_client.get('/api/tags/?asset={}'.format(asset.id))
+    response = auth_client.get('/api/tags/?asset={}'.format(asset.pk))
     tags = response.data['results']
     assert len(tags) == 2
-    assert {t['id'] for t in tags} == {tag_red.id, tag_green.id}
+    assert {t['id'] for t in tags} == {tag_red.pk, tag_green.pk}
 
-
-################
-# Vulnerabilities
-
-@pytest.fixture
-def asset_vulnerabilities(db):
-    """Set up some database objects to test asset-vulnerability relations."""
-    # db is a virtual arg to gain access to database
-    asset = models.Asset.objects.create(hostname='foo.com')
-    asset_2 = models.Asset.objects.create(hostname='bar.com')
-    dummy_vulnerability = models.Vulnerability.objects.create(name='eggs')
-    vulnerability_spam = models.Vulnerability.objects.create(name='spam')
-    vulnerability_red = models.Vulnerability.objects.create(name='red')
-    vulnerability_green = models.Vulnerability.objects.create(name='green')
-    models.AssetVulnerability.objects.create(vulnerability=vulnerability_red,
-                                             asset=asset)
-    models.AssetVulnerability.objects.create(vulnerability=vulnerability_green,
-                                             asset=asset)
-    models.AssetVulnerability.objects.create(vulnerability=vulnerability_spam,
-                                             asset=asset_2)
-    return (asset, vulnerability_red, vulnerability_green)
-
-
-# The following tests are "guilty" of this by necessity
 
 def test_get_asset_vulnerabilities_obsolete(auth_client,
                                             asset_vulnerabilities):
@@ -155,12 +131,12 @@ def test_get_asset_scans_obsolete(auth_client):
     dummy_scan = models.Scan.objects.create(asset=asset_dummy,
                                             connector_task=c_task_3,
                                             **aux_fields)
-    response = auth_client.get('/api/assets/{}/scans/'.format(asset.id))
+    response = auth_client.get('/api/assets/{}/scans/'.format(asset.pk))
     # assert response.status_code == 405
     # assert response.status_text == "Method Not Allowed"
     scans = response.data['results']
     assert len(scans) == 2
-    assert {t['id'] for t in scans} == {scan_red.id, scan_green.id}
+    assert {t['id'] for t in scans} == {scan_red.pk, scan_green.pk}
 
 
 def test_get_asset_scans_new(auth_client):
@@ -191,10 +167,10 @@ def test_get_asset_scans_new(auth_client):
     dummy_scan = models.Scan.objects.create(asset=asset_dummy,
                                             connector_task=c_task_3,
                                             **aux_fields)
-    response = auth_client.get('/api/scans/?asset={}'.format(asset.id))
+    response = auth_client.get('/api/scans/?asset={}'.format(asset.pk))
     scans = response.data['results']
     assert len(scans) == 2
-    assert {t['id'] for t in scans} == {scan_red.id, scan_green.id}
+    assert {t['id'] for t in scans} == {scan_red.pk, scan_green.pk}
     # Sanity check (should get all scans.)
     response = auth_client.get('/api/scans/')
     scans = response.data['results']
@@ -213,11 +189,11 @@ def test_get_asset_network_old_api(admin_client):
     asset = models.Asset.objects.create(ip_address='10.0.0.1')
     network = models.Network.objects.create()
     network.cidr = ['10.0.0.0/24']
-    response = admin_client.get('/api/assets/{}/networks/'.format(asset.id))
+    response = admin_client.get('/api/assets/{}/networks/'.format(asset.pk))
     # assert response.status_code == 404
     networks = response.data['results']
     assert len(networks) == 1
-    assert networks[0]['id'] == network.id
+    assert networks[0]['id'] == network.pk
 
 
 def test_get_asset_network_new_api(admin_client):
@@ -231,7 +207,7 @@ def test_get_asset_network_new_api(admin_client):
     network_red.cidr = ['10.0.0.0/31']
     dummy_network = models.Network.objects.create(name='dummy_1')
     dummy_network.cidr = ['10.0.1.0/24']
-    response = admin_client.get('/api/networks/?asset={}'.format(asset.id))
+    response = admin_client.get('/api/networks/?asset={}'.format(asset.pk))
     networks = response.data['results']
     assert len(networks) == 2
-    assert {n['id'] for n in networks} == {network_blue.id, network_red.id}
+    assert {n['id'] for n in networks} == {network_blue.pk, network_red.pk}

@@ -6,7 +6,6 @@ With special focus on perms.
 import json
 import pytest
 from bf_opencore import models
-from .test_autocomplete import completables as acme_assets
 
 
 def test_search(auth_client, acme_assets):
