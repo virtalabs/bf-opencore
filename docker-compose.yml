@@ -22,7 +22,8 @@ services:
     build: .
     command: /app/.venv/bin/python project/manage.py runserver 0.0.0.0:8000
     volumes:
-      - .:/app
+      - .:/app # Mount app for dev workflow
+      - web_venv:/app/.venv # Isolate container .venv from host .venv
     ports:
       - "8000:8000"
     depends_on:
@@ -37,3 +38,4 @@ services:
 
 volumes:
   postgres_data:
+  web_venv:
