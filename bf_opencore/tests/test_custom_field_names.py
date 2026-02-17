@@ -7,7 +7,7 @@ http://pytest-django.readthedocs.io/en/latest/helpers.html
 from collections import namedtuple
 import json
 import pytest
-import bf_opencore.models as bf_mod
+from bf_opencore import models
 
 ################################################################
 # Fixtures
@@ -20,7 +20,7 @@ def cleandb(db):
     For example, the "location" custom field is added by a migration.  These
     tests assume starting without it.
     """
-    bf_mod.AssetCustomFieldName.objects.all().delete()
+    models.AssetCustomFieldName.objects.all().delete()
 
 
 @pytest.fixture
@@ -31,12 +31,12 @@ def cfield(cleandb):
      - a couple of custom fields (names)
      - and a custom field (value)
     """
-    asset = bf_mod.Asset.objects.create(hostname='foo.com')
-    sparkly_field = bf_mod.AssetCustomFieldName.objects.create(
+    asset = models.Asset.objects.create(hostname='foo.com')
+    sparkly_field = models.AssetCustomFieldName.objects.create(
         field_name='sparkliness')
-    shiny_field = bf_mod.AssetCustomFieldName.objects.create(
+    shiny_field = models.AssetCustomFieldName.objects.create(
         field_name='shinyness')
-    custom_field = bf_mod.AssetCustomField.objects.create(
+    custom_field = models.AssetCustomField.objects.create(
         field=shiny_field, asset=asset, value_text='rather dull')
     cfield_tuple = namedtuple(
         'cfield_tuple',
@@ -50,7 +50,7 @@ def cfield(cleandb):
 
 def test_custom_field_name(cleandb, auth_client):
     """Test get custom field names."""
-    afn_object = bf_mod.AssetCustomFieldName.objects.create(field_name='red')
+    afn_object = models.AssetCustomFieldName.objects.create(field_name='red')
     afn = auth_client.get('/api/assetcustomfieldnames/').json()
     assert afn['count'] == 1
     assert len(afn['results']) == 1
@@ -182,7 +182,7 @@ def test_api_disable_custom_field_name_get_disabled(
                    reason="Not yet implemented")
 def test_api_disabled_custom_field(cleandb, auth_client, admin_client):
     """Disable custom field."""
-    asset_id = bf_mod.Asset.objects.create(hostname='foo.com').id
+    asset_id = models.Asset.objects.create(hostname='foo.com').id
     kwargs = {'data': json.dumps({'field_name': 'sparkliness'}),
               'content_type': 'application/json'}
     res = admin_client.post('/api/assetcustomfieldnames/', **kwargs)
@@ -205,7 +205,7 @@ def test_api_disabled_custom_field(cleandb, auth_client, admin_client):
                    reason="Not yet implemented")
 def test_api_asset_disabled_custom_field(cleandb, auth_client, admin_client):
     """No custom field arriving with the asset when disabled."""
-    asset_id = bf_mod.Asset.objects.create(hostname='foo.com').id
+    asset_id = models.Asset.objects.create(hostname='foo.com').id
     kwargs = {'data': json.dumps({'field_name': 'sparkliness'}),
               'content_type': 'application/json'}
     res = admin_client.post('/api/assetcustomfieldnames/', **kwargs)

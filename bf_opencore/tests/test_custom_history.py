@@ -12,12 +12,12 @@ work going on, and some decisions being made, on whether custom fields
 should be accssed via the asset or via its own API.
 """
 
-import bf_opencore.models as bf_mod
+from bf_opencore import models
 
 
 def test_history_canonical_fields(asset_edit_client):
     """Check some rudimentary asset history."""
-    a = bf_mod.Asset.objects.create()
+    a = models.Asset.objects.create()
     a.hostname = 'spam'
     a.save()
     a.owner = 'Hormel'
@@ -34,7 +34,7 @@ def test_history_canonical_fields(asset_edit_client):
 
 def test_history_canonical_field_unchanged(asset_edit_client):
     """Unchanged field should show up as 'empty-ish'."""
-    a = bf_mod.Asset.objects.create()
+    a = models.Asset.objects.create()
     res = asset_edit_client.get(f'/api/assets/{a.id}/history/?field=hostname')
     assert res.status_code == 200
     assert [h['hostname'] for h in res.data] == [None]
@@ -42,7 +42,7 @@ def test_history_canonical_field_unchanged(asset_edit_client):
 
 def test_history_canonical_one_field(asset_edit_client):
     """Field history should contain only the changes."""
-    a = bf_mod.Asset.objects.create()
+    a = models.Asset.objects.create()
     a.hostname = 'spam'
     a.save()
     a.owner = 'Hormel'

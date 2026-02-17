@@ -3,9 +3,9 @@
 import pytest
 import django
 from rest_framework.reverse import reverse
-import bf_opencore.models as bf_mod
+from bf_opencore import models
 
-# bf_mod models do have 'objects' member, but it's being lazy loaded
+# models do have 'objects' member, but it's being lazy loaded
 
 
 def test_reverse_asset_tags():
@@ -41,7 +41,7 @@ def test_reverse_asset_groups():
 
 def test_asset_tags_api(auth_client):
     """API for tags associated with asset works."""
-    asset_obj = bf_mod.Asset.objects.create()
+    asset_obj = models.Asset.objects.create()
     res = auth_client.get('/api/assets/{}/tags/'.format(asset_obj.id))
     assert res.status_code == 200
     assert res.json()['count'] == 0
@@ -52,7 +52,7 @@ def test_asset_groups_api(auth_client):
 
     (see test_groups.py)
     """
-    asset_obj = bf_mod.Asset.objects.create()
+    asset_obj = models.Asset.objects.create()
     res = auth_client.get('/api/assets/{}/groups/'.format(asset_obj.id))
     assert res.status_code == 404
 

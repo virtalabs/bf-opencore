@@ -7,7 +7,7 @@ import pytest
 pytest.importorskip("connectors")
 
 from connectors.management.commands.create_connectors import create_connectors
-import bf_opencore.models as bf_mod
+from bf_opencore import models
 
 
 def test_get_connectors(admin_client):
@@ -28,7 +28,7 @@ def test_create_disabled_connector_task(admin_client):
     # Django models do have members
 
     # Disable connector
-    connector = bf_mod.Connector.objects.get(id="true")
+    connector = models.Connector.objects.get(id="true")
     connector.enabled = False
     connector.save()
 

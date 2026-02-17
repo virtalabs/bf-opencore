@@ -3,21 +3,21 @@
 import json
 from collections import namedtuple
 import pytest
-import bf_opencore.models as bf_mod
+from bf_opencore import models
 
 
 @pytest.fixture
 def asset_groups(db):
     """Set up some assets and groups."""
     # db is a virtual arg to gain access to database
-    asset_a = bf_mod.Asset.objects.create(hostname='foo.com')
-    asset_b = bf_mod.Asset.objects.create(hostname='bar.com')
-    group_red = bf_mod.Group.objects.create(name='red')
-    group_green = bf_mod.Group.objects.create(name='green')
-    group_yellow = bf_mod.Group.objects.create(name='yellow')
-    agra = bf_mod.AssetGroup.objects.create(group=group_red, asset=asset_a)
-    agga = bf_mod.AssetGroup.objects.create(group=group_green, asset=asset_a)
-    aggb = bf_mod.AssetGroup.objects.create(group=group_green, asset=asset_b)
+    asset_a = models.Asset.objects.create(hostname='foo.com')
+    asset_b = models.Asset.objects.create(hostname='bar.com')
+    group_red = models.Group.objects.create(name='red')
+    group_green = models.Group.objects.create(name='green')
+    group_yellow = models.Group.objects.create(name='yellow')
+    agra = models.AssetGroup.objects.create(group=group_red, asset=asset_a)
+    agga = models.AssetGroup.objects.create(group=group_green, asset=asset_a)
+    aggb = models.AssetGroup.objects.create(group=group_green, asset=asset_b)
     ag = namedtuple('AssetGroups',
                     'aa, ab, gr, gg, gy, agra, agga, aggb')
     return ag(aa=asset_a, ab=asset_b,
@@ -226,16 +226,16 @@ def test_create_group_biomed(biomed_client):
 
 def test_delete_group_biomed(biomed_client):
     """Delete a group with a 'biomed_client'."""
-    group_obj = bf_mod.Group.objects.create(name='spam')
+    group_obj = models.Group.objects.create(name='spam')
     resp = biomed_client.delete('/api/groups/{pk}/'.format(pk=group_obj.id))
     assert resp.status_code == 204  # deleted
 
 
 def test_create_asset_group(biomed_client):
     """Add asset(s) to a group AKA create assetgroup."""
-    gid = bf_mod.Group.objects.create(name='spam').id
-    aid1 = bf_mod.Asset.objects.create(hostname='eggs').id
-    aid2 = bf_mod.Asset.objects.create(hostname='ham').id
+    gid = models.Group.objects.create(name='spam').id
+    aid1 = models.Asset.objects.create(hostname='eggs').id
+    aid2 = models.Asset.objects.create(hostname='ham').id
     resp = biomed_client.post('/api/groups/{gid}/assets/'.format(gid=gid),
                               json.dumps({'asset_ids': [aid1, aid2]}),
                               content_type='application/json')
@@ -251,9 +251,9 @@ def test_delete_asset_group(biomed_client):
     Duplicate of test_delete_asset_group_by_group_plus_asset except
     we're using a 'biomed client'.
     """
-    gid = bf_mod.Group.objects.create(name='spam').id
-    aid = bf_mod.Asset.objects.create(hostname='eggs').id
-    _ = bf_mod.AssetGroup.objects.create(group_id=gid, asset_id=aid)
+    gid = models.Group.objects.create(name='spam').id
+    aid = models.Asset.objects.create(hostname='eggs').id
+    _ = models.AssetGroup.objects.create(group_id=gid, asset_id=aid)
     response = biomed_client.get('/api/assetgroups/')
     agroups = response.data['results']
     assert len(agroups) == 1
