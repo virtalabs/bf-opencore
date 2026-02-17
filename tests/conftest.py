@@ -86,7 +86,7 @@ def auth_client(db, enable_core_switch):
 
 
 @pytest.fixture
-def admin_client(db):
+def admin_client(db, enable_core_switch):
     """API client authenticated with a superuser (for app-level admin-style tests; uses factories.make_superuser)."""
     from rest_framework.test import APIClient
 
