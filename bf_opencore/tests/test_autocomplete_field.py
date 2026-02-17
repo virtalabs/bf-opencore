@@ -1,24 +1,6 @@
 """Test autocomplete interface."""
 
-# "redefine outer name" is how pytest fixtures work.
-
-import pytest
 from bf_opencore import models
-
-
-@pytest.fixture
-def complete_us(db):
-    """Sample assets."""
-    mfmods = {
-        'Foo': ['One', 'Two', 'Three'],
-        'Bar': ['Four', 'Five', 'Six'],
-    }
-
-    assets = []
-    for manuf, models in mfmods.items():
-        for model in models:
-            assets.append(models.Asset(manufacturer=manuf, model=model))
-    models.Asset.objects.bulk_create(assets)
 
 
 def test_autocomplete_field(auth_client, complete_us):

@@ -21,31 +21,6 @@ def test_autocomplete_no_error_order(auth_client):
     assert candidates.status_code == 200
 
 
-@pytest.fixture
-def completables(db):
-    """Sample assets and other items to be completed."""
-    # Models *do* have (lazily loaded) 'objects' member
-    models.Asset.objects.create(mac_address='88:aa:bb:cc:dd:ee')
-    models.Asset.objects.create(manufacturer="ACME Inc.",
-                                model="Instant Tunnel",
-                                serial_number="WILE-E-1234")
-    models.Asset.objects.create(manufacturer="ACME",
-                                model="Instant Tunnel",
-                                serial_number="RR-6789")
-    w95 = models.Asset.objects.create(os="Windows 95", ip_address='10.2.3.5')
-    models.Tag.objects.create(name="ACME products")
-    models.Tag.objects.create(name="FooTag")
-    barv = models.Vulnerability.objects.create(
-        name='foo', synopsis='Bar Baz Quux')
-    models.AssetVulnerability.objects.create(asset=w95,
-                                             vulnerability=barv)
-    grp = models.Group.objects.create(name='Bargle')
-    models.AssetGroup.objects.create(asset=w95, group=grp)
-    blorp = models.Network.objects.create(name='BlorpNet')
-    blorp.cidr = ['10.2.3.0/24']
-    blorp.save()
-
-
 def test_autocomplete_numeric(auth_client, completables):
     """Autocompleting a string that is just a number finds IPs."""
     candidates = auth_client.get('/api/autocomplete/?autocomplete=1')
