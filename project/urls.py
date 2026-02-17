@@ -6,4 +6,5 @@ from django.urls import path, include
 
 urlpatterns = [
     path("", include("bf_opencore.urls")),
+    path("api/", include(("bf_opencore.urls", "api"))),
 ]
