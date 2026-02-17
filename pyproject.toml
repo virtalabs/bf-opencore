@@ -28,7 +28,13 @@ dependencies = [
 ]
 
 [project.optional-dependencies]
-dev = ["pytest", "pytest-django", "model_bakery", "django-test-migrations", "freezegun>=1.0,<3"]
+dev = [
+    "pytest",
+    "pytest-django",
+    "model_bakery",
+    "django-test-migrations",
+    "freezegun>=1.0,<3",
+]
 
 [tool.setuptools.packages.find]
 where = ["."]
@@ -39,3 +45,7 @@ include = ["bf_opencore*", "project*"]
 testpaths = ["tests"]
 addopts = "-ra"
 filterwarnings = ["ignore::DeprecationWarning"]
+
+[tool.pyright]
+venvPath = "."
+venv = ".venv"
