@@ -6,7 +6,7 @@ With special focus on perms.
 import json
 import pytest
 from django.utils import timezone
-import bf_opencore.models as bf_mod
+from bf_opencore import models
 
 
 
@@ -14,11 +14,11 @@ import bf_opencore.models as bf_mod
 @pytest.fixture
 def pulse_feed_items():
     """Set up some pulse feed items to play with."""
-    bf_mod.PulseFeedItem.objects.create(external_pulse_id=12,
+    models.PulseFeedItem.objects.create(external_pulse_id=12,
                                         date_last_updated=timezone.now())
-    bf_mod.PulseFeedItem.objects.create(external_pulse_id=23,
+    models.PulseFeedItem.objects.create(external_pulse_id=23,
                                         date_last_updated=timezone.now())
-    bf_mod.PulseFeedItem.objects.create(external_pulse_id=34,
+    models.PulseFeedItem.objects.create(external_pulse_id=34,
                                         date_last_updated=timezone.now())
 
 
@@ -32,7 +32,7 @@ def test_get_pulse_feed_items(auth_client, pulse_feed_items):
 
 def test_get_one_pulse_feed_item(auth_client, pulse_feed_items):
     """Check that we can get one pulse feed item by its external ID."""
-    pfi = bf_mod.PulseFeedItem.objects.first()
+    pfi = models.PulseFeedItem.objects.first()
     response = auth_client.get('/api/pulse/{}/'.format(pfi.external_pulse_id))
     assert response.status_code == 200
     pulse_feed_item = response.data
@@ -41,7 +41,7 @@ def test_get_one_pulse_feed_item(auth_client, pulse_feed_items):
 
 def test_delete_pulse_feed_item(pulse_feed_auth_client, pulse_feed_items):
     """Make sure that we can't delete a pulse feed item."""
-    pfi = bf_mod.PulseFeedItem.objects.first()
+    pfi = models.PulseFeedItem.objects.first()
     response = pulse_feed_auth_client.delete(
         '/api/pulse/{}/'.format(pfi.external_pulse_id))
     assert response.status_code == 403  # forbidden
@@ -49,20 +49,20 @@ def test_delete_pulse_feed_item(pulse_feed_auth_client, pulse_feed_items):
 
 def test_close_pulse_feed_item(pulse_feed_auth_client, pulse_feed_items):
     """Check that we can mark a pulse feed item as Closed."""
-    pfi = bf_mod.PulseFeedItem.objects.first()
+    pfi = models.PulseFeedItem.objects.first()
     assert pfi.status == 'open'
     response = pulse_feed_auth_client.patch(
         '/api/pulse/{}/'.format(pfi.external_pulse_id),
         json.dumps({'status': 'closed'}),
         content_type='application/json')
     assert response.status_code == 200
-    pfi = bf_mod.PulseFeedItem.objects.get(pk=pfi.id)
+    pfi = models.PulseFeedItem.objects.get(pk=pfi.id)
     assert pfi.status == 'closed'
 
 
 def test_delete_pulse_feed_item_unauth(auth_client, pulse_feed_items):
     """Make sure unauthorized can't delete a pulse feed item."""
-    pfi = bf_mod.PulseFeedItem.objects.first()
+    pfi = models.PulseFeedItem.objects.first()
     response = auth_client.delete(
         '/api/pulse/{}/'.format(pfi.external_pulse_id))
     assert response.status_code == 403  # forbidden
@@ -70,7 +70,7 @@ def test_delete_pulse_feed_item_unauth(auth_client, pulse_feed_items):
 
 def test_close_pulse_feed_item_unauth(auth_client, pulse_feed_items):
     """Make sure unauthorized can't mark a pulse feed item as Closed."""
-    pfi = bf_mod.PulseFeedItem.objects.first()
+    pfi = models.PulseFeedItem.objects.first()
     assert pfi.status == 'open'
     response = auth_client.patch(
         '/api/pulse/{}/'.format(pfi.external_pulse_id),

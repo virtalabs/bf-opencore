@@ -4,7 +4,7 @@
 
 # These errors are endemic to pytest
 
-import bf_opencore.models as bf_mod
+from bf_opencore import models
 from .test_autocomplete import completables
 from .test_custom_field_names import cleandb, cfield
 
@@ -24,7 +24,7 @@ def test_free_text_search_model(auth_client, completables):
 def test_free_text_search_os(auth_client, completables):
     """We can get an asset via its OS with free-text search."""
     candidates = auth_client.get('/api/assets/?search=windows')
-    asset = bf_mod.Asset.objects.filter(os='Windows 95').first()
+    asset = models.Asset.objects.filter(os='Windows 95').first()
     assert candidates.data['count'] == 1
     assert candidates.data['results'][0]['id'] == asset.id
 
@@ -32,16 +32,16 @@ def test_free_text_search_os(auth_client, completables):
 def test_free_text_search_serial_number(auth_client, completables):
     """We can get an asset via its serial number with free-text search."""
     candidates = auth_client.get('/api/assets/?search=wile')
-    asset = bf_mod.Asset.objects.filter(serial_number='WILE-E-1234').first()
+    asset = models.Asset.objects.filter(serial_number='WILE-E-1234').first()
     assert candidates.data['count'] == 1
     assert candidates.data['results'][0]['id'] == asset.id
 
 
 def test_search_tag(auth_client, completables):
     """We get assets that have a tag attached."""
-    asset = bf_mod.Asset.objects.get(serial_number='WILE-E-1234')
-    tag = bf_mod.Tag.objects.get(name="FooTag")
-    bf_mod.AssetTag.objects.create(tag=tag, asset=asset)
+    asset = models.Asset.objects.get(serial_number='WILE-E-1234')
+    tag = models.Tag.objects.get(name="FooTag")
+    models.AssetTag.objects.create(tag=tag, asset=asset)
     candidates = auth_client.get('/api/assets/?search=FooTag')
     assert candidates.data['count'] == 1
     assert candidates.data['results'][0]['serial_number'] == 'WILE-E-1234'
@@ -72,9 +72,9 @@ def test_search_custom_field_name_nocust(auth_client, cfield):
 
     Still, 'shinyness' should not return any results.
     """
-    asset_foo = bf_mod.Asset.objects.get(hostname='foo.com')
+    asset_foo = models.Asset.objects.get(hostname='foo.com')
     asset_foo.delete()
-    bf_mod.Asset.objects.create(hostname='bar.com')
+    models.Asset.objects.create(hostname='bar.com')
     candidates = auth_client.get('/api/assets/?search=shinyness')
     assert candidates.data['count'] == 0
 
@@ -105,7 +105,7 @@ def test_search_custom_value_nocust(auth_client, cfield):
 
     No asset has a value in custom field 'shinyness'.
     """
-    asset_foo = bf_mod.Asset.objects.get(hostname='foo.com')
+    asset_foo = models.Asset.objects.get(hostname='foo.com')
     asset_foo.delete()
     candidates = auth_client.get('/api/assets/?search=dull')
     assert candidates.data['count'] == 0

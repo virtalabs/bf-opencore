@@ -2,9 +2,9 @@
 
 import json
 import pytest
-import bf_opencore.models as bf_mod
+from bf_opencore import models
 
-# bf_mod models do have 'objects' member, but it's being lazy loaded
+# models do have 'objects' member, but it's being lazy loaded
 
 
 def test_create_empty_network(nwk_authorized_client):
@@ -25,7 +25,7 @@ def test_create_named_network(nwk_authorized_client):
                                           json.dumps({'name': 'spam'}),
                                           content_type='application/json')
     assert response.status_code == 201
-    networks = bf_mod.Network.objects.all()
+    networks = models.Network.objects.all()
     assert len(networks) == 1
     network = networks.first()
     assert network.name == 'spam'
@@ -38,7 +38,7 @@ def test_create_named_network_unauth(auth_client):
                                 json.dumps({'name': 'spam'}),
                                 content_type='application/json')
     assert response.status_code == 403
-    assert bf_mod.Network.objects.count() == 0
+    assert models.Network.objects.count() == 0
 
 
 CIDR_TEST_DATA = [
@@ -73,7 +73,7 @@ def test_create_network_then_cidr(supplied_cidr, resulting_cidr,
                                            content_type='application/json')
     # assert response.content == '{}'
     assert response.status_code == 200
-    network = bf_mod.Network.objects.first()
+    network = models.Network.objects.first()
     assert network.name == 'spam'
     assert network.cidr == resulting_cidr
 
@@ -101,7 +101,7 @@ def test_delete_cidr(nwk_authorized_client):
                                           json.dumps({'name': 'spam'}),
                                           content_type='application/json')
     assert response.status_code == 201
-    network = bf_mod.Network.objects.first()
+    network = models.Network.objects.first()
     assert network.cidr == []
 
     nwk_url = response.data["url"]
@@ -109,14 +109,14 @@ def test_delete_cidr(nwk_authorized_client):
                                            json.dumps({'cidr': '10.0.1.2'}),
                                            content_type='application/json')
     assert response.status_code == 200
-    network = bf_mod.Network.objects.first()
+    network = models.Network.objects.first()
     assert network.cidr == ['10.0.1.2/32']
 
     response = nwk_authorized_client.patch(nwk_url,
                                            json.dumps({'cidr': ''}),
                                            content_type='application/json')
     assert response.status_code == 200
-    network = bf_mod.Network.objects.first()
+    network = models.Network.objects.first()
     assert network.cidr == []
 
 
@@ -131,13 +131,13 @@ def test_change_cidr_one(nwk_authorized_client):
                                            json.dumps({'cidr': '10.0.1.2'}),
                                            content_type='application/json')
     assert response.status_code == 200
-    network = bf_mod.Network.objects.first()
+    network = models.Network.objects.first()
     assert network.cidr == ['10.0.1.2/32']
     response = nwk_authorized_client.patch(nwk_url,
                                            json.dumps({'cidr': '10.0.1.3'}),
                                            content_type='application/json')
     assert response.status_code == 200
-    network = bf_mod.Network.objects.first()
+    network = models.Network.objects.first()
     assert network.cidr == ['10.0.1.3/32']
 
 
@@ -152,7 +152,7 @@ def test_change_cidr(nwk_authorized_client, test_case):
                                           json.dumps({'name': 'spam'}),
                                           content_type='application/json')
     assert response.status_code == 201
-    network = bf_mod.Network.objects.first()
+    network = models.Network.objects.first()
     assert network.cidr == []
 
     nwk_url = response.data["url"]
@@ -161,7 +161,7 @@ def test_change_cidr(nwk_authorized_client, test_case):
         json.dumps({'cidr': CIDR_TEST_DATA[test_case - 1][0]}),
         content_type='application/json')
     assert response.status_code == 200
-    network = bf_mod.Network.objects.first()
+    network = models.Network.objects.first()
     assert network.cidr == CIDR_TEST_DATA[test_case - 1][1]
 
     response = nwk_authorized_client.patch(
@@ -169,7 +169,7 @@ def test_change_cidr(nwk_authorized_client, test_case):
         json.dumps({'cidr': CIDR_TEST_DATA[test_case][0]}),
         content_type='application/json')
     assert response.status_code == 200
-    network = bf_mod.Network.objects.first()
+    network = models.Network.objects.first()
     assert network.cidr == CIDR_TEST_DATA[test_case][1]
 
 
@@ -187,7 +187,7 @@ def test_create_cidr_network(nwk_authorized_client):
                                           content_type='application/json')
     # Don't expect this create to work
     assert response.status_code == 201
-    # network = bf_mod.Network.objects.first()
+    # network = models.Network.objects.first()
     # assert network.name == 'spam'
     # assert network.cidr == ['10.0.1.2']
 
@@ -233,8 +233,8 @@ def test_cidr_bad_json(nwk_authorized_client):
 
 def test_asset_in_network_old_api(nwk_authorized_client):
     """Ensure we can determine network membership."""
-    dummy_asset = bf_mod.Asset.objects.create(ip_address='10.0.0.1')
-    network = bf_mod.Network.objects.create()
+    dummy_asset = models.Asset.objects.create(ip_address='10.0.0.1')
+    network = models.Network.objects.create()
     network.cidr = ['10.0.0.0/24']
     response = nwk_authorized_client.get(
         '/api/networks/{}/assets/'.format(network.id))
@@ -243,10 +243,10 @@ def test_asset_in_network_old_api(nwk_authorized_client):
 
 def test_asset_in_network_new_api(nwk_authorized_client):
     """Ensure we can determine network membership."""
-    asset = bf_mod.Asset.objects.create(ip_address='10.0.0.1')
-    dummy_asset_out_of_network = bf_mod.Asset.objects.create(
+    asset = models.Asset.objects.create(ip_address='10.0.0.1')
+    dummy_asset_out_of_network = models.Asset.objects.create(
         ip_address='10.0.1.1')
-    network = bf_mod.Network.objects.create()
+    network = models.Network.objects.create()
     network.cidr = ['10.0.0.0/24']
     response = nwk_authorized_client.get(
         '/api/assets/?network={}'.format(network.id))
@@ -268,10 +268,10 @@ def test_asset_big_network(nwk_authorized_client):
                  '192.168.218.101']
     asset = {}
     for ip_address in asset_ips:
-        asset[ip_address] = bf_mod.Asset.objects.create(ip_address=ip_address)
-    network_big = bf_mod.Network.objects.create(name='big')
+        asset[ip_address] = models.Asset.objects.create(ip_address=ip_address)
+    network_big = models.Network.objects.create(name='big')
     network_big.cidr = ['192.168.218.0/24']
-    network_small = bf_mod.Network.objects.create(name='small')
+    network_small = models.Network.objects.create(name='small')
     network_small.cidr = ['192.168.218.100/30']
     response_small = nwk_authorized_client.get(
         '/api/assets/?network={}'.format(network_small.id))

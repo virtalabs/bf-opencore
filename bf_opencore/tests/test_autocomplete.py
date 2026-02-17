@@ -4,7 +4,7 @@
 # In tests it's often more descriptive to use len(SEQUENCE) == 0
 
 import pytest
-import bf_opencore.models as bf_mod
+from bf_opencore import models
 from .test_custom_field_names import cleandb, cfield
 
 
@@ -25,23 +25,23 @@ def test_autocomplete_no_error_order(auth_client):
 def completables(db):
     """Sample assets and other items to be completed."""
     # Models *do* have (lazily loaded) 'objects' member
-    bf_mod.Asset.objects.create(mac_address='88:aa:bb:cc:dd:ee')
-    bf_mod.Asset.objects.create(manufacturer="ACME Inc.",
+    models.Asset.objects.create(mac_address='88:aa:bb:cc:dd:ee')
+    models.Asset.objects.create(manufacturer="ACME Inc.",
                                 model="Instant Tunnel",
                                 serial_number="WILE-E-1234")
-    bf_mod.Asset.objects.create(manufacturer="ACME",
+    models.Asset.objects.create(manufacturer="ACME",
                                 model="Instant Tunnel",
                                 serial_number="RR-6789")
-    w95 = bf_mod.Asset.objects.create(os="Windows 95", ip_address='10.2.3.5')
-    bf_mod.Tag.objects.create(name="ACME products")
-    bf_mod.Tag.objects.create(name="FooTag")
-    barv = bf_mod.Vulnerability.objects.create(
+    w95 = models.Asset.objects.create(os="Windows 95", ip_address='10.2.3.5')
+    models.Tag.objects.create(name="ACME products")
+    models.Tag.objects.create(name="FooTag")
+    barv = models.Vulnerability.objects.create(
         name='foo', synopsis='Bar Baz Quux')
-    bf_mod.AssetVulnerability.objects.create(asset=w95,
+    models.AssetVulnerability.objects.create(asset=w95,
                                              vulnerability=barv)
-    grp = bf_mod.Group.objects.create(name='Bargle')
-    bf_mod.AssetGroup.objects.create(asset=w95, group=grp)
-    blorp = bf_mod.Network.objects.create(name='BlorpNet')
+    grp = models.Group.objects.create(name='Bargle')
+    models.AssetGroup.objects.create(asset=w95, group=grp)
+    blorp = models.Network.objects.create(name='BlorpNet')
     blorp.cidr = ['10.2.3.0/24']
     blorp.save()
 
@@ -83,7 +83,7 @@ def test_autocomplete_tag(auth_client, completables):
                  if c['suggestion_type'] == 'Tag']
     assert len(tag_cands) == 1
     tag_cand = tag_cands[0]
-    acme_tag = bf_mod.Tag.objects.get(name="ACME products")
+    acme_tag = models.Tag.objects.get(name="ACME products")
     assert tag_cand['url'] == f'/tags/{acme_tag.id}/'
 
 
@@ -284,9 +284,9 @@ def test_autocomplete_custom_field_name_nocust(auth_client, cfield):
 
     Still, 'shinyness' should not return any results.
     """
-    asset_foo = bf_mod.Asset.objects.get(hostname='foo.com')
+    asset_foo = models.Asset.objects.get(hostname='foo.com')
     asset_foo.delete()
-    bf_mod.Asset.objects.create(hostname='bar.com')
+    models.Asset.objects.create(hostname='bar.com')
     candidates = auth_client.get('/api/autocomplete/?autocomplete=shiny')
     cv_cands = [c for c in candidates.data['results']
                 if c['suggestion_type'] is not None]
@@ -333,13 +333,13 @@ def test_autocomplete_custom_value_duplicate_1(auth_client, cfield):
 
     We should still only see one autocomplete for 'rather dull'.
     """
-    asset = bf_mod.Asset.objects.create(hostname='bar.com')
-    shiny_field = bf_mod.AssetCustomFieldName.objects.get(
+    asset = models.Asset.objects.create(hostname='bar.com')
+    shiny_field = models.AssetCustomFieldName.objects.get(
         field_name='shinyness')
-    assert bf_mod.AssetCustomField.objects.count() == 1
-    bf_mod.AssetCustomField.objects.create(
+    assert models.AssetCustomField.objects.count() == 1
+    models.AssetCustomField.objects.create(
         field=shiny_field, asset=asset, value_text='rather dull')
-    assert bf_mod.AssetCustomField.objects.count() == 2
+    assert models.AssetCustomField.objects.count() == 2
 
     candidates = auth_client.get('/api/autocomplete/?autocomplete=rath')
     cv_cands = [c for c in candidates.data['results']
@@ -363,13 +363,13 @@ def test_autocomplete_custom_value_duplicate_2(auth_client, cfield):
 
     We should still only see one autocomplete for 'rather dull'.
     """
-    asset = bf_mod.Asset.objects.create(hostname='bar.com')
-    sparkly_field = bf_mod.AssetCustomFieldName.objects.get(
+    asset = models.Asset.objects.create(hostname='bar.com')
+    sparkly_field = models.AssetCustomFieldName.objects.get(
         field_name='sparkliness')
-    assert bf_mod.AssetCustomField.objects.count() == 1
-    bf_mod.AssetCustomField.objects.create(
+    assert models.AssetCustomField.objects.count() == 1
+    models.AssetCustomField.objects.create(
         field=sparkly_field, asset=asset, value_text='rather dull')
-    assert bf_mod.AssetCustomField.objects.count() == 2
+    assert models.AssetCustomField.objects.count() == 2
 
     candidates = auth_client.get('/api/autocomplete/?autocomplete=rath')
     cv_cands = [c for c in candidates.data['results']
@@ -393,13 +393,13 @@ def test_autocomplete_custom_value_duplicate_3(auth_client, cfield):
 
     We should still only see one autocomplete for 'rather dull'.
     """
-    asset = bf_mod.Asset.objects.get(hostname='foo.com')
-    sparkly_field = bf_mod.AssetCustomFieldName.objects.get(
+    asset = models.Asset.objects.get(hostname='foo.com')
+    sparkly_field = models.AssetCustomFieldName.objects.get(
         field_name='sparkliness')
-    assert bf_mod.AssetCustomField.objects.count() == 1
-    bf_mod.AssetCustomField.objects.create(
+    assert models.AssetCustomField.objects.count() == 1
+    models.AssetCustomField.objects.create(
         field=sparkly_field, asset=asset, value_text='rather dull')
-    assert bf_mod.AssetCustomField.objects.count() == 2
+    assert models.AssetCustomField.objects.count() == 2
 
     candidates = auth_client.get('/api/autocomplete/?autocomplete=rath')
     cv_cands = [c for c in candidates.data['results']
@@ -433,7 +433,7 @@ def test_autocomplete_custom_value_nocust(auth_client, cfield):
 
     No asset has a value in custom field 'shinyness'.
     """
-    asset_foo = bf_mod.Asset.objects.get(hostname='foo.com')
+    asset_foo = models.Asset.objects.get(hostname='foo.com')
     asset_foo.delete()
     candidates = auth_client.get('/api/autocomplete/?autocomplete=rath')
     cv_cands = [c for c in candidates.data['results']

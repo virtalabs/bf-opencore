@@ -6,20 +6,20 @@ http://pytest-django.readthedocs.io/en/latest/helpers.html
 
 import json
 import pytest
-import bf_opencore.models as bf_mod
+from bf_opencore import models
 
 # Many functions use Model classes which *do* have an 'objects' member
 
 
 def test_tag_asset_via_model(auth_client):
     """Tagging an asset adds tag info to an asset record."""
-    asset_obj = bf_mod.Asset.objects.create(hostname='foo.com')
+    asset_obj = models.Asset.objects.create(hostname='foo.com')
     asset = auth_client.get('/api/assets/{}/'.format(asset_obj.id)).json()
     assert asset['hostname'] == 'foo.com'
     assert asset['asset_tags'] == []
 
-    tag = bf_mod.Tag.objects.create(name='red', color='red')
-    asset_tag = bf_mod.AssetTag.objects.create(tag=tag, asset=asset_obj)
+    tag = models.Tag.objects.create(name='red', color='red')
+    asset_tag = models.AssetTag.objects.create(tag=tag, asset=asset_obj)
     assert list(asset_obj.tags.all()) == [tag]
     assert list(asset_obj.asset_tags.all()) == [asset_tag]
 
@@ -30,8 +30,8 @@ def test_tag_asset_via_model(auth_client):
 
 def test_tag_asset_via_api(biomed_client):
     """Admin can tag assets through assets/N/tags."""
-    asset_obj = bf_mod.Asset.objects.create(hostname='foo.com')
-    tag = bf_mod.Tag.objects.create(name='red', color='red')
+    asset_obj = models.Asset.objects.create(hostname='foo.com')
+    tag = models.Tag.objects.create(name='red', color='red')
     resp = biomed_client.post('/api/assets/{}/tags/'.format(asset_obj.id),
                               json.dumps({'tag_id': tag.id}),
                               content_type='application/json')
@@ -46,8 +46,8 @@ def test_tag_asset_via_api_failing(biomed_client):
     be fixed, but it seems equally natural to allow adding tags via the
     /api/assets/<N>/tags/ route as in the test function just above.
     """
-    asset_obj = bf_mod.Asset.objects.create(hostname='foo.com')
-    tag = bf_mod.Tag.objects.create(name='red', color='red')
+    asset_obj = models.Asset.objects.create(hostname='foo.com')
+    tag = models.Tag.objects.create(name='red', color='red')
     resp = biomed_client.post('/api/assettags/',
                               json.dumps({'tag_id': tag.id,
                                           'asset_id': asset_obj.id}),
@@ -58,9 +58,9 @@ def test_tag_asset_via_api_failing(biomed_client):
 
 def test_get_assettag_via_api(biomed_client):
     """Admin can tag assets through assets/N/tags."""
-    asset_obj = bf_mod.Asset.objects.create(hostname='foo.com')
-    tag = bf_mod.Tag.objects.create(name='red', color='red')
-    dummy_asset_tag = bf_mod.AssetTag.objects.create(tag=tag, asset=asset_obj)
+    asset_obj = models.Asset.objects.create(hostname='foo.com')
+    tag = models.Tag.objects.create(name='red', color='red')
+    dummy_asset_tag = models.AssetTag.objects.create(tag=tag, asset=asset_obj)
     resp = biomed_client.get('/api/assettags/')
     asset_tags = resp.json()['results']
     assert len(asset_tags) == 1
@@ -70,9 +70,9 @@ def test_get_assettag_via_api(biomed_client):
 
 def test_untag_asset_via_api(biomed_client):
     """Biomed can untag assets."""
-    asset_obj = bf_mod.Asset.objects.create(hostname='foo.com')
-    tag = bf_mod.Tag.objects.create(name='red', color='red')
-    asset_tag = bf_mod.AssetTag.objects.create(tag=tag, asset=asset_obj)
+    asset_obj = models.Asset.objects.create(hostname='foo.com')
+    tag = models.Tag.objects.create(name='red', color='red')
+    asset_tag = models.AssetTag.objects.create(tag=tag, asset=asset_obj)
     resp = biomed_client.delete('/api/assettags/{}/'.format(asset_tag.id))
     assert resp.status_code == 204  # no content
     assert list(asset_obj.tags.all()) == []
@@ -120,8 +120,8 @@ def test_create_many_tags(num_tags, auth_client, biomed_client):
 
 def test_tag_asset_via_api_reg_user(auth_client):
     """Non-admin, non-biomed client cannot tag assets."""
-    asset_obj = bf_mod.Asset.objects.create(hostname='foo.com')
-    tag = bf_mod.Tag.objects.create(name='red', color='red')
+    asset_obj = models.Asset.objects.create(hostname='foo.com')
+    tag = models.Tag.objects.create(name='red', color='red')
     resp = auth_client.post('/api/assets/{}/tags/'.format(asset_obj.id),
                             json.dumps({'tag_id': tag.id}),
                             content_type='application/json')
@@ -130,9 +130,9 @@ def test_tag_asset_via_api_reg_user(auth_client):
 
 def test_untag_asset_via_api_reg_user(auth_client):
     """Non-admin, non-biomed client cannot untag assets."""
-    asset_obj = bf_mod.Asset.objects.create(hostname='foo.com')
-    tag = bf_mod.Tag.objects.create(name='red', color='red')
-    asset_tag = bf_mod.AssetTag.objects.create(tag=tag, asset=asset_obj)
+    asset_obj = models.Asset.objects.create(hostname='foo.com')
+    tag = models.Tag.objects.create(name='red', color='red')
+    asset_tag = models.AssetTag.objects.create(tag=tag, asset=asset_obj)
     resp = auth_client.delete('/api/assettags/{}/'.format(asset_tag.id))
     assert resp.status_code == 403  # forbidden
 
@@ -157,10 +157,10 @@ def test_create_tag_biomed_user(biomed_client):
 
 def test_get_tagged_asset_obsolete(auth_client):
     """Test a route that's now obsolete."""
-    asset_obj = bf_mod.Asset.objects.create(hostname='foo.com')
-    dummy_asset_obj = bf_mod.Asset.objects.create(hostname='spam.com')
-    tag = bf_mod.Tag.objects.create(name='red', color='red')
-    bf_mod.AssetTag.objects.create(tag=tag, asset=asset_obj)
+    asset_obj = models.Asset.objects.create(hostname='foo.com')
+    dummy_asset_obj = models.Asset.objects.create(hostname='spam.com')
+    tag = models.Tag.objects.create(name='red', color='red')
+    models.AssetTag.objects.create(tag=tag, asset=asset_obj)
     response = auth_client.get('/api/tags/{}/assets/'.format(tag.id))
     assert response.status_code == 405
     assert response.status_text == "Method Not Allowed"
@@ -168,10 +168,10 @@ def test_get_tagged_asset_obsolete(auth_client):
 
 def test_get_tagged_asset_new(auth_client):
     """Test new API route."""
-    asset_obj = bf_mod.Asset.objects.create(hostname='foo.com')
-    dummy_asset_obj = bf_mod.Asset.objects.create(hostname='spam.com')
-    tag = bf_mod.Tag.objects.create(name='red', color='red')
-    bf_mod.AssetTag.objects.create(tag=tag, asset=asset_obj)
+    asset_obj = models.Asset.objects.create(hostname='foo.com')
+    dummy_asset_obj = models.Asset.objects.create(hostname='spam.com')
+    tag = models.Tag.objects.create(name='red', color='red')
+    models.AssetTag.objects.create(tag=tag, asset=asset_obj)
     response = auth_client.get('/api/assets/?tag={}'.format(tag.id))
     assets = response.data['results']
     assert len(assets) == 1  # This fails; 2 assets are returned.

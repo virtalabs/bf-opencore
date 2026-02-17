@@ -6,20 +6,20 @@ http://pytest-django.readthedocs.io/en/latest/helpers.html
 
 # import pytest
 from django.utils import timezone
-import bf_opencore.models as bf_mod
+from bf_opencore import models
 
 
 # Many functions use Model classes which *do* have an 'objects' member
 
 def test_get_vulnerable_asset_obsolete(auth_client):
     """Test a route that's now obsolete."""
-    asset_obj = bf_mod.Asset.objects.create(hostname='foo.com')
-    dummy_asset_obj = bf_mod.Asset.objects.create(hostname='spam.com')
+    asset_obj = models.Asset.objects.create(hostname='foo.com')
+    dummy_asset_obj = models.Asset.objects.create(hostname='spam.com')
     # The dummy_vulnerability is here only to artificially increment the
     # pk/id in order to verify proper behaviour.
-    dummy_vulnerability = bf_mod.Vulnerability.objects.create(name='dummy')
-    vulnerability = bf_mod.Vulnerability.objects.create(name='red')
-    bf_mod.AssetVulnerability.objects.create(vulnerability=vulnerability,
+    dummy_vulnerability = models.Vulnerability.objects.create(name='dummy')
+    vulnerability = models.Vulnerability.objects.create(name='red')
+    models.AssetVulnerability.objects.create(vulnerability=vulnerability,
                                              asset=asset_obj)
     response = auth_client.get(
         '/api/vulnerabilities/{}/assets/'.format(vulnerability.id))
@@ -28,12 +28,12 @@ def test_get_vulnerable_asset_obsolete(auth_client):
 
 def test_get_vulnerable_asset_new(auth_client):
     """Test route /api/assets/?vulnerability=<id>."""
-    asset_obj = bf_mod.Asset.objects.create(hostname='foo.com')
-    dummy_asset_obj = bf_mod.Asset.objects.create(hostname='spam.com')
+    asset_obj = models.Asset.objects.create(hostname='foo.com')
+    dummy_asset_obj = models.Asset.objects.create(hostname='spam.com')
     # Increment the pk/id in order to verify behaviour commented on above.
-    dummy_vulnerability = bf_mod.Vulnerability.objects.create(name='dummy')
-    vulnerability = bf_mod.Vulnerability.objects.create(name='red')
-    bf_mod.AssetVulnerability.objects.create(vulnerability=vulnerability,
+    dummy_vulnerability = models.Vulnerability.objects.create(name='dummy')
+    vulnerability = models.Vulnerability.objects.create(name='red')
+    models.AssetVulnerability.objects.create(vulnerability=vulnerability,
                                              asset=asset_obj)
     response = auth_client.get(
         '/api/assets/?vulnerability={}'.format(vulnerability.id))
@@ -44,11 +44,11 @@ def test_get_vulnerable_asset_new(auth_client):
 
 def test_get_vulnerable_assets(auth_client):
     """Get more than one vulnerable asset."""
-    asset_1 = bf_mod.Asset.objects.create(hostname='one.foo.com')
-    asset_2 = bf_mod.Asset.objects.create(hostname='two.foo.com')
-    vuln = bf_mod.Vulnerability.objects.create(name='red')
-    bf_mod.AssetVulnerability.objects.create(vulnerability=vuln, asset=asset_1)
-    bf_mod.AssetVulnerability.objects.create(vulnerability=vuln, asset=asset_2)
+    asset_1 = models.Asset.objects.create(hostname='one.foo.com')
+    asset_2 = models.Asset.objects.create(hostname='two.foo.com')
+    vuln = models.Vulnerability.objects.create(name='red')
+    models.AssetVulnerability.objects.create(vulnerability=vuln, asset=asset_1)
+    models.AssetVulnerability.objects.create(vulnerability=vuln, asset=asset_2)
 
     response = auth_client.get('/api/assets/?vulnerability={}'.format(vuln.id))
     assets = response.data['results']
@@ -58,11 +58,11 @@ def test_get_vulnerable_assets(auth_client):
 
 def test_get_vulnerable_assets_ignored(auth_client):
     """Get all assets (also ignored) unless explicitly filtered out."""
-    asset_1 = bf_mod.Asset.objects.create(hostname='one.foo.com')
-    asset_2 = bf_mod.Asset.objects.create(hostname='two.foo.com')
-    vuln = bf_mod.Vulnerability.objects.create(name='red')
-    bf_mod.AssetVulnerability.objects.create(vulnerability=vuln, asset=asset_1)
-    bf_mod.AssetVulnerability.objects.create(vulnerability=vuln, asset=asset_2,
+    asset_1 = models.Asset.objects.create(hostname='one.foo.com')
+    asset_2 = models.Asset.objects.create(hostname='two.foo.com')
+    vuln = models.Vulnerability.objects.create(name='red')
+    models.AssetVulnerability.objects.create(vulnerability=vuln, asset=asset_1)
+    models.AssetVulnerability.objects.create(vulnerability=vuln, asset=asset_2,
                                              date_ignored=timezone.now())
     response = auth_client.get('/api/assets/?vulnerability={}'.format(vuln.id))
     assets = response.data['results']
@@ -72,11 +72,11 @@ def test_get_vulnerable_assets_ignored(auth_client):
 
 def test_get_vulnerable_assets_hide_ignored(auth_client):
     """Don't get ignored assets if filtered out."""
-    asset_1 = bf_mod.Asset.objects.create(hostname='one.foo.com')
-    asset_2 = bf_mod.Asset.objects.create(hostname='two.foo.com')
-    vuln = bf_mod.Vulnerability.objects.create(name='red')
-    bf_mod.AssetVulnerability.objects.create(vulnerability=vuln, asset=asset_1)
-    bf_mod.AssetVulnerability.objects.create(vulnerability=vuln, asset=asset_2,
+    asset_1 = models.Asset.objects.create(hostname='one.foo.com')
+    asset_2 = models.Asset.objects.create(hostname='two.foo.com')
+    vuln = models.Vulnerability.objects.create(name='red')
+    models.AssetVulnerability.objects.create(vulnerability=vuln, asset=asset_1)
+    models.AssetVulnerability.objects.create(vulnerability=vuln, asset=asset_2,
                                              date_ignored=timezone.now())
     response = auth_client.get(
         '/api/assets/'
@@ -90,11 +90,11 @@ def test_get_vulnerable_assets_hide_ignored(auth_client):
 
 def test_get_vulnerable_assets_remediated(auth_client):
     """Get all assets (also remediated) unless explicitly filtered out."""
-    asset_1 = bf_mod.Asset.objects.create(hostname='one.foo.com')
-    asset_2 = bf_mod.Asset.objects.create(hostname='two.foo.com')
-    vuln = bf_mod.Vulnerability.objects.create(name='red')
-    bf_mod.AssetVulnerability.objects.create(vulnerability=vuln, asset=asset_1)
-    bf_mod.AssetVulnerability.objects.create(vulnerability=vuln, asset=asset_2,
+    asset_1 = models.Asset.objects.create(hostname='one.foo.com')
+    asset_2 = models.Asset.objects.create(hostname='two.foo.com')
+    vuln = models.Vulnerability.objects.create(name='red')
+    models.AssetVulnerability.objects.create(vulnerability=vuln, asset=asset_1)
+    models.AssetVulnerability.objects.create(vulnerability=vuln, asset=asset_2,
                                              date_remediated=timezone.now())
     response = auth_client.get('/api/assets/?vulnerability={}'.format(vuln.id))
     assets = response.data['results']
@@ -104,11 +104,11 @@ def test_get_vulnerable_assets_remediated(auth_client):
 
 def test_get_vulnerable_assets_hide_remediated(auth_client):
     """Don't get remediated assets if filtered out."""
-    asset_1 = bf_mod.Asset.objects.create(hostname='one.foo.com')
-    asset_2 = bf_mod.Asset.objects.create(hostname='two.foo.com')
-    vuln = bf_mod.Vulnerability.objects.create(name='red')
-    bf_mod.AssetVulnerability.objects.create(vulnerability=vuln, asset=asset_1)
-    bf_mod.AssetVulnerability.objects.create(vulnerability=vuln, asset=asset_2,
+    asset_1 = models.Asset.objects.create(hostname='one.foo.com')
+    asset_2 = models.Asset.objects.create(hostname='two.foo.com')
+    vuln = models.Vulnerability.objects.create(name='red')
+    models.AssetVulnerability.objects.create(vulnerability=vuln, asset=asset_1)
+    models.AssetVulnerability.objects.create(vulnerability=vuln, asset=asset_2,
                                              date_remediated=timezone.now())
     response = auth_client.get(
         '/api/assets/'

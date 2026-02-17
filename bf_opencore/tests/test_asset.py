@@ -11,10 +11,10 @@ import pytest
 pytest.importorskip("connectors")
 
 from freezegun import freeze_time
-import bf_opencore.models as bf_mod
+from bf_opencore import models
 from connectors.management.commands.create_connectors import create_connectors
 
-# bf_mod models do have 'objects' member, but it's being lazy loaded
+# models do have 'objects' member, but it's being lazy loaded
 
 # These errors are endemic to pytest
 
@@ -29,7 +29,7 @@ def test_get_empty_assets(auth_client):
 
 def test_create_asset(auth_client):
     """Creating an empty asset makes it available via the API."""
-    dummy_asset = bf_mod.Asset.objects.create()
+    dummy_asset = models.Asset.objects.create()
     assets = auth_client.get('/api/assets/')
     assert assets.status_code == 200
     assert assets.data['count'] == 1
@@ -37,7 +37,7 @@ def test_create_asset(auth_client):
 
 def test_get_asset_csv(auth_client):
     """We can specify CSV format."""
-    dummy_asset = bf_mod.Asset.objects.create()
+    dummy_asset = models.Asset.objects.create()
     # import pdb ; pdb.set_trace()
     response = auth_client.get('/api/assets/', HTTP_ACCEPT='text/csv')
     assert response.status_code == 200
@@ -47,7 +47,7 @@ def test_get_asset_csv(auth_client):
 
 def test_get_asset_csv_specify_fields(auth_client):
     """With CSV format we generally would specify which headers we want."""
-    dummy_asset = bf_mod.Asset.objects.create(name='spam',
+    dummy_asset = models.Asset.objects.create(name='spam',
                                               ip_address='10.0.0.1')
     # import pdb ; pdb.set_trace()
     response = auth_client.get('/api/assets/?fields=name,ip_address,model',
@@ -62,7 +62,7 @@ def test_get_asset_csv_specify_fields(auth_client):
 
 def test_export_assets_json(auth_client):
     """We can export assets to JSON."""
-    dummy_asset = bf_mod.Asset.objects.create()
+    dummy_asset = models.Asset.objects.create()
     # import pdb ; pdb.set_trace()
     response = auth_client.get('/api/assets/', HTTP_ACCEPT='application/json')
     assert response.status_code == 200
@@ -313,7 +313,7 @@ def test_unauth_patch_asset(auth_client):
 
     (auth_client is 'authenticated', not 'authorized')
     """
-    dummy_asset = bf_mod.Asset.objects.create()
+    dummy_asset = models.Asset.objects.create()
     response = auth_client.get('/api/assets/')
     assert response.status_code == 200  # 200 = Created
     assert response.json()['count'] == 1
@@ -334,7 +334,7 @@ def test_create_many_assets(auth_client):
     """Creating multiple assets makes them available via the API."""
     asset_names = ['foo', 'bar', 'baz', 'xyzzy', 'spam', 'ham', 'eggs']
     for name in asset_names:
-        _ = bf_mod.Asset.objects.create(name=name)
+        _ = models.Asset.objects.create(name=name)
     assets = auth_client.get('/api/assets/')
     assert assets.data['count'] == len(asset_names)
 
@@ -343,7 +343,7 @@ def test_retrieve_one_asset(auth_client):
     """Creating an asset makes it available via the API."""
     asset_names = ['foo', 'bar', 'baz', 'xyzzy', 'spam', 'ham', 'eggs']
     for hostname in asset_names:
-        _ = bf_mod.Asset.objects.create(hostname=hostname)
+        _ = models.Asset.objects.create(hostname=hostname)
     assets = auth_client.get('/api/assets/?hostname__icontains=xyzzy')
     assert assets.data['count'] == 1
     assert len(assets.data['results']) == 1
@@ -353,7 +353,7 @@ def test_one_asset_details(auth_client):
     """Creating an asset makes its details available via the API."""
     asset_names = ['foo', 'bar', 'baz', 'xyzzy', 'spam', 'ham', 'eggs']
     for hostname in asset_names:
-        _ = bf_mod.Asset.objects.create(hostname=hostname)
+        _ = models.Asset.objects.create(hostname=hostname)
     # Note alternative query syntax
     assets = auth_client.get('/api/assets/', {'hostname__icontains': 'xyzzy'})
     asset = assets.data['results'].pop()
@@ -363,7 +363,7 @@ def test_one_asset_details(auth_client):
 def test_patch_asset(asset_edit_client):
     """Patching an asset field updates the asset in the database."""
     client = asset_edit_client
-    spam_asset = bf_mod.Asset.objects.create(hostname='spam')
+    spam_asset = models.Asset.objects.create(hostname='spam')
     # Verify that hostname is what we set it to
     assert spam_asset.hostname == 'spam'
     # Send PATCH request
@@ -372,7 +372,7 @@ def test_patch_asset(asset_edit_client):
                      content_type='application/json')
     # Query for the new version of spam_asset, verify that its
     # hostname has changed.
-    spam_asset = bf_mod.Asset.objects.get(id=spam_asset.id)
+    spam_asset = models.Asset.objects.get(id=spam_asset.id)
     assert spam_asset.hostname == 'nospam'
 
 
@@ -382,7 +382,7 @@ def test_patch_asset_open_ports_tcp_string(asset_edit_client):
     We try to be helpful, and sort the resulting list & make it unique.
     """
     client = asset_edit_client
-    spam_asset = bf_mod.Asset.objects.create(hostname='spam')
+    spam_asset = models.Asset.objects.create(hostname='spam')
     # Verify that hostname is what we set it to
     assert spam_asset.hostname == 'spam'
     assert spam_asset.open_ports_tcp == []
@@ -396,7 +396,7 @@ def test_patch_asset_open_ports_tcp_string(asset_edit_client):
     assert response.status_code == 200
     # Query for the new version of spam_asset, verify that the list of
     # ports is correct.
-    spam_asset = bf_mod.Asset.objects.get(id=spam_asset.id)
+    spam_asset = models.Asset.objects.get(id=spam_asset.id)
     # But no fear, the stored list of ports is unique and sorted.
     assert spam_asset.open_ports_tcp == [80, 443, 8000]
 
@@ -407,7 +407,7 @@ def test_patch_asset_open_ports_tcp_list(asset_edit_client):
     We try to be helpful, and sort the resulting list & make it unique.
     """
     client = asset_edit_client
-    spam_asset = bf_mod.Asset.objects.create(hostname='spam')
+    spam_asset = models.Asset.objects.create(hostname='spam')
     # Verify that hostname is what we set it to
     assert spam_asset.hostname == 'spam'
     assert spam_asset.open_ports_tcp == []
@@ -420,7 +420,7 @@ def test_patch_asset_open_ports_tcp_list(asset_edit_client):
     assert response.status_code == 200
     # Query for the new version of spam_asset, verify that the list of
     # ports is correct.
-    spam_asset = bf_mod.Asset.objects.get(id=spam_asset.id)
+    spam_asset = models.Asset.objects.get(id=spam_asset.id)
     # But no fear, the stored list of ports is unique and sorted.
     assert spam_asset.open_ports_tcp == [80, 443, 8000]
 
@@ -431,7 +431,7 @@ def test_patch_asset_open_ports_tcp_list_bad(asset_edit_client):
     We try to be helpful, and sort the resulting list & make it unique.
     """
     client = asset_edit_client
-    spam_asset = bf_mod.Asset.objects.create(hostname='spam')
+    spam_asset = models.Asset.objects.create(hostname='spam')
     # Verify that hostname is what we set it to
     assert spam_asset.hostname == 'spam'
     assert spam_asset.open_ports_tcp == []
@@ -447,7 +447,7 @@ def test_patch_asset_open_ports_tcp_list_bad(asset_edit_client):
 def test_patch_asset_open_ports_tcp_bad(asset_edit_client):
     """Patching ports with a string of integers... but they are bad."""
     client = asset_edit_client
-    spam_asset = bf_mod.Asset.objects.create(hostname='spam')
+    spam_asset = models.Asset.objects.create(hostname='spam')
     # Verify that hostname is what we set it to
     assert spam_asset.hostname == 'spam'
     assert spam_asset.open_ports_tcp == []
@@ -459,7 +459,7 @@ def test_patch_asset_open_ports_tcp_bad(asset_edit_client):
     assert response.status_code == 400
     # Query for the new version of spam_asset, verify that the list of
     # ports is correct.
-    spam_asset = bf_mod.Asset.objects.get(id=spam_asset.id)
+    spam_asset = models.Asset.objects.get(id=spam_asset.id)
     # Port list is unchanged
     assert spam_asset.open_ports_tcp == []
 
@@ -470,7 +470,7 @@ def test_patch_asset_open_ports_tcp_null(asset_edit_client):
     We try to be helpful, and sort the resulting list & make it unique.
     """
     client = asset_edit_client
-    spam_asset = bf_mod.Asset.objects.create(hostname='spam',
+    spam_asset = models.Asset.objects.create(hostname='spam',
                                              open_ports_tcp=[80, 443])
     # Verify that hostname is what we set it to
     assert spam_asset.open_ports_tcp == [80, 443]
@@ -483,7 +483,7 @@ def test_patch_asset_open_ports_tcp_null(asset_edit_client):
     assert response.status_code == 200
     # Query for the new version of spam_asset, verify that the list of
     # ports is correct.
-    spam_asset = bf_mod.Asset.objects.get(id=spam_asset.id)
+    spam_asset = models.Asset.objects.get(id=spam_asset.id)
     # Port list is empty
     assert spam_asset.open_ports_tcp == []
 
@@ -494,7 +494,7 @@ def test_patch_asset_open_ports_tcp_empty(asset_edit_client):
     We try to be helpful, and sort the resulting list & make it unique.
     """
     client = asset_edit_client
-    spam_asset = bf_mod.Asset.objects.create(hostname='spam',
+    spam_asset = models.Asset.objects.create(hostname='spam',
                                              open_ports_tcp=[80, 443])
     # Verify that hostname is what we set it to
     assert spam_asset.open_ports_tcp == [80, 443]
@@ -507,7 +507,7 @@ def test_patch_asset_open_ports_tcp_empty(asset_edit_client):
     assert response.status_code == 200
     # Query for the new version of spam_asset, verify that the list of
     # ports is correct.
-    spam_asset = bf_mod.Asset.objects.get(id=spam_asset.id)
+    spam_asset = models.Asset.objects.get(id=spam_asset.id)
     # Port list is empty
     assert spam_asset.open_ports_tcp == []
 
@@ -515,7 +515,7 @@ def test_patch_asset_open_ports_tcp_empty(asset_edit_client):
 def test_set_name_empty(asset_edit_client):
     """PATCHing a hostname to an empty string works."""
     client = asset_edit_client
-    spam_asset = bf_mod.Asset.objects.create(hostname='spam')
+    spam_asset = models.Asset.objects.create(hostname='spam')
     # Verify that hostname is what we set it to
     assert spam_asset.hostname == 'spam'
     # Send PATCH request
@@ -524,14 +524,14 @@ def test_set_name_empty(asset_edit_client):
                      content_type='application/json')
     # Query for the new version of spam_asset, verify that its
     # hostname has changed.
-    spam_asset = bf_mod.Asset.objects.get(id=spam_asset.id)
+    spam_asset = models.Asset.objects.get(id=spam_asset.id)
     assert spam_asset.hostname == ''
 
 
 def test_set_name_null(asset_edit_client):
     """PATCHing a hostname to `null` works."""
     client = asset_edit_client
-    spam_asset = bf_mod.Asset.objects.create(hostname='spam')
+    spam_asset = models.Asset.objects.create(hostname='spam')
     # Verify that hostname is what we set it to
     assert spam_asset.hostname == 'spam'
     # Send PATCH request
@@ -541,18 +541,18 @@ def test_set_name_null(asset_edit_client):
     assert response.status_code == 200
     # Query for the new version of spam_asset, verify that its
     # hostname has changed.
-    spam_asset = bf_mod.Asset.objects.get(id=spam_asset.id)
+    spam_asset = models.Asset.objects.get(id=spam_asset.id)
     assert spam_asset.hostname is None
 
 
 def test_field_histogram(auth_client):
     """Field histogram works with one field."""
-    bf_mod.Asset.objects.create(manufacturer='Bar')
-    bf_mod.Asset.objects.create(manufacturer='Quux')
-    bf_mod.Asset.objects.create(manufacturer='Foo')
-    bf_mod.Asset.objects.create(manufacturer='Foo')
-    bf_mod.Asset.objects.create(manufacturer='Bar')
-    bf_mod.Asset.objects.create(manufacturer='Foo')
+    models.Asset.objects.create(manufacturer='Bar')
+    models.Asset.objects.create(manufacturer='Quux')
+    models.Asset.objects.create(manufacturer='Foo')
+    models.Asset.objects.create(manufacturer='Foo')
+    models.Asset.objects.create(manufacturer='Bar')
+    models.Asset.objects.create(manufacturer='Foo')
 
     response = auth_client.get('/api/assets/histogram/',
                                {'field': 'manufacturer'})
@@ -582,12 +582,12 @@ def test_api_duplicate_ips(auth_client):
     assert response.status_code == 200
     assert response.json() == []
 
-    bf_mod.Asset.objects.create(ip_address='1.2.3.4')
-    bf_mod.Asset.objects.create(ip_address='1.2.3.4')
-    bf_mod.Asset.objects.create(ip_address='1.2.3.4')
-    bf_mod.Asset.objects.create(ip_address='1.2.3.5')
-    bf_mod.Asset.objects.create(ip_address='1.2.3.5')
-    bf_mod.Asset.objects.create(manufacturer='Foo', ip_address=None)
+    models.Asset.objects.create(ip_address='1.2.3.4')
+    models.Asset.objects.create(ip_address='1.2.3.4')
+    models.Asset.objects.create(ip_address='1.2.3.4')
+    models.Asset.objects.create(ip_address='1.2.3.5')
+    models.Asset.objects.create(ip_address='1.2.3.5')
+    models.Asset.objects.create(manufacturer='Foo', ip_address=None)
     response = auth_client.get('/api/assets/duplicate_ips/')
     assert response.status_code == 200
     assert response.json() == [
@@ -602,12 +602,12 @@ def test_api_duplicate_ips_one(auth_client):
     assert response.status_code == 200
     assert response.json() == []
 
-    bf_mod.Asset.objects.create(ip_address='1.2.3.4')
-    bf_mod.Asset.objects.create(ip_address='1.2.3.4')
-    bf_mod.Asset.objects.create(ip_address='1.2.3.4')
-    bf_mod.Asset.objects.create(ip_address='1.2.3.5')
-    bf_mod.Asset.objects.create(ip_address='1.2.3.5')
-    bf_mod.Asset.objects.create(manufacturer='Foo', ip_address=None)
+    models.Asset.objects.create(ip_address='1.2.3.4')
+    models.Asset.objects.create(ip_address='1.2.3.4')
+    models.Asset.objects.create(ip_address='1.2.3.4')
+    models.Asset.objects.create(ip_address='1.2.3.5')
+    models.Asset.objects.create(ip_address='1.2.3.5')
+    models.Asset.objects.create(manufacturer='Foo', ip_address=None)
     response = auth_client.get('/api/assets/duplicate_ips/?ip_address=1.2.3.4')
     assert response.status_code == 200
     assert response.json() == [
@@ -624,12 +624,12 @@ def test_api_duplicate_ips_one_spell_exact(auth_client):
     assert response.status_code == 200
     assert response.json() == []
 
-    bf_mod.Asset.objects.create(ip_address='1.2.3.4')
-    bf_mod.Asset.objects.create(ip_address='1.2.3.4')
-    bf_mod.Asset.objects.create(ip_address='1.2.3.4')
-    bf_mod.Asset.objects.create(ip_address='1.2.3.5')
-    bf_mod.Asset.objects.create(ip_address='1.2.3.5')
-    bf_mod.Asset.objects.create(manufacturer='Foo', ip_address=None)
+    models.Asset.objects.create(ip_address='1.2.3.4')
+    models.Asset.objects.create(ip_address='1.2.3.4')
+    models.Asset.objects.create(ip_address='1.2.3.4')
+    models.Asset.objects.create(ip_address='1.2.3.5')
+    models.Asset.objects.create(ip_address='1.2.3.5')
+    models.Asset.objects.create(manufacturer='Foo', ip_address=None)
     response = auth_client.get(
         '/api/assets/duplicate_ips/?ip_address__exact=1.2.3.4')
     assert response.status_code == 200
@@ -644,14 +644,14 @@ def test_api_duplicate_ips_one_prefix_robust(auth_client):
     assert response.status_code == 200
     assert response.json() == []
 
-    bf_mod.Asset.objects.create(ip_address='1.2.3.4')
-    bf_mod.Asset.objects.create(ip_address='1.2.3.4')
-    bf_mod.Asset.objects.create(ip_address='1.2.3.4')
-    bf_mod.Asset.objects.create(ip_address='1.2.3.45')
-    bf_mod.Asset.objects.create(ip_address='1.2.3.45')
-    bf_mod.Asset.objects.create(ip_address='1.2.3.5')
-    bf_mod.Asset.objects.create(ip_address='1.2.3.5')
-    bf_mod.Asset.objects.create(manufacturer='Foo', ip_address=None)
+    models.Asset.objects.create(ip_address='1.2.3.4')
+    models.Asset.objects.create(ip_address='1.2.3.4')
+    models.Asset.objects.create(ip_address='1.2.3.4')
+    models.Asset.objects.create(ip_address='1.2.3.45')
+    models.Asset.objects.create(ip_address='1.2.3.45')
+    models.Asset.objects.create(ip_address='1.2.3.5')
+    models.Asset.objects.create(ip_address='1.2.3.5')
+    models.Asset.objects.create(manufacturer='Foo', ip_address=None)
     response = auth_client.get('/api/assets/duplicate_ips/?ip_address=1.2.3.4')
     assert response.status_code == 200
     assert response.json() == [
@@ -661,9 +661,9 @@ def test_api_duplicate_ips_one_prefix_robust(auth_client):
 
 def test_fetch_by_os(auth_client):
     """Assets can be fetched by OS field."""
-    a1 = bf_mod.Asset.objects.create(os='Windows XP')
-    a2 = bf_mod.Asset.objects.create(os='WinXP')
-    a3 = bf_mod.Asset.objects.create(os='XP')
+    a1 = models.Asset.objects.create(os='Windows XP')
+    a2 = models.Asset.objects.create(os='WinXP')
+    a3 = models.Asset.objects.create(os='XP')
 
     response = auth_client.get('/api/assets/?os__iexact=XP')
     assert response.status_code == 200
@@ -688,11 +688,11 @@ def test_fetch_by_os(auth_client):
 
 def test_app_sw_version_needs_update(auth_client):
     """Test whether assets need software updates."""
-    oldest = bf_mod.Asset.objects.create(manufacturer='Foo', model='Bar',
+    oldest = models.Asset.objects.create(manufacturer='Foo', model='Bar',
                                          app_sw_version='1.2.3')
-    newer = bf_mod.Asset.objects.create(manufacturer='Foo', model='Bar',
+    newer = models.Asset.objects.create(manufacturer='Foo', model='Bar',
                                         app_sw_version='1.2.4')
-    newest = bf_mod.Asset.objects.create(manufacturer='Foo', model='Bar',
+    newest = models.Asset.objects.create(manufacturer='Foo', model='Bar',
                                          app_sw_version='1.2.5')
 
     response = auth_client.get('/api/assets/{}/needs_sw_update/'.format(
@@ -716,13 +716,13 @@ def test_app_sw_version_needs_update(auth_client):
 
 def test_nonsense_app_sw_version_needs_update(auth_client):
     """Test whether a silly asset needs an update."""
-    a = bf_mod.Asset.objects.create(manufacturer='Foo', model='Bar',
+    a = models.Asset.objects.create(manufacturer='Foo', model='Bar',
                                     app_sw_version='Henrik Holm')
     resp = auth_client.get('/api/assets/{}/needs_sw_update/'.format(a.id))
     assert resp.json()['needs_update'] is False
 
     # create another asset; how does it sort? parsable > legacy...
-    bf_mod.Asset.objects.create(manufacturer='Foo', model='Bar',
+    models.Asset.objects.create(manufacturer='Foo', model='Bar',
                                 app_sw_version='3.54.5')
     resp = auth_client.get('/api/assets/{}/needs_sw_update/'.format(a.id))
     assert resp.json()['needs_update'] is True
@@ -730,9 +730,9 @@ def test_nonsense_app_sw_version_needs_update(auth_client):
 
 def test_app_sw_version_not_needs_update(auth_client):
     """Test whether two equal assets need updates."""
-    a1 = bf_mod.Asset.objects.create(manufacturer='Foo', model='Bar',
+    a1 = models.Asset.objects.create(manufacturer='Foo', model='Bar',
                                      app_sw_version='1.2.3')
-    a2 = bf_mod.Asset.objects.create(manufacturer='Foo', model='Bar',
+    a2 = models.Asset.objects.create(manufacturer='Foo', model='Bar',
                                      app_sw_version='1.2.3')
 
     response1 = auth_client.get('/api/assets/{}/needs_sw_update/'.format(
@@ -748,7 +748,7 @@ def test_app_sw_version_not_needs_update(auth_client):
 
 def test_app_sw_no_version_needs_update(auth_client):
     """Test whether assets without software versions need updates."""
-    asset = bf_mod.Asset.objects.create(manufacturer='Foo', model='Bar')
+    asset = models.Asset.objects.create(manufacturer='Foo', model='Bar')
     response = auth_client.get('/api/assets/{}/needs_sw_update/'.format(
         asset.id))
     assert response.status_code == 200
@@ -801,15 +801,15 @@ def test_upsert_create(asset_edit_client):
     assert response.status_code == 201  # Created
     assert response.data["mac_address"] == macaddr
     assert response.data["nic_vendor"] == "Hospira Inc."
-    assert bf_mod.Asset.objects.count() == 1
-    asset = bf_mod.Asset.objects.get()
+    assert models.Asset.objects.count() == 1
+    asset = models.Asset.objects.get()
     assert asset.mac_address == macaddr
 
 
 def test_upsert_update(asset_edit_client):
     """Update an existing asset via upsert endpoint."""
     # Create existing asset in database
-    bf_mod.Asset.objects.create(mac_address="11:22:33:44:55:66")
+    models.Asset.objects.create(mac_address="11:22:33:44:55:66")
     response = asset_edit_client.post(
         "/api/assets/upsert/",
         json.dumps({
@@ -821,8 +821,8 @@ def test_upsert_update(asset_edit_client):
     assert response.status_code == 200  # OK
     assert response.data["mac_address"] == "11:22:33:44:55:66"
     assert response.data["ip_address"] == "10.0.0.1"
-    assert bf_mod.Asset.objects.count() == 1
-    asset = bf_mod.Asset.objects.get()
+    assert models.Asset.objects.count() == 1
+    asset = models.Asset.objects.get()
     assert asset.mac_address == "11:22:33:44:55:66"
     assert str(asset.ip_address) == "10.0.0.1"
 
@@ -837,7 +837,7 @@ def test_upsert_no_mac_address(asset_edit_client):
         content_type="application/json",
     )
     assert response.status_code == 412  # Precondition failed
-    assert bf_mod.Asset.objects.count() == 0
+    assert models.Asset.objects.count() == 0
 
 
 def test_upsert_no_mac_address_duplicate(asset_edit_client):
@@ -863,7 +863,7 @@ def test_upsert_no_mac_address_duplicate(asset_edit_client):
         content_type="application/json",
     )
     assert response.status_code == 412  # Precondition failed
-    assert bf_mod.Asset.objects.count() == 1
+    assert models.Asset.objects.count() == 1
 
 
 def test_upsert_ipv6(asset_edit_client):
@@ -881,7 +881,7 @@ def test_upsert_ipv6(asset_edit_client):
         content_type="application/json",
     )
     assert response.status_code == 201  # Created
-    assert bf_mod.Asset.objects.count() == 1
+    assert models.Asset.objects.count() == 1
 
 
 def test_upsert_many_fields(asset_edit_client):
@@ -902,7 +902,7 @@ def test_upsert_many_fields(asset_edit_client):
         content_type="application/json",
     )
     assert response.status_code == 201  # Created
-    assert bf_mod.Asset.objects.count() == 1
+    assert models.Asset.objects.count() == 1
 
 
 def test_upsert_ipv4(asset_edit_client):
@@ -921,7 +921,7 @@ def test_upsert_ipv4(asset_edit_client):
     )
     assert response.status_code == 201  # Created
     assert response.data["ip_address"] == "10.0.0.1"
-    asset = bf_mod.Asset.objects.get()
+    asset = models.Asset.objects.get()
     assert str(asset.ip_address) == "10.0.0.1"
 
 
@@ -954,7 +954,7 @@ def test_upsert_open_port_tcp(asset_edit_client):
     )
     assert response.status_code == 201  # Created
     assert response.data["open_ports_tcp"] == [80]
-    asset = bf_mod.Asset.objects.get()
+    asset = models.Asset.objects.get()
     assert asset.open_ports_tcp == [80]
 
 
@@ -973,7 +973,7 @@ def test_upsert_identifier(asset_edit_client):
     )
     assert response.status_code == 201  # Created
     assert response.data["name"] == "Alaris 8100"
-    asset = bf_mod.Asset.objects.get()
+    asset = models.Asset.objects.get()
     assert asset.name == "Alaris 8100"
 
 
@@ -1004,18 +1004,18 @@ def test_asset_date_range(date_range, num_assets, auth_client):
     2018-06-30 is a Saturday
     """
     with freeze_time('2018-06-30 12:00:00', tz_offset=0):
-        bf_mod.Asset.objects.create(name='today')
+        models.Asset.objects.create(name='today')
     with freeze_time('2018-06-29 12:00:00', tz_offset=0):
-        bf_mod.Asset.objects.create(name='yesterday_1')
-        bf_mod.Asset.objects.create(name='yesterday_2')
+        models.Asset.objects.create(name='yesterday_1')
+        models.Asset.objects.create(name='yesterday_2')
     with freeze_time('2018-06-24 12:00:00', tz_offset=0):
-        bf_mod.Asset.objects.create(name='this_week')
+        models.Asset.objects.create(name='this_week')
     with freeze_time('2018-06-23 10:00:00', tz_offset=0):
-        bf_mod.Asset.objects.create(name='last_week')
+        models.Asset.objects.create(name='last_week')
     with freeze_time('2018-06-14 12:00:00', tz_offset=0):
-        bf_mod.Asset.objects.create(name='this_month')
+        models.Asset.objects.create(name='this_month')
     with freeze_time('2018-05-14 12:00:00', tz_offset=0):
-        bf_mod.Asset.objects.create(name='this_year')
+        models.Asset.objects.create(name='this_year')
 
     res = auth_client.get('/api/assets/')
     assert res.status_code == 200
@@ -1029,7 +1029,7 @@ def test_asset_date_range(date_range, num_assets, auth_client):
 def test_external_key_connector(db, auth_client):
     """Test that external_links/ detail route renders connector URLs."""
     create_connectors()
-    foobar = bf_mod.Asset.objects.create(name='Foobar')
+    foobar = models.Asset.objects.create(name='Foobar')
     foobar.external_keys = {'tms': '12345'}
     foobar.save()
     assert foobar.external_keys['tms'] == '12345'
@@ -1044,7 +1044,7 @@ def test_external_key_connector(db, auth_client):
 def test_external_key_non_connector(db, auth_client):
     """Test that external_links/ detail route doesn't barf on non-connector
        external key."""
-    foobar = bf_mod.Asset.objects.create(name='Foobar')
+    foobar = models.Asset.objects.create(name='Foobar')
     foobar.external_keys = {'ECN': '12345'}
     foobar.save()
     assert foobar.external_keys['ECN'] == '12345'

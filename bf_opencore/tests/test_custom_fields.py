@@ -7,15 +7,15 @@ http://pytest-django.readthedocs.io/en/latest/helpers.html
 import json
 import pytest
 from django.db import IntegrityError
-import bf_opencore.models as bf_mod
+from bf_opencore import models
 from .test_custom_field_names import cleandb, cfield
 
 def test_custom_field_api(cleandb, auth_client):
     """Test get custom fields."""
-    asset_obj = bf_mod.Asset.objects.create(hostname='foo.com')
-    custom_field_name = bf_mod.AssetCustomFieldName.objects.create(
+    asset_obj = models.Asset.objects.create(hostname='foo.com')
+    custom_field_name = models.AssetCustomFieldName.objects.create(
         field_name='red')
-    _ = bf_mod.AssetCustomField.objects.create(field=custom_field_name,
+    _ = models.AssetCustomField.objects.create(field=custom_field_name,
                                                asset=asset_obj,
                                                value_text='foovalue')
     asset_custom_field = auth_client.get('/api/assetcustomfields/').json()
@@ -27,16 +27,16 @@ def test_custom_field_api(cleandb, auth_client):
 
 def test_custom_field_via_model(cleandb, auth_client):
     """Test get Custom fields associated with one asset."""
-    asset_obj = bf_mod.Asset.objects.create(hostname='foo.com')
+    asset_obj = models.Asset.objects.create(hostname='foo.com')
     assert hasattr(asset_obj, 'custom_fields')        # The list of field names
     assert hasattr(asset_obj, 'asset_custom_fields')  # The list of fields
     asset = auth_client.get('/api/assets/{}/'.format(asset_obj.id)).json()
     assert asset['hostname'] == 'foo.com'
     assert asset['asset_custom_fields'] == []  # This fails (no such field)
 
-    custom_field_name = bf_mod.AssetCustomFieldName.objects.create(
+    custom_field_name = models.AssetCustomFieldName.objects.create(
         field_name='red')
-    asset_custom_field = bf_mod.AssetCustomField.objects.create(
+    asset_custom_field = models.AssetCustomField.objects.create(
         field=custom_field_name, asset=asset_obj)
     assert list(asset_obj.asset_custom_fields.all()) == [asset_custom_field]
 
@@ -55,8 +55,8 @@ def test_api_add_custom_field_via_asset(cleandb, auth_client, admin_client):
 
     Not implemented (and probably won't be).
     """
-    asset_id = bf_mod.Asset.objects.create(hostname='foo.com').id
-    custom_fn_id = bf_mod.AssetCustomFieldName.objects.create(
+    asset_id = models.Asset.objects.create(hostname='foo.com').id
+    custom_fn_id = models.AssetCustomFieldName.objects.create(
         field_name='sparkliness').id
     kwargs = {'data': json.dumps({'field_id': custom_fn_id,
                                   'value_text': 'very sparkly'}),
@@ -75,8 +75,8 @@ def test_api_add_custom_field_via_asset(cleandb, auth_client, admin_client):
 
 def test_api_add_custom_field(cleandb, auth_client, admin_client):
     """Add custom fields via API."""
-    asset_id = bf_mod.Asset.objects.create(hostname='foo.com').id
-    custom_fn_id = bf_mod.AssetCustomFieldName.objects.create(
+    asset_id = models.Asset.objects.create(hostname='foo.com').id
+    custom_fn_id = models.AssetCustomFieldName.objects.create(
         field_name='sparkliness').id
     kwargs = {'data': json.dumps({'field_id': custom_fn_id,
                                   'asset_id': asset_id,
@@ -95,8 +95,8 @@ def test_api_add_custom_field(cleandb, auth_client, admin_client):
 
 def test_api_change_custom_field(cleandb, auth_client, admin_client):
     """Add custom fields via API."""
-    asset_id = bf_mod.Asset.objects.create(hostname='foo.com').id
-    custom_fn_id = bf_mod.AssetCustomFieldName.objects.create(
+    asset_id = models.Asset.objects.create(hostname='foo.com').id
+    custom_fn_id = models.AssetCustomFieldName.objects.create(
         field_name='sparkliness').id
     kwargs = {'data': json.dumps({'field_id': custom_fn_id,
                                   'asset_id': asset_id,
@@ -122,8 +122,8 @@ def test_api_change_custom_field(cleandb, auth_client, admin_client):
 
 def test_api_delete_custom_field(cleandb, auth_client, admin_client):
     """Add custom fields via API."""
-    asset_id = bf_mod.Asset.objects.create(hostname='foo.com').id
-    custom_fn_id = bf_mod.AssetCustomFieldName.objects.create(
+    asset_id = models.Asset.objects.create(hostname='foo.com').id
+    custom_fn_id = models.AssetCustomFieldName.objects.create(
         field_name='sparkliness').id
     kwargs = {'data': json.dumps({'field_id': custom_fn_id,
                                   'asset_id': asset_id,
@@ -148,7 +148,7 @@ def test_api_delete_custom_field(cleandb, auth_client, admin_client):
 
 def test_api_asset_custom_field(cleandb, auth_client, admin_client):
     """View custom fields arriving with the asset."""
-    asset_id = bf_mod.Asset.objects.create(hostname='foo.com').id
+    asset_id = models.Asset.objects.create(hostname='foo.com').id
     kwargs = {'data': json.dumps({'field_name': 'sparkliness'}),
               'content_type': 'application/json'}
     res = admin_client.post('/api/assetcustomfieldnames/', **kwargs)

@@ -6,7 +6,7 @@ import os
 import urllib
 import pytest
 from django.conf import settings as django_settings
-import bf_opencore.models as bf_mod
+from bf_opencore import models
 from .utils import AttrDict
 
 
@@ -78,7 +78,7 @@ def test_upload_file_with_model(asset_edit_client):
 
 def test_upload_file_with_asset(asset_edit_client):
     """Upload that's associated with an asset."""
-    asset = bf_mod.Asset.objects.create()
+    asset = models.Asset.objects.create()
     body = {
         'file': io.BytesIO(b'bar'),
         'asset_id': asset.id,

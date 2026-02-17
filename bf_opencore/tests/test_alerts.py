@@ -8,7 +8,7 @@ from datetime import timedelta
 from django.utils import timezone
 from bf_opencore.models import Alert
 
-# bf_mod models do have 'objects' member, but it's being lazy loaded
+# models do have 'objects' member, but it's being lazy loaded
 
 
 def test_simple(auth_client):

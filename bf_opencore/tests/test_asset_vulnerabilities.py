@@ -1,7 +1,7 @@
 """Test asset vulnerability query strings."""
 
 import json
-import bf_opencore.models as bf_mod
+from bf_opencore import models
 
 from .test_asset_relations import asset_vulnerabilities
 
@@ -35,7 +35,7 @@ def test_get_asset_vulnerabilities_model(auth_client, asset_vulnerabilities):
     (asset, vulnerability_red, vulnerability_green) = asset_vulnerabilities
     asset.model = 'best-model'
     asset.save()
-    a = bf_mod.Asset.objects.get(id=asset.id)
+    a = models.Asset.objects.get(id=asset.id)
     assert a.model == asset.model
     assert a.model == 'best-model'
     response = auth_client.get(
@@ -54,7 +54,7 @@ def test_delete_asset_vulnerability(asset_edit_client, asset_vulnerabilities):
     AKA delete an assetvulnerability.
     """
     (asset, vulnerability_red, vulnerability_green) = asset_vulnerabilities
-    av = bf_mod.AssetVulnerability.objects.get(
+    av = models.AssetVulnerability.objects.get(
         asset=asset, vulnerability=vulnerability_red)
     response = asset_edit_client.delete(
         '/api/assetvulnerabilities/{}/'.format(av.id))
@@ -67,7 +67,7 @@ def test_update_asset_vulnerability(asset_edit_client, asset_vulnerabilities):
     AKA update/patch an assetvulnerability.
     """
     (asset, vulnerability_red, vulnerability_green) = asset_vulnerabilities
-    av = bf_mod.AssetVulnerability.objects.get(
+    av = models.AssetVulnerability.objects.get(
         asset=asset, vulnerability=vulnerability_red)
     assert av.date_remediated is None
     assert av.date_ignored is None
@@ -76,6 +76,6 @@ def test_update_asset_vulnerability(asset_edit_client, asset_vulnerabilities):
         json.dumps({'ignore': 'true'}),
         content_type='application/json')
     assert response.status_code == 200  # deleted
-    av = bf_mod.AssetVulnerability.objects.get(
+    av = models.AssetVulnerability.objects.get(
         asset=asset, vulnerability=vulnerability_red)
     assert av.date_ignored is not None
