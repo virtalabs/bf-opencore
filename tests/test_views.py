@@ -2,15 +2,7 @@
 
 """Tests for bf_opencore views/API (mirrors bf_opencore/views)."""
 
-import os
 
-import pytest
-
-
-@pytest.mark.skipif(
-    not os.environ.get("DATABASE_URL"),
-    reason="Requires PostgreSQL (set DATABASE_URL); migrations use Postgres-only types",
-)
 def test_api_assets_empty(auth_client):
     """Asset list is empty by default."""
     response = auth_client.get("/assets/")
