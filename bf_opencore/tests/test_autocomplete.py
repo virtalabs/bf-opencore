@@ -5,7 +5,6 @@
 
 import pytest
 from bf_opencore import models
-from .test_custom_field_names import cleandb, cfield
 
 
 def test_autocomplete_no_error(auth_client):

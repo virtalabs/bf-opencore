@@ -8,7 +8,7 @@ import json
 import pytest
 from django.db import IntegrityError
 from bf_opencore import models
-from .test_custom_field_names import cleandb, cfield
+
 
 def test_custom_field_api(cleandb, auth_client):
     """Test get custom fields."""
