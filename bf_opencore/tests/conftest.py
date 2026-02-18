@@ -48,6 +48,17 @@ def pulse_feed_auth_client(auth_client):
 
 
 @pytest.fixture
+def media_root(tmp_path):
+    """Use tmp_path for MEDIA_ROOT so attachment tests don't touch real filesystem."""
+    from django.test import override_settings
+
+    media = tmp_path / "media"
+    media.mkdir()
+    with override_settings(MEDIA_ROOT=str(media)):
+        yield media
+
+
+@pytest.fixture
 def cleandb(db):
     """Remove custom fields added by migrations.
 

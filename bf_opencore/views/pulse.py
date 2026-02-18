@@ -67,6 +67,10 @@ class PulseFeedItemViewSet(WaffleSwitchMixin, PaginateRelationsMixin, viewsets.M
     serializer_class = PulseFeedItemSerializer
     filterset_class = PulseFeedItemFilter
 
+    def destroy(self, request, *args, **kwargs):
+        from rest_framework.exceptions import PermissionDenied
+        raise PermissionDenied("Deleting pulse feed items is not allowed.")
+
     @action(detail=False)
     def closed_by_quarter(self, request):
         """Return a list of `closed` feed items for past quarters.

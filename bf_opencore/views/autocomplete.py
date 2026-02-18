@@ -108,6 +108,7 @@ class AutocompleteViewSet(viewsets.ReadOnlyModelViewSet):
     """Lists search suggestions based on user entry."""
 
     serializer_class = AutocompleteSerializer
+    filter_backends = []  # Custom get_queryset returns non-ORM objects; disable default filters
     # NOTE: Since this ViewSet doesn't have a proper queryset/associated
     #   model, it's not possible to check for permissions the
     #   automatic/Django way -- even checking the permissions causes an
@@ -115,6 +116,12 @@ class AutocompleteViewSet(viewsets.ReadOnlyModelViewSet):
     #   DjangoModelPermissions class and sticking with the simple
     #   IsAuthenticated class.
     permission_classes = (permissions.IsAuthenticated,)
+
+    def list(self, request, *args, **kwargs):
+        """Return {count, results} format for autocomplete API consumers."""
+        queryset = self.filter_queryset(self.get_queryset())
+        serializer = self.get_serializer(queryset, many=True)
+        return Response({'count': len(queryset), 'results': serializer.data})
 
     def get_queryset(self):
         """Return Autocomplete objects that match request."""

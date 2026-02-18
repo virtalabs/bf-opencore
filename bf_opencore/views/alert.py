@@ -100,7 +100,7 @@ class AlertViewSet(WaffleSwitchMixin, viewsets.ModelViewSet):
         count_read = self.queryset.\
             filter(date_read__isnull=False).\
             count()
-        response = super().list(request, args, kwargs)
+        response = super().list(request, *args, **kwargs)
         response.data['count_unread'] = count_unread
         response.data['count_read'] = count_read
         return response

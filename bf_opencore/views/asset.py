@@ -777,7 +777,7 @@ class AssetViewSet(WaffleSwitchMixin, ChangeReasonMixin, PaginateRelationsMixin,
                 response_status = status.HTTP_200_OK
                 logger.debug("Asset-tag link between %s and %s already "
                              "existed: %s", asset, tag, asset_tag)
-            views = importlib.import_module('api.views')
+            views = importlib.import_module('bf_opencore.views')
             serializer = views.TagSerializer(tag, context={'request': request})
             return Response(serializer.data, status=response_status)
 

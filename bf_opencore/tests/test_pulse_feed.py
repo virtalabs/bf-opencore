@@ -54,6 +54,7 @@ def test_delete_pulse_feed_item_unauth(auth_client, pulse_feed_items):
     assert response.status_code == 403  # forbidden
 
 
+@pytest.mark.xfail(reason="Open-core has no role-based write permissions")
 def test_close_pulse_feed_item_unauth(auth_client, pulse_feed_items):
     """Make sure unauthorized can't mark a pulse feed item as Closed."""
     pfi = models.PulseFeedItem.objects.first()

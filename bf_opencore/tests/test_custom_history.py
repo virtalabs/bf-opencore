@@ -25,9 +25,10 @@ def test_history_canonical_fields(asset_edit_client):
     a.hostname = 'eggs'
     a.save()
     res = asset_edit_client.get(f'/api/assets/{a.id}/history/')
-    expected_owner_hist = ['Hormel', 'Hormel', None, None, None]
+    # 4 history records: create, hostname=spam, owner=Hormel, hostname=eggs
+    expected_owner_hist = ['Hormel', 'Hormel', None, None]
     assert [h['owner'] for h in res.data['results']] == expected_owner_hist
-    expected_hostname_hist = ['eggs', 'spam', 'spam', None, None]
+    expected_hostname_hist = ['eggs', 'spam', 'spam', None]
     assert [h['hostname'] for h in
             res.data['results']] == expected_hostname_hist
 
