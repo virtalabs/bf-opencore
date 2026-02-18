@@ -34,9 +34,16 @@ When using docker-compose, use `postgresql://blueflow:blueflow@localhost:5432/bl
 
 ### Django settings
 
-The Django settings module is set automatically by `conftest.py` to `project.settings.test`. You do not need to set `DJANGO_SETTINGS_MODULE` manually.
+While root `conftest.py` sets `DJANGO_SETTINGS_MODULE` to `project.settings.test` in `pytest_configure`, scoped runs may fail due to import order.
+As a workaround, set this before invoking pytest:
+
+```bash
+export DJANGO_SETTINGS_MODULE=project.settings.test
+```
 
 ### Running tests
+
+For reliable collection, set `DATABASE_URL` and `DJANGO_SETTINGS_MODULE` before running (see above).
 
 **Run project-level tests only** (smoke tests, migrations, models, views):
 
@@ -71,7 +78,7 @@ uv run pytest bf_opencore/tests/test_groups.py
 **Run a single test:**
 
 ```bash
-uv run pytest bf_opencore/tests/test_groups.py::test_get_groups -v
+uv run pytest bf_opencore/tests/test_groups.py::test_get_groups_for_asset_new -v
 ```
 
 **Faster re-runs (keep database between runs):**
@@ -119,6 +126,7 @@ In open-core, all role-scoped clients are aliases to `auth_client` (adds per-res
 
 ### App-level data fixtures (`bf_opencore/tests/conftest.py`)
 
+- **`media_root`** — Uses `tmp_path` for `MEDIA_ROOT` so attachment tests don't touch the project filesystem. Use for any test that uploads files.
 - **`cleandb`** — Removes migration-seeded custom field names so tests start with a clean slate.
 - **`cfield`** — Depends on `cleandb`. Creates an asset, custom field names (`sparkliness`, `shinyness`), and a custom field value.
 - **`completables`** — Sample assets, tags, vulnerabilities, groups, and networks for autocomplete/search tests.
@@ -195,6 +203,8 @@ Add to `[project.optional-dependencies] dev` in `pyproject.toml`:
 "pytest-cov",
 ```
 
+Run `uv sync --all-extras` (or `uv pip install -e ".[dev]"`) to install.
+
 ### 2. Configure coverage in pyproject.toml
 
 ```toml
@@ -215,6 +225,8 @@ exclude_lines = [
 ```
 
 ### 3. Generate a report
+
+After completing steps 1–2 and reinstalling dependencies:
 
 ```bash
 uv run pytest --cov=bf_opencore --cov-report=markdown tests/ bf_opencore/tests/
