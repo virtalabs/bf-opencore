@@ -41,7 +41,6 @@ where = ["."]
 include = ["bf_opencore*", "project*"]
 
 [tool.pytest.ini_options]
-# Tests require PostgreSQL; set DATABASE_URL. Run: pytest or pytest tests/ bf_opencore/tests/
 testpaths = ["tests", "bf_opencore/tests"]
 addopts = "-ra"
 filterwarnings = ["ignore::DeprecationWarning"]
@@ -51,6 +50,4 @@ venvPath = "."
 venv = ".venv"
 
 [dependency-groups]
-dev = [
-    "django-stubs>=5.2.9",
-]
+dev = ["django-stubs>=5.2.9"]

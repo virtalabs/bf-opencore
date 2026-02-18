@@ -190,6 +190,7 @@ def test_api_asset_disabled_custom_field(cleandb, auth_client, admin_client):
 ################################################################
 # Test post field name with different users
 
+@pytest.mark.xfail(reason="Open-core has no role-based write permissions")
 def test_api_field_name_unauthorized_post(auth_client):
     kwargs = {'data': json.dumps({'field_name': 'sparkliness'}),
               'content_type': 'application/json'}
@@ -215,6 +216,7 @@ def test_api_field_name_admin_post(admin_client):
 ################################################################
 # Test patch field name with different users
 
+@pytest.mark.xfail(reason="Open-core has no role-based write permissions")
 def test_api_field_name_unauthorized_patch(cfield, auth_client):
     fn_id = cfield.shiny_field.id
     kwargs = {'data': json.dumps({'field_name': 'dullness'}),
@@ -248,6 +250,7 @@ def test_api_field_name_admin_patch(cfield, admin_client):
 ################################################################
 # Test delete field name with different users
 
+@pytest.mark.xfail(reason="Open-core has no role-based write permissions")
 def test_api_field_name_unauthorized_delete(cfield, auth_client):
     """Simply Authenticated client should not be allowed to delete."""
     fn_id = cfield.shiny_field.id

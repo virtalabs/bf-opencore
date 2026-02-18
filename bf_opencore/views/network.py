@@ -12,6 +12,8 @@ from waffle.mixins import WaffleSwitchMixin
 from bf_opencore.models import Network, SavedSearch, Asset, Cidr
 from bf_opencore.utils import ipset_from_network
 
+from .utils import HugeLimitOffsetPagination
+
 logger = logging.getLogger(__name__)
 
 
@@ -95,6 +97,7 @@ class NetworkViewSet(WaffleSwitchMixin, viewsets.ModelViewSet):
     queryset = Network.objects.all()
     serializer_class = NetworkSerializer
     filterset_class = NetworkFilter
+    pagination_class = HugeLimitOffsetPagination
 
     @action(detail=False)
     def no_network(self, request):

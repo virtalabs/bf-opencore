@@ -1,0 +1,221 @@
+# Testing Guide
+
+This document describes the testing infrastructure for bf-opencore: setup, fixtures, conventions, and coverage.
+
+## Setup Instructions
+
+### Prerequisites
+
+- Python 3.12+
+- PostgreSQL
+- [uv](https://github.com/astral-sh/uv) package manager (or pip)
+
+### Install dependencies
+
+Install the package with dev dependencies:
+
+```bash
+uv sync --all-extras
+```
+
+Use the project's dev environment when running tests; do not rely on a global pytest that may use a different interpreter or environment.
+
+### Database configuration
+
+All tests require PostgreSQL. There is no SQLite fallback; `project.settings.test` raises `RuntimeError` if `DATABASE_URL` is unset.
+
+Set the environment variable before running tests:
+
+```bash
+export DATABASE_URL=postgresql://blueflow:blueflow@localhost:5432/blueflow
+```
+
+When using docker-compose, use `postgresql://blueflow:blueflow@localhost:5432/blueflow` when the db service is exposed on localhost.
+
+### Django settings
+
+The Django settings module is set automatically by `conftest.py` to `project.settings.test`. You do not need to set `DJANGO_SETTINGS_MODULE` manually.
+
+### Running tests
+
+**Run project-level tests only** (smoke tests, migrations, models, views):
+
+```bash
+uv run pytest tests/
+```
+
+**Run app-level tests only** (bf_opencore integration and API tests):
+
+```bash
+uv run pytest bf_opencore/tests/
+```
+
+**Run all tests** (both project and app):
+
+```bash
+uv run pytest tests/ bf_opencore/tests/
+```
+
+Or rely on the default `testpaths`:
+
+```bash
+uv run pytest
+```
+
+**Run a single file:**
+
+```bash
+uv run pytest bf_opencore/tests/test_groups.py
+```
+
+**Run a single test:**
+
+```bash
+uv run pytest bf_opencore/tests/test_groups.py::test_get_groups -v
+```
+
+**Faster re-runs (keep database between runs):**
+
+```bash
+uv run pytest --reuse-db tests/ bf_opencore/tests/
+```
+
+**Using Docker:**
+
+```bash
+docker-compose run web uv run pytest tests/ bf_opencore/tests/
+```
+
+---
+
+## Fixture Patterns and Test Data Strategies
+
+### Conftest layering
+
+The project uses a three-tier conftest structure:
+
+| Tier    | Path                            | Provides                                                                                                                                                 |
+| ------- | ------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Root    | `conftest.py`                   | `pytest_configure`, `pytest_ignore_collect`, `django_db_setup` (session-scoped PostgreSQL), `enable_core_switch` (waffle), `auth_client`, `admin_client` |
+| Project | `tests/conftest.py`             | Empty; inherits root fixtures                                                                                                                            |
+| App     | `bf_opencore/tests/conftest.py` | Role-alias clients, data fixtures                                                                                                                        |
+
+### Root fixtures (`conftest.py`)
+
+- **`enable_core_switch`** — Activates the `"core"` waffle switch so API views (e.g. `/assets/`) are allowed in tests.
+- **`django_db_setup`** — Session-scoped; uses PostgreSQL only. Supports `--reuse-db`.
+- **`auth_client`** — DRF `APIClient` authenticated with a regular user (via `make_user`).
+- **`admin_client`** — DRF `APIClient` authenticated with a superuser (via `make_superuser`).
+
+### App-level role-alias clients (`bf_opencore/tests/conftest.py`)
+
+In open-core, all role-scoped clients are aliases to `auth_client` (adds per-resource permissions):
+
+- `asset_edit_client` — User that can create/edit assets
+- `nwk_authorized_client` — User allowed to manage networks
+- `biomed_client` — User with biomed role
+- `custom_field_edit_client` — User allowed to edit custom field names
+- `pulse_feed_auth_client` — User allowed to delete/close pulse feed items
+
+### App-level data fixtures (`bf_opencore/tests/conftest.py`)
+
+- **`cleandb`** — Removes migration-seeded custom field names so tests start with a clean slate.
+- **`cfield`** — Depends on `cleandb`. Creates an asset, custom field names (`sparkliness`, `shinyness`), and a custom field value.
+- **`completables`** — Sample assets, tags, vulnerabilities, groups, and networks for autocomplete/search tests.
+- **`acme_assets`** — Alias for `completables`.
+- **`asset_groups`** — Two assets, three groups, and three asset-group links (named tuple `AssetGroups`).
+- **`asset_vulnerabilities`** — Two assets, four vulnerabilities, and linking records.
+- **`pulse_feed_items`** — Three `PulseFeedItem` objects.
+- **`complete_us`** — Six assets (manufacturer/model pairs) for autocomplete field tests.
+
+### Factory module (`bf_opencore/tests/factories.py`)
+
+| Helper           | Implementation              | Use                                   |
+| ---------------- | --------------------------- | ------------------------------------- |
+| `make_user`      | Django `create_user`        | Correct password hashing for API auth |
+| `make_superuser` | Django `create_superuser`   | Admin-style tests                     |
+| `make_tag`       | `model_bakery` `baker.make` | Tag creation with defaults            |
+| `make_connector` | `model_bakery` `baker.make` | Connector creation with defaults      |
+
+Only `make_user` and `make_superuser` are consumed by the root conftest.
+Use `auth_client` or `admin_client` for API tests.
+Call `make_user`/`make_superuser` directly when you need a custom user instance.
+
+---
+
+## Testing Conventions
+
+### Style
+
+- All tests are **plain functions** (no `class Test*`).
+- Tests use the `db` fixture indirectly via client fixtures, which provides `@pytest.mark.django_db` semantics.
+- DRF `APIClient` with `force_authenticate` — session or cookie auth is not currently used.
+
+### Paginated responses
+
+The API uses `HugeLimitOffsetPagination`. Assert against:
+
+- `response.data['count']` — Total number of results
+- `response.data['results']` — List of objects
+
+### Expected failures and skips
+
+**`@pytest.mark.xfail`** — Tests that are expected to fail:
+
+- `reason="Open-core has no role-based write permissions"` — Regular user gets 403 in the product; currently in open-core, `auth_client` has full access (12 tests).
+- `raises=(SomeError,)` — Tests that exercise known bugs or unimplemented features.
+- `raises=(IntegrityError, TransactionManagementError)` — Tests that trigger database constraint violations.
+
+**`@pytest.mark.skip`** — Tests that are never run:
+
+- Routes that do not currently exist (e.g. `test_api_add_custom_field_via_asset`).
+- Connector module not yet present in open-core: `pytest.importorskip("connectors")` skips `test_asset.py` and `test_connectors.py`.
+
+### Feature gating
+
+All API viewsets use `WaffleSwitchMixin` with `waffle_switch = "core"`.
+The `enable_core_switch` fixture activates this switch.
+Both `auth_client` and `admin_client` depend on it, so it is active for all API tests.
+
+### Pytest options
+
+- `addopts = "-ra"` — Shows a short summary for all non-passing tests (failures, errors, skips, xfails).
+
+---
+
+## Coverage Goals and Reports
+
+Coverage tooling is not yet configured. To add it:
+
+### 1. Add pytest-cov
+
+Add to `[project.optional-dependencies] dev` in `pyproject.toml`:
+
+```toml
+"pytest-cov",
+```
+
+### 2. Configure coverage in pyproject.toml
+
+```toml
+[tool.coverage.run]
+source = ["bf_opencore"]
+omit = [
+    "*/migrations/*",
+    "*/__init__.py",
+    "*/tests/*",
+]
+
+[tool.coverage.report]
+exclude_lines = [
+    "pragma: no cover",
+    "def __repr__",
+    "raise NotImplementedError",
+]
+```
+
+### 3. Generate a report
+
+```bash
+uv run pytest --cov=bf_opencore --cov-report=markdown tests/ bf_opencore/tests/
+```

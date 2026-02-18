@@ -3,6 +3,7 @@
 """Minimal Django settings for bf-opencore tests (pytest). Use DJANGO_SETTINGS_MODULE=project.settings.test."""
 
 import os
+import tempfile
 
 from .base import *
 
@@ -23,3 +24,6 @@ DATABASES = {
         conn_health_checks=False,
     )
 }
+
+MEDIA_ROOT = tempfile.mkdtemp(prefix="bf_opencore_test_media_")
+MEDIA_URL = "/media/"
