@@ -18,9 +18,7 @@ class AssetCustomFieldNameSerializer(serializers.HyperlinkedModelSerializer):
     """
 
     url = serializers.HyperlinkedIdentityField(
-        view_name="api:assetcustomfieldname-detail")
-    # page_url = serializers.HyperlinkedIdentityField(
-    #     view_name="blueflow:assetcustomfieldname")
+        view_name="bf_opencore:assetcustomfieldname-detail")
 
     re_non_alphanum = re.compile(r'[^A-Za-z0-9]+')
 
@@ -36,7 +34,6 @@ class AssetCustomFieldNameSerializer(serializers.HyperlinkedModelSerializer):
         computed_fields = (
             'url',
             'num_assets',
-            # 'page_url',
         )
 
         fields = tag_fields + computed_fields
@@ -96,11 +93,9 @@ class AssetCustomFieldSerializer(serializers.HyperlinkedModelSerializer):
     """
 
     url = serializers.HyperlinkedIdentityField(
-        view_name="api:assetcustomfield-detail")
+        view_name="bf_opencore:assetcustomfield-detail")
     # asset = AssetSerializer()
     field = AssetCustomFieldNameSerializer(read_only=True)
-    # page_url = serializers.HyperlinkedIdentityField(
-    #     view_name="blueflow:assetcustomfield")
     asset_id = IntegerField()
     field_id = IntegerField()
 

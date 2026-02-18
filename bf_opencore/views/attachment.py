@@ -22,13 +22,11 @@ class AttachmentSerializer(serializers.HyperlinkedModelSerializer):
     Teaches the rest_framework (the ViewSet) which fields to expect.
     """
 
-    # Since we namespace with `api:` we have to specify the view-name.
-    # This is a little strange...
     url = serializers.HyperlinkedIdentityField(
-        view_name="api:attachment-detail")
+        view_name="bf_opencore:attachment-detail")
     asset = serializers.HyperlinkedRelatedField(
         read_only=True,
-        view_name='api:asset-detail'
+        view_name='bf_opencore:asset-detail'
         )
     asset_id = serializers.IntegerField(required=False)
     file_name = serializers.CharField(required=False)

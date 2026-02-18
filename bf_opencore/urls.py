@@ -1,5 +1,7 @@
 """BlueFlow open-core Django app URLs."""
 
+app_name = "bf_opencore"
+
 from django.conf.urls import include
 from django.urls import path
 
@@ -47,7 +49,7 @@ router.register(r'periodictask', views.PeriodicTaskViewSet)
 
 urlpatterns = [
     path('schema/', SpectacularAPIView.as_view(), name='schema'),
-    path('docs/', SpectacularSwaggerView.as_view(url_name='api:schema'), name='swagger-ui'),
+    path('docs/', SpectacularSwaggerView.as_view(url_name='bf_opencore:schema'), name='swagger-ui'),
     path(r'api-token-auth/', authview.obtain_auth_token, name='auth-token'),
     path('', include(router.urls)),
 ]

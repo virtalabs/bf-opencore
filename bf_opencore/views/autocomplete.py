@@ -52,7 +52,7 @@ class Autocomplete():
                  base_url=None, append_query_params=True):
         """Copy inputs to member variables."""
         if base_url is None:
-            base_url = reverse_lazy('blueflow:search')
+            base_url = reverse_lazy('bf_opencore:asset-list')
         self.term = term
         self.suggestion = suggestion
         self.suggestion_type = \
@@ -250,10 +250,10 @@ def autocomplete_column(term, column, lookup, base_query,
         suggestion = getattr(asset, column)  # Equivalent to "asset.model"
         query_dict = dict(base_query_params)
         if column == 'manufacturer':
-            base_url = reverse_lazy('blueflow:manufacturer')
+            base_url = reverse_lazy('bf_opencore:asset-list')
             query_dict['manufacturer'] = suggestion
         elif column == 'model':
-            base_url = reverse_lazy('blueflow:model')
+            base_url = reverse_lazy('bf_opencore:asset-list')
             query_dict['manufacturer'] = asset.manufacturer
             query_dict['model'] = suggestion
             suggestion = '{} {}'.format(asset.manufacturer, suggestion)
@@ -374,7 +374,7 @@ def autocomplete_tag(term, base_query, base_query_params,
     for tag in tags[:limit]:
         query_dict = dict(base_query_params)
         query_dict['tag'] = tag.id
-        base_url = reverse_lazy('blueflow:tag', args=[tag.id])
+        base_url = reverse_lazy('bf_opencore:tag-detail', args=[tag.id])
         autocomplete = Autocomplete(
             term=term,
             suggestion=tag.name,
@@ -393,7 +393,7 @@ def autocomplete_vulnerability(term, limit=AUTOCOMPLETE_LIMIT):
 
     results = []
     for vuln in vulns[:limit]:
-        base_url = reverse_lazy('blueflow:vulnerability', args=[vuln.id])
+        base_url = reverse_lazy('bf_opencore:vulnerability-detail', args=[vuln.id])
         autocomplete = Autocomplete(
             term=term,
             suggestion=vuln.synopsis,
@@ -412,7 +412,7 @@ def autocomplete_group(term, limit=AUTOCOMPLETE_LIMIT):
 
     results = []
     for group in groups[:limit]:
-        base_url = reverse_lazy('blueflow:group', args=[group.id])
+        base_url = reverse_lazy('bf_opencore:group-detail', args=[group.id])
         autocomplete = Autocomplete(
             term=term,
             suggestion=group.name,
@@ -449,7 +449,7 @@ def autocomplete_network(term, limit=AUTOCOMPLETE_LIMIT):
 
     results = []
     for network in networks[:limit]:
-        base_url = reverse_lazy('blueflow:network', args=[network.id])
+        base_url = reverse_lazy('bf_opencore:network-detail', args=[network.id])
         autocomplete = Autocomplete(
             term=term,
             suggestion=network.name,

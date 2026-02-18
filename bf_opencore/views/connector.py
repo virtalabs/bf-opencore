@@ -18,9 +18,7 @@ class ConnectorSerializer(serializers.HyperlinkedModelSerializer):
     """
 
     url = serializers.HyperlinkedIdentityField(
-        view_name="api:connector-detail")
-    page_url = serializers.HyperlinkedIdentityField(
-        view_name="blueflow:connector")
+        view_name="bf_opencore:connector-detail")
 
     class Meta:  # noqa
         model = Connector
@@ -41,7 +39,6 @@ class ConnectorSerializer(serializers.HyperlinkedModelSerializer):
         # Fields that are computed (not stored directly in schema)
         computed_fields = (
             'url',
-            'page_url',
             'display_name',
             'description',
             'hidden',

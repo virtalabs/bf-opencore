@@ -1,7 +1,6 @@
 """ViewSet for alerts."""
 
 import logging
-from django.urls import reverse_lazy
 from django.utils import timezone
 from rest_framework import viewsets, serializers
 from waffle.mixins import WaffleSwitchMixin
@@ -18,30 +17,28 @@ class AlertSerializer(serializers.HyperlinkedModelSerializer):
 
     # Few public methods; that's just how serializers work
 
-    # Since we namespace with `api:` we have to specify the view-name.
     url = serializers.HyperlinkedIdentityField(
-        view_name="api:alert-detail")
+        view_name="bf_opencore:alert-detail")
     asset = serializers.HyperlinkedRelatedField(
         read_only=True,
-        view_name="blueflow:asset",
+        view_name="bf_opencore:asset-detail",
     )
     connector = serializers.HyperlinkedRelatedField(
         read_only=True,
-        view_name="blueflow:connector",
+        view_name="bf_opencore:connector-detail",
     )
     connectortask = serializers.HyperlinkedRelatedField(
         read_only=True,
-        view_name="blueflow:connectortask",
+        view_name="bf_opencore:connectortask-detail",
     )
-    pulsefeeditem = serializers.SerializerMethodField()
     riskmetrics = serializers.HyperlinkedRelatedField(
         many=True,
         read_only=True,
-        view_name="api:riskmetrics-detail",
+        view_name="bf_opencore:riskmetrics-detail",
     )
     vulnerability = serializers.HyperlinkedRelatedField(
         read_only=True,
-        view_name="blueflow:vulnerability",
+        view_name="bf_opencore:vulnerability-detail",
     )
 
     class Meta:  # noqa
@@ -54,10 +51,8 @@ class AlertSerializer(serializers.HyperlinkedModelSerializer):
         computed_fields = (
             'url',
             'asset',
-            'link',
             'connector',
             'connectortask',
-            'pulsefeeditem',
             'riskmetrics',
             'vulnerability',
             'status',
@@ -65,13 +60,6 @@ class AlertSerializer(serializers.HyperlinkedModelSerializer):
         )
 
         fields = asset_fields + computed_fields
-
-    def get_pulsefeeditem(self, obj):
-        """Get the URL of the Pulse page, if applicable."""
-        if obj.pulsefeeditem is None:
-            return None
-        return reverse_lazy('blueflow:pulse', args=[
-            obj.pulsefeeditem.external_pulse_id])
 
     def update(self, instance, validated_data):
         """Update date_read upon any PATCH request.

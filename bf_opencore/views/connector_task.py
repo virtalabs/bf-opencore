@@ -25,16 +25,12 @@ class ConnectorTaskSerializer(serializers.HyperlinkedModelSerializer):
     Teaches the rest_framework (the ViewSet) which fields to expect.
     """
 
-    # Since we namespace with `api:` we have to specify the view-name.
-    # This is a little strange...
     url = serializers.HyperlinkedIdentityField(
-        view_name="api:connectortask-detail")
-    page_url = serializers.HyperlinkedIdentityField(
-        view_name="blueflow:connectortask")
+        view_name="bf_opencore:connectortask-detail")
     connector = serializers.HyperlinkedRelatedField(
         required=True,
         queryset=Connector.objects.all(),
-        view_name="api:connector-detail",
+        view_name="bf_opencore:connector-detail",
     )
 
     class Meta:  # noqa
@@ -62,7 +58,6 @@ class ConnectorTaskSerializer(serializers.HyperlinkedModelSerializer):
         _auto_fields = (
             'id',
             'url',
-            'page_url',
             'display_name',
             'connector',
             'connector_id',
