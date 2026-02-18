@@ -12,7 +12,7 @@ from .utils import ChangeReasonMixin
 class AssetTagSerializer(serializers.HyperlinkedModelSerializer):
     """Serializes AssetTag objects."""
 
-    url = serializers.HyperlinkedIdentityField(view_name="api:assettag-detail")
+    url = serializers.HyperlinkedIdentityField(view_name="bf_opencore:assettag-detail")
     tag = TagSerializer(read_only=True)
     asset_id = IntegerField()
     tag_id = IntegerField()

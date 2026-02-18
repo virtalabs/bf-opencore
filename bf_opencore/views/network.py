@@ -21,11 +21,7 @@ class NetworkSerializer(serializers.HyperlinkedModelSerializer):
     Teaches the rest_framework (the ViewSet) which fields to expect.
     """
 
-    # Since we namespace with `api:` we have to specify the view-name.
-    # This is a little strange...
-    url = serializers.HyperlinkedIdentityField(view_name="api:network-detail")
-    page_url = serializers.HyperlinkedIdentityField(
-        view_name="blueflow:network")
+    url = serializers.HyperlinkedIdentityField(view_name="bf_opencore:network-detail")
     cidr = serializers.JSONField(required=False)
 
     class Meta:  # noqa
@@ -34,7 +30,7 @@ class NetworkSerializer(serializers.HyperlinkedModelSerializer):
         # (only name, ok_to_scan, and date_added are real DB fields.)
         fields = (
             'url', 'id', 'name', 'cidr', 'ok_to_scan', 'date_added',
-            'display_name', 'page_url', 'type', 'num_assets',
+            'display_name', 'type', 'num_assets',
             'identified_statistics',
             )
 
@@ -122,8 +118,7 @@ class CidrSerializer(serializers.HyperlinkedModelSerializer):
     Teaches the rest_framework (the ViewSet) which fields to expect.
     """
 
-    # Since we namespace with `api:` we have to specify the view-name.
-    url = serializers.HyperlinkedIdentityField(view_name="api:cidr-detail")
+    url = serializers.HyperlinkedIdentityField(view_name="bf_opencore:cidr-detail")
     network_id = IntegerField()
 
     class Meta:  # noqa
@@ -146,12 +141,8 @@ class SavedSearchSerializer(serializers.HyperlinkedModelSerializer):
     Teaches the rest_framework (the ViewSet) which fields to expect.
     """
 
-    # Since we namespace with `api:` we have to specify the view-name.
-    # This is a little strange...
     url = serializers.HyperlinkedIdentityField(
-        view_name="api:savedsearch-detail")
-    # page_url = serializers.HyperlinkedIdentityField(
-    #     view_name="blueflow:network")
+        view_name="bf_opencore:savedsearch-detail")
 
     class Meta:  # noqa
         model = SavedSearch

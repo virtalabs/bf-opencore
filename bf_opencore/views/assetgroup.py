@@ -18,7 +18,7 @@ class AssetGroupSerializer(serializers.HyperlinkedModelSerializer):
     # Few public methods; that's just how serializers work
 
     url = serializers.HyperlinkedIdentityField(
-        view_name="api:assetgroup-detail")
+        view_name="bf_opencore:assetgroup-detail")
     group = GroupSerializer(read_only=True)
     asset_id = IntegerField()
     group_id = IntegerField()

@@ -2,7 +2,6 @@
 
 import logging
 
-from django.urls import reverse_lazy
 import django_filters
 from rest_framework import viewsets, serializers, status
 from rest_framework.response import Response
@@ -20,16 +19,11 @@ class PulseFeedItemSerializer(serializers.HyperlinkedModelSerializer):
 
 
     url = serializers.HyperlinkedIdentityField(
-        view_name="api:pulsefeeditem-detail",
+        view_name="bf_opencore:pulsefeeditem-detail",
         lookup_field="external_pulse_id",
     )
-    pulse_page_url = serializers.SerializerMethodField()
 
     vulnerabilities = VulnerabilitySerializer(read_only=True, many=True)
-
-    def get_pulse_page_url(self, obj):
-        """Get the URL of the alert page about this Pulse alert."""
-        return reverse_lazy('blueflow:pulse', args=[obj.external_pulse_id])
 
     class Meta:
         """Wire up serializer to model."""
@@ -39,7 +33,6 @@ class PulseFeedItemSerializer(serializers.HyperlinkedModelSerializer):
         model = PulseFeedItem
         model_fields = tuple(f.name for f in model._meta.fields)
         computed_fields = (
-            'pulse_page_url',
             'url',
             'last_notes_editor',
             'last_notes_date',

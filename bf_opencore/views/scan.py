@@ -17,24 +17,17 @@ class ScanSerializer(serializers.HyperlinkedModelSerializer):
     Teaches the rest_framework (the ViewSet) which fields to expect.
     """
 
-    # Since we namespace with `api:` we have to specify the view-name.
-    # This is a little strange...
-    url = serializers.HyperlinkedIdentityField(view_name="api:scan-detail")
-    # page_url = serializers.HyperlinkedIdentityField(
-    #     view_name="blueflow:scan")
+    url = serializers.HyperlinkedIdentityField(view_name="bf_opencore:scan-detail")
     asset = serializers.HyperlinkedRelatedField(
         #     many=True,
         read_only=True,
-        view_name='api:asset-detail'
+        view_name='bf_opencore:asset-detail'
         )
     connector_task = serializers.HyperlinkedRelatedField(
         #     many=True,
         read_only=True,
-        view_name='api:connectortask-detail'
+        view_name='bf_opencore:connectortask-detail'
         )
-    # connectortask_page_url = serializers.HyperlinkedRelatedField(
-    #     read_only=True,
-    #     view_name="blueflow:connectortask")
 
     class Meta:  # noqa
         """Wire this serializer to a model."""
@@ -47,8 +40,6 @@ class ScanSerializer(serializers.HyperlinkedModelSerializer):
         # Fields that are computed (not stored directly in schema)
         computed_fields = (
             'url',
-            # 'connectortask_page_url',
-            # 'page_url',
         )
 
         fields = scan_fields + computed_fields

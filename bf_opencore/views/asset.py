@@ -60,7 +60,7 @@ class MiniAssetVulnerabilitySerializer(serializers.HyperlinkedModelSerializer):
     """
 
     url = serializers.HyperlinkedIdentityField(
-        view_name="api:assetvulnerability-detail")
+        view_name="bf_opencore:assetvulnerability-detail")
 
     class Meta:  # noqa
         model = AssetVulnerability
@@ -81,15 +81,12 @@ class AssetSerializer(serializers.HyperlinkedModelSerializer):
     Teaches the rest_framework (the ViewSet) which fields to expect.
     """
 
-    # Since we namespace with `api:` we have to specify the view-name.
-    # This is a little strange...
-    url = serializers.HyperlinkedIdentityField(view_name="api:asset-detail")
-    tags_url = serializers.HyperlinkedIdentityField(view_name="api:asset-tags")
+    url = serializers.HyperlinkedIdentityField(view_name="bf_opencore:asset-detail")
+    tags_url = serializers.HyperlinkedIdentityField(view_name="bf_opencore:asset-tags")
     scans_url = serializers.HyperlinkedIdentityField(
-        view_name="api:asset-scans")
-    page_url = serializers.HyperlinkedIdentityField(view_name="blueflow:asset")
+        view_name="bf_opencore:asset-scans")
     external_links_url = serializers.HyperlinkedIdentityField(
-        view_name="api:asset-external-links")
+        view_name="bf_opencore:asset-external-links")
 
     asset_tags = AssetTagSerializer(read_only=True, many=True)
     asset_custom_fields = AssetCustomFieldSerializer(read_only=True, many=True)
@@ -110,7 +107,6 @@ class AssetSerializer(serializers.HyperlinkedModelSerializer):
         # Fields that are computed (not stored directly in schema)
         computed_fields = (
             'url',
-            'page_url',
             'tags_url',
             'scans_url',
             'external_links_url',
@@ -171,7 +167,7 @@ class HistoricalAssetSerializer(serializers.HyperlinkedModelSerializer):
     """Serializes asset history."""
 
     history_user = serializers.HyperlinkedRelatedField(
-        view_name="api:user-detail",
+        view_name="bf_opencore:user-detail",
         read_only=True,
         )
 
@@ -230,7 +226,7 @@ class ChangeLogAssetSerializer(serializers.HyperlinkedModelSerializer,
     """
 
     history_user = serializers.HyperlinkedRelatedField(
-        view_name="api:user-detail",
+        view_name="bf_opencore:user-detail",
         read_only=True,
         )
 

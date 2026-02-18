@@ -19,10 +19,8 @@ class CrontabScheduleSerializer(serializers.HyperlinkedModelSerializer):
     Teaches the rest_framework (the ViewSet) which fields to expect.
     """
 
-    # Since we namespace with `api:` we have to specify the view-name.
-    # This is a little strange...
     url = serializers.HyperlinkedIdentityField(
-        view_name="api:crontabschedule-detail")
+        view_name="bf_opencore:crontabschedule-detail")
 
     # Human-readable name
     display_name = serializers.SerializerMethodField('do_display_name')
@@ -61,10 +59,8 @@ class IntervalScheduleSerializer(serializers.HyperlinkedModelSerializer):
     Teaches the rest_framework (the ViewSet) which fields to expect.
     """
 
-    # Since we namespace with `api:` we have to specify the view-name.
-    # This is a little strange...
     url = serializers.HyperlinkedIdentityField(
-        view_name="api:intervalschedule-detail")
+        view_name="bf_opencore:intervalschedule-detail")
 
     # Human-readable name
     display_name = serializers.SerializerMethodField('do_display_name')
@@ -100,12 +96,8 @@ class PeriodicTaskSerializer(serializers.HyperlinkedModelSerializer):
     Teaches the rest_framework (the ViewSet) which fields to expect.
     """
 
-    # Since we namespace with `api:` we have to specify the view-name.
-    # This is a little strange...
     url = serializers.HyperlinkedIdentityField(
-        view_name="api:periodictask-detail")
-    page_url = serializers.HyperlinkedIdentityField(
-        view_name="blueflow:periodictask")
+        view_name="bf_opencore:periodictask-detail")
     display_name = serializers.SerializerMethodField('do_display_name')
     display_schedule = serializers.SerializerMethodField('do_display_schedule')
     connector_id = serializers.SerializerMethodField('do_connector_id')
@@ -149,12 +141,12 @@ class PeriodicTaskSerializer(serializers.HyperlinkedModelSerializer):
     interval = serializers.HyperlinkedRelatedField(
         required=False,
         queryset=IntervalSchedule.objects.all(),
-        view_name="api:intervalschedule-detail",
+        view_name="bf_opencore:intervalschedule-detail",
     )
     crontab = serializers.HyperlinkedRelatedField(
         required=False,
         queryset=CrontabSchedule.objects.all(),
-        view_name="api:crontabschedule-detail",
+        view_name="bf_opencore:crontabschedule-detail",
     )
 
     def validate(self, attrs):
@@ -196,7 +188,6 @@ class PeriodicTaskSerializer(serializers.HyperlinkedModelSerializer):
             "interval_id",
             "interval",
             "url",
-            "page_url",
             "display_name",
             "display_schedule",
             "connector_enabled",

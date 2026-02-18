@@ -3,7 +3,6 @@
 import logging
 from django.db import models
 from django.utils import timezone
-from django.urls import reverse
 
 logger = logging.getLogger(__name__)
 
@@ -64,42 +63,6 @@ class Alert(models.Model):
         if self.date_read is not None:
             return "read"
         return "unread"
-
-    @property
-    def link(self):
-        """Compute external link from external_page_url or foreign keys.
-
-        If external_page_url is non-null, return it.  Otherwise, try the detail
-        page corresponding to each foreign key.          Return None if no link can be
-        found.
-        """
-        if self.external_page_url:
-            return self.external_page_url
-        if self.asset:
-            return reverse('blueflow:asset', args=[self.asset.id])
-        if self.connector:
-            return reverse(
-                'blueflow:connector',
-                args=[self.connector.id],
-            )
-        if self.connectortask:
-            return reverse(
-                'blueflow:connectortask',
-                args=[self.connectortask.id],
-            )
-        if self.pulsefeeditem:
-            return reverse(
-                'blueflow:pulse',
-                args=[self.pulsefeeditem.external_pulse_id],
-            )
-        if self.riskmetrics:
-            return reverse('blueflow:report-risk')
-        if self.vulnerability:
-            return reverse(
-                'blueflow:vulnerability',
-                args=[self.vulnerability.id],
-            )
-        return None
 
     @property
     def display_text(self):

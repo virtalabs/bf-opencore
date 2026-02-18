@@ -9,23 +9,23 @@ from bf_opencore import models
 
 
 def test_reverse_asset_tags():
-    """Reverse api:asset-tags == /api/asset/<i>/tags."""
+    """Reverse bf_opencore:asset-tags == /api/asset/<i>/tags."""
     # import pdb ; pdb.set_trace()
-    url = reverse("api:asset-tags", args=[1])
+    url = reverse("bf_opencore:asset-tags", args=[1])
     assert url == "/api/assets/1/tags/"
 
 
 def test_reverse_group_single():
-    """Reverse api:asset-tags == /api/asset/<i>/tags."""
+    """Reverse bf_opencore:asset-tags == /api/asset/<i>/tags."""
     # import pdb ; pdb.set_trace()
-    url = reverse("api:group-detail", args=[1])
+    url = reverse("bf_opencore:group-detail", args=[1])
     assert url == "/api/groups/1/"
 
 
 def test_reverse_group():
-    """Reverse api:asset-tags == /api/asset/<i>/tags."""
+    """Reverse bf_opencore:asset-tags == /api/asset/<i>/tags."""
     # import pdb ; pdb.set_trace()
-    url = reverse("api:group-list")
+    url = reverse("bf_opencore:group-list")
     assert url == "/api/groups/"
 
 
@@ -34,9 +34,9 @@ def test_reverse_group():
     reason="Route /api/assets/1/groups/ doesn't exist (and shouldn't)",
 )
 def test_reverse_asset_groups():
-    """Reverse api:asset-groups == /api/asset/<i>/groups."""
+    """Reverse bf_opencore:asset-groups == /api/asset/<i>/groups."""
     # import pdb ; pdb.set_trace()
-    url = reverse("api:asset-groups", args=[1])
+    url = reverse("bf_opencore:asset-groups", args=[1])
     assert url == "/api/assets/1/groups/"
 
 

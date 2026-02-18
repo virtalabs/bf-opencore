@@ -24,16 +24,13 @@ class GroupSerializer(serializers.HyperlinkedModelSerializer):
     Teaches the rest_framework (the ViewSet) which fields to expect.
     """
 
-    # Since we namespace with `api:` we have to specify the view-name.
-    # This is a little strange...
-    url = serializers.HyperlinkedIdentityField(view_name="api:group-detail")
-    page_url = serializers.HyperlinkedIdentityField(view_name="blueflow:group")
+    url = serializers.HyperlinkedIdentityField(view_name="bf_opencore:group-detail")
     add_assets_url = serializers.HyperlinkedIdentityField(
-        view_name="api:group-assets")
+        view_name="bf_opencore:group-assets")
     # assets = serializers.HyperlinkedRelatedField(
     #     many=True,
     #     read_only=True,
-    #     view_name='api:asset-detail'
+    #     view_name='bf_opencore:asset-detail'
     # )
 
     class Meta:  # noqa
@@ -47,7 +44,6 @@ class GroupSerializer(serializers.HyperlinkedModelSerializer):
         # Fields that are computed (not stored directly in schema)
         computed_fields = (
             'url',
-            'page_url',
             'add_assets_url',
             'num_assets',
             'identified_statistics',

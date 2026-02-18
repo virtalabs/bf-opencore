@@ -26,12 +26,9 @@ class TagSerializer(serializers.HyperlinkedModelSerializer):
     Teaches the rest_framework (the ViewSet) which fields to expect.
     """
 
-    # Since we namespace with `api:` we have to specify the view-name.
-    # This is a little strange...
-    url = serializers.HyperlinkedIdentityField(view_name="api:tag-detail")
-    page_url = serializers.HyperlinkedIdentityField(view_name="blueflow:tag")
+    url = serializers.HyperlinkedIdentityField(view_name="bf_opencore:tag-detail")
     add_assets_url = serializers.HyperlinkedIdentityField(
-        view_name="api:tag-assets")
+        view_name="bf_opencore:tag-assets")
 
     class Meta:  # noqa
         """Wire this serializer to a model."""
@@ -44,7 +41,6 @@ class TagSerializer(serializers.HyperlinkedModelSerializer):
         # Fields that are computed (not stored directly in schema)
         computed_fields = (
             'url',
-            'page_url',
             'add_assets_url',
             'num_assets',
         )
