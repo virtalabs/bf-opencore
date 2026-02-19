@@ -10,7 +10,7 @@ import sh
 from django.apps import apps
 from django.utils import timezone
 from bf_opencore.bf_opencore.exceptions import ConnectorTaskError
-from bf_opencore.connectors.celery import celery_app
+from bf_opencore.celery import celery_app
 
 
 # Configure logging.  Disable logging in sh module.

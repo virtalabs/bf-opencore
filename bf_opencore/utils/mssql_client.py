@@ -6,7 +6,7 @@ To use this client, inherit from it and override the get_num_assets() and
 get_page() functions.
 
 EXAMPLE:
-class MyClient(connectors.utils.MSSQLClient):
+class MyClient(bf_opencore.utils.MSSQLClient):
     def get_num_assets(self):
         return self.query_value("""
             SELECT COUNT(myId)

@@ -8,7 +8,7 @@ import random
 import importlib
 import celery
 import click
-from bf_opencore.connectors.celery import celery_app
+from bf_opencore.celery import celery_app
 from .mock import MockPopulation, MATH_PACKAGE_ERROR
 
 

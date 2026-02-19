@@ -3,10 +3,10 @@
 
 from collections import OrderedDict
 import pytest
-import bf_opencore.connectors
+import bf_opencore
 
 
-MODULES = [getattr(connectors, c.name) for c in connectors.CONNECTORS]
+MODULES = [getattr(bf_opencore, c.name) for c in bf_opencore.CONNECTORS]
 
 
 @pytest.mark.parametrize('module', MODULES)

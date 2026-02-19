@@ -2,11 +2,11 @@
 """Test CSV connector."""
 
 import os
-import bf_opencore.connectors.celery
-from bf_opencore.bf_opencore.models import Asset, ConnectorTask
+import bf_opencore.celery
+from bf_opencore.models import Asset, ConnectorTask
 # TODO: we should NOT be doing setup like this
 from .test_csv import write_tempfile, setup_db, no_nwk_field
-from bf_opencore import connectors
+import bf_opencore
 
 
 def test_sync_match_on_string_key_id_other_cmms(setup_db, no_nwk_field):
@@ -27,7 +27,7 @@ def test_sync_match_on_string_key_id_other_cmms(setup_db, no_nwk_field):
     )
     asset = Asset.objects.last()
     assert asset.manufacturer == "Foo"
-    connectors.csv.main.apply(kwargs={
+    bf_opencore.csv.main.apply(kwargs={
         'filename': filename,
         'field_mapping': field_mapping,
     })
@@ -54,7 +54,7 @@ def test_match_on_ex_key_bad_ip(setup_db, no_nwk_field):
         "Asset #,IP,Manufacturer\n"
         "ONETWOTHREE,b0d_ip,Different\n"
     )
-    connectors.csv.main.apply(
+    bf_opencore.csv.main.apply(
         kwargs={'filename': filename, 'field_mapping': field_mapping})
     os.unlink(filename)
     ct = ConnectorTask.objects.get()
@@ -79,7 +79,7 @@ def test_match_on_ex_key_bad_mac(setup_db, no_nwk_field):
         "Asset #,MAC,Manufacturer\n"
         "ONETWOTHREE,b0d_mac,Different\n"
     )
-    connectors.csv.main.apply(
+    bf_opencore.csv.main.apply(
         kwargs={'filename': filename, 'field_mapping': field_mapping})
     os.unlink(filename)
     ct = ConnectorTask.objects.get()
@@ -107,7 +107,7 @@ def test_match_on_ex_key_no_ip_mac(setup_db, no_nwk_field):
         "Asset #,Manufacturer\n"
         "ONETWOTHREE,Different\n"
     )
-    connectors.csv.main.apply(
+    bf_opencore.csv.main.apply(
         kwargs={'filename': filename, 'field_mapping': field_mapping})
     os.unlink(filename)
     ct = ConnectorTask.objects.get()
@@ -132,7 +132,7 @@ def test_create_with_ex_key_no_ip_mac(setup_db, no_nwk_field):
         "Asset #,Manufacturer\n"
         "ONETWOTHREE,Different\n"
     )
-    connectors.csv.main.apply(
+    bf_opencore.csv.main.apply(
         kwargs={'filename': filename, 'field_mapping': field_mapping})
     os.unlink(filename)
     ct = ConnectorTask.objects.get()
@@ -157,7 +157,7 @@ def test_create_with_empty_ex_key_ip_mac(setup_db, no_nwk_field):
         "Asset #,Manufacturer\n"
         ",Different\n"
     )
-    connectors.csv.main.apply(
+    bf_opencore.csv.main.apply(
         kwargs={'filename': filename, 'field_mapping': field_mapping})
     os.unlink(filename)
     ct = ConnectorTask.objects.get()
@@ -179,7 +179,7 @@ def test_create_without_ex_key_ip_mac(setup_db, no_nwk_field):
         "Manufacturer\n"
         "Different\n"
     )
-    connectors.csv.main.apply(
+    bf_opencore.csv.main.apply(
         kwargs={'filename': filename, 'field_mapping': field_mapping})
     os.unlink(filename)
     ct = ConnectorTask.objects.get()

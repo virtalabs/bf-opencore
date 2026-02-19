@@ -10,8 +10,8 @@
 import unittest.mock
 import django.core.management
 import pytest
-from bf_opencore import connectors
-from bf_opencore.bf_opencore.models import Connector, ConnectorTask, Asset, Scan
+import bf_opencore
+from bf_opencore.models import Connector, ConnectorTask, Asset, Scan
 
 
 sample_stdout = b'''
@@ -57,7 +57,7 @@ def test_portscan_basic(mock_sudo, setup_db):
     mock_sudo.return_value.exit_code = 0
 
     kwargs = dict(hostname='localhost')
-    status = connectors.portscan.main.apply(kwargs=kwargs)
+    status = bf_opencore.portscan.main.apply(kwargs=kwargs)
     assert status.result is not None
 
     ct = ConnectorTask.objects.get()
@@ -75,7 +75,7 @@ def test_portscan_scan_object(mock_sudo, setup_db):
     mock_sudo.return_value.exit_code = 0
 
     kwargs = dict(hostname='localhost')
-    status = connectors.portscan.main.apply(kwargs=kwargs)
+    status = bf_opencore.portscan.main.apply(kwargs=kwargs)
     assert status.result is not None
 
     ct = ConnectorTask.objects.get()

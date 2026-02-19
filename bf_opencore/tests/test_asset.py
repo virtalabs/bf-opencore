@@ -12,7 +12,7 @@ pytest.importorskip("connectors")
 
 from freezegun import freeze_time
 from bf_opencore import models
-from bf_opencore.connectors.management.commands.create_connectors import create_connectors
+from bf_opencore.management.commands.create_connectors import create_connectors
 
 # models do have 'objects' member, but it's being lazy loaded
 

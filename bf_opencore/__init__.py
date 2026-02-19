@@ -13,14 +13,14 @@ Example 1: CLI
 
 Example 2: Synchronous API
     $ python
-    >>> import bf_opencore.connectors
-    >>> connectors.mock.main.apply(kwargs={'nassets': 100})
+    >>> import bf_opencore
+    >>> bf_opencore.mock.main.apply(kwargs={'nassets': 100})
 
 Example 3: Asynchronous API
-    $ celery -A connectors worker --loglevel=info &
+    $ celery -A bf_opencore worker --loglevel=info &
     $ python
-    >>> import bf_opencore.connectors
-    >>> connectors.mock.main.apply_async(kwargs={'nassets': 100})
+    >>> import bf_opencore
+    >>> bf_opencore.mock.main.apply_async(kwargs={'nassets': 100})
 """
 
 import os
@@ -110,4 +110,4 @@ CONNECTORS = [
 ]
 
 for c in CONNECTORS:
-    importlib.import_module('bf_opencore.connectors.{c.name}'.format(c=c))
+    importlib.import_module('bf_opencore.{c.name}'.format(c=c))

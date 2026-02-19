@@ -14,7 +14,7 @@ from rest_framework import viewsets, serializers
 from rest_framework.parsers import MultiPartParser, JSONParser
 from waffle.mixins import WaffleSwitchMixin
 
-from bf_opencore.connectors.models import Connector, ConnectorTask
+from bf_opencore.models import Connector, ConnectorTask
 
 
 logger = logging.getLogger(__name__)
