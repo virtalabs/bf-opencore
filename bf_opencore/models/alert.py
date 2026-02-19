@@ -21,18 +21,6 @@ class Alert(models.Model):
         related_name='alert_assets',
         null=True,
     )
-    connector = models.ForeignKey(
-        'Connector',
-        on_delete=models.SET_NULL,
-        related_name='alert_connectors',
-        null=True,
-    )
-    connectortask = models.ForeignKey(
-        'ConnectorTask',
-        on_delete=models.SET_NULL,
-        related_name='alert_connector_tasks',
-        null=True,
-    )
     pulsefeeditem = models.ForeignKey(
         'PulseFeedItem',
         on_delete=models.SET_NULL,

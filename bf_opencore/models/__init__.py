@@ -8,7 +8,6 @@ from .group import Group, AssetGroup
 from .tag import Tag, AssetTag
 from .network import Cidr, Network, SavedSearch
 from .network_endpoint import NetworkEndpoint, EndpointSuggestion
-from .connector import ConnectorTask, Connector
 from .pulse import PulseFeedItem
 from .scan import Scan
 from .vulnerability import Vulnerability, AssetVulnerability
@@ -19,8 +18,6 @@ __all__ = [
     'AssetCustomFieldName',
     'AssetCustomField',
     'Attachment',
-    'ConnectorTask',
-    'Connector',
     'PulseFeedItem',
     'Scan',
     'Vulnerability',

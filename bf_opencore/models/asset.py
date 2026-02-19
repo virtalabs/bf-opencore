@@ -27,7 +27,6 @@ from bf_opencore.utils import NullUnlessChanged
 
 from .asset_manager import AssetManager, AssetQuerySet, _unflatten_json_field
 from .asset_custom_field import AssetCustomFieldName, AssetCustomField
-from .connector import ConnectorTask
 from .group import Group, AssetGroup
 from .scan import Scan
 from .tag import Tag, AssetTag
@@ -86,7 +85,6 @@ class Asset(models.Model):
     tags = models.ManyToManyField(Tag, through=AssetTag)
     vulnerabilities = models.ManyToManyField(Vulnerability,
                                              through=AssetVulnerability)
-    scans = models.ManyToManyField(ConnectorTask, through=Scan)
     custom_fields = models.ManyToManyField(AssetCustomFieldName,
                                            through=AssetCustomField)
     risk_score_remediable = models.FloatField(null=False, default=0.0)

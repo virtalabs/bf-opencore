@@ -1,2 +1,1 @@
-
-"""General blueflow tests (mostly connectors)."""
+"""General Blueflow tests"""

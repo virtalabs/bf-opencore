@@ -11,16 +11,6 @@ def make_tag(**kwargs):
     return baker.make("bf_opencore.Tag", **{**defaults, **kwargs})
 
 
-def make_connector(**kwargs):
-    """Create a Connector for tests. Defaults: id, celery_task_name, enabled."""
-    defaults = {
-        "id": kwargs.pop("id", "test_connector"),
-        "celery_task_name": kwargs.pop("celery_task_name", "connectors.test.tasks.run"),
-        "enabled": kwargs.pop("enabled", False),
-    }
-    return baker.make("bf_opencore.Connector", **{**defaults, **kwargs})
-
-
 def make_user(**kwargs):
     """Create a regular user via Django's create_user (correct password hashing). For APIClient auth, use auth_client fixture or force_authenticate(user=make_user(...))."""
     from django.contrib.auth import get_user_model

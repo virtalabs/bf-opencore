@@ -1,17 +1,16 @@
-
-"""Test CSV connector."""
+"""Test CSV integration."""
 
 import os
 import bf_opencore.celery
-from bf_opencore.csv.__main__ import process_csv
-from bf_opencore.models import Asset, ConnectorTask, \
-    AssetCustomFieldName, AssetCustomField
+from bf_opencore.csv import process_csv
+from bf_opencore.models import Asset, AssetCustomFieldName, AssetCustomField
 from .test_csv import write_tempfile, setup_db, no_nwk_field, TestCTX 
 import bf_opencore
 
 
 def test_csv_import_with_custom_field(setup_db, no_nwk_field):
     """We can import from CSV into a custom field."""
+    raise NotImplementedError("Connectors have been removed")
     Asset.objects.create(
         manufacturer='Foo',
         model='Bar',

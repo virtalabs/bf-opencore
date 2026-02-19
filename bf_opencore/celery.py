@@ -1,21 +1,21 @@
 # Copyright (C) 2017 Virta Laboratories, Inc.  All rights reserved.
 
 """
-Celery instance for connectors.
+Celery instance for integrations.
 
-One instance of Celery lives in this file.  All tasks in the connectors will
+One instance of Celery lives in this file.  All tasks in the integrations will
 use this instance.
 
 Based on Celery documentation:
 http://docs.celeryproject.org/en/latest/getting-started/first-steps-with-celery.html
 
 Quick start (from root blueflow/ directory)
-$ celery -A connectors worker --loglevel=info &
+$ celery -A bf_opencore.celery worker --loglevel=info &
 ...
 [2017-06-30 16:36:12,453: INFO/MainProcess] celery@manzana.local ready.
 $ python
->>> import connectors
->>> connectors.tasks.load_mock.delay()
+>>> import bf_opencore.celery
+>>> bf_opencore.celery.celery_app.tasks.ping.main.delay(hostname='localhost')
 <AsyncResult: e8cfbb56-eca7-491d-a3a3-c15819cad8b8>
 """
 import celery

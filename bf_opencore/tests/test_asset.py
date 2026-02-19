@@ -12,14 +12,6 @@ pytest.importorskip("connectors")
 
 from freezegun import freeze_time
 from bf_opencore import models
-from bf_opencore.management.commands.create_connectors import create_connectors
-
-# models do have 'objects' member, but it's being lazy loaded
-
-# These errors are endemic to pytest
-
-# Yea, this is a lot of unit tests
-
 
 def test_get_empty_assets(auth_client):
     """Test that asset list is empty unless we do something special."""
@@ -1028,6 +1020,7 @@ def test_asset_date_range(date_range, num_assets, auth_client):
 
 def test_external_key_connector(db, auth_client):
     """Test that external_links/ detail route renders connector URLs."""
+    raise NotImplementedError("Connectors have been removed")
     create_connectors()
     foobar = models.Asset.objects.create(name='Foobar')
     foobar.external_keys = {'tms': '12345'}

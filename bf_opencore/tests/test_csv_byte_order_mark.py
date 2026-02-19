@@ -1,9 +1,8 @@
-
-"""Test CSV connector."""
+"""Test CSV integration."""
 
 import os
 from codecs import BOM_UTF8
-from bf_opencore.csv.__main__ import process_csv
+from bf_opencore.csv import process_csv
 from bf_opencore.models import Asset
 from .test_csv import write_tempfile, setup_db, TestCTX
 

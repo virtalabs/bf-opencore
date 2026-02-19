@@ -17,67 +17,68 @@ from bf_opencore.utils import FieldMap, FileWrapper
 logger = celery.utils.log.get_task_logger(__name__)
 
 
+# TODO: review this when we are ready to setup the csv integration
 # Simple field mappings
-DEFAULT_FIELD_MAPPING = {
-    'serial_number': 'Serial',
-    'mac_address': 'MAC',
-    'ip_address': 'IP',
-    'manufacturer': 'Manufacturer',
-    'model': 'Model',
-}
-_DEFAULT_FIELD_NAMES = list(DEFAULT_FIELD_MAPPING.values())
-
-CONNECTOR_SPEC = {
-    "display_name": "CSV",
-    "description": """Load assets from a CSV file.
-
-By default, BlueFlow imports from columns with these names: {fieldnames}.
-You can change how BlueFlow imports data by configuring the CSV connector at
-its [connector settings page]({settings}).
-
-Assets to be imported must have a value in at least one of the following
-fields:
-
- - An IP address
- - A MAC address
- - An external key (such as a unique asset ID from another system)
-
-When exporting data from Excel or a similar tool, choose `ASCII` or `UTF-8`
-encoding.
-
-A sample CSV file is available [here](bf_opencore/csv/sample.csv).
-""".format(settings='/settings/csv/',
-           fieldnames=', '.join(
-               map(lambda x: '<tt>{}</tt>'.format(x),  # pylint: disable=unnecessary-lambda
-                   _DEFAULT_FIELD_NAMES))),
-    "kwargs": OrderedDict([
-        ("filename", {
-            "default": None,
-            "type": FileWrapper,
-            "help": "CSV file with header row",
-        })
-    ]),
-    'settings': OrderedDict([
-        ('require_network_info', {
-            'type': bool,
-            'default': True,
-            'help': 'Import only assets with a valid MAC or IP address.',
-        }),
-        ('update_only', {
-            'type': bool,
-            'default': False,
-            'help': 'Do not create new assets.  Only update existing assets.',
-        }),
-        ('field_mapping', {
-            'type': dict,
-            'default': DEFAULT_FIELD_MAPPING,
-            'help': 'Mapping of BlueFlow fields to CSV column names',
-        }),
-    ]),
-}
-
-DEFAULTS = {k: v["default"] for k, v in CONNECTOR_SPEC["kwargs"].items()}
-TYPES = {k: v["type"] for k, v in CONNECTOR_SPEC["kwargs"].items()}
+# DEFAULT_FIELD_MAPPING = {
+#     'serial_number': 'Serial',
+#     'mac_address': 'MAC',
+#     'ip_address': 'IP',
+#     'manufacturer': 'Manufacturer',
+#     'model': 'Model',
+# }
+# _DEFAULT_FIELD_NAMES = list(DEFAULT_FIELD_MAPPING.values())
+# 
+# CONNECTOR_SPEC = {
+#     "display_name": "CSV",
+#     "description": """Load assets from a CSV file.
+# 
+# By default, BlueFlow imports from columns with these names: {fieldnames}.
+# You can change how BlueFlow imports data by configuring the CSV connector at
+# its [connector settings page]({settings}).
+# 
+# Assets to be imported must have a value in at least one of the following
+# fields:
+# 
+#  - An IP address
+#  - A MAC address
+#  - An external key (such as a unique asset ID from another system)
+# 
+# When exporting data from Excel or a similar tool, choose `ASCII` or `UTF-8`
+# encoding.
+# 
+# A sample CSV file is available [here](bf_opencore/csv/sample.csv).
+# """.format(settings='/settings/csv/',
+#            fieldnames=', '.join(
+#                map(lambda x: '<tt>{}</tt>'.format(x),  # pylint: disable=unnecessary-lambda
+#                    _DEFAULT_FIELD_NAMES))),
+#     "kwargs": OrderedDict([
+#         ("filename", {
+#             "default": None,
+#             "type": FileWrapper,
+#             "help": "CSV file with header row",
+#         })
+#     ]),
+#     'settings': OrderedDict([
+#         ('require_network_info', {
+#             'type': bool,
+#             'default': True,
+#             'help': 'Import only assets with a valid MAC or IP address.',
+#         }),
+#         ('update_only', {
+#             'type': bool,
+#             'default': False,
+#             'help': 'Do not create new assets.  Only update existing assets.',
+#         }),
+#         ('field_mapping', {
+#             'type': dict,
+#             'default': DEFAULT_FIELD_MAPPING,
+#             'help': 'Mapping of BlueFlow fields to CSV column names',
+#         }),
+#     ]),
+# }
+# 
+# DEFAULTS = {k: v["default"] for k, v in CONNECTOR_SPEC["kwargs"].items()}
+# TYPES = {k: v["type"] for k, v in CONNECTOR_SPEC["kwargs"].items()}
 
 
 def linecount(filename):

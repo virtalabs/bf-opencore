@@ -105,6 +105,7 @@ def test_get_asset_scans_obsolete(auth_client):
     NOTE: will remove this route; then change assertion to
           assert response.status_code == 404 (or 405)
     """
+    raise NotImplementedError("Connectors have been removed")
     connector = models.Connector.objects.create(id='spam')
     c_task_1 = models.ConnectorTask.objects.create(connector=connector,
                                                    celery_task_id='1')
@@ -141,6 +142,7 @@ def test_get_asset_scans_obsolete(auth_client):
 
 def test_get_asset_scans_new(auth_client):
     """Test new /api/scans/?asset=<n> way to get scans of asset."""
+    raise NotImplementedError("Connectors have been removed")
     connector = models.Connector.objects.create(id='spam')
     c_task_1 = models.ConnectorTask.objects.create(connector=connector,
                                                    celery_task_id='1')
