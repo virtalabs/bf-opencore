@@ -1,7 +1,5 @@
+"""Ping integration"""
 
-"""Ping connector runs command line utility."""
-
-from collections import OrderedDict
 import logging
 import re
 import socket
@@ -9,7 +7,7 @@ import celery
 import sh
 from django.apps import apps
 from django.utils import timezone
-from bf_opencore.exceptions import ConnectorTaskError
+from bf_opencore.exceptions import IntegrationTaskError
 from bf_opencore.celery import celery_app
 
 
@@ -18,18 +16,19 @@ logger = celery.utils.log.get_task_logger(__name__)
 logging.getLogger('sh').setLevel(logging.WARNING)
 
 
-CONNECTOR_SPEC = {
-    "display_name": "Ping",
-    "description": "Ping an asset via ICMP ping.",
-    "kwargs": OrderedDict([
-        ("hostname", {
-            "default": None,
-            "type": str,
-            "help": "network host",
-        }),
-    ]),
-    'settings': OrderedDict(),
-}
+# TODO: review this when we are ready to setup the ping integration
+# CONNECTOR_SPEC = {
+#     "display_name": "Ping",
+#     "description": "Ping an asset via ICMP ping.",
+#     "kwargs": OrderedDict([
+#         ("hostname", {
+#             "default": None,
+#             "type": str,
+#             "help": "network host",
+#         }),
+#     ]),
+#     'settings': OrderedDict(),
+# }
 
 PING_OPTS = [
     '-c 3',        # number of ping packets to send
@@ -50,7 +49,7 @@ def main(ctx, hostname):
 
     host_or_ip_matcher = re.compile(PING_TARGET_RE)
     if not host_or_ip_matcher.match(hostname):
-        raise ConnectorTaskError("Invalid target: '%s'" % hostname)
+        raise IntegrationTaskError("Invalid target: '%s'" % hostname)
 
     # Try to resolve the hostname into an IP address so that we can create an
     # Asset for this host.  Caveats:
@@ -62,7 +61,7 @@ def main(ctx, hostname):
     try:
         ipv4addr = socket.gethostbyname(hostname)
     except socket.gaierror:
-        raise ConnectorTaskError("Cannot resolve hostname '%s'" % hostname)
+        raise IntegrationTaskError("Cannot resolve hostname '%s'" % hostname)
 
     args = PING_OPTS
     args.append(hostname)

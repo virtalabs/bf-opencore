@@ -1,9 +1,5 @@
 
 """Fingerprinting connector."""
-
-from collections import OrderedDict
-import logging
-import click
 import nmap
 import celery
 from django.apps import apps
@@ -16,30 +12,31 @@ from bf_opencore.utils.hostname import hostname_ok, ip_address_ok
 logger = celery.utils.log.get_task_logger(__name__)
 
 
-CONNECTOR_SPEC = {
-    "display_name": "Fingerprint",
-    "description": """
-Send traffic to an asset to guess what operating system it runs.
-
-**WARNING:** this connector may send a significant amount of network traffic to
-the target host.  This traffic is not entirely without risk; poorly configured
-or poorly implemented networked devices may behave unpredictably as a result of
-unexpected network traffic.
-
-This connector uses [Nmap](https://nmap.org/) under the hood to perform OS
-detection, which is documented in the [Nmap
-book](https://nmap.org/book/osdetect.html).
-    """,
-    "kwargs": OrderedDict([
-        ("hostname", {
-            "default": None,
-            "type": str,
-            "help": "Hostname or IP address",
-        }),
-    ]),
-    'settings': OrderedDict(),
-}
-DEFAULTS = {k: v["default"] for k, v in CONNECTOR_SPEC["kwargs"].items()}
+# TODO: review this when we are ready to setup the fingerprint integration
+# CONNECTOR_SPEC = {
+#     "display_name": "Fingerprint",
+#     "description": """
+# Send traffic to an asset to guess what operating system it runs.
+# 
+# **WARNING:** this connector may send a significant amount of network traffic to
+# the target host.  This traffic is not entirely without risk; poorly configured
+# or poorly implemented networked devices may behave unpredictably as a result of
+# unexpected network traffic.
+# 
+# This connector uses [Nmap](https://nmap.org/) under the hood to perform OS
+# detection, which is documented in the [Nmap
+# book](https://nmap.org/book/osdetect.html).
+#     """,
+#     "kwargs": OrderedDict([
+#         ("hostname", {
+#             "default": None,
+#             "type": str,
+#             "help": "Hostname or IP address",
+#         }),
+#     ]),
+#     'settings': OrderedDict(),
+# }
+# DEFAULTS = {k: v["default"] for k, v in CONNECTOR_SPEC["kwargs"].items()}
 
 
 @celery_app.task(bind=True)
