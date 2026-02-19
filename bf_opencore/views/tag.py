@@ -12,8 +12,8 @@ from rest_framework.decorators import action
 from simple_history import utils as hist_utils
 from waffle.mixins import WaffleSwitchMixin
 
-from bf_opencore.bf_opencore.models import Tag, Asset, AssetTag
-from bf_opencore.bf_opencore.utils import iterable
+from bf_opencore.models import Tag, Asset, AssetTag
+from bf_opencore.utils import iterable
 from .utils import HugeLimitOffsetPagination
 from .utils import ChangeReasonMixin
 

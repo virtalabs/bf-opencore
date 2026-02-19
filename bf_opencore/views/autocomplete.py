@@ -34,9 +34,9 @@ from rest_framework import serializers, viewsets, permissions, status
 from rest_framework.viewsets import ViewSet
 from rest_framework.response import Response
 
-from bf_opencore.bf_opencore.models import \
+from bf_opencore.models import \
     Asset, Tag, SavedSearch, Vulnerability, Group, Network, AssetCustomField
-from bf_opencore.bf_opencore.views.asset import AssetFilter, AssetViewSet
+from bf_opencore.views.asset import AssetFilter, AssetViewSet
 
 
 logger = logging.getLogger(__name__)

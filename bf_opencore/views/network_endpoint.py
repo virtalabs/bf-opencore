@@ -2,7 +2,7 @@
 
 from rest_framework import serializers, viewsets
 from waffle.mixins import WaffleSwitchMixin
-from bf_opencore.bf_opencore.models import NetworkEndpoint, Asset, EndpointSuggestion
+from bf_opencore.models import NetworkEndpoint, Asset, EndpointSuggestion
 from .utils import PaginateRelationsMixin
 from .asset import AssetSerializer
 

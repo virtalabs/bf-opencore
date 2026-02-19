@@ -5,7 +5,7 @@ import logging
 from rest_framework import viewsets, serializers
 from waffle.mixins import WaffleSwitchMixin
 
-from bf_opencore.bf_opencore.models import Attachment
+from bf_opencore.models import Attachment
 
 from .utils import HugeLimitOffsetPagination
 from .utils import ChangeReasonMixin

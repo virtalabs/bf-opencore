@@ -8,7 +8,7 @@ from django.db.models.signals import post_save
 from netfields import MACAddressField, InetAddressField
 
 from django.apps import apps
-from bf_opencore.bf_opencore.utils import DisableSignals
+from bf_opencore.utils import DisableSignals
 
 
 class NetworkEndpointManager(models.Manager):

@@ -6,7 +6,7 @@ import django_filters
 from rest_framework import viewsets, serializers
 from waffle.mixins import WaffleSwitchMixin
 
-from bf_opencore.bf_opencore.models import Scan
+from bf_opencore.models import Scan
 
 logger = logging.getLogger(__name__)
 

@@ -6,7 +6,7 @@ from rest_framework import viewsets, serializers
 from rest_framework.fields import IntegerField
 from waffle.mixins import WaffleSwitchMixin
 
-from bf_opencore.bf_opencore.models import AssetCustomFieldName, AssetCustomField, Asset
+from bf_opencore.models import AssetCustomFieldName, AssetCustomField, Asset
 from .utils import HugeLimitOffsetPagination, ChangeReasonMixin
 
 logger = logging.getLogger(__name__)

@@ -7,7 +7,7 @@ from rest_framework import viewsets, serializers, status
 from rest_framework.response import Response
 from rest_framework.decorators import action
 from waffle.mixins import WaffleSwitchMixin
-from bf_opencore.bf_opencore.models import PulseFeedItem
+from bf_opencore.models import PulseFeedItem
 from .utils import PaginateRelationsMixin
 from .vulnerability import VulnerabilitySerializer
 

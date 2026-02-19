@@ -5,7 +5,7 @@ from collections import OrderedDict
 import django_filters
 from rest_framework import mixins, viewsets, serializers
 from waffle.mixins import WaffleSwitchMixin
-from bf_opencore.bf_opencore.models import Connector
+from bf_opencore.models import Connector
 
 
 logger = logging.getLogger(__name__)

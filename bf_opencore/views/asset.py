@@ -20,8 +20,8 @@ from waffle.mixins import WaffleSwitchMixin
 import netfields
 from simple_history import utils as hist_utils
 
-from bf_opencore.bf_opencore.models import Asset
-from bf_opencore.bf_opencore.models import Tag, AssetTag, Connector, PulseFeedItem, AssetVulnerability, AssetCustomFieldName, AssetCustomField
+from bf_opencore.models import Asset
+from bf_opencore.models import Tag, AssetTag, Connector, PulseFeedItem, AssetVulnerability, AssetCustomFieldName, AssetCustomField
 
 from .utils import PaginateRelationsMixin, ChangeReasonMixin
 from .assettag import AssetTagSerializer

@@ -7,7 +7,7 @@ from rest_framework.fields import IntegerField
 from rest_framework.generics import get_object_or_404, Http404
 from waffle.mixins import WaffleSwitchMixin
 
-from bf_opencore.bf_opencore.models import AssetGroup
+from bf_opencore.models import AssetGroup
 from .group import GroupSerializer
 from .utils import HugeLimitOffsetPagination
 
