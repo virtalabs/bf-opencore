@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!-- This file contains malformed XML. -->
+
+<!DOCTYPE SCAN SYSTEM "https://qualysguard.qg2.apps.qualys.com/scan-1.dtd">
+<!-- This report was generated with an evaluation version of Qualys //-->
+
+<SCAN value="scan/1466442320.39675">
+
+<HEADER>
+  <KEY value="USERNAME">vrtaa2rh</KEY>
+  <KEY value="COMPANY"><![CDATA[Virta Laboratories]]></KEY>
+  <KEY value="DATE">2016-06-20T17:05:20Z</KEY>
+  <KEY value="TITLE"><![CDATA[Virta_Office_Vulnerability_Scan]]></KEY>
+  <KEY value="TARGET"><![CDATA[192.168.10.1,192.168.10.17,192.168.10.39,192.168.10.102,192.168.10.109-192.168.10.110,192.168.10.113,192.168.10.126,192.168.10.136,192.168.10.152,192.168.10.155,192.168.10.169,192.168.10.175,192.168.10.177,192.168.10.179,192.168.10.253]]></KEY>
+  <KEY value="EXCLUDED_TARGET"><![CDATA[N/A]]></KEY>
+  <KEY value="DURATION">02:33:04</KEY>
+  <KEY value="SCAN_HOST">Virta (Scanner 8.3.36-1, Vulnerability Signatures 2.3.349-3)</KEY>
+  <KEY value="NBHOST_ALIVE">16</KEY>
+  <KEY value="NBHOST_TOTAL">16</KEY>
+  <KEY value="REPORT_TYPE">On-demand (default option profile)</KEY>
+  <KEY value="OPTIONS"><![CDATA[parallel ML scaling disabled for appliances, Load balancer detection OFF, Overall Performance: Normal, Hosts to Scan in Parallel - External Scanners: 15, Hosts to Scan in Parallel - Scanner Appliances: 30, Total Processes to Run in Parallel: 10, HTTP Processes to Run in Parallel: 10, Packet (Burst) Delay: Medium, Intensity: Normal]]></KEY>
+  <KEY value="STATUS">FINISHED</KEY>
+  <ASSET_GROUPS>
+    <ASSET_GROUP>
+      <ASSET_GROUP_TITLE><![CDATA[Virta Office]]></ASSET_GROUP_TITLE>
+    </ASSET_GROUP>
+  </ASSET_GROUPS>
+  <OPTION_PROFILE>
+    <OPTION_PROFILE_TITLE option_profile_default="1"><![CDATA[Initial Options]]></OPTION_PROFILE_TITLE>
+  </OPTION_PROFILE>
+</HEADER>
+
+<!-- the following element is missing a matching close tag. -->
+<IP value="192.168.10.1" name="No registered hostname">
+</SCAN>
+<!-- This report was generated with an evaluation version of Qualys //--><!-- CONFIDENTIAL AND PROPRIETARY INFORMATION. Qualys provides the QualysGuard Service "As Is," without any warranty of any kind. Qualys makes no warranty that the information contained in this report is complete or error-free. Copyright 2016, Qualys, Inc. //--> 

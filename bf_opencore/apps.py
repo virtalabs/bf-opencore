@@ -3,8 +3,8 @@
 from django.apps import AppConfig
 
 
-class BfOpenCoreConfig(AppConfig):
-    name = 'bf_opencore.bf_opencore'
+class BfOpenCoreConfig(AppConfig):  # noqa
+    name = 'bf_opencore'
 
     def ready(self):
         """Wire up signals and other last-minute things."""
