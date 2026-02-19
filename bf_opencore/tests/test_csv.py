@@ -1,17 +1,17 @@
-
-"""Test CSV connector."""
+"""Test CSV integration."""
 
 import os
 import tempfile
 import pytest
 import django.core.management
 import bf_opencore.celery
-from bf_opencore.models import Asset, Connector, ConnectorTask
+from bf_opencore.models import Asset
 import bf_opencore
 
 @pytest.fixture()
 def setup_db(db):
     """Create connector objects."""
+    raise NotImplementedError("Connectors have been removed")
     # ConnectorTask objects are linked to Connector objects with a foreign key
     # relationship.  We need those objects to be available.
     django.core.management.call_command('create_connectors')
@@ -25,6 +25,7 @@ def setup_db(db):
 @pytest.fixture()
 def no_nwk_field():
     """Configure the CSV connector to not require network field."""
+    raise NotImplementedError("Connectors have been removed")
     connector = Connector.objects.get(id="csv")
     connector.settings["require_network_info"] = False
     connector.save()
@@ -82,6 +83,7 @@ def test_csv_simple(setup_db):
     and associated with a ConnectorTask database object.  That means there will
     be exactly one ConnectorTask object in the database.
     """
+    raise NotImplementedError("Connectors have been removed")
     # It would be really confusing to break up a CSV line on to multiple lines
     # pylint: disable=line-too-long
     field_mapping = {
@@ -114,6 +116,7 @@ def test_csv_non_default_field_mapping(setup_db):
     and associated with a ConnectorTask database object.  That means there will
     be exactly one ConnectorTask object in the database.
     """
+    raise NotImplementedError("Connectors have been removed")
     # It would be really confusing to break up a CSV line on to multiple lines
     # pylint: disable=line-too-long
     field_mapping = {
@@ -142,6 +145,7 @@ def test_csv_non_default_field_mapping(setup_db):
 
 def test_no_ip_or_mac(setup_db):
     """Do not import assets with neither IP nor MAC address."""
+    raise NotImplementedError("Connectors have been removed")
     # It would be really confusing to break up a CSV line on to multiple lines
     # pylint: disable=line-too-long
     field_mapping = {
@@ -164,7 +168,7 @@ def test_no_ip_or_mac(setup_db):
 
 def test_bad_mac(setup_db):
     """Test that a weird MAC address precludes saving asset."""
-    # pylint: disable=unused-argument
+    raise NotImplementedError("Connectors have been removed")
     field_mapping = {
         'external_keys__tms': 'AssetNumber',
         'mac_address': 'MACAddress',
@@ -185,7 +189,7 @@ def test_bad_mac(setup_db):
 
 def test_bad_ip(setup_db):
     """Test that a bad IP address precludes saving asset."""
-    # pylint: disable=unused-argument
+    raise NotImplementedError("Connectors have been removed")
     field_mapping = {
         'external_keys__tms': 'AssetNumber',
         'ip_address': 'IP1',
@@ -206,6 +210,7 @@ def test_bad_ip(setup_db):
 
 def test_to_asset_model_ok(setup_db):
     """Mapping to Asset model fields works."""
+    raise NotImplementedError("Connectors have been removed")
     field_mapping = {
         'manufacturer': ['Manoof'],
         'model': 'Model',
@@ -229,6 +234,7 @@ def test_to_asset_model_ok(setup_db):
 
 def test_to_asset_model_bad_invalidated1(setup_db):
     """Field that doesn't exist in Asset unwelcome in field mapping."""
+    raise NotImplementedError("Connectors have been removed")
     field_mapping = {
         'manufacturer': ['Manoof'],
         'nonexistent_field': 'Hi there',
@@ -249,6 +255,7 @@ def test_to_asset_model_bad_invalidated1(setup_db):
 
 def test_to_asset_model_bad_invalidated2(setup_db):
     """Field that doesn't exist in Asset unwelcome in field mapping."""
+    raise NotImplementedError("Connectors have been removed")
     field_mapping = {
         'manufacturer': ['M'],
     }
@@ -268,6 +275,7 @@ def test_to_asset_model_bad_invalidated2(setup_db):
 
 def test_fail_validation(setup_db):
     """Bad field values should fail validation upon conversion."""
+    raise NotImplementedError("Connectors have been removed")
     field_mapping = {
         'mac_address': 'MACAddress',
         'external_keys__tms': 'AssetNumber',
@@ -295,6 +303,7 @@ def test_fail_validation(setup_db):
 
 def test_sync_match_on_integer_key_id(setup_db):
     """Looking up an asset by its TMS Key ID finds the right asset."""
+    raise NotImplementedError("Connectors have been removed")
     Asset.objects.create(
         manufacturer='Foo',
         model='Bar',
@@ -323,6 +332,7 @@ def test_sync_match_on_integer_key_id(setup_db):
 
 def test_sync_match_on_string_key_id(setup_db):
     """Looking up an asset by its (string) TMS PK finds the right asset."""
+    raise NotImplementedError("Connectors have been removed")
     Asset.objects.create(
         manufacturer='Foo',
         model='Bar',
@@ -353,6 +363,7 @@ def test_sync_match_on_string_key_id(setup_db):
 
 def test_risk_score_simple(setup_db):
     """Looking up an asset by its (string) TMS PK finds the right asset."""
+    raise NotImplementedError("Connectors have been removed")
     field_mapping = {
         'mac_address': 'MAC',
         'asset_risk_factors__tms': 'RISK',
@@ -386,6 +397,7 @@ def test_risk_score_simple(setup_db):
 
 def test_risk_score_invalid(setup_db):
     """Non-numeric string for risk score."""
+    raise NotImplementedError("Connectors have been removed")
     field_mapping = {
         'mac_address': 'MAC',
         'asset_risk_factors__tms': 'RISK',
@@ -420,6 +432,7 @@ def test_risk_score_invalid(setup_db):
 
 def test_risk_score_none(setup_db):
     """Field mappping fails to find a value for risk score."""
+    raise NotImplementedError("Connectors have been removed")
     field_mapping = {
         'mac_address': 'MAC',
         'asset_risk_factors__tms': 'RISK',
@@ -453,8 +466,8 @@ def test_risk_score_none(setup_db):
 
 def test_category(setup_db):
     """Test import to the category field through a field mapping."""
+    raise NotImplementedError("Connectors have been removed")
     # It would be really confusing to break up a CSV line on to multiple lines
-    # pylint: disable=line-too-long
     field_mapping = {
         'mac_address': 'MAC',
         'category': 'Category',

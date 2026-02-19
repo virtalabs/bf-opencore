@@ -1,7 +1,7 @@
 
 """Callbacks that are run automatically by the Celery worker.
 
-We use these to automatically update the ConnectorTasks database.
+We use these to automatically update the IntegrationTasks database.
 
 Reference:
 http://docs.celeryproject.org/en/latest/userguide/signals.html
@@ -21,13 +21,14 @@ logger = celery.utils.log.get_task_logger(__name__)
 @celery.signals.task_prerun.connect()
 def task_prerun(task_id, task, *args, **kwargs):
     """
-    Update ConnectorTask database entry with "Running" status.
+    Update IntegrationTask database entry with "Running" status.
 
     Celery Documentation:
     http://docs.celeryproject.org/en/latest/userguide/signals.html#task-prerun
     Dispatched before a task is executed.
     Sender is the task object being executed.
     """
+    raise NotImplementedError("Connectors have been removed")
     logger.debug("task_prerun(task_id=%s)", task_id)
 
     # When a task is run asynchronously by a worker, the name looks like
@@ -36,7 +37,7 @@ def task_prerun(task_id, task, *args, **kwargs):
     # them both look the same.
     task_name = task.name.replace("app.", "")
 
-    # Do nothing if task is *not* a BlueFlow connector
+    # Do nothing if task is *not* a BlueFlow integration
     if not task_name.startswith("bf_opencore"):
         return
 
@@ -90,6 +91,7 @@ def task_postrun(task_id, task, retval, state, *args, **kwargs):
     executed.  Note that this hook runs even when there has been an exception
     thrown by the task
     """
+    raise NotImplementedError("Connectors have been removed")
     logger.debug("task_postrun(task_id=%s)", task_id)
     ConnectorTask = apps.get_model('bf_opencore', 'ConnectorTask')
     try:
@@ -124,6 +126,7 @@ def task_retry(request, reason, einfo, *args, **kwargs):
     Celery Documentation:
     http://docs.celeryproject.org/en/latest/userguide/signals.html#task-retry
     """
+    raise NotImplementedError("Connectors have been removed")
     logger.debug("task_retry(request=%s)", request)
     ConnectorTask = apps.get_model('bf_opencore', 'ConnectorTask')
     try:
@@ -145,6 +148,7 @@ def task_success(result, *args, **kwargs):
     Celery Documentation:
     http://docs.celeryproject.org/en/latest/userguide/signals.html#task-success
     """
+    raise NotImplementedError("Connectors have been removed")
     logger.debug("task_success(result=%s)", result)
     ConnectorTask = apps.get_model('bf_opencore', 'ConnectorTask')
     try:
@@ -167,6 +171,7 @@ def task_failure(task_id, exception, traceback, einfo, *args, **kwargs):
     Celery Documentation:
     http://docs.celeryproject.org/en/latest/userguide/signals.html#task-failure
     """
+    raise NotImplementedError("Connectors have been removed")
     logger.debug("task_failure(task_id=%s)", task_id)
     ConnectorTask = apps.get_model('bf_opencore', 'ConnectorTask')
     try:
@@ -193,6 +198,7 @@ def task_revoked(request, terminated, signum, expired, *args, **kwargs):
     Celery Documentation:
     http://docs.celeryproject.org/en/latest/userguide/signals.html#task-revoked
     """
+    raise NotImplementedError("Connectors have been removed")
     logger.debug("task_revoke(request=%s)", request)
     ConnectorTask = apps.get_model('bf_opencore', 'ConnectorTask')
     try:

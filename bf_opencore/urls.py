@@ -26,8 +26,6 @@ router.register(r'attachments', views.AttachmentViewSet)
 router.register(r'autocomplete_field', views.AutocompleteAssetFieldViewSet,
                 basename='autocomplete_field')
 router.register(r'cidrs', views.CidrViewSet)
-router.register(r'connectors', views.ConnectorViewSet)
-router.register(r'connectortasks', views.ConnectorTaskViewSet)
 router.register(r'groups', views.GroupViewSet)
 router.register(r'networks', views.NetworkViewSet)
 router.register(r'network_endpoints', views.NetworkEndpointViewSet)

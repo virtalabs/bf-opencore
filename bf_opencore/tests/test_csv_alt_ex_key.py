@@ -11,6 +11,7 @@ import bf_opencore
 
 def test_sync_match_on_string_key_id_other_cmms(setup_db, no_nwk_field):
     """Looking up an asset by its arbitrary PK finds the right asset."""
+    raise NotImplementedError("Connectors have been removed")
     Asset.objects.create(
         manufacturer='Foo',
         model='Bar',
@@ -41,6 +42,7 @@ def test_sync_match_on_string_key_id_other_cmms(setup_db, no_nwk_field):
 
 def test_match_on_ex_key_bad_ip(setup_db, no_nwk_field):
     """Match existing asset with ex key, but where incoming IP is bad."""
+    raise NotImplementedError("Connectors have been removed")
     Asset.objects.create(
         manufacturer='Foo',
         external_keys={'other_cmms': 'ONETWOTHREE'},
@@ -66,6 +68,7 @@ def test_match_on_ex_key_bad_ip(setup_db, no_nwk_field):
 
 def test_match_on_ex_key_bad_mac(setup_db, no_nwk_field):
     """Match existing asset with ex key, but where incoming MAC is bad."""
+    raise NotImplementedError("Connectors have been removed")
     Asset.objects.create(
         manufacturer='Foo',
         external_keys={'other_cmms': 'ONETWOTHREE'},
@@ -95,6 +98,7 @@ def test_match_on_ex_key_no_ip_mac(setup_db, no_nwk_field):
     This *should* work.  It corresponds roughly to
     test_asset_match_truth_table.py::test_update_or_create_case_19b
     """
+    raise NotImplementedError("Connectors have been removed")
     Asset.objects.create(
         manufacturer='Foo',
         external_keys={'other_cmms': 'ONETWOTHREE'},
@@ -123,6 +127,7 @@ def test_create_with_ex_key_no_ip_mac(setup_db, no_nwk_field):
     This *should* work.  It corresponds roughly to
     test_asset_match_truth_table.py::test_update_or_create_case_19b
     """
+    raise NotImplementedError("Connectors have been removed")
     assert Asset.objects.count() == 0
     field_mapping = {
         'external_keys__other_cmms': 'Asset #',
@@ -148,6 +153,7 @@ def test_create_with_empty_ex_key_ip_mac(setup_db, no_nwk_field):
     This *should* work.  It corresponds roughly to
     test_asset_match_truth_table.py::test_update_or_create_case_19b
     """
+    raise NotImplementedError("Connectors have been removed")
     assert Asset.objects.count() == 0
     field_mapping = {
         'external_keys__other_cmms': 'Asset #',
@@ -171,6 +177,7 @@ def test_create_without_ex_key_ip_mac(setup_db, no_nwk_field):
     This *should* work.  It corresponds roughly to
     test_asset_match_truth_table.py::test_update_or_create_case_19b
     """
+    raise NotImplementedError("Connectors have been removed")
     assert Asset.objects.count() == 0
     field_mapping = {
         'manufacturer': 'Manufacturer',

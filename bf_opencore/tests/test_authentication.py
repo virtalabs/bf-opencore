@@ -2,9 +2,7 @@
 
 import pytest
 from django.contrib.auth.models import User, Group
-from blueflow.management.commands import create_permission_groups as cpg
-
-from .test_nessusbrowse import nessus_connector, NESSUS_CONNECTOR_ID
+from bf_opencore.management.commands import create_permission_groups as cpg
 
 
 @pytest.fixture(autouse=True)
@@ -53,22 +51,6 @@ def test_get_empty_assets_standard_user(auth_client):
     assets = auth_client.get('/api/assets/')
     assert assets.status_code == 200
     assert assets.data['count'] == 0
-
-
-def test_connector_settings_admin_user(nessus_connector, admin_client):
-    """Test that admin client can get connector settings."""
-    nc = admin_client.get('/api/connectors/{}/'.format(NESSUS_CONNECTOR_ID))
-    assert nc.status_code == 200
-    assert nc.data['id'] == NESSUS_CONNECTOR_ID
-    assert 'settings' in nc.data
-
-
-def test_connector_settings_non_admin_user(nessus_connector, auth_client):
-    """Test that non-admin client CAN'T get connector settings."""
-    nc = auth_client.get('/api/connectors/{}/'.format(NESSUS_CONNECTOR_ID))
-    assert nc.status_code == 200
-    assert nc.data['id'] == NESSUS_CONNECTOR_ID
-    assert 'settings' not in nc.data
 
 
 def test_test_module_user():

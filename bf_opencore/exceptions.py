@@ -4,18 +4,8 @@
 class BlueFlowError(Exception):
     """Generic base exception class for BlueFlow errors."""
 
-
-class TMSConnectorError(BlueFlowError):
-    """Base exception for TMS connector errors."""
-
-
-class AIMSConnectorError(BlueFlowError):
-    """Base exception for AIMS connector errors."""
-
-
 class IntegrationTaskError(BlueFlowError):
     """Thrown by integration tasks."""
-
 
 
 class MalformedFileError(BlueFlowError, ValueError):
@@ -23,9 +13,9 @@ class MalformedFileError(BlueFlowError, ValueError):
 
 
 class IntegrationConfigError(BlueFlowError):
-    """Thrown by connector users.
+    """Thrown by integration users.
 
-    This happens if we try to use an insufficiently configured connector.
+    This happens if we try to use an insufficiently configured integration.
     """
 
 

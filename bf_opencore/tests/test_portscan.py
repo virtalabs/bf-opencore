@@ -11,7 +11,7 @@ import unittest.mock
 import django.core.management
 import pytest
 import bf_opencore
-from bf_opencore.models import Connector, ConnectorTask, Asset, Scan
+from bf_opencore.models import Asset
 
 
 sample_stdout = b'''
@@ -38,6 +38,7 @@ Nmap done: 1 IP address (1 host up) scanned in 3.21 seconds
 @pytest.fixture()
 def setup_db(db):
     """Create connector objects."""
+    raise NotImplementedError("Connectors have been removed")
     # ConnectorTask objects are linked to Connector objects with a foreign key
     # relationship.  We need those objects to be available.
     django.core.management.call_command('create_connectors')
@@ -52,6 +53,7 @@ def setup_db(db):
 def test_portscan_basic(mock_sudo, setup_db):
     """sudo nmap plumbing works."""
 
+    raise NotImplementedError("Connectors have been removed")
     mock_sudo.return_value.stdout = sample_stdout
     mock_sudo.return_value.stderr = b''
     mock_sudo.return_value.exit_code = 0
@@ -69,6 +71,7 @@ def test_portscan_basic(mock_sudo, setup_db):
 @unittest.mock.patch('sh.sudo', create=True)
 def test_portscan_scan_object(mock_sudo, setup_db):
     """Portscan connector creates a Scan object."""
+    raise NotImplementedError("Connectors have been removed")
     asset = Asset.objects.create(ip_address='127.0.0.1')
     mock_sudo.return_value.stdout = sample_stdout
     mock_sudo.return_value.stderr = b''

@@ -143,7 +143,6 @@ In open-core, all role-scoped clients are aliases to `auth_client` (adds per-res
 | `make_user`      | Django `create_user`        | Correct password hashing for API auth |
 | `make_superuser` | Django `create_superuser`   | Admin-style tests                     |
 | `make_tag`       | `model_bakery` `baker.make` | Tag creation with defaults            |
-| `make_connector` | `model_bakery` `baker.make` | Connector creation with defaults      |
 
 Only `make_user` and `make_superuser` are consumed by the root conftest.
 Use `auth_client` or `admin_client` for API tests.
@@ -177,7 +176,6 @@ The API uses `HugeLimitOffsetPagination`. Assert against:
 **`@pytest.mark.skip`** — Tests that are never run:
 
 - Routes that do not currently exist (e.g. `test_api_add_custom_field_via_asset`).
-- Connector module not yet present in open-core: `pytest.importorskip("connectors")` skips `test_asset.py` and `test_connectors.py`.
 
 ### Feature gating
 

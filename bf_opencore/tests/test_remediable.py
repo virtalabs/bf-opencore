@@ -6,9 +6,9 @@ http://pytest-django.readthedocs.io/en/latest/helpers.html
 
 # import pytest
 import json
-import blueflow.models as bf_mod
+import bf_opencore.models as bf_mod
 
-from blueflow.tests.test_risk_score_calculation import setup_db
+from bf_opencore.tests.test_risk_score_calculation import setup_db
 
 
 def test_create_risk_factor_rem(admin_client):
