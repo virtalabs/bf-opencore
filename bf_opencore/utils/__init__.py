@@ -1,6 +1,9 @@
 
 """Utilities for connectors."""
 
+
+from enum import Enum, auto
+from collections.abc import Iterable
 from .fieldmap import FieldMap
 from .mssql_client import MSSQLClient
 from .func import NullUnlessChanged
@@ -24,8 +27,8 @@ class FileWrapper(str):
 
 def iterable(arg):
     """Check if something is really an iterable but not a string."""
-    return (isinstance(arg, collections.abc.Iterable) and
-            not isinstance(arg, six.string_types))
+    return (isinstance(arg, Iterable) and
+            not isinstance(arg, str))
 
 
 class Created(Enum):
