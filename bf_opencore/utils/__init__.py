@@ -7,7 +7,6 @@ from .func import NullUnlessChanged
 from .ipset import ipset_from_network
 from .disable_signals import DisableSignals
 from .quarters import quarter_start, prev_quarter_start
-from .iterable import iterable
 
 
 class password(str):  # pylint: disable=invalid-name
@@ -30,7 +29,6 @@ __all__ = [
     'DisableSignals',
     'quarter_start',
     'prev_quarter_start',
-    'iterable',
     'password',
     'FileWrapper',
 ]

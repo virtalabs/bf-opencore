@@ -10,6 +10,7 @@ __pycache__/
 *.pyc
 *.egg
 *.egg-info/
+build/
 
 # Test
 .pytest_cache/
