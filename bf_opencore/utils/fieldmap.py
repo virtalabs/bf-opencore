@@ -8,8 +8,8 @@ BlueFlow's tables (its internal ORM).
 
 import ipaddress
 import netaddr
-from blueflow.lazy import models as bf_mod
-from blueflow.exceptions import ConnectorTaskError
+from bf_opencore.exceptions import ConnectorTaskError
+from django.apps import apps
 
 
 class FieldMap():
@@ -84,8 +84,9 @@ class FieldMap():
 
         This method exists so that we can have fail-fast behavior.
         """
+        Asset = apps.get_model('bf_opencore', 'Asset')
         for orm_key in keymap.keys():
-            if not bf_mod.Asset.is_valid_field_name(orm_key):
+            if not Asset.is_valid_field_name(orm_key):
                 raise ConnectorTaskError(
                     "'{}' key in FieldMap".format(orm_key) +
                     " does not match any Asset field"
@@ -196,7 +197,8 @@ class FieldMap():
                     continue
 
             # Ignore anything that Django's ORM type system doesn't like
-            if not bf_mod.Asset.is_valid_field_value(orm_key, value):
+            Asset = apps.get_model('bf_opencore', 'Asset')
+            if not Asset.is_valid_field_value(orm_key, value):
                 continue
 
             # Must be a valid value

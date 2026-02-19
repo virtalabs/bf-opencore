@@ -38,6 +38,7 @@ version = "3.0.0"
 source = { editable = "." }
 dependencies = [
     { name = "celery" },
+    { name = "click" },
     { name = "dj-database-url" },
     { name = "django" },
     { name = "django-celery-beat" },
@@ -70,6 +71,7 @@ dev = [
 [package.metadata]
 requires-dist = [
     { name = "celery", specifier = "<5.5" },
+    { name = "click", specifier = ">=8.3.1" },
     { name = "dj-database-url" },
     { name = "django", specifier = ">=5.2,<5.3" },
     { name = "django-celery-beat" },

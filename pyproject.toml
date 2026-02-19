@@ -26,6 +26,7 @@ dependencies = [
     "django-waffle>=4.0",
     "dj-database-url",
     "psycopg[binary]>=3",
+    "click>=8.3.1",
 ]
 
 [project.optional-dependencies]
