@@ -6,7 +6,7 @@ from rest_framework import viewsets, serializers
 from waffle.mixins import WaffleSwitchMixin
 
 from django_celery_beat.models import PeriodicTask, IntervalSchedule, CrontabSchedule
-from bf_opencore.bf_opencore.models import Connector
+from bf_opencore.models import Connector
 
 
 logger = logging.getLogger(__name__)

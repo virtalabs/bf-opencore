@@ -9,7 +9,7 @@ from django.contrib.postgres.fields import ArrayField
 from django.utils import timezone
 from simple_history.models import HistoricalRecords
 from django.apps import apps
-from bf_opencore.bf_opencore.utils import quarter_start, prev_quarter_start, NullUnlessChanged
+from bf_opencore.utils import quarter_start, prev_quarter_start, NullUnlessChanged
 
 logger = logging.getLogger(__name__)
 

@@ -4,7 +4,7 @@ import logging
 from django.utils import timezone
 from rest_framework import viewsets, serializers
 from waffle.mixins import WaffleSwitchMixin
-from bf_opencore.bf_opencore.models import Alert
+from bf_opencore.models import Alert
 
 logger = logging.getLogger(__name__)
 

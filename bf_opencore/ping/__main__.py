@@ -9,7 +9,7 @@ import celery
 import sh
 from django.apps import apps
 from django.utils import timezone
-from bf_opencore.bf_opencore.exceptions import ConnectorTaskError
+from bf_opencore.exceptions import ConnectorTaskError
 from bf_opencore.celery import celery_app
 
 

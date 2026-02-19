@@ -3,7 +3,7 @@ from rest_framework import viewsets, serializers
 from rest_framework.fields import IntegerField
 from waffle.mixins import WaffleSwitchMixin
 
-from bf_opencore.bf_opencore.models import AssetTag
+from bf_opencore.models import AssetTag
 from .tag import TagSerializer
 from .utils import HugeLimitOffsetPagination
 from .utils import ChangeReasonMixin

@@ -11,8 +11,8 @@ from rest_framework.response import Response
 from rest_framework.decorators import action
 from waffle.mixins import WaffleSwitchMixin
 
-from bf_opencore.bf_opencore.models import Group, Asset, AssetGroup
-from bf_opencore.bf_opencore.utils import iterable
+from bf_opencore.models import Group, Asset, AssetGroup
+from bf_opencore.utils import iterable
 from .utils import HugeLimitOffsetPagination
 
 logger = logging.getLogger(__name__)

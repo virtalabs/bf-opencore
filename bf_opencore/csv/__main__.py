@@ -12,7 +12,7 @@ from django.conf import settings as django_settings
 from django.core.exceptions import ValidationError
 from django.db.utils import IntegrityError
 from simple_history import utils as hist_utils
-from bf_opencore.bf_opencore.exceptions import ConnectorTaskError
+from bf_opencore.exceptions import ConnectorTaskError
 from bf_opencore.celery import celery_app
 from bf_opencore.utils import FieldMap, FileWrapper
 

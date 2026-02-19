@@ -8,7 +8,7 @@ import nmap
 import celery
 from django.apps import apps
 from django.utils import timezone
-from bf_opencore.bf_opencore.exceptions import ConnectorTaskError
+from bf_opencore.exceptions import ConnectorTaskError
 from bf_opencore.celery import celery_app
 from bf_opencore.utils.hostname import hostname_ok, ip_address_ok
 
