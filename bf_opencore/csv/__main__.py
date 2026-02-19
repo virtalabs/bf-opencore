@@ -48,7 +48,7 @@ fields:
 When exporting data from Excel or a similar tool, choose `ASCII` or `UTF-8`
 encoding.
 
-A sample CSV file is available [here](/static/blueflow/samples/sample.csv).
+A sample CSV file is available [here](bf_opencore/csv/sample.csv).
 """.format(settings='/settings/connectors/csv/',
            fieldnames=', '.join(
                map(lambda x: '<tt>{}</tt>'.format(x),  # pylint: disable=unnecessary-lambda
