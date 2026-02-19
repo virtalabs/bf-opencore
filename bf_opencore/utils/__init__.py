@@ -21,6 +21,29 @@ class password(str):  # pylint: disable=invalid-name
 class FileWrapper(str):
     """File wrapper for use with file uploads."""
 
+
+def iterable(arg):
+    """Check if something is really an iterable but not a string."""
+    return (isinstance(arg, collections.abc.Iterable) and
+            not isinstance(arg, six.string_types))
+
+
+class Created(Enum):
+    """Extended Django's "created" flag to include up-to-date."""
+
+    UPDATED = auto()
+    CREATED = auto()
+    UPTODATE = auto()
+
+    def __bool__(self):
+        """Mimic Django behavior in if-statements.
+
+        Return True if created, otherwise False.
+        """
+        # We need to access private member to get this job done
+        # pylint: disable=protected-access,no-member
+        return self._value_ == self.CREATED._value_
+
 __all__ = [
     'FieldMap',
     'MSSQLClient',
@@ -31,4 +54,6 @@ __all__ = [
     'prev_quarter_start',
     'password',
     'FileWrapper',
+    'iterable',
+    'Created',
 ]
