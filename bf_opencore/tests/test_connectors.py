@@ -3,7 +3,7 @@
 import json
 import pytest
 from bf_opencore import models
-from bf_opencore.connectors.management.commands.create_connectors import create_connectors
+from bf_opencore.management.commands.create_connectors import create_connectors
 
 pytest.importorskip("connectors")
 

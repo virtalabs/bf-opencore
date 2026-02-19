@@ -3,8 +3,8 @@
 
 import os
 from codecs import BOM_UTF8
-from bf_opencore.connectors.csv.__main__ import process_csv
-from bf_opencore.bf_opencore.models import Asset
+from bf_opencore.csv.__main__ import process_csv
+from bf_opencore.models import Asset
 from .test_csv import write_tempfile, setup_db, TestCTX
 
 def test_tempfile_plain():

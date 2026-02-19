@@ -5,9 +5,9 @@ import os
 import tempfile
 import pytest
 import django.core.management
-import bf_opencore.connectors.celery
-from bf_opencore.bf_opencore.models import Asset, Connector, ConnectorTask
-from bf_opencore import connectors
+import bf_opencore.celery
+from bf_opencore.models import Asset, Connector, ConnectorTask
+import bf_opencore
 
 @pytest.fixture()
 def setup_db(db):
@@ -96,7 +96,7 @@ def test_csv_simple(setup_db):
         "Hospira,Plum A+,10.10.0.13,01:00:00:00:00:13,a013,This thing is totally broken\n"
         "Alaris,8100,192.168.0.1,01:00:00:00:00:01,a001,Last serviced by Ben\n"
     )
-    connectors.csv.main.apply(kwargs={
+    bf_opencore.csv.main.apply(kwargs={
         'filename': filename,
         'field_mapping': field_mapping,
     })
@@ -128,7 +128,7 @@ def test_csv_non_default_field_mapping(setup_db):
         "Hospira,Plum A+,10.10.0.13,01:00:00:00:00:13,a013,This thing is totally broken\n"
         "Alaris,8100,192.168.0.1,01:00:00:00:00:01,a001,Last serviced by Ben\n"
     )
-    connectors.csv.main.apply(kwargs={
+    bf_opencore.csv.main.apply(kwargs={
         'filename': filename,
         'field_mapping': field_mapping,
     })
@@ -152,7 +152,7 @@ def test_no_ip_or_mac(setup_db):
         "MyIP,MyMAC\n"
         ",,\n"
     )
-    connectors.csv.main.apply(kwargs={
+    bf_opencore.csv.main.apply(kwargs={
         'filename': filename,
         'field_mapping': field_mapping,
     })
@@ -173,7 +173,7 @@ def test_bad_mac(setup_db):
         "AssetNumber,MACAddress\n"
         "126,72.18.10.62\n"
     )
-    connectors.csv.main.apply(kwargs={
+    bf_opencore.csv.main.apply(kwargs={
         'filename': filename,
         'field_mapping': field_mapping,
     })
@@ -194,7 +194,7 @@ def test_bad_ip(setup_db):
         "AssetNumber,IP1\n"
         "126,192.168.0.345\n"
     )
-    connectors.csv.main.apply(kwargs={
+    bf_opencore.csv.main.apply(kwargs={
         'filename': filename,
         'field_mapping': field_mapping,
     })
@@ -215,7 +215,7 @@ def test_to_asset_model_ok(setup_db):
         "Model,AssetNumber,LAN 1 IP,Manoof\n"
         "X4000,1,10.0.0.1,FooCorp\n"
     )
-    connectors.csv.main.apply(kwargs={
+    bf_opencore.csv.main.apply(kwargs={
         'filename': filename,
         'field_mapping': field_mapping,
     })
@@ -237,7 +237,7 @@ def test_to_asset_model_bad_invalidated1(setup_db):
         "AssetNumber,Manoof\n"
         "124,FooCorp\n"
     )
-    connectors.csv.main.apply(kwargs={
+    bf_opencore.csv.main.apply(kwargs={
         'filename': filename,
         'field_mapping': field_mapping,
     })
@@ -256,7 +256,7 @@ def test_to_asset_model_bad_invalidated2(setup_db):
         "AssetNumber,Manoof\n"
         "124,FooCorp\n"
     )
-    connectors.csv.main.apply(kwargs={
+    bf_opencore.csv.main.apply(kwargs={
         'filename': filename,
         'field_mapping': field_mapping,
     })
@@ -277,7 +277,7 @@ def test_fail_validation(setup_db):
         "1,0:1:2:3:4:5\n"
         "2,hamburger\n"
     )
-    connectors.csv.main.apply(kwargs={
+    bf_opencore.csv.main.apply(kwargs={
         'filename': filename,
         'field_mapping': field_mapping,
     })
@@ -309,7 +309,7 @@ def test_sync_match_on_integer_key_id(setup_db):
         "AssetNumber,LAN 1 IP,Manufacturer\n"
         "123,10.0.0.1,Different\n"
     )
-    connectors.csv.main.apply(kwargs={
+    bf_opencore.csv.main.apply(kwargs={
         'filename': filename,
         'field_mapping': field_mapping,
     })
@@ -339,7 +339,7 @@ def test_sync_match_on_string_key_id(setup_db):
     )
     asset = Asset.objects.last()
     assert asset.manufacturer == "Foo"
-    connectors.csv.main.apply(kwargs={
+    bf_opencore.csv.main.apply(kwargs={
         'filename': filename,
         'field_mapping': field_mapping,
     })
@@ -363,7 +363,7 @@ def test_risk_score_simple(setup_db):
     )
 
     # Run CSV connector
-    connectors.csv.main.apply(kwargs={
+    bf_opencore.csv.main.apply(kwargs={
         'filename': filename,
         'field_mapping': field_mapping,
     })
@@ -396,7 +396,7 @@ def test_risk_score_invalid(setup_db):
     )
 
     # Run CSV connector
-    connectors.csv.main.apply(kwargs={
+    bf_opencore.csv.main.apply(kwargs={
         'filename': filename,
         'field_mapping': field_mapping,
     })
@@ -430,7 +430,7 @@ def test_risk_score_none(setup_db):
     )
 
     # Run CSV connector
-    connectors.csv.main.apply(kwargs={
+    bf_opencore.csv.main.apply(kwargs={
         'filename': filename,
         'field_mapping': field_mapping,
     })
@@ -463,7 +463,7 @@ def test_category(setup_db):
         "MAC,Category\n"
         "11:22:33:44:55:66,Infusion Pump\n"
     )
-    connectors.csv.main.apply(kwargs={
+    bf_opencore.csv.main.apply(kwargs={
         'filename': filename,
         'field_mapping': field_mapping,
     })

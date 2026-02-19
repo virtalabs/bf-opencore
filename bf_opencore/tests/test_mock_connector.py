@@ -7,10 +7,10 @@ try:
 except ImportError:
     np = None
 
-from bf_opencore.connectors import mock
-from bf_opencore.connectors.mock.mock import MockPopulation
+from bf_opencore import mock
+from bf_opencore.mock.mock import MockPopulation
 
-from bf_opencore.connectors.management.commands.create_connectors import create_connectors
+from bf_opencore.management.commands.create_connectors import create_connectors
 
 
 # pylint: disable=line-too-long, unused-argument

@@ -8,7 +8,7 @@ from .group import Group, AssetGroup
 from .tag import Tag, AssetTag
 from .network import Cidr, Network, SavedSearch
 from .network_endpoint import NetworkEndpoint, EndpointSuggestion
-from bf_opencore.connectors.models import ConnectorTask, Connector
+from .connector import ConnectorTask, Connector
 from .pulse import PulseFeedItem
 from .scan import Scan
 from .vulnerability import Vulnerability, AssetVulnerability

@@ -12,12 +12,11 @@ import celery
 from django.db import models
 from django_celery_beat.models import PeriodicTask
 from django.apps import apps
-from bf_opencore.bf_opencore.exceptions import ConnectorConfigError
 from django.db import models
 from django.db.models import F
 from django.utils import timezone
 
-from bf_opencore.bf_opencore.exceptions import ConnectorTaskError
+from bf_opencore.exceptions import ConnectorConfigError, ConnectorTaskError
 
 logger = logging.getLogger(__name__)
 
@@ -86,12 +85,12 @@ class Connector(models.Model):
         This helper function will be used later to extract the Connector
         CONNECTOR_SPEC, DEFAULT_RISK_SCORE_PARAMS, etc.
         """
-        connectors = importlib.import_module('connectors')
+        bf_opencore = importlib.import_module('bf_opencore')
         try:
-            return getattr(connectors, self.id)
+            return getattr(bf_opencore, self.id)
         except AttributeError as err:
             logger.error(
-                "Expected id '%s' to name a submodule of connectors: %s",
+                "Expected id '%s' to name a submodule of bf_opencore: %s",
                 self.id, err,
             )
             raise err

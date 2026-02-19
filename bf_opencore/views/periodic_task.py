@@ -213,7 +213,7 @@ class PeriodicTaskViewSet(WaffleSwitchMixin, viewsets.ModelViewSet):
 
     # Include only BlueFlow connectors.  This will exclude the Celery Backend
     # Clean up task.
-    queryset = PeriodicTask.objects.filter(task__startswith="connectors")
+    queryset = PeriodicTask.objects.filter(task__startswith="bf_opencore")
     serializer_class = PeriodicTaskSerializer
 
     search_fields = ['name']

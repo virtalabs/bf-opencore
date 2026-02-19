@@ -2,12 +2,12 @@
 """Test CSV connector."""
 
 import os
-import bf_opencore.connectors.celery
-from bf_opencore.connectors.csv.__main__ import process_csv
-from bf_opencore.bf_opencore.models import Asset, ConnectorTask, \
+import bf_opencore.celery
+from bf_opencore.csv.__main__ import process_csv
+from bf_opencore.models import Asset, ConnectorTask, \
     AssetCustomFieldName, AssetCustomField
 from .test_csv import write_tempfile, setup_db, no_nwk_field, TestCTX 
-from bf_opencore import connectors
+import bf_opencore
 
 
 def test_csv_import_with_custom_field(setup_db, no_nwk_field):
@@ -31,7 +31,7 @@ def test_csv_import_with_custom_field(setup_db, no_nwk_field):
     asset = Asset.objects.last()
     asset_custom_fields = AssetCustomField.objects.filter(asset=asset)
     assert asset_custom_fields.count() == 0
-    connectors.csv.main.apply(kwargs={
+    bf_opencore.csv.main.apply(kwargs={
         'filename': filename,
         'field_mapping': field_mapping,
     })

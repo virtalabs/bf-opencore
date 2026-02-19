@@ -31,20 +31,20 @@ def task_prerun(task_id, task, *args, **kwargs):
     logger.debug("task_prerun(task_id=%s)", task_id)
 
     # When a task is run asynchronously by a worker, the name looks like
-    # 'connectors.sleep.__main__.main'.  When it is run synchronously from the
-    # command line, it looks like 'app.connectors.sleep.__main__.main'.  Make
+    # 'bf_opencore.sleep.__main__.main'.  When it is run synchronously from the
+    # command line, it looks like 'app.bf_opencore.sleep.__main__.main'.  Make
     # them both look the same.
     task_name = task.name.replace("app.", "")
 
     # Do nothing if task is *not* a BlueFlow connector
-    if not task_name.startswith("connectors"):
+    if not task_name.startswith("bf_opencore"):
         return
 
     # Create database entry if it isn't already there.  When a task is run
     # asynchronously from the web UI, it will already have a DB entry.  When
     # a task is run synchronously from the CLI, we need to create it.
-    ConnectorTask = apps.get_model('connectors', 'ConnectorTask')
-    Connector = apps.get_model('connectors', 'Connector')
+    ConnectorTask = apps.get_model('bf_opencore', 'ConnectorTask')
+    Connector = apps.get_model('bf_opencore', 'Connector')
     try:
         connector_task = ConnectorTask.objects.get(
             celery_task_id=task_id)
@@ -91,7 +91,7 @@ def task_postrun(task_id, task, retval, state, *args, **kwargs):
     thrown by the task
     """
     logger.debug("task_postrun(task_id=%s)", task_id)
-    ConnectorTask = apps.get_model('connectors', 'ConnectorTask')
+    ConnectorTask = apps.get_model('bf_opencore', 'ConnectorTask')
     try:
         connector_task = ConnectorTask.objects.get(
             celery_task_id=task_id)
@@ -125,7 +125,7 @@ def task_retry(request, reason, einfo, *args, **kwargs):
     http://docs.celeryproject.org/en/latest/userguide/signals.html#task-retry
     """
     logger.debug("task_retry(request=%s)", request)
-    ConnectorTask = apps.get_model('connectors', 'ConnectorTask')
+    ConnectorTask = apps.get_model('bf_opencore', 'ConnectorTask')
     try:
         task_id = request.id
         connector_task = ConnectorTask.objects.get(
@@ -146,7 +146,7 @@ def task_success(result, *args, **kwargs):
     http://docs.celeryproject.org/en/latest/userguide/signals.html#task-success
     """
     logger.debug("task_success(result=%s)", result)
-    ConnectorTask = apps.get_model('connectors', 'ConnectorTask')
+    ConnectorTask = apps.get_model('bf_opencore', 'ConnectorTask')
     try:
         task_id = kwargs['sender'].request.id
         connector_task = ConnectorTask.objects.get(
@@ -168,7 +168,7 @@ def task_failure(task_id, exception, traceback, einfo, *args, **kwargs):
     http://docs.celeryproject.org/en/latest/userguide/signals.html#task-failure
     """
     logger.debug("task_failure(task_id=%s)", task_id)
-    ConnectorTask = apps.get_model('connectors', 'ConnectorTask')
+    ConnectorTask = apps.get_model('bf_opencore', 'ConnectorTask')
     try:
         connector_task = ConnectorTask.objects.get(
             celery_task_id=task_id)
@@ -194,7 +194,7 @@ def task_revoked(request, terminated, signum, expired, *args, **kwargs):
     http://docs.celeryproject.org/en/latest/userguide/signals.html#task-revoked
     """
     logger.debug("task_revoke(request=%s)", request)
-    ConnectorTask = apps.get_model('connectors', 'ConnectorTask')
+    ConnectorTask = apps.get_model('bf_opencore', 'ConnectorTask')
     try:
         task_id = request.id
         connector_task = ConnectorTask.objects.get(

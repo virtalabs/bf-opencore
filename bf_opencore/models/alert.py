@@ -22,13 +22,13 @@ class Alert(models.Model):
         null=True,
     )
     connector = models.ForeignKey(
-        'connectors.Connector',
+        'Connector',
         on_delete=models.SET_NULL,
         related_name='alert_connectors',
         null=True,
     )
     connectortask = models.ForeignKey(
-        'connectors.ConnectorTask',
+        'ConnectorTask',
         on_delete=models.SET_NULL,
         related_name='alert_connector_tasks',
         null=True,

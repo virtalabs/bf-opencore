@@ -27,7 +27,7 @@ from bf_opencore.bf_opencore.utils import NullUnlessChanged
 
 from .asset_manager import AssetManager, AssetQuerySet, _unflatten_json_field
 from .asset_custom_field import AssetCustomFieldName, AssetCustomField
-from bf_opencore.connectors.models import ConnectorTask
+from bf_opencore.models import ConnectorTask
 from .group import Group, AssetGroup
 from .scan import Scan
 # from .attachment import Attachment

@@ -17,7 +17,7 @@ class Scan(models.Model):
     """
 
     asset = models.ForeignKey("Asset", on_delete=models.CASCADE)
-    connector_task = models.ForeignKey("connectors.ConnectorTask",
+    connector_task = models.ForeignKey("ConnectorTask",
                                        on_delete=models.CASCADE)
     num_vulnerabilities = models.IntegerField()
     num_plugins = models.IntegerField()

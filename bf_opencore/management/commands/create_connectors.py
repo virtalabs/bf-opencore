@@ -2,8 +2,8 @@
 """Create or update connectors."""
 
 from django.core.management.base import BaseCommand
-from bf_opencore import connectors
-from models import Connector
+import bf_opencore
+from bf_opencore.models import Connector
 
 
 class Command(BaseCommand):  # noqa: D101
@@ -26,10 +26,10 @@ def create_connectors(verbosity=0):
     """Create or update connectors."""
     if verbosity > 0:
         print("Updating connector table ...")
-    for connector in connectors.CONNECTORS:
+    for connector in bf_opencore.CONNECTORS:
         if verbosity > 2:
             print(connector.name)
-        module = getattr(connectors, connector.name)
+        module = getattr(bf_opencore, connector.name)
         default_settings = {setting_name: value['default']
                             for setting_name, value in
                             module.CONNECTOR_SPEC['settings'].items()}
