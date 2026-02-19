@@ -6,7 +6,6 @@ from rest_framework import viewsets, serializers
 from waffle.mixins import WaffleSwitchMixin
 
 from django_celery_beat.models import PeriodicTask, IntervalSchedule, CrontabSchedule
-from bf_opencore.models import Connector
 
 
 logger = logging.getLogger(__name__)
@@ -99,10 +98,6 @@ class PeriodicTaskSerializer(serializers.HyperlinkedModelSerializer):
         view_name="bf_opencore:periodictask-detail")
     display_name = serializers.SerializerMethodField('do_display_name')
     display_schedule = serializers.SerializerMethodField('do_display_schedule')
-    connector_id = serializers.SerializerMethodField('do_connector_id')
-    connector_enabled = serializers.SerializerMethodField(
-        'do_connector_enabled'
-    )
 
     def do_display_name(self, periodictask):
         """Server-controlled human-readable name."""
@@ -115,20 +110,6 @@ class PeriodicTaskSerializer(serializers.HyperlinkedModelSerializer):
         if periodictask.crontab:
             return str(periodictask.crontab)
         return None
-
-    def do_connector_id(self, periodictask):
-        """Human-readable name."""
-        connector = Connector.objects.get(
-            celery_task_name=periodictask.task
-        )
-        return connector.id
-
-    def do_connector_enabled(self, periodictask):
-        """Human-readable name."""
-        connector = Connector.objects.get(
-            celery_task_name=periodictask.task
-        )
-        return connector.enabled
 
     # We need to tell DRF how to turn foreign key relationships into URLs
     # and objects.   I will admit that I don't fully understand what's going on
@@ -165,8 +146,7 @@ class PeriodicTaskSerializer(serializers.HyperlinkedModelSerializer):
     class Meta:  # noqa
         model = PeriodicTask
         # NOTE HHolm 2017-08-29: I think most of these args are in fact
-        #   read-only.  We should consider tagging them as such, like
-        #   in connector_task.py:ConnectorTaskSerializer.
+        #   read-only.  We should consider tagging them as such.
         fields = [
             "id",
             "name",
@@ -189,8 +169,6 @@ class PeriodicTaskSerializer(serializers.HyperlinkedModelSerializer):
             "url",
             "display_name",
             "display_schedule",
-            "connector_enabled",
-            "connector_id",
             ]
 
 
@@ -211,9 +189,7 @@ class PeriodicTaskViewSet(WaffleSwitchMixin, viewsets.ModelViewSet):
 
     waffle_switch = "core"
 
-    # Include only BlueFlow connectors.  This will exclude the Celery Backend
-    # Clean up task.
-    queryset = PeriodicTask.objects.filter(task__startswith="bf_opencore")
+    queryset = PeriodicTask.objects.all()
     serializer_class = PeriodicTaskSerializer
 
     search_fields = ['name']
