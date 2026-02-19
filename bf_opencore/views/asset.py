@@ -21,7 +21,7 @@ import netfields
 from simple_history import utils as hist_utils
 
 from bf_opencore.models import Asset
-from bf_opencore.models import Tag, AssetTag, Connector, PulseFeedItem, AssetVulnerability, AssetCustomFieldName, AssetCustomField
+from bf_opencore.models import Tag, AssetTag, PulseFeedItem, AssetVulnerability, AssetCustomFieldName, AssetCustomField
 
 from .utils import PaginateRelationsMixin, ChangeReasonMixin
 from .assettag import AssetTagSerializer
@@ -249,8 +249,6 @@ class AssetFilter(django_filters.rest_framework.FilterSet):
     active_vulnerability = django_filters.NumberFilter(
         method="filter_active_vulnerability")
     pulse = django_filters.NumberFilter(method="filter_pulse")
-    connector_task = django_filters.NumberFilter(
-        field_name='scans__id')
 
     @staticmethod
     def filter_network(queryset, name, value):
@@ -587,6 +585,7 @@ class AssetViewSet(WaffleSwitchMixin, ChangeReasonMixin, PaginateRelationsMixin,
     @action(detail=True)
     def external_links(self, request, pk):
         """Return a dictionary of (systemname, url) external links."""
+        raise NotImplementedError("Connectors have been removed")
         external_keys = self.get_object().external_keys
         if not external_keys:
             return Response({})

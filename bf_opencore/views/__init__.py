@@ -12,8 +12,6 @@ from .assetvulnerability import AssetVulnerabilityViewSet, \
 from .attachment import AttachmentViewSet, AttachmentSerializer
 from .autocomplete import AutocompleteViewSet, AutocompleteSerializer, \
     AutocompleteAssetFieldViewSet
-from .connector import ConnectorViewSet, ConnectorSerializer
-from .connector_task import ConnectorTaskViewSet, ConnectorTaskSerializer
 from .group import GroupViewSet, GroupSerializer
 from .network import NetworkViewSet, NetworkSerializer, SavedSearchViewSet, \
     CidrViewSet
