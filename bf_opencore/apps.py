@@ -3,7 +3,7 @@
 from django.apps import AppConfig
 
 
-class BfOpenCoreConfig(AppConfig):  # noqa
+class BfOpenCoreConfig(AppConfig): 
     name = 'bf_opencore'
 
     def ready(self):
