@@ -1,0 +1,6038 @@
+{
+   "manufacturers" : {
+      "EP Medsystems Inc" : [
+         "930115P01",
+         "Wm01"
+      ],
+      "Kodak" : [
+         "Dryview 6800",
+         "Dv6850"
+      ],
+      "Gast Manufacturing Incorporate" : [
+         "Dol101Aa",
+         "Dol-101-Aa"
+      ],
+      "Aiv" : [
+         "Ps11076"
+      ],
+      "Endosonics" : [
+         "S7700470"
+      ],
+      "OR Solutions Inc" : [
+         "Ors2066D",
+         "Ors2038",
+         "Ors2038D",
+         "Ors3028",
+         "Ors2066R",
+         "Ors-1058-Hs-44.5",
+         "Or1Summit",
+         "Ors2066Rg"
+      ],
+      "Citizen" : [
+         "Ch4532"
+      ],
+      "A & D Engineering" : [
+         "Ua787",
+         "Ua851"
+      ],
+      "Armstrong Medical Industries" : [
+         "Ar6",
+         "Ar600P",
+         "40014A",
+         "Ae6970",
+         "Asmart",
+         "Pblb30",
+         "Pbll30",
+         "Pelaa30",
+         "2314B",
+         "Par30",
+         "Smartcart",
+         "Basix 202",
+         "Amc6Y",
+         "Pel30",
+         "Smart Cart",
+         "Isolation Cart"
+      ],
+      "Xltek" : [
+         "Emu40"
+      ],
+      "Vasomedical Inc" : [
+         "Eecp"
+      ],
+      "Hausmann Industries Inc" : [
+         "Exam Table"
+      ],
+      "Sunnex Inc" : [
+         "Hs34Pm"
+      ],
+      "Gomco Surgical Mfg Co" : [
+         "4005P"
+      ],
+      "Ritron" : [
+         "Slx400"
+      ],
+      "Tsi Incorporated" : [
+         "4140A",
+         "4071B",
+         "4071A",
+         "40714B"
+      ],
+      "Kalatel" : [
+         "Ktd400"
+      ],
+      "Triangle Biomedical Sciences" : [
+         "Pd120"
+      ],
+      "Therakos Inc Johnson & Johnson" : [
+         "Uvarxts",
+         "Cellex"
+      ],
+      "Sun Medical Inc" : [
+         "Sunstim Plus"
+      ],
+      "Motorola Inc" : [
+         "P50",
+         "P110",
+         "Tcc460",
+         "Ht750",
+         "Msf5000",
+         "Gr1225",
+         "Aahtn3003",
+         "Xts2500Ii",
+         "Xts5000Iii",
+         "M44Gmc20A1Aa",
+         "Wpln4197A",
+         "Xts5000",
+         "Wpln4108Br"
+      ],
+      "Chrono-Log Corp" : [
+         "700X"
+      ],
+      "Invotec International" : [
+         "Tac400M"
+      ],
+      "Tenex" : [
+         "TX"
+      ],
+      "Perkin-Elmer Corp" : [
+         "Pks1000",
+         "Aanalyst800",
+         "Pcr9700",
+         "Pcr7300",
+         "Wizzard2",
+         "Ajmag01"
+      ],
+      "Philips Medical Systems Inc" : [
+         "Ie33",
+         "Hd11",
+         "Envisor",
+         "Envisorhd",
+         "200P6Eb27",
+         "Iu22",
+         "Frx",
+         "S73T",
+         "S7-2",
+         "M3860A",
+         "C51",
+         "X72T",
+         "X7-2T",
+         "M3860Fr2Plus",
+         "Cx50",
+         "Heartstartfr2",
+         "M3861A",
+         "S5-1",
+         "X6-1",
+         "S8-3",
+         "X5-1",
+         "S12-4",
+         "S72",
+         "Frx",
+         "S8-3T",
+         "S7-3T",
+         "Epiq7C",
+         "Cx50Compactextreme",
+         "M3860Afr2Plus",
+         "Heartstartfrx",
+         "Cx30"
+      ],
+      "Thermo Cardiosystems Inc" : [
+         "1280N",
+         "Pbu1240",
+         "816784"
+      ],
+      "Hemocue Inc" : [
+         "Hb200Plus",
+         "Hb201Plus"
+      ],
+      "GE Datex-Ohmeda" : [
+         "Aestiva5Mri",
+         "Giraffe",
+         "Aisys",
+         "Aisyscarestation",
+         "Ecaiovx00En",
+         "Ecaio00En",
+         "Panda",
+         "Giraffeomnibed",
+         "Wellbaby",
+         "6600-0585-806",
+         "Wellbaby"
+      ],
+      "Bosch" : [
+         "Sccal2B"
+      ],
+      "Humphrey Instruments" : [
+         "750I",
+         "740I"
+      ],
+      "Concept Ii" : [
+         "Conceptii"
+      ],
+      "Reichert Ophthalmic Instrument" : [
+         "11635B",
+         "Xcel300",
+         "Euro",
+         "Poc",
+         "1251B",
+         "Tonopenavia",
+         "Tonopenxl",
+         "12084Loudkifepoc",
+         "12084Loudlifepoc",
+         "Tonometer7",
+         "Tono Pen Xl",
+         "R900",
+         "Avia",
+         "Dgh555B",
+         "Mentor"
+      ],
+      "JA Preston Corp / Sammons Pres" : [
+         "Jamarplus",
+         "Jamar"
+      ],
+      "Philips Healthcare" : [
+         "M3860A",
+         "8960-237-56001",
+         "4000-0985-02",
+         "300-0243-01",
+         "Easyvision",
+         "380-0243-01",
+         "700002D",
+         "L12-5",
+         "C9-4",
+         "C8-4V",
+         "21314A",
+         "4000-0966-02",
+         "Easydiagnost",
+         "Integris",
+         "BV Endura",
+         "Whl",
+         "P670",
+         "Envisor",
+         "Achieva 1.5T",
+         "Ie33",
+         "Iu22",
+         "X7-2T",
+         "S7-2T",
+         "Cx50",
+         "Epiq7C",
+         "Epiq7G",
+         "S5-1",
+         "L12-3",
+         "Viewforum",
+         "Pws",
+         "L9-E",
+         "C5-1",
+         "BV Pulsera",
+         "Extended Workstation",
+         "Hd9",
+         "Ingenia",
+         "Veradius",
+         "Panorama",
+         "T5500",
+         "C10-3V",
+         "L15-7Io",
+         "4535-303-60691",
+         "L12-5-50",
+         "X6-1",
+         "Epiq 7 G",
+         "L12-5 50",
+         "C-5-1",
+         "C5-2",
+         "C8-5",
+         "L17-5",
+         "L15-7Io",
+         "L9-3",
+         "C6-2",
+         "L12-4",
+         "C6-3",
+         "Mri",
+         "Panoramahfo",
+         "CX-30",
+         "Avalonfm50",
+         "Avalonfm30",
+         "Clearview 650",
+         "S12-4",
+         "S8-3",
+         "X5-1",
+         "C-51",
+         "Sparq",
+         "Ut1G2L024C6Tpm",
+         "Ug1G2L024C6Tbpm2",
+         "Ug1G2L024C6Tbpm",
+         "C5-1V",
+         "C9-4V",
+         "Clearvue 650",
+         "S14-4",
+         "Epiq 7G",
+         "C9-2",
+         "L18-5",
+         "M2720A",
+         "Host Pc",
+         "Avalonfm20",
+         "Xper Pc",
+         "Xper",
+         "S7-3T",
+         "Fr3",
+         "Fr3",
+         "T70",
+         "M2726A",
+         "Epiq 7C",
+         "Heart Start",
+         "Frx",
+         "Em60"
+      ],
+      "Hamilton Mfg Co Inc" : [
+         "Premier",
+         "235750A",
+         "Hl2",
+         "6K11"
+      ],
+      "Oakworks Medical" : [
+         "Fl40"
+      ],
+      "Unico (United Products & Instr" : [
+         "C806",
+         "Gs80Led"
+      ],
+      "Spectronics Corp" : [
+         "Cvx300",
+         "Xl1000"
+      ],
+      "Body Master" : [
+         "Md114",
+         "Md122",
+         "Md115",
+         "Cm290",
+         "Cx122",
+         "Cm240",
+         "Cm242",
+         "Cm292",
+         "Cxi213",
+         "Be218A",
+         "210A"
+      ],
+      "Premobil" : [
+         "C300Rnet"
+      ],
+      "Iomed" : [
+         "Phoresorii",
+         "Pm850",
+         "Dupel"
+      ],
+      "Toshiba Medical Systems" : [
+         "Ccd",
+         "Jktu52H",
+         "Xarioxg",
+         "Aplioxg",
+         "Xario Xg",
+         "Iktu51Cu",
+         "Satellitel305",
+         "Satellite Pro53000 E",
+         "Satelitepro5300Ez151",
+         "S300Ez1512",
+         "1400Xlplus",
+         "Plt-704At 7.5 Mhz",
+         "Pvt-382Bt 3.5Mhz",
+         "Plt-704Sbt 7.5Mhz",
+         "Pvt-375Bt 3.5 Mhz",
+         "Pvt-382Bt  3.5 Mhz",
+         "G8000",
+         "Plt-704Sbt",
+         "Pvt-375Bt",
+         "Pvt-328Bt",
+         "Pst-25Bt",
+         "Plt-604At",
+         "Pvt-382Bt",
+         "Infinixvfdubp",
+         "Infinixcfibp",
+         "IK-Tu51Cu"
+      ],
+      "Nova Biomedical Corp" : [
+         "Nova8",
+         "Nova1"
+      ],
+      "Hagner" : [
+         "Ec1-L",
+         "Screenmaster"
+      ],
+      "Given Imaging" : [
+         "Dr3"
+      ],
+      "Arjo Inc" : [
+         "Ac550",
+         "Stedy",
+         "Ceb600301",
+         "Hep1001Saraplus",
+         "Htair1200",
+         "Htair1200A",
+         "Asc800",
+         "Ntb2000"
+      ],
+      "Coulter Electronics" : [
+         "N"
+      ],
+      "Savant Instruments Inc  E C Ap" : [
+         "Iss110",
+         "Dna120",
+         "Svc100H"
+      ],
+      "Bird Electronic Corp" : [
+         "61-89A-50-A05-G1",
+         "61-89A-50-C05-G1"
+      ],
+      "Mego Afek" : [
+         "201 M"
+      ],
+      "Fotodyne" : [
+         "Ct150B"
+      ],
+      "Tecan Us Inc" : [
+         "Evo150",
+         "Freedomevo150/8"
+      ],
+      "Cybex International Inc" : [
+         "Seated Leg Curl",
+         "Trotter",
+         "Gsmh91",
+         "Vr24507",
+         "Vr24645",
+         "Vr24640",
+         "Vr24530",
+         "Gsup",
+         "500T",
+         "500R"
+      ],
+      "Dynasil Products" : [
+         "N29001Hn",
+         "N2900112",
+         "Navigator2.0"
+      ],
+      "Ideal Medical Products Inc" : [
+         "Gw208"
+      ],
+      "Monarch" : [
+         "Ergomedic894E"
+      ],
+      "Anspach Effort Inc" : [
+         "Sc2100"
+      ],
+      "Sage Science" : [
+         "Da1Sec",
+         "HT"
+      ],
+      "Zonare" : [
+         "Pn84009",
+         "C6-2",
+         "85222-00",
+         "84008-00",
+         "Zone",
+         "Z.One",
+         "84009-00",
+         "C9-4T",
+         "L10-5",
+         "Pn84003",
+         "85333-00",
+         "C4-1",
+         "L8-3",
+         "E9-4",
+         "84003-R",
+         "Zs3",
+         "Z.One Pro Sp",
+         "L10-5 Linear",
+         "L14-5Sp",
+         "89000-00",
+         "86888-30"
+      ],
+      "Omega Engineering Inc" : [
+         "Taobl",
+         "30L O2 Low Flow"
+      ],
+      "Cepheid" : [
+         "Genexpert Iv"
+      ],
+      "Kaneka Phrma Amera Corp" : [
+         "Ma03"
+      ],
+      "Siemens Medical Solutions Usa" : [
+         "V5M",
+         "L7384",
+         "C256",
+         "Leonardo Mmwp",
+         "Aristos Fx",
+         "52091-X2",
+         "41691-Xc",
+         "41691-Xb",
+         "Immulite",
+         "Immulite2000",
+         "Multixtop (475525)",
+         "Multix Fd",
+         "Ws3000",
+         "Accuson Cyprus",
+         "Mv1000",
+         "Antares",
+         "Arcadis Orbic 3D",
+         "DS 3000",
+         "62Eoxl",
+         "Aristos Mx",
+         "Sireskop Sd",
+         "Axiom Luminos Tf",
+         "Robcontmod",
+         "Mainconvstart",
+         "Bnii",
+         "Cypress",
+         "Luminos Tf",
+         "4V1C",
+         "Arcadisavantic",
+         "Axiom Artis Dbc",
+         "Axiom Artis Dbc",
+         "Axiom Artis Dtc",
+         "Axiom Artis Dta/C",
+         "Axiom Artis",
+         "Axiom Artis Dta",
+         "Artis Niyobi",
+         "Sequoiac512",
+         "Axiom Artis Mp",
+         "Biograph",
+         "Az733V",
+         "Tev5Ms",
+         "Tev7B",
+         "Tevm",
+         "Tev5M",
+         "Mammotest",
+         "P390",
+         "Sc2000",
+         "Dcavantage",
+         "Dca2000Plus",
+         "Artis Zee Biplane",
+         "Leonardo",
+         "Artis Zee Mp",
+         "Syngo",
+         "Pvt-375Bt",
+         "Ysio",
+         "Syngo Mmwp",
+         "Syngo Xwp",
+         "6C2",
+         "18L6",
+         "6C1 Hd",
+         "Ec9-4",
+         "Artis Zeego",
+         "Symbia",
+         "Mct",
+         "Artis Zee Bi-Plane",
+         "Artis Zee",
+         "Syngoxworkplace",
+         "Axiom Luminos",
+         "Symbiat16",
+         "Artis Zee Dta",
+         "Somatom Sensation",
+         "8C3 Hd",
+         "Espree",
+         "Syngo X-Wp",
+         "Mv200",
+         "Luminos Agile",
+         "8V3",
+         "Acuson S3000",
+         "12L4",
+         "14L5 Sp",
+         "9L4",
+         "10V4",
+         "14L5",
+         "18L6Hd",
+         "Acuson S2000",
+         "Acuson 9L4",
+         "Acuson 6C1Hd",
+         "Acuson 14L5",
+         "Immulite1000",
+         "Ysio Max",
+         "Acuson Sc2000",
+         "Swift Link",
+         "Swift Link V",
+         "Vf7-3",
+         "Vf10-5",
+         "Ch4-1",
+         "Px4-1",
+         "Artis Q Biplane",
+         "Artiszee",
+         "Syngo Workstation",
+         "5031C",
+         "X700",
+         "Biograph Mct Flow",
+         "Clinitek Status +"
+      ],
+      "Dermamed" : [
+         "E300"
+      ],
+      "Scifit Sysyems" : [
+         "Pro1100"
+      ],
+      "Mindray Ds Usa Inc" : [
+         "DP-6600",
+         "Dp6600",
+         "M7",
+         "C5-2S",
+         "L14-6Ns",
+         "P4-2S",
+         "L14-6Ns",
+         "DP-30",
+         "M9"
+      ],
+      "Karl Storz Endoscopy" : [
+         "Visitor1",
+         "V3Csx19R110",
+         "481C",
+         "Ksa4",
+         "20212101U020",
+         "9512B",
+         "20132001U",
+         "22200011U1",
+         "22201011U102",
+         "9319Nra24",
+         "9426Hdnb",
+         "Scwu24A1511",
+         "22200011U102",
+         "9601G",
+         "20200075U",
+         "Scwu26A1511",
+         "Scwu23A1515",
+         "Dvdm",
+         "Scwu42",
+         "H3P",
+         "Nova175",
+         "Wu1089A",
+         "22260131Htsc",
+         "22260131Ntsc",
+         "9801T20",
+         "Cybersmithvra",
+         "9801T",
+         "9601Hd",
+         "9401Ms26",
+         "Xenonnova175",
+         "9401Ms",
+         "Vs122471M",
+         "Chromovision",
+         "H3M",
+         "22201011U110",
+         "Scb300W",
+         "P20040608U",
+         "9426Hdaf",
+         "Clearvisionii",
+         "9803T",
+         "11101Vn",
+         "9419A",
+         "11301Df",
+         "11301Dg",
+         "11005Bc1",
+         "11002Bd1",
+         "11001Bn1",
+         "11900Bn",
+         "R11900Bn",
+         "9426Ls",
+         "R11005Bc1",
+         "R11002Bd1",
+         "Scwh1515",
+         "Scwu26A1515",
+         "Or1Essentialneohls",
+         "Scwu24A1515",
+         "Aidahdconnect",
+         "11101Rp2",
+         "9426Hdafkt",
+         "11101Rp1",
+         "SC-Wu42-A1515",
+         "Tc200",
+         "Image 1",
+         "200905 21",
+         "SC-Wv26-A1507",
+         "Thermoflator",
+         "Image1Hub"
+      ],
+      "Heathrow Scientific LLC" : [
+         "Sprout"
+      ],
+      "Accumetrics Inc" : [
+         "Verifynow",
+         "Verynowsystem"
+      ],
+      "Urawa Corp" : [
+         "Up5001C",
+         "Up501C"
+      ],
+      "Fluke Biomedical Corp" : [
+         "26Iii",
+         "179Iii",
+         "232D",
+         "77-111",
+         "Dastony",
+         "Lt544Dl1Tb",
+         "50S",
+         "Impulse4000",
+         "Dale14",
+         "Mas-5",
+         "Sigmapace1000",
+         "Cufflink",
+         "Dpm2Plus",
+         "Qaesmikii",
+         "Ps420",
+         "Ps240",
+         "451Bryr",
+         "Psa420",
+         "Impulse7000Dp",
+         "Ida4Plus",
+         "Esa612",
+         "87-3",
+         "7171500G",
+         "Vtplushf",
+         "U1273A",
+         "Prosim8"
+      ],
+      "Draeger Inc" : [
+         "Babylog VN500"
+      ],
+      "Heath Co" : [
+         "In3117"
+      ],
+      "Carefusion-Bd" : [
+         "Ltv1000",
+         "3100B",
+         "3100A",
+         "10041A",
+         "Mr850",
+         "Avea",
+         "Sipap",
+         "Vmaxencore29N",
+         "Baby Body",
+         "Cortical Stim",
+         "Micro Loop",
+         "Vmaxencore",
+         "Cortical Stim",
+         "03800A",
+         "Vmaxencore20C"
+      ],
+      "National Display Systems" : [
+         "90X0342",
+         "Scsx19A1A11",
+         "Scwu26A1511"
+      ],
+      "Novametrix Medical Systems" : [
+         "715Sp"
+      ],
+      "Leica Microsystems Inc" : [
+         "Cv5030"
+      ],
+      "Perspective Enterprise" : [
+         "Pewm6084"
+      ],
+      "Smiths Medical Asd Inc" : [
+         "6400"
+      ],
+      "Jolife Ab/Physio Control" : [
+         "Lucas2"
+      ],
+      "Swisslog Tranlogic" : [
+         "Sc3008"
+      ],
+      "Covidien" : [
+         "Superdimension",
+         "Genius 2",
+         "Kangaroo E-Pump",
+         "Kangaroo",
+         "Bis Loc 4 Channel",
+         "Triad",
+         "Force Fx",
+         "Emprint"
+      ],
+      "Thermobrite" : [
+         "Statspin"
+      ],
+      "Advanced Mechanical Technology" : [
+         "Mca6",
+         "Msa6"
+      ],
+      "Nustep By Lifeplus" : [
+         "Trs4000"
+      ],
+      "Carl Zeiss" : [
+         "Opmicsxy2",
+         "Zms175",
+         "Stativ5",
+         "Nagopmi",
+         "Zms230",
+         "Zms226",
+         "Zvs3700",
+         "Opmiprimo",
+         "Zms216",
+         "Superlux40",
+         "Zvs1000",
+         "Opmi9",
+         "Opmi9Fc",
+         "Superlux175",
+         "Zms419",
+         "P30A05952",
+         "Opmi6Sf",
+         "Zms124",
+         "Opmicsi",
+         "Opmivisu150",
+         "Axioskop2Plus",
+         "Trio",
+         "Opmiorl",
+         "Opmivario",
+         "Iolmaster",
+         "Opmi Sensera F/Ent S",
+         "Ff450+R",
+         "Oct3Stratus",
+         "Axio",
+         "S7",
+         "Opmi",
+         "Opmipico",
+         "750I",
+         "Medilivetrio3",
+         "Gmbh",
+         "Lumera700",
+         "Resight",
+         "Opmilumera700",
+         "Resight700",
+         "Matrix715",
+         "Opmivaro",
+         "F450Plusir",
+         "Ff450Plus5000Fa",
+         "Atlas9000",
+         "Opmi3",
+         "Matrix800",
+         "S5"
+      ],
+      "Nds Surgical Imaging Llc" : [
+         "90K0006F"
+      ],
+      "Burton Medical Products" : [
+         "Supernova"
+      ],
+      "Phs West Inc" : [
+         "2000Rcsst"
+      ],
+      "Veris Industries" : [
+         "Veris"
+      ],
+      "Gyrus Medical" : [
+         "G400",
+         "Plasmakinetic",
+         "A20918A",
+         "Ues40",
+         "C400",
+         "Hyfxp",
+         "Enfxp",
+         "Enft3"
+      ],
+      "Frigitronics" : [
+         "Ce82"
+      ],
+      "Seca Corp" : [
+         "Delta",
+         "Seca"
+      ],
+      "Steelcase" : [
+         "Admx 2242Loc"
+      ],
+      "Maxtec Inc" : [
+         "Maxo2",
+         "Om25Me",
+         "Om25Mel",
+         "Om25Ae",
+         "Maxblendhighflow",
+         "Maxblend",
+         "Ox25Me"
+      ],
+      "Capsa Solutions" : [
+         "Avalo"
+      ],
+      "Bunnell Inc" : [
+         "Lifepulse"
+      ],
+      "Resonance Technology Inc" : [
+         "Cinema Vision"
+      ],
+      "Amx Corp" : [
+         "Cwv7935Xt",
+         "Sx8T",
+         "Cwv7935St"
+      ],
+      "Pacscube" : [
+         "200X",
+         "100X"
+      ],
+      "Baxter Healthcare Corp Biotec" : [
+         "Fibrinotherm",
+         "W297514",
+         "Easyspray"
+      ],
+      "Fresenius" : [
+         "2008T"
+      ],
+      "Ortho Diagnostic Systems" : [
+         "Mts213784"
+      ],
+      "Hgm" : [
+         "Hdl"
+      ],
+      "Solta Medical Inc" : [
+         "Fraxelsr1500"
+      ],
+      "Stryker Medical Corp" : [
+         "Tpsconsole",
+         "G986",
+         "Command2",
+         "Ref540050",
+         "Sm104",
+         "Sm204",
+         "St104",
+         "Cub",
+         "Smartpump",
+         "1069D",
+         "Fluidsafe",
+         "Mseries",
+         "Neptune",
+         "Prime",
+         "Mseries1007",
+         "Neptunesilver",
+         "Core",
+         "Primeseries",
+         "Primezoom",
+         "Eye",
+         "Gynnie",
+         "Epic Ii",
+         "Neptune2",
+         "Gobediiex",
+         "Neptune2Roverultra",
+         "Premier",
+         "Fl28C1",
+         "Gobediifl28",
+         "Bigwheel",
+         "Rio 3.005"
+      ],
+      "Natus Medical Inc" : [
+         "Nicolet Cortical Sti"
+      ],
+      "Ricoh" : [
+         "Sp4100N"
+      ],
+      "Hygenic Corporation" : [
+         "Parabath"
+      ],
+      "Esoft" : [
+         "Esoft"
+      ],
+      "Midland Manufacturing Co Inc" : [
+         "2225A",
+         "2228Bb",
+         "8859B"
+      ],
+      "Intoximeters  Inc" : [
+         "F-000157-01"
+      ],
+      "Innovative Medical Suppliers" : [
+         "Scrubex128Se1140Ce",
+         "Scrubex128Rrwpbvme",
+         "Scrubex128Rrw9Bvme",
+         "SE-3000B-E"
+      ],
+      "Cincinnati Sub Zero Product" : [
+         "222R",
+         "333W",
+         "Blanketroliii",
+         "Hemotherm 400Ce"
+      ],
+      "Icn Pharmaceuticals Inc" : [
+         "Spag2",
+         "Spag2-6000"
+      ],
+      "Hewlett-Packard" : [
+         "D335760200",
+         "D3094B",
+         "3396B",
+         "79853C",
+         "79851A",
+         "79856A",
+         "79853A",
+         "3396C",
+         "79856Ax",
+         "79852A",
+         "2225D",
+         "P3005",
+         "C4582A",
+         "C2001A",
+         "C6428A",
+         "8011A",
+         "5971A",
+         "Laserjet 4050N",
+         "Laserjet4050N",
+         "Proliantml370",
+         "1Kay",
+         "C6490A",
+         "Ds3000",
+         "Hpml110",
+         "Proliantdl380",
+         "D7260",
+         "Deskjet6940",
+         "Compaq67106",
+         "6910P",
+         "Dws5",
+         "Dws5V",
+         "Hp9000-8275",
+         "HP 8000",
+         "Pavilion 550",
+         "Compaq6735B",
+         "P3015",
+         "P4515X",
+         "9264C",
+         "Probook 6460B"
+      ],
+      "Mallinckrodt Sensor Systems In" : [
+         "Pts2000",
+         "Npb40",
+         "Inoblender"
+      ],
+      "Lexington Instruments Corp" : [
+         "P2035N"
+      ],
+      "Maico Hearing Instruments Inc" : [
+         "Ma25",
+         "Ma40",
+         "Mi26",
+         "Ma41",
+         "Mi24",
+         "Ma42",
+         "Pilot"
+      ],
+      "Aerogen Incorporated" : [
+         "Agap1050",
+         "Pro-X",
+         "Ap1500"
+      ],
+      "Pace Tech" : [
+         "Mbt210",
+         "Mbt301"
+      ],
+      "Woodway" : [
+         "Desmos",
+         "S55",
+         "Barimill"
+      ],
+      "Seemore Imaging Canada" : [
+         "GP5.0SLP"
+      ],
+      "Applied Biosystems" : [
+         "Pcr9700",
+         "Pcr9600",
+         "Pcr7500",
+         "Orion Star Series",
+         "Ab3130Xl",
+         "Ab3730",
+         "Veriti Dx",
+         "Sc1500",
+         "Veritidx",
+         "3730Xl",
+         "G2939A",
+         "Veriti"
+      ],
+      "Quest Medical Inc" : [
+         "642E"
+      ],
+      "GE Marquette Medical Systems" : [
+         "Solar8000M",
+         "Cicv2Fd",
+         "7000Etco2",
+         "Cicv3",
+         "Solar8000",
+         "Dash4000",
+         "T451M",
+         "Dash3000",
+         "Cicv3Fd",
+         "Apexpro",
+         "Cicv2Apexfd",
+         "Cic",
+         "Prn50",
+         "Rac4",
+         "Octanet",
+         "7000Bpbp",
+         "Solar9500",
+         "D6015Tmts",
+         "Apexs",
+         "7000Temp",
+         "7000Svo2",
+         "Solarview",
+         "Rac4A",
+         "Mac5000",
+         "Rac2A",
+         "Sam",
+         "T2000",
+         "Ysi700",
+         "Mac5000I",
+         "Museserver",
+         "Prov2",
+         "Cicv41",
+         "Mac5500",
+         "Smart2Plus",
+         "Solarsp02",
+         "T2100",
+         "Statview",
+         "Cic19Cfp",
+         "Solar8000I",
+         "Use1913A",
+         "Smk600A",
+         "One600M601",
+         "Use1503A",
+         "Molvl15005",
+         "Cicv+5",
+         "Cicv5Plus",
+         "Maclab",
+         "Unityid",
+         "Unityidv5",
+         "Casev6.7",
+         "Mac5000Hd",
+         "Transport Pro",
+         "Md15T",
+         "Use1501A1A",
+         "Mac1200",
+         "Casev6.5",
+         "S1702D",
+         "H09C009067",
+         "409822002Sam",
+         "Capnoflexlf",
+         "Msncapco2Mod",
+         "Capnoflex",
+         "Mac5500Hd",
+         "Capnoflex Adapter",
+         "Cicv5+",
+         "Use1501A",
+         "Transport Pro",
+         "U85020",
+         "Capnostat",
+         "Mac5500 Hd",
+         "D19Kt",
+         "F501",
+         "Pdm",
+         "Apexproch",
+         "Use1501",
+         "Cicv5Plusmp1000Dup",
+         "Prn50M"
+      ],
+      "Autogen" : [
+         "Flexstar",
+         "Quickcheck110"
+      ],
+      "Sony Electronics Inc Medical" : [
+         "Cpd220Gs",
+         "Cpd220R",
+         "Lcd1770Nx2"
+      ],
+      "Sanyo" : [
+         "Mco19M"
+      ],
+      "Coherent Medical" : [
+         "VPC"
+      ],
+      "Critikon  Johnson & Johnson Me" : [
+         "Pro100",
+         "Pro300",
+         "Pro400",
+         "Pro320",
+         "Pro120",
+         "Pro220",
+         "Pro200",
+         "V100",
+         "Dinamap",
+         "Dinamap V100",
+         "Dinamapv100",
+         "Carescapev100"
+      ],
+      "Aero-Motive Co" : [
+         "Apc300",
+         "Icc200Ea",
+         "Eip2"
+      ],
+      "Sybron Endo" : [
+         "1005"
+      ],
+      "Seritex Incorporated" : [
+         "602V"
+      ],
+      "Baltimore Therapeutic Equipmen" : [
+         "Bte Stimulator Ii /S"
+      ],
+      "Ameda/Egnell Corp" : [
+         "Lacte",
+         "Smb50",
+         "Elite",
+         "Smb",
+         "Platinum",
+         "17803"
+      ],
+      "Bioflex Inc" : [
+         "Nmes"
+      ],
+      "Medela Inc" : [
+         "BabyChecker"
+      ],
+      "National Optical & Scientfic" : [
+         "420420Ahf"
+      ],
+      "Esaote" : [
+         "Fd570A"
+      ],
+      "B Braun Medical Inc" : [
+         "Bodyguard121",
+         "Stimuplexhns12",
+         "Hns12"
+      ],
+      "Integra Lifesciences Corp" : [
+         "A-1018",
+         "A1012",
+         "A1015",
+         "41B1171",
+         "A1008",
+         "Armrest",
+         "Tablemount",
+         "A20022000",
+         "A1079",
+         "437A1016",
+         "437A1062",
+         "437A1065",
+         "A1111",
+         "Ax2000Bif",
+         "00Mlx",
+         "A-1059",
+         "A-2101",
+         "Dlx"
+      ],
+      "Planar" : [
+         "Vs15Xad",
+         "Pt1503Nt",
+         "Vs15Xdtr",
+         "Vs15Xadtr",
+         "Vs17"
+      ],
+      "Tycos Instruments" : [
+         "1961P2245"
+      ],
+      "B & K Medical Systems Inc" : [
+         "Hawkxdi",
+         "Profucsc",
+         "Flexfocus500",
+         "Flex Focus 400",
+         "8808A",
+         "Flexfocus400",
+         "Flexfocus800",
+         "8666-Rf"
+      ],
+      "Xomed" : [
+         "Xps"
+      ],
+      "Videonics" : [
+         "Tm3000"
+      ],
+      "Nellcor" : [
+         "Npb-40"
+      ],
+      "Ivac Corp" : [
+         "3863B"
+      ],
+      "Alaris (Carefusion)" : [
+         "4415C",
+         "1320D",
+         "4415A",
+         "1320E",
+         "Geminipc2",
+         "4410C",
+         "4510A",
+         "2865B",
+         "10064303"
+      ],
+      "MO Bio Laboratories" : [
+         "Genie2"
+      ],
+      "Den-Tal-Ez Inc" : [
+         "Galaxycmna"
+      ],
+      "Colin Medical Instruments Corp" : [
+         "Bp8800C"
+      ],
+      "Optronics" : [
+         "Microcasthd"
+      ],
+      "Octafuge" : [
+         "OCT-VI"
+      ],
+      "Omnicell Technologies" : [
+         "0S224",
+         "Omnirx"
+      ],
+      "Vidco" : [
+         "580Cdr"
+      ],
+      "Grams Medical" : [
+         "Hk126",
+         "Hl100"
+      ],
+      "Erchonia" : [
+         "Vp3"
+      ],
+      "Endocare" : [
+         "Cryocare"
+      ],
+      "Nicolet Biomedical Inc" : [
+         "Vikingiv",
+         "Digiplex128",
+         "Microsam",
+         "Spirit",
+         "Endeavor",
+         "Vikingselect"
+      ],
+      "Acoustic Imaging" : [
+         "Ergo Tier With Z Arm",
+         "Dla1500"
+      ],
+      "Rainin Instrument Co" : [
+         "Miniplus2",
+         "Aft3000"
+      ],
+      "Ndd Medical Technologies" : [
+         "Easyone2001",
+         "Easyone20012P",
+         "Easyonepro"
+      ],
+      "Amtel Systems Corp" : [
+         "Penplusii",
+         "B025K3",
+         "Penplus Ii",
+         "Telewriters"
+      ],
+      "Grove" : [
+         "Hns11"
+      ],
+      "Summit Doppler" : [
+         "Lifedop250",
+         "Lifedop350R"
+      ],
+      "Sonora Medical Systems Inc" : [
+         "Nickel"
+      ],
+      "Waters Chromatography" : [
+         "Acuity",
+         "Xevotqs",
+         "Acuitylc",
+         "Acquity"
+      ],
+      "Gateway 2000" : [],
+      "Lexmark Corp" : [
+         "C950De"
+      ],
+      "Monaghan Medical Corp" : [
+         "Cm5000",
+         "Cm50005"
+      ],
+      "Cardiac Assist Inc" : [
+         "Ec1000"
+      ],
+      "Cone Instruments Inc" : [
+         "6W208",
+         "Gw108",
+         "Gw308U",
+         "Gw3080",
+         "Gw480U",
+         "Parker",
+         "907901U",
+         "Thermasonic",
+         "Gw208"
+      ],
+      "Arrow International Inc" : [
+         "Autocat2",
+         "Autocat2Wave"
+      ],
+      "GE Healthcare Lunar" : [
+         "Cicv5Plus",
+         "Prn50",
+         "Dash4000",
+         "Dash3000",
+         "Apexpro",
+         "Mp100R",
+         "Aprsrvr16Va",
+         "T14Tx",
+         "Apro16",
+         "Eawbb4U",
+         "Ea430",
+         "Eanmssw",
+         "Cicv5.1",
+         "Carescapev100",
+         "Achilles Insight",
+         "Rac4",
+         "M1188710",
+         "Cicv5+",
+         "Solar8000Ki",
+         "T451M",
+         "Prov2",
+         "Carescape850",
+         "Md15",
+         "Mac5500",
+         "Etco2",
+         "Tec7",
+         "T14",
+         "7000Etco2",
+         "Mp100Cicv5",
+         "Cicv5Pro",
+         "Apro08",
+         "Ato"
+      ],
+      "Sechrist Industries Inc" : [
+         "Dp220130001A",
+         "3500Cpd",
+         "P02Control"
+      ],
+      "Texas Instruments" : [
+         "Omni800"
+      ],
+      "Eisys" : [
+         "Table",
+         "28Eigmtr1",
+         "Elevating Table"
+      ],
+      "Spark" : [
+         "Rtg-9-12 Us",
+         "Rtg 9-12 Us"
+      ],
+      "Biomed Devices" : [
+         "2010Amf",
+         "2003Ge"
+      ],
+      "Dickson" : [
+         "Pb107",
+         "Pb101"
+      ],
+      "Bird Products Corp" : [
+         "3800A",
+         "3802A",
+         "3803T",
+         "Mark7",
+         "L1104",
+         "03920A",
+         "M210010477",
+         "T70"
+      ],
+      "Luxtec Corp //  Use V# 357056" : [
+         "Lx300",
+         "008000A",
+         "Microlux",
+         "9300Xsp",
+         "9300T",
+         "Ax1375Bifsl",
+         "Dlx",
+         "Nstreamplus",
+         "00Mlx",
+         "Mlx",
+         "Clxt",
+         "Oomlx",
+         "000Mlx"
+      ],
+      "Optos Inc" : [
+         "Octslo",
+         "200Tx"
+      ],
+      "Stille-Sonesta Inc Use#477163" : [
+         "6210"
+      ],
+      "Debusk Temperature Systems" : [
+         "Dts1000"
+      ],
+      "Perimed Inc" : [
+         "Pf5001",
+         "Periscan Pim 3"
+      ],
+      "Electro Surgical Instruments C" : [
+         "Hls150"
+      ],
+      "Philips" : [
+         "Cca192At31",
+         "1350B",
+         "2720A",
+         "S72Omni",
+         "Rtx",
+         "1Px1",
+         "S72",
+         "Ipx1",
+         "21369A",
+         "Epiq7G",
+         "Fr2",
+         "M3855A",
+         "X72T",
+         "Achievanova",
+         "Achievaxr",
+         "Panoramahfo",
+         "S73T",
+         "Ut1G2L024C6Tpm",
+         "Avalonfm30",
+         "1351A",
+         "Trilogy",
+         "Hd9",
+         "S83T",
+         "5066A",
+         "Heartstartfrx",
+         "Fr2Plus",
+         "M5066A",
+         "Frx"
+      ],
+      "Hygienic" : [
+         "24050"
+      ],
+      "Rian Corp" : [
+         "Ltu904",
+         "Ltu0904"
+      ],
+      "Bard Usci Div" : [
+         "Siteritev",
+         "Siteritevi"
+      ],
+      "Hytrol" : [
+         "Giraffeshuttle",
+         "Wellbaby",
+         "Panda",
+         "Aisyscarestation"
+      ],
+      "Bio-Logic Systems Corp" : [
+         "Nv20091A",
+         "Audxproii"
+      ],
+      "EF Brewer Co" : [
+         "Access"
+      ],
+      "Horizion Fitness" : [
+         "T203"
+      ],
+      "Wells Johnson Co" : [
+         "Aspirator3",
+         "II Plus",
+         "Aspirator2",
+         "Hercules"
+      ],
+      "Berchtold Corporation" : [
+         "Chromopharee550",
+         "Chromophared540",
+         "Chromophared300",
+         "Teletomtt52C",
+         "Chromopharee668",
+         "Teletom754",
+         "Chromospharee558",
+         "Teletom764",
+         "Teletom744",
+         "Chromopharef628",
+         "Chromophare65"
+      ],
+      "Tripp Lite" : [
+         "Smart1200Xlhg",
+         "Is1800Hg",
+         "Smartpro",
+         "Smart1200Xlhgh",
+         "Smart1500Vaslt",
+         "Is1000",
+         "Smart1500Slt",
+         "Smart1500Lcd",
+         "Is1000Hg",
+         "Smart1500Xl",
+         "PS-615-Hg-Oem",
+         "Smart1200Xlhg",
+         "1500Vasmarttoweravr",
+         "Smart1500",
+         "PS-415-Hg",
+         "PS-615-Hg",
+         "PS-415-Hgultra"
+      ],
+      "3M Healthcare" : [
+         "Airmatehepa",
+         "Papr"
+      ],
+      "Coulter Corp" : [
+         "Z2",
+         "Cd2",
+         "Lh750",
+         "Lh755",
+         "Lh1512",
+         "Fc500",
+         "Lh750Ss",
+         "Lh500",
+         "Lh750Sm"
+      ],
+      "Aribex" : [
+         "Nomad Pro",
+         "Nomadpro",
+         "Nomad"
+      ],
+      "Smith & Nephew Dyonics" : [
+         "Pvm20M2Mdu"
+      ],
+      "Lifewatch" : [
+         "Heartaide",
+         "Er300"
+      ],
+      "Terumo Medical Corp" : [
+         "Scd312",
+         "11160R",
+         "Hx2",
+         "Harvestsmp2115"
+      ],
+      "Quincy Lab Inc" : [
+         "10Laboven"
+      ],
+      "Bruker" : [
+         "Lysh"
+      ],
+      "American Medical Systems Inc" : [
+         "Xps"
+      ],
+      "Healthy Life Devices" : [
+         "A02",
+         "A02",
+         "Hld Physio Touch A02"
+      ],
+      "Digene" : [
+         "Dml2000"
+      ],
+      "Fujinon Inc Medical" : [
+         "Epx4400",
+         "En450T5",
+         "Sifq180"
+      ],
+      "Pixel Velocity" : [
+         "Betadci",
+         "Investigational"
+      ],
+      "Premiere" : [
+         "Xh1001",
+         "Xh1003"
+      ],
+      "Olympic Medical Corp" : [
+         "Usg400",
+         "CV-170",
+         "MU-1",
+         "Esg400"
+      ],
+      "Barry Blowers And Sons" : [
+         "Dynavox"
+      ],
+      "Lexion" : [
+         "1117Sc"
+      ],
+      "Nikon Inc Instrument Group" : [
+         "Labophot2",
+         "Alphaphot2",
+         "Alphaphotys",
+         "Diaphot",
+         "Optiphot",
+         "Smz1",
+         "Nikon",
+         "Hfxii",
+         "Tms",
+         "Smz2B",
+         "E200",
+         "Ys2H",
+         "E400",
+         "Smz1000",
+         "Xn485"
+      ],
+      "Eberline Instrument" : [
+         "E 120",
+         "Rm14",
+         "E-120",
+         "R0 20",
+         "Ro20",
+         "177"
+      ],
+      "Thermo Fisher Scientific" : [
+         "004480F",
+         "Acuspin Micro 17",
+         "Micro 17",
+         "Qhs33701",
+         "Xir",
+         "Legend14"
+      ],
+      "Biosense Webster" : [
+         "Piu",
+         "Cartoxp",
+         "Maestro",
+         "Stockert70",
+         "Coolflow",
+         "Carto3Pc",
+         "Carto3",
+         "Fg470000",
+         "152985Cartosoundxp",
+         "EM-5403-00",
+         "Fg540000",
+         "Em540100",
+         "Em540520",
+         "Carto Xp",
+         "M490004",
+         "EM-5406-00"
+      ],
+      "Rauland-Borg Corp" : [
+         "Responder Iv",
+         "Responder8000",
+         "Responder Iii",
+         "Ncs8000",
+         "Responder4K",
+         "R4K",
+         "Raulandiv",
+         "R4Knim",
+         "R4000",
+         "Responder V"
+      ],
+      "Hausted" : [
+         "Vic",
+         "578Eyest",
+         "Mbc Ooo St"
+      ],
+      "Dupont Medical Products" : [
+         "310072489"
+      ],
+      "Duomed Inc" : [
+         "Fl500"
+      ],
+      "Easote" : [
+         "Mylab25Gold",
+         "Mylabfive",
+         "Mylab25"
+      ],
+      "Health O Meter Inc" : [
+         "503Kl",
+         "Proseries",
+         "386S01",
+         "402Kl",
+         "Scal20Mc",
+         "599Kl",
+         "500Kl"
+      ],
+      "Lenovo" : [
+         "Thinkpad T520",
+         "X 230 Tablet Thinkpa"
+      ],
+      "Cyber Power" : [
+         "Cp1000Avrlcd"
+      ],
+      "Asus" : [
+         "Us228"
+      ],
+      "Aspen Laboratories" : [
+         "3000"
+      ],
+      "Ritter" : [
+         "75LP",
+         "AM350"
+      ],
+      "Shandon Lipshaw" : [
+         "Cytospin3",
+         "Cytospin4"
+      ],
+      "Synaptive Medical Inc" : [
+         "Syn-0512"
+      ],
+      "GE OEC Medical Systems" : [
+         "9800 Plus",
+         "Miniview 6800 Cp",
+         "Miniview 6800",
+         "9800Plus",
+         "Esp 9900",
+         "9900 PMcare",
+         "Oec 9900 Elite",
+         "9900 Elite",
+         "9900 Cardiac Elite",
+         "9900 Elite Vas 8",
+         "9900 Vas 8",
+         "9900 Vas Mts"
+      ],
+      "Eberbach Corp" : [
+         "E247500"
+      ],
+      "Intelligent Medical Systems In" : [
+         "Pc10001"
+      ],
+      "Verathon Medical Inc" : [
+         "Bvi3000",
+         "Bvi9400",
+         "Cobalt",
+         "Glidescope",
+         "Cobaltavl",
+         "Bvi 9400"
+      ],
+      "HP" : [
+         "Laserjet4250N",
+         "Palvillon",
+         "Mini1000",
+         "Compaq 6720S",
+         "Audicor 200",
+         "Compaqpro6300",
+         "Prodesk600G1",
+         "Deskjet 1010"
+      ],
+      "Peripheral Vision" : [
+         "Smart"
+      ],
+      "Alcon Laboratories Inc" : [
+         "Ocuscan",
+         "400Vs",
+         "Infiniti",
+         "Constellationlxt",
+         "Ex500",
+         "Vario"
+      ],
+      "Tobii Dynavox" : [
+         "Tobii+ Dynavox"
+      ],
+      "Block Scientific" : [
+         "Octvi"
+      ],
+      "Kayla" : [
+         "Sl15"
+      ],
+      "Gbc" : [
+         "H435"
+      ],
+      "Earthlite" : [
+         "Harmonydx"
+      ],
+      "Medtec Biolab Equipment" : [
+         "Ab3000H"
+      ],
+      "Maxant" : [
+         "Viewbox",
+         "Ts44Nfmxsihg-12V6U"
+      ],
+      "Sensormedics" : [
+         "Vmaxcardio2Cp",
+         "Vmax29N",
+         "Vmax20Cencore",
+         "Vmaxencore22D",
+         "Vmaxencore29N"
+      ],
+      "Quantel Medical" : [
+         "Axisiipr",
+         "Aviso A/B"
+      ],
+      "Heartware Inc" : [
+         "1600Us",
+         "Battery Charger"
+      ],
+      "Everest & Jennings Internation" : [
+         "V8A26047774",
+         "6500W4",
+         "Atc2Da",
+         "Univstandard"
+      ],
+      "Atago" : [
+         "Pal-105"
+      ],
+      "GE Healthcare" : [
+         "Amx Iv",
+         "Mri 1.5T",
+         "Ic5-9-D",
+         "Advantage 4.6",
+         "Seno Advantage",
+         "M12L",
+         "4C",
+         "M7C",
+         "9L",
+         "E8C",
+         "Senograph Essential",
+         "4S",
+         "Ml6-15",
+         "1.5T",
+         "2236420-7",
+         "Dsxi",
+         "AW 4.1",
+         "Proteus",
+         "G14K4",
+         "Node Seeker",
+         "5115335-2",
+         "Lightspeed Vct",
+         "Pettrace",
+         "5117866-3",
+         "Logiqworks",
+         "Logiq 9",
+         "Definium 8000",
+         "ME+200223",
+         "Logiq I",
+         "Advantage 4.5",
+         "Advantage 4.4",
+         "5183547-2",
+         "5183547-33",
+         "Seno Essential",
+         "Voluson S6",
+         "Volusonebt11",
+         "Voluson E",
+         "5212920-100",
+         "Lightspeed750",
+         "C1-5 D",
+         "9L-D",
+         "Ultra",
+         "S4-10",
+         "Ml6-15-D",
+         "L8-18I",
+         "11L-D",
+         "8C",
+         "739L",
+         "Logiq E9",
+         "C1-5",
+         "L8018I",
+         "1C5-9-D",
+         "Logiqebt09",
+         "Discovery Ct750 Hd",
+         "Discovery Xr650",
+         "Voluson E",
+         "Hd750 Ct",
+         "Logiqe9",
+         "5232083-5",
+         "Discovery Xr656",
+         "Logiqe9Bt11",
+         "L8-18I-D",
+         "Senograph Advantage",
+         "L8-18I-D",
+         "Hpz800",
+         "Idi",
+         "Mc6",
+         "ME+210327",
+         "Wj113Ec#Aba",
+         "C1-5-D",
+         "Ml6-15D",
+         "S1-5-D",
+         "4C-Rs",
+         "C1-6",
+         "C1-6-D",
+         "L8-18I",
+         "Idi Workstation",
+         "Ric5-9W-Rs",
+         "Logiq E",
+         "Discovery Hd750",
+         "Xeleris",
+         "12L-Rs",
+         "5394804-2",
+         "Logiqe",
+         "C1-5-Rs",
+         "L4-12T",
+         "L10-22",
+         "Vivide9",
+         "Apex Pro Ch",
+         "Venue40",
+         "Mac5500 Hd",
+         "Voluson E10",
+         "V100",
+         "Prn 50-M+",
+         "Dinamapsm",
+         "E-Minic-00",
+         "Capnoflex"
+      ],
+      "Hovertech" : [
+         "Laphtair1200A",
+         "Htair1200A"
+      ],
+      "Zoe Medical Inc" : [
+         "179-0001"
+      ],
+      "Biomerieux  Inc" : [
+         "Vidas30",
+         "210147"
+      ],
+      "Bio-Rad Laboratories Ltd" : [
+         "30D",
+         "Powerpac",
+         "Hl20",
+         "Ald1234",
+         "Bioplex2000"
+      ],
+      "Creche Innovations" : [
+         "Penguin"
+      ],
+      "Great Lakes" : [
+         "Ministar"
+      ],
+      "Matrix Technologies Corp" : [
+         "Mdm",
+         "60001110U"
+      ],
+      "Sun Microsystems Inc" : [
+         "UltraSPARC 10"
+      ],
+      "Diversified Diagnostic Product" : [
+         "Ch72045"
+      ],
+      "Avasure Llc" : [
+         "Ava-M"
+      ],
+      "Parks Medical Electronics" : [
+         "811B",
+         "802A",
+         "811Bts",
+         "2100Sx",
+         "801B",
+         "806Cb",
+         "811A",
+         "614B",
+         "841A",
+         "810B"
+      ],
+      "Bio Logic Systems Corp" : [
+         "580Abaer1",
+         "580Navpro",
+         "580Navpr2",
+         "Abaer",
+         "Audxproii"
+      ],
+      "Sharp Electronics" : [
+         "Pn465U"
+      ],
+      "Resmed" : [
+         "S9",
+         "Apnealink",
+         "Astral"
+      ],
+      "Edwards Laboratories" : [
+         "Vigileo"
+      ],
+      "Unfors Inst" : [
+         "P11"
+      ],
+      "Valleylab Inc/Covidien" : [
+         "Force2",
+         "Forcefx",
+         "Sse2L",
+         "Force1C",
+         "Forceez",
+         "Sse4",
+         "Surgistat",
+         "Force4B",
+         "E8006",
+         "Surgistatb",
+         "Cusaexcel",
+         "Forceez20",
+         "FX",
+         "Surgistatii",
+         "Forceezc",
+         "Fxc",
+         "Forcee2C",
+         "Forcetriad",
+         "Optimum",
+         "Forcefxc",
+         "Ligasure",
+         "Ctswcontrol",
+         "Forcefxcsebd",
+         "Forcefxcs",
+         "Cusaexcel2",
+         "Forceezcs",
+         "Ft10"
+      ],
+      "Medrad Interventional/Possis" : [
+         "5000A"
+      ],
+      "Fisher Scientific Company Llc" : [
+         "6K",
+         "Dynac Ii",
+         "Dynacii",
+         "V6500",
+         "G560",
+         "Isotemp",
+         "Pb153S",
+         "Cl2",
+         "2052Fs",
+         "100Fs",
+         "Dca2000",
+         "Isotemp2025",
+         "2001Fs",
+         "Vortex",
+         "G10Suvvis",
+         "Slx400",
+         "Vortexmixer",
+         "Statspin4",
+         "Isotemp105",
+         "Precision6878",
+         "Statspinexpress3",
+         "Ab15",
+         "Mini",
+         "Isotemp2329",
+         "Statspinexpress2",
+         "Minicentrifuge",
+         "Analog",
+         "Alps50V",
+         "Sorvallst8R"
+      ],
+      "Scientific Industries Inc" : [
+         "G560",
+         "Genie 2"
+      ],
+      "Digirad" : [
+         "Ergo"
+      ],
+      "Qiagen Inc" : [
+         "Ez1",
+         "M48"
+      ],
+      "Excel Tech Ltd" : [
+         "Multi3",
+         "IV",
+         "Mu4",
+         "Exul4",
+         "Ultraiv",
+         "Ultra Iv"
+      ],
+      "Vital Images Incorporated" : [
+         "Hpxw6400",
+         "Pq127Uc#Aba",
+         "Ej981Uc#Aba",
+         "Rs470Uc#Aba",
+         "Z600"
+      ],
+      "Volcano Corp" : [
+         "S5",
+         "400-0100-01",
+         "Coremobile"
+      ],
+      "American Optical" : [
+         "Stereooptical",
+         "Bh2",
+         "Leica10",
+         "1130A",
+         "Bht",
+         "Starzoom",
+         "Spencer"
+      ],
+      "Carline Creation Co" : [
+         "6"
+      ],
+      "Nihon Kohden America" : [
+         "Je106Ab",
+         "Je413A"
+      ],
+      "North American Drager" : [
+         "Sevoflurane",
+         "Isoflurane191",
+         "19.5",
+         "19.3 Isoflurane",
+         "Tec6",
+         "Isoflurane",
+         "Halothane",
+         "Vapor2000",
+         "Fabiustiro",
+         "Sevo2000",
+         "M3505416",
+         "M35160",
+         "Enflurane"
+      ],
+      "Pilling" : [
+         "Narcopilling"
+      ],
+      "Audioscan" : [
+         "Veriliftvf1"
+      ],
+      "Cryomedics" : [
+         "Mm6000"
+      ],
+      "Smith & Nephew" : [
+         "72105695"
+      ],
+      "Pelco" : [
+         "Pcml419Hb"
+      ],
+      "Camp International" : [
+         "103A"
+      ],
+      "Cow Industries Inc" : [
+         "Rf0Cw17002",
+         "Rf0Lo200Sr"
+      ],
+      "Napco Scientific  Co" : [
+         "3500E"
+      ],
+      "Enmet Corp" : [
+         "Isa60M"
+      ],
+      "Pci Medical Inc" : [
+         "G14Vp2",
+         "G14Vp3",
+         "G32Egus",
+         "G14Ka",
+         "G10Ent",
+         "Td100",
+         "G25E",
+         "G25Sgus",
+         "617Hs"
+      ],
+      "Ion Torrent" : [
+         "Iononetouch"
+      ],
+      "Interactive Health" : [
+         "Inmotion Robot"
+      ],
+      "Omron Healthcare Inc" : [
+         "Hem711Acn",
+         "Bp742",
+         "Hem790It",
+         "Hbf400",
+         "Hem780",
+         "Hem710",
+         "Bp791It",
+         "Ua767",
+         "Hem712C",
+         "Bp760 (Hem-7220-Z)",
+         "Bp742N"
+      ],
+      "Konica/Minolta" : [
+         "Jm103"
+      ],
+      "Aloka" : [
+         "1P1230Cth",
+         "Ssd1400",
+         "Ssdalpha5",
+         "Ssd Alpha5",
+         "Ssd1700",
+         "Ssdalpha10",
+         "Ust-536",
+         "Ust-5534T-7.5",
+         "Alpha 7St",
+         "Ust-9132T",
+         "Ust-52114P",
+         "Ust 9150",
+         "Ust-9120",
+         "Ust-Mc11-8731",
+         "Ust 9132T"
+      ],
+      "Agfa Healtcare Corp" : [
+         "Drystar 3000"
+      ],
+      "Spectroline" : [
+         "Q22",
+         "En140L"
+      ],
+      "Osbon Medical System" : [
+         "Rigiscanplus"
+      ],
+      "Aeroqual" : [
+         "Series200"
+      ],
+      "Orthopedic Systems" : [
+         "Osiorthopedic"
+      ],
+      "Inovonics Corperation" : [
+         "Fa575 900Mhz"
+      ],
+      "Sebra Engineering" : [
+         "1020"
+      ],
+      "Invivo Corporation" : [
+         "Dynacad",
+         "4535-302-10882"
+      ],
+      "Uroplasty Inc" : [
+         "Upc200"
+      ],
+      "Knight Manufacturer Inc" : [
+         "Knight"
+      ],
+      "Compaq Computer" : [],
+      "Packard Instrument Co" : [
+         "Cobraii",
+         "P70Ra"
+      ],
+      "Seward" : [
+         "80Markii"
+      ],
+      "Pie Medical" : [
+         "Picus"
+      ],
+      "Ohmeda Canadian Div" : [
+         "16059000000"
+      ],
+      "Laerdal Medical Corp" : [
+         "2314B",
+         "Simnewb",
+         "Ae6976",
+         "Ae6975",
+         "Lcsu3"
+      ],
+      "Pulmonetic Systems / Use 50072" : [
+         "Msp1787",
+         "Ltm",
+         "Ltv950",
+         "Ltv1200"
+      ],
+      "Bodystat" : [
+         "Quadscan4000"
+      ],
+      "Iris Medical Instruments" : [
+         "Infrared",
+         "Lio",
+         "Oculightslx",
+         "GL",
+         "Slx",
+         "30903M",
+         "Express4",
+         "Oculighttx",
+         "30903H500",
+         "M501-22"
+      ],
+      "Mortara Instrument" : [
+         "Eli250",
+         "Eli150",
+         "H12+",
+         "Eli150C",
+         "Wam Pc - Ert",
+         "Eli 150",
+         "Eli250 Rx",
+         "Eli2Xx",
+         "Eli 250"
+      ],
+      "Arzco Medical Systems Inc" : [
+         "7A"
+      ],
+      "Accelerated Care Plus" : [
+         "1203000B"
+      ],
+      "Medivators" : [
+         "Eca-100G",
+         "Advantage Plus"
+      ],
+      "Dynatronics Corp" : [
+         "D125",
+         "Solarisplus"
+      ],
+      "Excyte" : [
+         "20"
+      ],
+      "Atl Ultrasound Inc" : [
+         "Hdi 5000"
+      ],
+      "Tektronix Inc" : [
+         "Tds520D",
+         "Tds320",
+         "213Dmm",
+         "Tds 220",
+         "Cfg253",
+         "Cmc251",
+         "Cdm250",
+         "Tds1012"
+      ],
+      "Electromed Inc" : [
+         "Smartvest"
+      ],
+      "Augustine Medical Inc" : [
+         "500Or",
+         "Cc0104"
+      ],
+      "Microlux" : [
+         "Dlx"
+      ],
+      "Ceramatec Inc" : [
+         "Maxo2",
+         "Om25Me",
+         "Om25Mel"
+      ],
+      "Ohmeda Medical Engineering Di" : [
+         "Enfluratec4",
+         "Isotec4",
+         "Isotec5",
+         "Tec6",
+         "Dtec"
+      ],
+      "Medtronic Cryocath" : [
+         "106A3"
+      ],
+      "Imed" : [
+         "Geminipc2"
+      ],
+      "Olympus Corp Of America" : [
+         "Cv190"
+      ],
+      "Baxter Healthcare Corp Iv Sys" : [
+         "Hematastatii",
+         "C18011",
+         "Hematxstat2",
+         "5C8310",
+         "5C4471R",
+         "Hematastat Ii"
+      ],
+      "Executone Information Systems" : [
+         "Compass"
+      ],
+      "Benchmark Scientific Inc" : [
+         "B1000",
+         "D1030",
+         "C1012",
+         "H2000-4"
+      ],
+      "Medical Graphics Corp" : [
+         "Tm500A",
+         "Cpfs",
+         "762030204R",
+         "Elitedl",
+         "Ultimapfx",
+         "Ultimacpxtm",
+         "Elitedx",
+         "Ultimaccm",
+         "Ultimacpx",
+         "Ultimapf",
+         "Elitedt"
+      ],
+      "Leica" : [
+         "Cm3050",
+         "Rm2155",
+         "Ultracut",
+         "11635B",
+         "Dmra",
+         "Cm190031",
+         "Dm1000",
+         "M680",
+         "Dmls",
+         "Cm3050S",
+         "Oh3",
+         "Dxcc33",
+         "Mz95",
+         "St5020",
+         "Rm2255",
+         "Cm30505",
+         "M5250H4",
+         "Cm1900Uv",
+         "M525F50",
+         "Cm1950",
+         "Sm2000R",
+         "Cm1850Uv31",
+         "Peloris",
+         "Oh5",
+         "Emuc7",
+         "Emkmr3",
+         "Dm5500",
+         "M525Oh4F20",
+         "M720Oh5",
+         "F12",
+         "S50012",
+         "Dm750",
+         "F50",
+         "F40",
+         "St4020"
+      ],
+      "Hospira Inc" : [
+         "Plum A+",
+         "Lifecare Pca"
+      ],
+      "Eppendorf North America Inc" : [
+         "5415C",
+         "5810R",
+         "5415D",
+         "5702R",
+         "5417C",
+         "A22331",
+         "Epgradient",
+         "5415R",
+         "5075Lh",
+         "Epp5702R",
+         "5452Minispin",
+         "5417R",
+         "5810A",
+         "5430R",
+         "Statspinexpress3",
+         "Thermomixer",
+         "5805F",
+         "Statspinexp3",
+         "Thermomixerr",
+         "Mastercyclerpro",
+         "5811F",
+         "Thermommixerr",
+         "5414D",
+         "5414R",
+         "R",
+         "C",
+         "Minispinplus"
+      ],
+      "Scigene Corp" : [
+         "Britespot",
+         "650C",
+         "Hybex",
+         "Cytobrite"
+      ],
+      "LW Scientific" : [
+         "Revalationiii"
+      ],
+      "Camp Inc" : [
+         "Gcs2000"
+      ],
+      "Thermo Electron Na Llc" : [
+         "Centracl2"
+      ],
+      "Hemametrics Llc" : [
+         "Critlineiii",
+         "Critlineiiitqa"
+      ],
+      "Heraeus Instruments Inc" : [
+         "Clinifuge"
+      ],
+      "Precision Scientific Div Jouan" : [
+         "32M"
+      ],
+      "Kiddie Kab Stroller" : [
+         "7600Pkblue"
+      ],
+      "Capsule Tech Inc" : [
+         "800Series"
+      ],
+      "Welch Allyn" : [
+         "Ls135",
+         "Tm262",
+         "48600/48650",
+         "Am232",
+         "Wa420Tbel",
+         "Microtymp2",
+         "76791M",
+         "Propaqlt",
+         "42Ntbeim",
+         "76791Mx",
+         "Gs4",
+         "Ceo297",
+         "76792M",
+         "678371821Mp",
+         "Spot",
+         "7114Xx",
+         "42Mtv",
+         "678376792M",
+         "Propaqencore206",
+         "768379791Mx",
+         "420Tb",
+         "678371641Ms",
+         "Gs300",
+         "Microtymp3",
+         "Propaq",
+         "71641M",
+         "678371641M",
+         "Gs600",
+         "76797X",
+         "767912Mpx",
+         "7671072M",
+         "76792Mnobp",
+         "76794M",
+         "7671071M",
+         "Probp3400Series",
+         "Suretemp Plus",
+         "7779X",
+         "7671081M",
+         "Eaxmlightiv",
+         "777912Mpx",
+         "Green Series 777",
+         "77797X",
+         "Gsiv",
+         "LX",
+         "7114X",
+         "GS Exam Light Iv"
+      ],
+      "Universal Companies Inc" : [
+         "C2000T"
+      ],
+      "Codonics Inc" : [
+         "Horizon"
+      ],
+      "Neurocom International" : [
+         "Smartequitest"
+      ],
+      "Ics Medical Corp" : [
+         "Nci480",
+         "Nc1408F"
+      ],
+      "Possis Medical Inc" : [
+         "3000A"
+      ],
+      "Grason Stadler Inc" : [
+         "Gsi38",
+         "Gsi37",
+         "Ps3A",
+         "Rm500",
+         "Gsi61",
+         "Tympstar Vi",
+         "Tympstarvii",
+         "Gsi1761",
+         "Gsi Autostar Pro"
+      ],
+      "New Brunswick Scientific" : [
+         "TC8"
+      ],
+      "Braemar Inc" : [
+         "Er300",
+         "Per900"
+      ],
+      "Johnson & Johnson Ortho Diagn" : [
+         "Vitros250",
+         "5100"
+      ],
+      "Cobe & Gambro Healthcare" : [
+         "Spectra9500",
+         "Sealsafe",
+         "Spectratherm"
+      ],
+      "Thor Photomedicine Llc" : [
+         "Lx2M"
+      ],
+      "Masimo Americas Corporation" : [
+         "Rad5",
+         "Rad5V",
+         "Rad8",
+         "Rad7",
+         "Radical7",
+         "605102Emma",
+         "Rad9",
+         "Rad 5V"
+      ],
+      "Thermolyne Corp" : [
+         "M48214",
+         "Medlite2580"
+      ],
+      "Allen" : [
+         "Elite",
+         "O-Yfes-A4"
+      ],
+      "Interacoustics" : [
+         "Aa220"
+      ],
+      "Byron Medical" : [
+         "Egp100"
+      ],
+      "Spectral Diagonstics" : [
+         "Smartline"
+      ],
+      "Huntleigh Healthcare Llc" : [
+         "Ac550",
+         "Fd1A",
+         "Sd1",
+         "D900",
+         "Dopplexmd2",
+         "Ac551",
+         "Ac552",
+         "Ac553",
+         "Ac554",
+         "Ac555",
+         "Ac556",
+         "Ac557",
+         "Ac558",
+         "Ac559",
+         "Ac560",
+         "Ac561",
+         "Ac562",
+         "Ac563",
+         "Ac564",
+         "Ac565",
+         "Ac566",
+         "Ac567",
+         "Ac568",
+         "Ac569",
+         "Ac570",
+         "Ac571",
+         "Ac572",
+         "Ac573",
+         "Ac574",
+         "Ac575",
+         "Ac576",
+         "Ac577",
+         "Ac578",
+         "Ac579",
+         "Ac580",
+         "Ac581",
+         "Ac582",
+         "Ac583",
+         "Ac584",
+         "Ac585",
+         "Ac586",
+         "Ac587",
+         "Ac588",
+         "Ac589",
+         "Ac590",
+         "Ac591",
+         "Ac592",
+         "Ac594",
+         "Ac595",
+         "Ac596",
+         "Ac597",
+         "Ac598"
+      ],
+      "Bluewater" : [
+         "1321A"
+      ],
+      "Helmer Labs Inc" : [
+         "Pfs96",
+         "Pc4200",
+         "Eba21",
+         "Dh8",
+         "Rotina35",
+         "Mikro20",
+         "Mikro22R",
+         "Rotanta460Rs",
+         "Quickspin",
+         "Ultracw",
+         "Serospin",
+         "Serospinso",
+         "Labspin",
+         "Mikro220R"
+      ],
+      "Cooper Vision Systems" : [
+         "Leep6000",
+         "Ce2000",
+         "Cs200",
+         "Kh1000"
+      ],
+      "Zenith" : [
+         "Sr1943Y",
+         "Xbv713"
+      ],
+      "Telefactor" : [
+         "Szac16",
+         "Beehive64",
+         "3000Hl",
+         "Seriesii",
+         "Bhcte",
+         "Beehive",
+         "Pa240",
+         "Bh32Cte",
+         "Dpux86",
+         "Bhcte32",
+         "Tm101D",
+         "Modacrack"
+      ],
+      "Viasys Healthcare" : [
+         "Ltv1000",
+         "Tc8080",
+         "200R",
+         "Gsi61",
+         "Ltv1200"
+      ],
+      "Planmeca" : [
+         "Promax",
+         "Promax Di Max4 Ceph"
+      ],
+      "Hemochron" : [
+         "Signature Elite"
+      ],
+      "Volcano Therapeutics Inc" : [
+         "S5"
+      ],
+      "Biorad" : [
+         "Powerpacbasic",
+         "Powerpachc",
+         "T100"
+      ],
+      "American International Electri" : [
+         "Aie300"
+      ],
+      "Cabot Medical Corp" : [
+         "Mt700"
+      ],
+      "Depuy Mitek Inc Div Bio-Dynami" : [
+         "Duoplus",
+         "Fmsvue"
+      ],
+      "True" : [
+         "700Z"
+      ],
+      "Ansul" : [
+         "Spiritxt10"
+      ],
+      "Pentax Precision Instrument Co" : [
+         "Lh150A",
+         "Lh150",
+         "Lh150Pc",
+         "Eb1530T3",
+         "9200C",
+         "Epk1000",
+         "9100B",
+         "Ee1580K",
+         "Fnl7Rp3",
+         "F110Bs",
+         "Fnl10P2",
+         "Fnl10Rp3"
+      ],
+      "Dentsply" : [
+         "Aeu20",
+         "Triad2000"
+      ],
+      "Life Fitness Inc" : [
+         "Sm50",
+         "Clst"
+      ],
+      "Ohaus Corp" : [
+         "Ct600",
+         "Cw112E0",
+         "Scoutpro400",
+         "Av53",
+         "Av53Usr",
+         "Cwii",
+         "Spe401",
+         "Scoutpro",
+         "V31Xw6",
+         "Cd33",
+         "D51P25Qr5",
+         "T51Xw",
+         "Galaxy160",
+         "Cs200",
+         "Scale Pro Sp202"
+      ],
+      "Cosmed Usa Inc" : [
+         "K4B2"
+      ],
+      "Sanguis Health Llc" : [
+         "Bft15-2"
+      ],
+      "Kees Goebel Medical" : [
+         "Ae3",
+         "Trt300",
+         "Trt500",
+         "Cps004",
+         "Adapta300",
+         "Legend",
+         "Int002",
+         "Cps003",
+         "Legendxt"
+      ],
+      "Clay Adams Div Becton Dickinso" : [
+         "Serofuge",
+         "Dynacii",
+         "Nutatur",
+         "Serofuge2001",
+         "Serofuge2100",
+         "Yjtav"
+      ],
+      "Nec Usa Inc" : [
+         "Jb1408Hma",
+         "Lcd1810X",
+         "Lcd1770Nx",
+         "Lcd1850X",
+         "Lcd1860Nx",
+         "Lcd4000",
+         "Lcd1560Nx",
+         "Lcd1980Sx",
+         "Lcd2080Uxbk",
+         "L182R4",
+         "Lcd1880Sx",
+         "Lcd1560X",
+         "Lcd1980Sxi",
+         "Lcd1570Nx",
+         "Lcd1990Sxi",
+         "Ea192M-Bk",
+         "Lcd4610Bka",
+         "1990Sxi",
+         "Lcd2090Uxi",
+         "Lcd1990Sxp",
+         "Lcd1770Yx2",
+         "Lcd1990Sx",
+         "Lcd1770Nkbk",
+         "Lcd1770Nxbk2",
+         "As171Bk",
+         "Lcd1990Sxbk",
+         "Lcd24Wmcx",
+         "2090Ux",
+         "Lcd175M",
+         "V321232",
+         "Ea192M",
+         "1990Sx",
+         "Lcd1990Sx-Bk"
+      ],
+      "Orthoscan" : [
+         "Orthoscan HD",
+         "HD 1000-0004"
+      ],
+      "Viewsonic" : [
+         "Vp213Ob",
+         "Vp2130B",
+         "VA 1948M-Led",
+         "Vg930M3",
+         "Vs2037M-Led",
+         "Vg2439M"
+      ],
+      "Merit Medical System Inc" : [
+         "In5000"
+      ],
+      "Cholestech Corporation" : [
+         "LDX"
+      ],
+      "Jvc Professional Products Co" : [
+         "Tm91Su",
+         "Tm9U",
+         "Srmv5Ous"
+      ],
+      "Brinkmann Instruments" : [
+         "5415C",
+         "5414"
+      ],
+      "Zimmer Inc" : [
+         "Ats750",
+         "Ats2000",
+         "Ats1200",
+         "Ats3000",
+         "Cryo6",
+         "60-2000-001"
+      ],
+      "Skytron" : [
+         "In9S",
+         "Tvii",
+         "In9El",
+         "Infinity",
+         "18Wel1",
+         "If54",
+         "Kr56",
+         "18C1",
+         "Un60",
+         "6001Kr",
+         "Sh60",
+         "If22",
+         "200Spelb",
+         "200Eld5330Pb",
+         "If30",
+         "Cm200Elc3",
+         "In19El",
+         "Cmz00Elc3",
+         "200El05330Pb",
+         "6500Hd",
+         "St2323",
+         "St23",
+         "Sts95",
+         "St29",
+         "Et2Vba2Afs",
+         "Et2Cp52Afs",
+         "Ect2Ps2Afs",
+         "6700B",
+         "3600B",
+         "St9",
+         "St23Tv",
+         "Ec2Afsst23Tv",
+         "Ec2Afsst3Tv",
+         "Et2Fc2Afs",
+         "E2Fh",
+         "Tv23",
+         "Ect2F2Afs",
+         "E2Vba",
+         "St23Cl",
+         "Etzexp52Afs",
+         "Etzexps2Afs",
+         "Sesp",
+         "E2Fxvba",
+         "St2323Cl",
+         "Ec2Afssy29Tv23",
+         "Ect2Fcp3Zafsst23",
+         "E2Fhp5",
+         "E2Fhxvba",
+         "Et2Ecdk2Afs",
+         "14Mri",
+         "Et2Fcp52Afs",
+         "Et2Fcvba2Afs",
+         "E2Ehdk",
+         "Sesk",
+         "Etm2Fvba/2Sub",
+         "Ect2Sxub/2Afa",
+         "St19",
+         "Ect25Xub/2Afsa",
+         "Etm2Fvba/Sub",
+         "Ect2Sxub/2Afsa",
+         "Etm2Afg2Fc",
+         "St19S",
+         "3602Ultraslide",
+         "B142008",
+         "Led5",
+         "Aur55",
+         "Aur55Tv",
+         "B171056",
+         "B171059",
+         "Argosiiar24",
+         "Tm200Vb/200C3X-Hd",
+         "Aurora3",
+         "St29Tv",
+         "Et2Fc2Af",
+         "Aut5",
+         "Ec2Fkm36/Wt55",
+         "Spectra Aut1",
+         "Auaslh,Aua7Ch,B1-720",
+         "Aurora 4",
+         "Aut1S"
+      ],
+      "Ika" : [
+         "Ms2-59"
+      ],
+      "Professional Instruments" : [
+         "Ns3A"
+      ],
+      "Eckert & Ziegler" : [
+         "Pharmtracer"
+      ],
+      "Corning Inc Science Procducts" : [
+         "Pc351",
+         "Minicentrifuge"
+      ],
+      "Schwinn Cycling And Fitness In" : [
+         "Airdyne",
+         "Airdyne Evoluti",
+         "215P",
+         "Windsprint",
+         "Airdynes",
+         "BE-7216"
+      ],
+      "AR Medica Manufacture Corp" : [
+         "Am340"
+      ],
+      "Dynamic" : [
+         "Dst8000"
+      ],
+      "Scientific Products" : [
+         "S82231"
+      ],
+      "Bio-Tek Instruments Inc" : [
+         "Dpmiii",
+         "Uw3",
+         "As1",
+         "Pma1",
+         "Dpm1B",
+         "601A",
+         "Dpmi",
+         "Elx50",
+         "Elx800",
+         "A31844",
+         "Synergyht"
+      ],
+      "Oki" : [
+         "B4600"
+      ],
+      "Global Surgical Corp" : [
+         "S740200",
+         "Empi Select",
+         "Maxi"
+      ],
+      "Vertex Industries Inc" : [
+         "Vx160V",
+         "Vx41745"
+      ],
+      "Cook Inc" : [
+         "Sblkit1"
+      ],
+      "Organon Teknika" : [
+         "Bp2805"
+      ],
+      "Kowa Optimed Inc" : [
+         "Sl5",
+         "Sl14",
+         "Sl15"
+      ],
+      "Invivo Research Inc" : [
+         "Precess",
+         "Magnitude",
+         "3160Du",
+         "3160Dcu",
+         "Expression",
+         "Precess3160Dcu",
+         "3150M",
+         "3160P",
+         "Mr400",
+         "Expressionip5"
+      ],
+      "Torrey" : [
+         "Ps5"
+      ],
+      "Vidar" : [
+         "Diagpro",
+         "Diag Pro Advant"
+      ],
+      "WR Medical Electronics Co" : [
+         "Caseiv"
+      ],
+      "Trackmaster" : [
+         "Tmx425Cp"
+      ],
+      "Digitimer" : [
+         "Ds7Ah",
+         "D185"
+      ],
+      "Reck" : [
+         "Viva2"
+      ],
+      "Nidek Incorporated" : [
+         "Yc1600",
+         "Gyc2000",
+         "Mc500",
+         "Ark1S",
+         "Lm600"
+      ],
+      "Shimadzu Scientific Inst" : [
+         "Sdu450Xl",
+         "Mobile Dart",
+         "Dart Evolution"
+      ],
+      "Marco Ophthalmic" : [
+         "Lm820",
+         "Km500",
+         "I",
+         "Bat1000",
+         "Keratometer1",
+         "Ark560",
+         "KI",
+         "Lm101"
+      ],
+      "Labconco Corp" : [
+         "Cat# 7701020"
+      ],
+      "Erbe Usa Inc" : [
+         "Vio300D",
+         "Vio200S"
+      ],
+      "Pehratek Products" : [
+         "Md15"
+      ],
+      "Bantam" : [
+         "Png50084",
+         "Pt5002"
+      ],
+      "WY East Medical" : [
+         "Tl026"
+      ],
+      "Planilux" : [
+         "Rotolux",
+         "320 8 J",
+         "320-8-J",
+         "Rotolux 320-8-J"
+      ],
+      "Physio Control" : [
+         "Lp12 Basic",
+         "Lp12 Advanced",
+         "Lp20",
+         "Lp12",
+         "Lp20E",
+         "Lifepak 20E",
+         "Mbss",
+         "3006569005"
+      ],
+      "Mge" : [
+         "07735090"
+      ],
+      "Brainz" : [
+         "Brm",
+         "Brm2",
+         "Brm3"
+      ],
+      "Meridian Bioscience Inc" : [
+         "Elx800"
+      ],
+      "Bausch & Lomb Inc Optical Sys" : [
+         "Orbscan"
+      ],
+      "GE Medical Systems Information" : [
+         "Pdm"
+      ],
+      "Clinton" : [
+         "Gc2"
+      ],
+      "Neurologica" : [
+         "Ceretom Sds"
+      ],
+      "Whitehall Manufacturing" : [
+         "Ts2"
+      ],
+      "Buffalo Dental Co Inc" : [
+         "Pswturboa5",
+         "Pswturbo"
+      ],
+      "Siemens Healthcare Diagnostics" : [
+         "Labcell",
+         "03802A",
+         "Mrorx04Cx",
+         "Clinitekstatusplus",
+         "Dca2000"
+      ],
+      "Fame Industries" : [
+         "Model 1"
+      ],
+      "Belmont Instrument Corp" : [
+         "Fms2000",
+         "037N"
+      ],
+      "Clarity Medical Systems" : [
+         "Retcam 3"
+      ],
+      "Nanosonics" : [
+         "Trophon"
+      ],
+      "Star Trac" : [
+         "Etr",
+         "Startrac Eseries",
+         "Tbt",
+         "Startrac Eseriesrb"
+      ],
+      "Alco Sales & Service" : [
+         "Ar311S76"
+      ],
+      "Honeywell" : [
+         "Dolphin9700",
+         "7900L00424C50E",
+         "Dolphin9700L0P"
+      ],
+      "Labnet International Inc" : [
+         "C13801",
+         "Biomate3",
+         "Minicentrifuge",
+         "C1301Lb",
+         "1C1301",
+         "H5500",
+         "C1301Lr",
+         "C1301Lp",
+         "Mps1000",
+         "C1301B",
+         "S0200",
+         "Spectrifuge24D",
+         "C1301R",
+         "C1301Lt",
+         "Microfuge",
+         "E0304",
+         "C1301P"
+      ],
+      "Thermal Scientific" : [
+         "M37615"
+      ],
+      "International Equipment Compan" : [
+         "Centracl2",
+         "Spinrtte4",
+         "Centrahn",
+         "Centracl3"
+      ],
+      "Landice" : [
+         "L9",
+         "L7Rtm",
+         "L7",
+         "L770Rtm",
+         "L8"
+      ],
+      "Scinomix Inc" : [
+         "Sciprepcyto56"
+      ],
+      "Sherwood Medical" : [
+         "3000A",
+         "3000Acl"
+      ],
+      "Lombart Instrument" : [
+         "Rf0Lo200Sr",
+         "Retinomax 3"
+      ],
+      "Redrick" : [
+         "Comfortview"
+      ],
+      "Transonic Systems Inc" : [
+         "Ht110B",
+         "Ht110R"
+      ],
+      "Pronk Technologies" : [
+         "Simcube"
+      ],
+      "Gen Probe" : [
+         "Sb100",
+         "Leader450Hc"
+      ],
+      "Immunicon" : [
+         "Celltracksii"
+      ],
+      "Heine Usa Ltd" : [
+         "Omega180",
+         "Omega500",
+         "En30",
+         "Omega200",
+         "Beta200",
+         "Msp1787",
+         "Omega 500"
+      ],
+      "Berkeley Bio-Engineering" : [
+         "Vc2",
+         "Vc10"
+      ],
+      "Apple Computer" : [
+         "M6000",
+         "M5890",
+         "M9020",
+         "M0360",
+         "M1688",
+         "Ipad Ii"
+      ],
+      "Ams" : [
+         "Aura Xp"
+      ],
+      "S-S X-Ray" : [
+         "470E4",
+         "V",
+         "70E2",
+         "10-94185",
+         "Mv200A"
+      ],
+      "Mecta" : [
+         "5000Q1001"
+      ],
+      "Keithley Instruments" : [
+         "35080A",
+         "35065"
+      ],
+      "Medtronic" : [
+         "Pbs1000",
+         "Bss2",
+         "E4",
+         "Stealthtreon",
+         "Lp20",
+         "Lp12 Basic",
+         "Lp12 Advanced",
+         "Xps3000",
+         "Endoscrub",
+         "O-Arm",
+         "Digitrapperph400",
+         "Response 3.0",
+         "Ipc",
+         "R560Bcs1",
+         "Aex",
+         "Fusion",
+         "Stealthstation S7",
+         "Nimresponse 3.0",
+         "Oarm",
+         "S7",
+         "Pulsar Ii Generator",
+         "Vitatron",
+         "Lp20E",
+         "Encore",
+         "CR Plus"
+      ],
+      "Teraklin" : [
+         "Avs5000"
+      ],
+      "Bell International" : [
+         "C310",
+         "C361"
+      ],
+      "Biopac System Inc" : [
+         "Mp150",
+         "Mp30",
+         "See Long Desscriptio"
+      ],
+      "Otsuka America Pharmaceutical" : [
+         "Ubitir300"
+      ],
+      "Hitachi-Aloka" : [
+         "Alpha 7St"
+      ],
+      "Neuro Kinetics Inc" : [
+         "NeuroStart",
+         "iPortal"
+      ],
+      "Troemner" : [
+         "200G - 1Mg"
+      ],
+      "Shuttle Power Systems" : [
+         "Promvp76108",
+         "Mvp Pro"
+      ],
+      "Blackbox" : [
+         "Ac502A"
+      ],
+      "Ndssi" : [
+         "Dome E3Chb"
+      ],
+      "Hill-Rom Advanced Respiratory" : [
+         "Centuryg",
+         "Totalcare Icu",
+         "Affinity",
+         "Century",
+         "K426",
+         "Totalcare Gc",
+         "Affinityiii",
+         "K870",
+         "Pm78-1",
+         "K8000",
+         "P3700",
+         "P78270",
+         "P680Ctl",
+         "Totalcareicu",
+         "Tc555",
+         "Totalcare",
+         "1900N",
+         "P1900N007157",
+         "Totalcare255Ax",
+         "Affinity4",
+         "Affinityaft500",
+         "Tc355",
+         "Tcbplus655",
+         "Vikingxl"
+      ],
+      "Sony" : [
+         "Pvm2030",
+         "Up890Md",
+         "Pvm20N1U",
+         "Pvm1943Md",
+         "Pvm1343Md",
+         "Pvm1353",
+         "Sony",
+         "Svo9500Md",
+         "Up2900Md",
+         "Sv01520",
+         "Pvm14N2U",
+         "Pvm14N6U",
+         "VO-5800H",
+         "Pvm20M2Mdu",
+         "Sv09500Md",
+         "Up5600Mdu",
+         "Evid30",
+         "Cpd220Gs",
+         "Pvm14Mzmdu",
+         "Up980",
+         "Up51Md",
+         "Up2100",
+         "Pvm14N5U",
+         "Up895Md",
+         "P91W",
+         "Up985Md",
+         "Slvn55",
+         "895Md",
+         "Ldm214Mdsdi",
+         "Cpdg220R",
+         "Upd71Xr",
+         "Pvm20Lmd",
+         "Dxcc33",
+         "Up5600Md",
+         "Sncz20N",
+         "UP-897Md",
+         "Up897Md",
+         "Upd897Md",
+         "Vplvw100",
+         "Up990Ad",
+         "Rdrvx555",
+         "Pvm14M2Mdu",
+         "Ldm1950Mdhd",
+         "Lmd2450Md",
+         "Ipela",
+         "Ldm1530Md",
+         "Lmd1950Md/Hd",
+         "Up25Md",
+         "Lmd1950Mdhd",
+         "Lmd1951Mdhd",
+         "Updr80Md",
+         "Upd80Md",
+         "Wu1271",
+         "Upd890",
+         "Lmd1530Md",
+         "Lmd2451Md",
+         "Rv3901Hg",
+         "Lmd2451Md/Hd",
+         "Lmd2451Mdhd",
+         "Hdrpj790V",
+         "UP-Dr80Md",
+         "UP-D898 Md",
+         "Lmd211Omd/Ol"
+      ],
+      "Iec" : [
+         "Medispin",
+         "Clinical",
+         "Micromax",
+         "Micromb"
+      ],
+      "Diversatronics" : [
+         "P40Ubm"
+      ],
+      "Clinical Scientific" : [
+         "837E"
+      ],
+      "Sakura Finetek Usa Inc" : [
+         "E300",
+         "Tn6500"
+      ],
+      "Fluke Electronics Corporation" : [
+         "232D",
+         "214B",
+         "454A",
+         "Cufflink",
+         "Impulse4000",
+         "215A",
+         "453A",
+         "217A",
+         "232B"
+      ],
+      "Madsen Electronics Inc" : [
+         "1500"
+      ],
+      "Porter" : [
+         "700002D",
+         "3420Mxr"
+      ],
+      "Ikaria" : [
+         "Inomaxdsir",
+         "Inoblender",
+         "Inomaxds",
+         "Inomaxdsirplus"
+      ],
+      "Donaldson Company Inc" : [
+         "Mturbo",
+         "Mturbo1.1",
+         "Mturbo1.2",
+         "L07521",
+         "Edge"
+      ],
+      "American Electromedics Corp" : [
+         "Pilot"
+      ],
+      "Elo Touchsystems" : [
+         "Entuitive",
+         "1928L",
+         "1529L",
+         "Et1729L8Uwa1Bgg"
+      ],
+      "Dgh Technology" : [
+         "Dgh550"
+      ],
+      "Datex Medical Instrumentation" : [
+         "Ulti2709"
+      ],
+      "Propaq" : [
+         "Propaqmd"
+      ],
+      "Olympus America Incorporated" : [
+         "CLK3",
+         "BX40",
+         "CLK4R",
+         "TCH1",
+         "BX40F3",
+         "CLK4",
+         "BX45",
+         "BH2",
+         "SSU2",
+         "Clvu40",
+         "Ch30",
+         "Ck2",
+         "CHT",
+         "BHTU",
+         "BX50F4",
+         "LF1",
+         "OEV201",
+         "BF1T40",
+         "BF3C20",
+         "BFXP60",
+         "BFP60",
+         "BFP40",
+         "BFXP40",
+         "BFn20",
+         "Otvs4",
+         "Clv10R",
+         "Uws1",
+         "Bx40F4",
+         "Wm30",
+         "Oev143",
+         "Otvsc",
+         "Mny01E",
+         "Bx40Cyf2",
+         "Bht",
+         "Bx41Tf",
+         "Bx40F",
+         "Ch2",
+         "Cyf3",
+         "Cv60",
+         "Otv56",
+         "Otv57B",
+         "Oep3",
+         "Clhsc",
+         "Cv240",
+         "Cluu40",
+         "Oev203",
+         "Bx50Fa",
+         "Tcc1",
+         "Bx50",
+         "Bx45Tf",
+         "Pvm14N5U",
+         "Cv160",
+         "Clv160",
+         "Osfv60",
+         "Bx51",
+         "Uhi2",
+         "Otvs6R",
+         "Clv250",
+         "Tjf160F",
+         "Otvs2",
+         "Clvs30",
+         "Gifq160",
+         "Otvs6",
+         "Clvs20",
+         "CF-Hq190L",
+         "Bx41Tb",
+         "Szx12",
+         "Otv57V",
+         "Oev171H",
+         "Otvs7V",
+         "Mu1",
+         "Clv180",
+         "Cv180",
+         "Bf3C40",
+         "Cx31Rbsf",
+         "D0B3",
+         "Cx41Rf",
+         "Uhi3",
+         "Hyfxp",
+         "Qtv57Hd",
+         "Clh250",
+         "Bx51Tf",
+         "Urfp3",
+         "90R0001",
+         "Otvs7H1D",
+         "Eum30Sk",
+         "90R0007",
+         "Pcfq180Al",
+         "Gif1Tq160",
+         "Gif2T160",
+         "Cfh180Al",
+         "Cfq160S",
+         "Pjf160",
+         "Bfq180",
+         "Bf1T180",
+         "Bf3C160",
+         "Gfue160Al5",
+         "Gfuc140Pal5",
+         "Bh2Rflt3",
+         "Gifq180",
+         "Eum30S",
+         "Nstream",
+         "90X0342",
+         "Bx41",
+         "Wmnp1",
+         "Bx45Tf5",
+         "Cyf5",
+         "Dp71",
+         "Enfgp",
+         "Lfgp",
+         "Lus2",
+         "K10006498",
+         "Bx41Tf5",
+         "Tdo",
+         "Clvs40",
+         "Oep4Hd",
+         "Cv190",
+         "Clv190",
+         "Wmnp2",
+         "Otvs7Pro",
+         "Clvs40Pro",
+         "Otvs7H1Dl08E",
+         "Oep4",
+         "Cyfv2",
+         "Cb3Ol",
+         "Oev261H",
+         "Cyf4",
+         "Otvs7Prohhdl08E",
+         "Chfp60",
+         "L08E",
+         "Gifh180J",
+         "Pcfh180Al",
+         "Tjfq180V",
+         "Gfuct180",
+         "Gifxp180N",
+         "Bfuc180Fa",
+         "Gfue140Pal5",
+         "Oev181H",
+         "Eume1",
+         "Cvy0003",
+         "Clvy006",
+         "Otv57Prohhdl08E",
+         "Dsd2017",
+         "Otvsib",
+         "Otvsi",
+         "Usb200",
+         "Bx53F",
+         "Otvs7H1N",
+         "Tcc2Ps",
+         "Evisexersa",
+         "Cv180Evisexeraii",
+         "Emfgp",
+         "Otvs190",
+         "Clvs190",
+         "Otvs7Prohhd10E",
+         "Urfp5",
+         "Bx46",
+         "Is20092",
+         "Bf3C160Ultrathin",
+         "Cyfvh",
+         "Oep5",
+         "Otvs7H1Nvisera",
+         "Uhi4",
+         "Ucr",
+         "Hyfv",
+         "Lmd211Omdol",
+         "Endoeyeurfv",
+         "Imh20",
+         "Bx43",
+         "5Ut150",
+         "Lfdp",
+         "Lmd1420Md",
+         "Bfq190",
+         "Bx43F",
+         "Bx53Tf",
+         "Clv-180",
+         "CV-180",
+         "Bx43Tf",
+         "Enfp4",
+         "CV-190",
+         "Clv-190",
+         "BF-1Th190",
+         "BF-Q190",
+         "BF-Xp190",
+         "Gif-H190",
+         "Gif-Xp190N",
+         "Gifxp190N",
+         "Gifhq190",
+         "Gif2Th180",
+         "Bf1Th190",
+         "Bfxp190",
+         "Cvl-190",
+         "Gif-1Th190",
+         "Pcf-H19Ol",
+         "3000Re",
+         "GF-Uc140P-Als",
+         "GF- Ue160-Als",
+         "Cx41",
+         "Bx53",
+         "Usg400",
+         "Aeh4G",
+         "Gif-Hq190",
+         "Gif-2Th180",
+         "BF-P190",
+         "GF-Uct180",
+         "MU-1",
+         "Altpro",
+         "Esg400",
+         "Eume2",
+         "Bfh190",
+         "Pcf-H190L",
+         "Pcf-Hq190L",
+         "A22002A",
+         "A22003A",
+         "Radiance26G2Hbscwu26",
+         "Clv 190",
+         "CV-170",
+         "Oep-5"
+      ],
+      "Epson America" : [
+         "Stylus C88+"
+      ],
+      "Medstone International Incorpe" : [
+         "Mds806900"
+      ],
+      "Ethicon Endo Surgery Inc" : [
+         "Versapoint",
+         "Scm12",
+         "Generator300",
+         "Gen11",
+         "Morcellex",
+         "Wound"
+      ],
+      "Storz Instrument" : [
+         "20212134U",
+         "9530Bmr",
+         "7210Aa",
+         "7210Ba",
+         "27086C",
+         "20232101U",
+         "Xenon",
+         "11302Bdx",
+         "27018Bs",
+         "Scwu26A1515",
+         "Or1Essentialneomls16",
+         "EJ-Mla26Uk1A",
+         "8403Zx",
+         "Xenon300",
+         "9606A",
+         "Tc301",
+         "Tc200",
+         "Tc300",
+         "20133120-1",
+         "Tp100",
+         "V3Csx19-R130",
+         "Scwu42A1A15",
+         "Wuns108Gw",
+         "V3Csx19R110",
+         "Xenon 300",
+         "Endocam"
+      ],
+      "Cadwell Laboratories Inc" : [
+         "Cascade Elite",
+         "Cascadeelite",
+         "Sierrawave"
+      ],
+      "Sysmex America Inc" : [
+         "Xt2000I",
+         "Xe50001",
+         "Xe50002",
+         "Xe50003",
+         "Xe50004",
+         "Sp10001",
+         "Sp10002",
+         "Ts2000",
+         "Lasc-Hst-N-Xe",
+         "Xp300",
+         "Xt4000I"
+      ],
+      "Tosoh Bioscience Inc" : [
+         "Aia-360",
+         "G8"
+      ],
+      "Sentec" : [
+         "Sntsdms",
+         "Sdm",
+         "Sdms",
+         "Sntsdmsns"
+      ],
+      "Picker International Inc" : [
+         "Picker",
+         "703T",
+         "Fx820",
+         "Viewbox",
+         "Mtx  Vpe",
+         "402482-2F"
+      ],
+      "Agilent Technologies" : [
+         "M3860A",
+         "G2939A"
+      ],
+      "American Hamilton" : [
+         "K20"
+      ],
+      "International Biomedical Ltd" : [
+         "20H",
+         "Om25Me"
+      ],
+      "Hamilton Bell" : [
+         "V6500"
+      ],
+      "Liko Incorporated" : [
+         "Golvo7007Es",
+         "243Es",
+         "Vikingxl",
+         "Uno102",
+         "Fg835L72",
+         "250Es",
+         "243 Es",
+         "7007 Es",
+         "Golvo7007",
+         "Vikingl",
+         "242Sr2R",
+         "Viking Xl"
+      ],
+      "Solomat Partners" : [
+         "Mpm500"
+      ],
+      "US Filter Corp" : [
+         "Mrorx03Cx"
+      ],
+      "Tanita" : [
+         "Bwb800",
+         "1458N-210",
+         "1458N",
+         "KD-200",
+         "Bwb-800"
+      ],
+      "Abiomed Cardiovascular Inc" : [
+         "200/20"
+      ],
+      "Loctite Corp" : [
+         "Ilook25",
+         "Ilook"
+      ],
+      "Sargent-Welch Scientific" : [
+         "2522B01",
+         "Bv1000"
+      ],
+      "Powervar" : [
+         "Abce",
+         "Abce1100-11Iec",
+         "05146006-6101",
+         "05146006-6106",
+         "650P1Se",
+         "Abce80011",
+         "Abce144011",
+         "Abce110011Iec",
+         "Securityplus",
+         "Abce60011Iec",
+         "Abce144011Iec",
+         "Ups10000Itsit",
+         "Ace",
+         "Abce110011B",
+         "Abce104411",
+         "Abce42011",
+         "Pw512522001",
+         "Abce300011D"
+      ],
+      "St Jude Medical" : [
+         "Ensitevelocity",
+         "Workmate",
+         "Claris"
+      ],
+      "Sebia Electrophoresis Inc" : [
+         "Hydrasys 2 Scan",
+         "Capillarys 2 Flex"
+      ],
+      "Amsco  (See Company #10153)" : [
+         "Lcm822",
+         "Ld202As7120",
+         "Ld202",
+         "3080R"
+      ],
+      "Cuda Products Corp" : [
+         "Xls180",
+         "Xls300"
+      ],
+      "Haemonetics" : [
+         "1050110Eng",
+         "02005110Ep",
+         "1050-110-Eng",
+         "Cellcsaver 5"
+      ],
+      "Clary Corp" : [
+         "M1040",
+         "S1500601"
+      ],
+      "Koven Technology Inc" : [
+         "Es100X",
+         "Hd307"
+      ],
+      "Luxor" : [
+         "209003"
+      ],
+      "Micromedical Technologies" : [
+         "DHS",
+         "AirStar",
+         "VisualEyes",
+         "RealEyes"
+      ],
+      "Meda Sonics" : [
+         "Bf4B",
+         "Bf4A",
+         "Fp3A"
+      ],
+      "Brad Access Systems Inc" : [
+         "Sherlock"
+      ],
+      "Akron" : [
+         "Cytovision"
+      ],
+      "Custom Ultrasonics Inc" : [
+         "83Plus2"
+      ],
+      "Kirlin Company" : [
+         "Infralitedx"
+      ],
+      "Leisegang Medical" : [
+         "1Dgul",
+         "Sul",
+         "Lm2Pr",
+         "Be1",
+         "Lm1P",
+         "Lm90",
+         "3Dl3",
+         "1Dsled",
+         "Optik205002",
+         "3Mtl-Led1",
+         "Optik204002",
+         "Optik102",
+         "Optik212001",
+         "Optik2"
+      ],
+      "Waters Financial Services" : [
+         "TQ",
+         "Acquity",
+         "Xevotqs"
+      ],
+      "Gambro Renal Products Inc" : [
+         "Prismaflex",
+         "Prismafloii"
+      ],
+      "Marconi" : [
+         "Pn465U"
+      ],
+      "Fogg Systems Co Inc" : [
+         "M7136",
+         "311"
+      ],
+      "Waters Instruments Inc" : [
+         "54076"
+      ],
+      "Medizintechnik" : [
+         "Viva2"
+      ],
+      "Miles Inc Diagnostics" : [
+         "4585"
+      ],
+      "Mvap Medical Supplies" : [
+         "Mavidair Extreme"
+      ],
+      "Lindberg Blue M" : [
+         "0V700G"
+      ],
+      "Covaris" : [
+         "S220"
+      ],
+      "Precision Biomedical" : [
+         "Ms160S",
+         "Pm5900",
+         "Pm5480"
+      ],
+      "Cybernet Mfg" : [
+         "Zpcgx31"
+      ],
+      "Arthrex" : [
+         "Ar9600",
+         "Dualwave"
+      ],
+      "Mitsubishi Electronics America" : [
+         "Hsu260",
+         "Lvpx200"
+      ],
+      "Advantage Medical" : [
+         "798/Ez Lift",
+         "298B",
+         "798Ezlift",
+         "Pa1200",
+         "Premierez",
+         "Llb500Ps",
+         "1500Ps",
+         "L500",
+         "Llb600Ps",
+         "EZ Lift"
+      ],
+      "Tri W-G Group" : [
+         "820Spc",
+         "112Ab",
+         "Tg1584",
+         "Tg2726",
+         "Tg1000",
+         "Tg1937",
+         "Tg1957",
+         "Tg1006",
+         "Tg1847",
+         "Tg1002",
+         "Tg1857",
+         "Tg1867"
+      ],
+      "Asah Medico A/S" : [
+         "Varilase722As"
+      ],
+      "Heidelberg Engineering" : [
+         "Spec"
+      ],
+      "Justright Medical" : [
+         "Jr100"
+      ],
+      "Afc Industries" : [
+         "Et7232",
+         "Sua 500",
+         "Afc",
+         "Elevating Table",
+         "Table Elevating"
+      ],
+      "Heart Technology" : [
+         "Rc5000"
+      ],
+      "Image Diagnostic Inc" : [
+         "Aspect100Rt"
+      ],
+      "Biofire" : [
+         "Flmiasy0001"
+      ],
+      "Scimetrics Inc" : [
+         "Mlx106"
+      ],
+      "Aci Medical Llc" : [
+         "Apg-1000",
+         "Vp25",
+         "Apg1000"
+      ],
+      "Iridex Corporation" : [
+         "OR"
+      ],
+      "Gaymar Industries Inc" : [
+         "Tp500C",
+         "Tp700C",
+         "Tp700Cs",
+         "Tp700"
+      ],
+      "Bptru Medical Devices" : [
+         "Bpm200",
+         "Bpm-300"
+      ],
+      "Mtb" : [
+         "Qh1500-24R"
+      ],
+      "Elmed" : [
+         "Bc50Mm",
+         "Bc50"
+      ],
+      "Pacific Fitness" : [
+         "Pacific"
+      ],
+      "Oxford Medical" : [
+         "Synergy",
+         "Vikingselect",
+         "Synergyt10Ep"
+      ],
+      "Medical Positioning Inc" : [
+         "Echo"
+      ],
+      "Dade Behring Inc" : [
+         "Bcsxp"
+      ],
+      "Midmark" : [
+         "411R",
+         "K525",
+         "K520",
+         "Tre24",
+         "K545001",
+         "75E",
+         "75L",
+         "222-016",
+         "223-016",
+         "204-002"
+      ],
+      "Innerspace" : [
+         "4290Bfc"
+      ],
+      "Cytyc Corp" : [
+         "Thinprep2000",
+         "Thinprep3000"
+      ],
+      "Carestream" : [
+         "Dryview 5950",
+         "Dryview 6850"
+      ],
+      "Samsung Electronics Corp" : [
+         "Sv4000W",
+         "710Mp",
+         "S132",
+         "Un32F5000Af",
+         "Ml3312Nd"
+      ],
+      "Evs System" : [
+         "Mrvr"
+      ],
+      "Seabrook Medical Systems" : [
+         "Sms2000"
+      ],
+      "Scition Inc" : [
+         "Profile"
+      ],
+      "Quinton Instruments Co" : [
+         "Breathtrackersc"
+      ],
+      "National Captioning Instrument" : [
+         "Nci4000"
+      ],
+      "Sportart" : [
+         "E830"
+      ],
+      "Etymonic Designs" : [
+         "Axiom"
+      ],
+      "Cirs" : [
+         "040Gse"
+      ],
+      "Airshields/Hill Rom" : [
+         "Pm781",
+         "7830"
+      ],
+      "John Fluke Mfg Co Inc" : [
+         "26Iii",
+         "79Iii",
+         "8060A",
+         "Fluke",
+         "8062A",
+         "52Ii",
+         "50Ii"
+      ],
+      "Sonosite Incorporated" : [
+         "Up895-Md",
+         "Ilook25",
+         "Ilook",
+         "M.Turbo",
+         "Micromaxx",
+         "Turbo1.0",
+         "Titan",
+         "Mturbo",
+         "Ilook 25",
+         "L0532310",
+         "S-Cath",
+         "L07530",
+         "Mturbo1.1.2",
+         "C60/5 2 Mhz",
+         "L38/10 5 Mhz Linear",
+         "L25X/13 6Mhz",
+         "L38X/10  5 Mhz",
+         "Cgox/5  2 Mhz",
+         "P08189-32",
+         "Mturbo1.2.6",
+         "PO 9417-93",
+         "P09417-45",
+         "M Turbo",
+         "S-Icu",
+         "P07699-11",
+         "P07691-70",
+         "P01910-03",
+         "Scath",
+         "Edge",
+         "P15000-13",
+         "Xporte",
+         "M-Turbo",
+         "P14567-22",
+         "P14566-20",
+         "P19617-20",
+         "P19220-55",
+         "P16665-03",
+         "PO-9417-93",
+         "Po9417-93",
+         "P20830-11",
+         "P18800-15",
+         "P20500-10",
+         "Sii",
+         "S Cath",
+         "P07691-20",
+         "X-Porte",
+         "P15000-10",
+         "P14027-15"
+      ],
+      "Industrial Laboratories" : [
+         "3500"
+      ],
+      "Marquette Electronics" : [
+         "T2000",
+         "MacVU",
+         "Mac5000",
+         "Mac1200",
+         "Caseeng",
+         "Mac12"
+      ],
+      "Levitronix Llc" : [
+         "P10037",
+         "L102966",
+         "L102954",
+         "Centrimag Back Up Co"
+      ],
+      "Nebu-Tec Med Produkte" : [
+         "On10072.4Mhz"
+      ],
+      "Teledyne Analytical Instrument" : [
+         "60T"
+      ],
+      "Arizant Inc" : [
+         "Ranger 245"
+      ],
+      "Medrad Inc" : [
+         "M1085Hn",
+         "Spectris Solaris Ep",
+         "Stellant",
+         "Mark 5 Provis",
+         "Continuum",
+         "Ppd",
+         "Tev5Ms",
+         "Veris",
+         "5000A",
+         "Intego",
+         "Intego",
+         "Arterion",
+         "Mark 7 Arterion",
+         "Veris8600",
+         "Provis",
+         "Veris"
+      ],
+      "Netech" : [
+         "Lkg1000",
+         "Expmt100P",
+         "770"
+      ],
+      "Ellman International Inc" : [
+         "Cl108C",
+         "Dentosurg90",
+         "Surgitronffpf",
+         "Ffpfemc",
+         "Vapervacii",
+         "Sv110",
+         "Surgitron4.0",
+         "Dentosurg90Ffp"
+      ],
+      "Waldmann Lighting" : [
+         "Proto203A"
+      ],
+      "BC Biomedical" : [
+         "Ult-2020",
+         "Ult2020",
+         "Utl2020"
+      ],
+      "The Magstim Company Ltd" : [
+         "Plus",
+         "Neurosign100",
+         "Neurosignn100"
+      ],
+      "GE Medical" : [
+         "Dash 8000M",
+         "9800Plus",
+         "Prn50",
+         "Dash4000",
+         "Carescapev100",
+         "Rac4",
+         "Pro300",
+         "Dash3000",
+         "Mac5500",
+         "Mac5500Hd",
+         "Case",
+         "Tangotplus",
+         "Logiqebt08",
+         "Sam",
+         "Rac2A",
+         "Pro300M",
+         "Prov2",
+         "T451M",
+         "Logiqebt11",
+         "Case8000",
+         "Ieb",
+         "Pro100",
+         "Logiq9",
+         "Pro300",
+         "Xw8200Hp",
+         "Rac4",
+         "Desflurane",
+         "Dash4000",
+         "Aestiva5Mri",
+         "Maclab",
+         "Oec9900Elite",
+         "Carescapev100",
+         "H4000Sr",
+         "Logiq E",
+         "12L-Rs",
+         "Rac4A",
+         "Discovery Mr750-2358",
+         "Logiqebt12",
+         "Gt1500T",
+         "Invenial"
+      ],
+      "Krasity S Medical & Surgical" : [
+         "76792M"
+      ],
+      "Separation Technology" : [
+         "C18011",
+         "Hemastatii",
+         "Hemostatii",
+         "Hemastat Ii",
+         "Hematastatii",
+         "Hematxstat Ii",
+         "Hematastat Ii",
+         "Hematxstat2"
+      ],
+      "Hewlett-Packard Co Medical Pr" : [
+         "Hpxw6400",
+         "Compaqpro6300"
+      ],
+      "Pathways" : [
+         "Mr20",
+         "Stm10"
+      ],
+      "Rohde & Schwarz" : [
+         "Fsh303"
+      ],
+      "Ultralite Enterprises Inc" : [
+         "H1200Df1200",
+         "1212D"
+      ],
+      "Lumenis Inc" : [
+         "1041S",
+         "Quantumsa3501000",
+         "XC",
+         "Versapulse",
+         "Totalfx",
+         "Acupluseduo",
+         "Ultraplusencore",
+         "Powersuite",
+         "1005890Deep Fx",
+         "064264401Cpg",
+         "P120H"
+      ],
+      "Giants" : [
+         "Dualfits",
+         "Tempo"
+      ],
+      "Candela Corp" : [
+         "Vbeam2Perfecta",
+         "Gentleyag",
+         "Gentalmax Pro",
+         "Alextrivantage"
+      ],
+      "Cardon Rehabilitation Products" : [
+         "R2711299",
+         "Ctt-Rr7627"
+      ],
+      "Mti" : [
+         "527-115",
+         "Ser700",
+         "527Wswc",
+         "527Swc",
+         "424H-115"
+      ],
+      "Acoustic Systems" : [
+         "Re243"
+      ],
+      "King Air Systems" : [
+         "E4C"
+      ],
+      "Designs For Vision" : [
+         "4000"
+      ],
+      "Mentor Ophthalmics" : [
+         "Tonopenxl",
+         "224806R",
+         "Pam"
+      ],
+      "Steris Corp" : [
+         "578Eyest",
+         "41600St",
+         "P1000",
+         "4160Dost",
+         "Harmony",
+         "99A2"
+      ],
+      "Zebra Technologies Corp" : [
+         "Z130",
+         "S500211000",
+         "Zm400"
+      ],
+      "Birtcher Corp" : [
+         "733Fs",
+         "733Sw"
+      ],
+      "Emerson Equipment Co" : [
+         "CA3000",
+         "CM3000"
+      ],
+      "Drasonn" : [
+         "Liaison"
+      ],
+      "Getinge International" : [
+         "Servoi"
+      ],
+      "Sunoptics Surgical" : [
+         "Solarmaxx300",
+         "Titan300St",
+         "Titan Hd"
+      ],
+      "Matrix Instruments Inc" : [
+         "Mxt5X"
+      ],
+      "Ibm Corporation" : [
+         "Thinkpad"
+      ],
+      "Vicon Industries Inc" : [
+         "V4Dtb",
+         "Vicon"
+      ],
+      "Hitachi High Tech America Inc" : [
+         "H7500",
+         "Cm813U521",
+         "M281",
+         "Eub405B"
+      ],
+      "Wild Leitz Usa Inc" : [
+         "Laborluxii",
+         "Laborluxs",
+         "Laborlux",
+         "355Shm"
+      ],
+      "Chattanooga Corp" : [
+         "Forte400",
+         "Forteus",
+         "Cps005",
+         "Tx15",
+         "Trt300",
+         "Intcb",
+         "Vectra4C",
+         "Legend Combo4C",
+         "Int001",
+         "Intelectlegend",
+         "Legendus",
+         "Intelect2782",
+         "Vectragenisys2764",
+         "Vectragenisys2759",
+         "Vectragenisys2",
+         "Vectragenisys4",
+         "Intelect Xt",
+         "2760 Legend",
+         "Flu110D",
+         "Vectragenisys2761"
+      ],
+      "Radiometer Of America Inc" : [
+         "Tcm3",
+         "Rts622",
+         "Titralab856",
+         "Abl800Flex",
+         "Tcm4006",
+         "Abl80",
+         "Abl90"
+      ],
+      "Peak Technologies" : [
+         "Peak Video"
+      ],
+      "Patterson Scientific" : [
+         "Octafuge",
+         "Metron Elite"
+      ],
+      "Acroprint" : [
+         "Bvi3000"
+      ],
+      "Transmotion" : [
+         "Tmm3B",
+         "Tmm3",
+         "Tmm3 Dysphagia Chair"
+      ],
+      "Tem Systems Inc" : [
+         "Rotemdelta"
+      ],
+      "Activatek" : [
+         "Activadose",
+         "Activadose2"
+      ],
+      "Stackhouse Inc" : [
+         "Es2000",
+         "Pt1000"
+      ],
+      "Datex-Ohmeda" : [
+         "Aisys",
+         "Tuffstat",
+         "Tec5",
+         "Tec7",
+         "Carestation",
+         "6600"
+      ],
+      "Hamilton Medical" : [
+         "31051Arabella",
+         "T1",
+         "Infantflowsystem"
+      ],
+      "Beckman Instruments Inc" : [
+         "Spinchron15",
+         "Gs15",
+         "Tj6",
+         "R611",
+         "Allera6R",
+         "Fc500",
+         "Allegra6",
+         "Allegra21",
+         "Allegrax22",
+         "Allera 6R",
+         "Allegrax22R",
+         "Prepplus2",
+         "Accuspin",
+         "Allerax15R",
+         "Act",
+         "Microfuge16",
+         "Gallios"
+      ],
+      "Oneac Corp" : [
+         "On600A",
+         "On400A",
+         "Onm600Xasi",
+         "Onm600M601",
+         "One600M601",
+         "Onm601",
+         "Onm600"
+      ],
+      "Link Dynamic System (Uk)" : [
+         "N203"
+      ],
+      "Topcon Medical Systems Inc" : [
+         "Lm6Es",
+         "Sl7E",
+         "Id5",
+         "Lm8",
+         "Cl200",
+         "Rm8900",
+         "Cl300",
+         "Cea540A"
+      ],
+      "Magnavox" : [
+         "Ccw131At"
+      ],
+      "Oridion" : [
+         "Microcap"
+      ],
+      "Haag-Streit Service Inc" : [
+         "Z2982A",
+         "900Bm",
+         "Ophthalmic",
+         "M900",
+         "Bm900",
+         "9Q900",
+         "R9000",
+         "At900",
+         "R900",
+         "900Bq",
+         "Tonopenxl",
+         "Im900",
+         "Toohs0016",
+         "Bx900",
+         "900.4.4",
+         "Octopus900",
+         "T900"
+      ],
+      "Reliance Medical Products" : [
+         "7700Nc",
+         "980Hfc",
+         "980Hfc13238",
+         "980Fc",
+         "7000Hfc",
+         "980L",
+         "980H",
+         "Fx920L",
+         "7720Nc",
+         "980Lcf",
+         "7000L",
+         "980Lfc",
+         "7900Nc",
+         "6200Hfc",
+         "7800Nc",
+         "Fx920",
+         "2500Ch"
+      ],
+      "Natus/Olympic" : [
+         "Vikingedx"
+      ],
+      "Luxo Corp" : [
+         "KFM17113"
+      ],
+      "Coy Laboratory Products Inc" : [
+         "Heater Control Module"
+      ],
+      "Orthomatic" : [
+         "Dreamwell"
+      ],
+      "Vanguard Imaging Products" : [
+         "12545L"
+      ],
+      "Itamar Medical Inc" : [
+         "Watch Pat200U"
+      ],
+      "Tenet Co" : [
+         "Tenet Tmax",
+         "7210551 Tmax Ii"
+      ],
+      "Automata Instrumentation Inc" : [
+         "Neo2"
+      ],
+      "Heraeus Lasersonics" : [
+         "5100Nd"
+      ],
+      "Piller" : [
+         "Uniblock Ubt 750"
+      ],
+      "Baxter Healthcare Corp" : [
+         "Phoenix"
+      ],
+      "Sorin Biomedical Inc" : [
+         "3T",
+         "4-Slot System Panel"
+      ],
+      "Hettich" : [
+         "Eba21",
+         "Rotanta460",
+         "Mikro20",
+         "Rotofix32",
+         "Rotanta460R",
+         "Rotofix32A",
+         "Rotanta460Rs",
+         "Eba20C",
+         "Eba20S",
+         "Rotina420",
+         "320R",
+         "Arthrexacp",
+         "Eba280",
+         "Eba20",
+         "Eba2005",
+         "Eba2005S",
+         "Mikro220R"
+      ],
+      "Neuro Technology" : [
+         "DigiStim III",
+         "MicroStim"
+      ],
+      "Spacelabs Healthcare" : [
+         "90449B",
+         "Dms",
+         "Dms3003A",
+         "902171Q",
+         "Lifecardcf12",
+         "902071Q",
+         "Aria",
+         "Evo",
+         "90217A",
+         "90217A-1",
+         "Evo 4",
+         "Lifecardcf12",
+         "Evo4",
+         "551"
+      ],
+      "Liebel Flarsheim" : [
+         "Lineariv",
+         "Angiomat 6000",
+         "Illumena"
+      ],
+      "Sorvall Products Lp" : [
+         "Rt6000",
+         "Rc3B",
+         "Legendrt",
+         "Sorvallst16",
+         "Ultra",
+         "Xf3",
+         "St40",
+         "St16",
+         "St40R",
+         "Legendmicro17",
+         "Legendtplus",
+         "Sorvallst8",
+         "Sorvst8B",
+         "Rc3Bpplus",
+         "Sorvst8Bt",
+         "Sorvallst16R",
+         "Sorvalst8"
+      ],
+      "National Instruments" : [
+         "Scb"
+      ],
+      "Accutome" : [
+         "24-4000"
+      ],
+      "Laborie Medical Technologies C" : [
+         "C485",
+         "Ud564Iii",
+         "Uss11012V",
+         "Aquariustt",
+         "94Ru1Bt Delphis",
+         "Son125",
+         "Uro Cap Iii",
+         "Urocapiii",
+         "Aquariusxt",
+         "Solar Blue"
+      ],
+      "Kay Elemetrics" : [
+         "9175"
+      ],
+      "Arthrocare Corp" : [
+         "Coblatorii",
+         "Quantum2"
+      ],
+      "Acumed" : [
+         "Etps1000"
+      ],
+      "Cardinal Health" : [
+         "Sa4740",
+         "Tympstarvii",
+         "M76541A"
+      ],
+      "Okidata" : [
+         "Ge5256K"
+      ],
+      "Ventana" : [
+         "N760Bmkxtm",
+         "N750Bmkxt",
+         "Benchmarkultra",
+         "Specialstainer",
+         "Benchmarkxt",
+         "Discoveryxt",
+         "Iscan"
+      ],
+      "Smith & Nephew Richards" : [
+         "Synergyii",
+         "Neurosign100",
+         "Dyonics"
+      ],
+      "Guidant" : [
+         "3120"
+      ],
+      "Powerware" : [
+         "Pw5115",
+         "Pw5115750",
+         "9125-1500",
+         "Pw91201500",
+         "Pw512522001"
+      ],
+      "Foresight Imaging" : [
+         "Tims"
+      ],
+      "Sonomed Inc" : [
+         "A2500",
+         "300A",
+         "200Plus",
+         "300Ap",
+         "Pacscan300Plus"
+      ],
+      "Jedmed Instruments" : [
+         "Xe30"
+      ],
+      "3Cpm Inc" : [
+         "Electrogastrogram"
+      ],
+      "Impedimed" : [
+         "Df50"
+      ],
+      "Ophir Optronics" : [
+         "Dgx",
+         "Nova1Z01500"
+      ],
+      "Impac Inc" : [
+         "2500"
+      ],
+      "Nikon" : [
+         "Alphaphot2",
+         "Ys2T",
+         "Smz1B",
+         "Labophot",
+         "Y52T",
+         "E400",
+         "Ys2H",
+         "Smzu",
+         "Alphaphot",
+         "Alphaphotys2",
+         "E600W",
+         "Te2000S",
+         "501I",
+         "Ys100",
+         "50I",
+         "Eclipse50",
+         "Te200",
+         "E600",
+         "Ys210",
+         "Eclipsecil",
+         "Eclipse55",
+         "E200",
+         "Eclipsecis"
+      ],
+      "Blickman Health Industries Inc" : [
+         "7902Ss",
+         "7902Ss157902000",
+         "7902Ss-Mx",
+         "7921Ts",
+         "7902Ssx-M"
+      ],
+      "Sharplan Lasers" : [
+         "40C",
+         "768"
+      ],
+      "Nellcor Puritan Bennett Inc" : [
+         "N20",
+         "Npb40",
+         "N200",
+         "Npb3940",
+         "Npb290Ad3",
+         "N20Pe",
+         "N20Pa",
+         "N65",
+         "N85"
+      ],
+      "Pelton & Crane Company" : [
+         "Fantasticiihbt",
+         "Hbt3",
+         "Hbt",
+         "Lfii"
+      ],
+      "Motion Control" : [
+         "Myolabii"
+      ],
+      "Respironics Inc" : [
+         "Ca3000",
+         "Nico",
+         "P1732",
+         "510M",
+         "Remstarpro",
+         "Remstarauto",
+         "Trilogy100",
+         "Trilogy200",
+         "Vision",
+         "V60",
+         "M10605",
+         "Milleniumm10",
+         "Everfloq",
+         "Alicepdx",
+         "1109581"
+      ],
+      "Boston Scientific" : [
+         "Ilab",
+         "Ilab",
+         "Ilab120Ins",
+         "Rhythmia",
+         "Rh1000",
+         "Magnetis Field Gener",
+         "Meastro 4000",
+         "M00546650"
+      ],
+      "Ekos Corporation" : [
+         "Pt3B"
+      ],
+      "American Scale Corp" : [
+         "DR"
+      ],
+      "Zymed" : [
+         "11008"
+      ],
+      "Castle" : [
+         "304"
+      ],
+      "Eaton Medical Group" : [
+         "Pw5115",
+         "5Sc1500"
+      ],
+      "Triton" : [
+         "J770",
+         "Trt400"
+      ],
+      "Volk Optical Inc" : [
+         "Pictor"
+      ],
+      "Life Plus" : [
+         "Trs3000",
+         "Trs4000"
+      ],
+      "Timeter Instrument Corp  (Alli" : [
+         "Rt200"
+      ],
+      "D E Hokanson Inc" : [
+         "Ag101",
+         "E20",
+         "Ec5R",
+         "Ec6"
+      ],
+      "Luminex" : [
+         "Xmap200",
+         "Lx200",
+         "SD"
+      ],
+      "BC Group International Inc" : [
+         "2000B"
+      ],
+      "Hologic Inc" : [
+         "Novasure",
+         "Insight2",
+         "Sapphire",
+         "Selenia Dimensions",
+         "Secureview Dx",
+         "Thinprep5000"
+      ],
+      "Microtronics" : [
+         "Sars"
+      ],
+      "Barkey" : [
+         "Pathmatherm"
+      ],
+      "Boekel Scientific" : [
+         "133001.Bracco",
+         "133001Bracco",
+         "112001"
+      ],
+      "Beckman Coulter Incorporated" : [
+         "Gallios"
+      ],
+      "Adapta" : [
+         "80100"
+      ],
+      "Freemotion" : [
+         "Fmtl8255Pl",
+         "Epicgzf180435",
+         "Magnum"
+      ],
+      "Fujitsu Siemens" : [
+         "P1610Bt"
+      ],
+      "Ivy Biomedical Systems Inc" : [
+         "3150-B",
+         "3150-A"
+      ],
+      "Air Seal" : [
+         "Oxitestplus7"
+      ],
+      "Metro Equipment" : [
+         "Basix Plus"
+      ],
+      "Codman & Shurtleff Inc" : [
+         "Cmciii",
+         "II",
+         "Icpexpress",
+         "826634Icp",
+         "Module1000",
+         "Synergyprecision"
+      ],
+      "Princeton Electronic" : [
+         "Lcd17D",
+         "Lcd19D"
+      ],
+      "Bfw Inc" : [
+         "Minimaxt3",
+         "Camttlntsc",
+         "Bfw9870Us",
+         "Bfw79030Hdhl",
+         "Bfw7930Hd",
+         "Bfw9870"
+      ],
+      "Custom Comfort Inc" : [
+         "Np1201Lxt",
+         "1201-Lxl/Xt"
+      ],
+      "Reichert-Jung" : [
+         "11035B"
+      ],
+      "Vascular Solutions" : [
+         "Ves 5100"
+      ],
+      "Canon" : [
+         "Bjc250"
+      ],
+      "Invacare" : [
+         "Tr185A080",
+         "Irc1135"
+      ],
+      "Trek Diagnostic Systems Inc" : [
+         "E3200",
+         "6540"
+      ],
+      "Stairmaster" : [
+         "4000Pt",
+         "4600Pt",
+         "4600Ptcl",
+         "Sc5"
+      ],
+      "Oxford Instruments Inc" : [
+         "Iii"
+      ],
+      "Ludlum Measurements Inc" : [
+         "500-2",
+         "14C",
+         "9-3",
+         "Model 3"
+      ],
+      "Schiller America Inc" : [
+         "At10Plus"
+      ],
+      "Barnstead/Thermolyne Corp" : [
+         "M37615",
+         "Db16525",
+         "Maximixplus",
+         "Maximixii"
+      ],
+      "Micro Typing Systems" : [
+         "Mts"
+      ],
+      "Johnson & Johnson" : [],
+      "Imex Medical Systems" : [
+         "Dopct",
+         "Dopii",
+         "Elite100",
+         "Ctplus",
+         "Dopctplus"
+      ],
+      "Capintec Inc" : [
+         "Crc12R",
+         "Crc-25R",
+         "Captus3000",
+         "Crc15R"
+      ],
+      "Powercom America Inc" : [
+         "Smk-1500A"
+      ],
+      "Stryker" : [
+         "Cmndii",
+         "6081Mxpro",
+         "1731Bw",
+         "721Bw",
+         "M100900000",
+         "Tps",
+         "1501Bw",
+         "Switchpointinfinity",
+         "Fluidsafe",
+         "Ma204",
+         "St104",
+         "Sm104",
+         "Sm204",
+         "Sv2",
+         "1088Hd",
+         "X7000",
+         "Sdchd",
+         "Neptunedockingstatio",
+         "Fl28C",
+         "Pt450In",
+         "M204",
+         "Fl28Ex",
+         "Neptunerover",
+         "Epic",
+         "Rugged",
+         "Core",
+         "System6",
+         "Neptune2Ultra",
+         "3002Sex",
+         "Surgistoolii",
+         "Gobedii",
+         "Bigwheel",
+         "1115000000Bsp",
+         "Neptune2Roverultra",
+         "Neptune2",
+         "Smartpump",
+         "Primex",
+         "Tp700C",
+         "240-030-930",
+         "1010E",
+         "Spiritselect",
+         "Aql100",
+         "Neptunebronze",
+         "11150000000E",
+         "Prime",
+         "Surgi Stool 2",
+         "Smartpump"
+      ],
+      "Biomed Truvue" : [
+         "678G3008",
+         "Truvue"
+      ],
+      "Cadex Electronics" : [
+         "C7000",
+         "Smart2+",
+         "Cd441",
+         "C7400Er",
+         "C7400Erc",
+         "C7400C"
+      ],
+      "Chongging Xinfeug Medical" : [
+         "Topca27"
+      ],
+      "Sofamor Danek" : [
+         "Stealth Station"
+      ],
+      "Gemini Medical Systems" : [
+         "94Am35145"
+      ],
+      "Del Mar Medical" : [
+         "Ariap",
+         "Aria",
+         "P6",
+         "Evo",
+         "Lc12Us",
+         "Evo 4",
+         "Evo Psu"
+      ],
+      "Horiba Instruments Inc" : [
+         "Pentra 400"
+      ],
+      "BK Precision" : [
+         "Multimeter"
+      ],
+      "The Chattanooga Group Inc" : [
+         "Intelect Legend"
+      ],
+      "Compumedics" : [
+         "Graelhdpsg",
+         "Bp500Uc",
+         "Sdmx82",
+         "Vg800",
+         "Eserieseeg/Psg44",
+         "Eseries",
+         "Somte",
+         "Siesta802"
+      ],
+      "Pedigo" : [
+         "550"
+      ],
+      "Sencore Electronics" : [
+         "Seneca",
+         "Pr57",
+         "Cr70"
+      ],
+      "Columbia Diagnostics" : [
+         "Octvi"
+      ],
+      "Ozone Solutions Inc" : [
+         "Scigene"
+      ],
+      "Hobart" : [
+         "D300D"
+      ],
+      "Progeny" : [
+         "Prevadc",
+         "Preva"
+      ],
+      "Davis & Geck Div Amer Cyanamid" : [
+         "Vitalvue700",
+         "Vitalvue"
+      ],
+      "Optimedica (Topcon)" : [
+         "Pascal"
+      ],
+      "Somatics" : [
+         "Systemiv"
+      ],
+      "Altair Instruments" : [
+         "Dmx2500"
+      ],
+      "Apc" : [
+         "Sua1500",
+         "5000Xl",
+         "Dla1500",
+         "Smart Ups",
+         "Su1400",
+         "Su1400X179",
+         "Ps450",
+         "Br1500G",
+         "Smart Ups 1400",
+         "Back Up Ups Pro 280",
+         "Su1500",
+         "Su700Net",
+         "Su1400Net",
+         "Br1500Lcd",
+         "Bp280S",
+         "Sua1500X36",
+         "Sua 1500",
+         "54R150",
+         "Smart Ups  5000Xl",
+         "Be750Bb",
+         "Smartd 5000Xl",
+         "Surt007",
+         "Svrt 007",
+         "Cfr2500",
+         "Br1500",
+         "Surta 3000 Xl",
+         "5000Xl",
+         "Back-Ups Pro 1500",
+         "Bp1500",
+         "Surtd5000Xlt",
+         "Surt 007",
+         "Backups Rs 1500",
+         "Smart Ups 1500",
+         "Smt2200",
+         "Skc1500",
+         "Bk350",
+         "Smartups1500",
+         "Es750",
+         "Br900",
+         "Rs900",
+         "Smt750Rm2U",
+         "Sm750",
+         "Bp1500G",
+         "Smt1500"
+      ],
+      "Somanetics Corporation" : [
+         "5100C"
+      ],
+      "Better Water Incorporated" : [
+         "Pbii"
+      ],
+      "Fisher & Paykel Healthcare Inc" : [
+         "Ns252J",
+         "Mr730",
+         "Mr850",
+         "Mr600",
+         "Mr630",
+         "Ns252",
+         "Innervator242",
+         "Ns242Auu",
+         "Mr401",
+         "Neopuff",
+         "Mr850Jhu",
+         "Pt101Us",
+         "Hc150"
+      ],
+      "Hewlett-Packard Co Analytical" : [
+         "3311A"
+      ],
+      "Bio-Med Devices Inc" : [
+         "Mvp10",
+         "2003M",
+         "Crossvent2Iplus"
+      ],
+      "Abbott Laboratories Inc" : [
+         "Axsym",
+         "Oximetrix3",
+         "Vapor2000",
+         "Istat",
+         "Mn300",
+         "Istat300",
+         "300G",
+         "M2000Sp",
+         "Topera",
+         "Istat1"
+      ],
+      "Clinical Dynamics" : [
+         "Ss100A"
+      ],
+      "Digital Equipment Corp" : [
+         "La75A2",
+         "Vt220"
+      ],
+      "Drucker Corp" : [
+         "614B",
+         "642E",
+         "Mini E",
+         "Horizonminie"
+      ],
+      "Tremetrics" : [
+         "Ra300"
+      ],
+      "Tagarno" : [
+         "35Axzenon"
+      ],
+      "Biodex Medical Systems Inc" : [
+         "Efx546",
+         "950-146",
+         "950-420"
+      ],
+      "Psychology Software Inc" : [
+         "Pst-100759",
+         "Blbrs-Fo-2"
+      ],
+      "Gordon Instruments Inc" : [
+         "580Abaer2"
+      ],
+      "Diatek Instruments Inc" : [
+         "3000A"
+      ],
+      "Franek Technologies Inc" : [
+         "Ft1A97002Spalt",
+         "Ft1Robosep2St"
+      ],
+      "Herman Miller" : [
+         "Wmnp1"
+      ],
+      "Instromedix" : [
+         "5218E",
+         "5218F"
+      ],
+      "Polaroid" : [
+         "Ce0537"
+      ],
+      "American Dynamics" : [
+         "Admnmlcd19"
+      ],
+      "Illumina Inc" : [
+         "Hispeedmicroplate",
+         "Hiscan"
+      ],
+      "Dymax Corp" : [
+         "SiteRite II"
+      ],
+      "Delasco" : [
+         "150S"
+      ],
+      "Unistorage" : [
+         "Dla1500"
+      ],
+      "Sartorius" : [
+         "Cp64",
+         "Az1502"
+      ],
+      "American Power Conversion" : [
+         "Sua1500Rm2U",
+         "Sua1500",
+         "Bk650Mc",
+         "Dla1500",
+         "Bk500",
+         "Bk350",
+         "Su1500Rm24",
+         "Smx1500Rm2U",
+         "Smt1500",
+         "Sua2200Va",
+         "Sua1000"
+      ],
+      "Precor" : [
+         "C846U",
+         "C846R",
+         "Efx546",
+         "C846I",
+         "Efx5461",
+         "C936I",
+         "C842/846",
+         "932Iexperience",
+         "815Iexperience",
+         "Efx821",
+         "Efx835",
+         "Trm823",
+         "Efx833",
+         "Trm833",
+         "Rbk835",
+         "Sc5",
+         "Ubk835",
+         "Rbk825",
+         "S323",
+         "Efx536I"
+      ],
+      "Vital Diagnostics" : [
+         "Excyte20",
+         "Duomix"
+      ],
+      "Dell Computer Corporation" : [
+         "Optiplex",
+         "Latitude",
+         "Latitude D820",
+         "Optiplex 755",
+         "Latitude E6540",
+         "Optiplex 7020"
+      ],
+      "Suntech Medical Instruments In" : [
+         "Tango",
+         "Oscar2"
+      ],
+      "Sorin Group Usa Inc" : [
+         "S5"
+      ],
+      "Boehringer Mannheim Corp" : [
+         "7702L"
+      ],
+      "GE Medical Systems" : [
+         "M6C",
+         "S1-5",
+         "Sam",
+         "Carescapeb850",
+         "Cse65",
+         "Statview",
+         "Apexpro",
+         "Mac1200",
+         "Prn50",
+         "Ecaio",
+         "9L-D",
+         "C1-5-D",
+         "Ic5-9-D",
+         "M6C",
+         "Vivid E9",
+         "Dtk0680159",
+         "Solar8000I",
+         "Rac4",
+         "T451M",
+         "V100",
+         "6Vt-D",
+         "Pdm",
+         "F5",
+         "Carescapeb650",
+         "4C-Rs",
+         "Logiq E9",
+         "C2-9",
+         "S1-5-D",
+         "C1-6",
+         "Ml6-15-D",
+         "L8-18I",
+         "C2-9-D",
+         "SL-5-D",
+         "C1-6-D",
+         "Ml6-15",
+         "L8-18I-D",
+         "Logiq E",
+         "L10-22 Rs",
+         "L4-12T Rs",
+         "C1-5 Rs",
+         "11E",
+         "M5S-D",
+         "3V-D",
+         "Use1501A",
+         "Use1501A1A",
+         "Smart1500Slt",
+         "Dash4000",
+         "Dash3000",
+         "6Tc",
+         "9T",
+         "Cicv5+",
+         "T14Tx",
+         "Carescapeb450",
+         "Esco",
+         "Solar8000Ki",
+         "Carescapev100",
+         "Ecaio00",
+         "Mac5500 Hd",
+         "Mac5500Hd",
+         "Nmt",
+         "Bis",
+         "Giraffestandalone",
+         "Vscan Dual Probe",
+         "Carescapeb450Pto",
+         "Ecio00",
+         "Vwr"
+      ],
+      "Scaletronix Inc" : [
+         "6702W",
+         "500Kl",
+         "6202D",
+         "6702Sp"
+      ],
+      "Genesis" : [
+         "Se340"
+      ],
+      "Eaton Corporation" : [
+         "Powerware 9355",
+         "Pw9-130I1000T-Xl",
+         "9390-160"
+      ],
+      "Solaire Medical" : [
+         "Tempo 34"
+      ],
+      "Sunrise Medical Inc Bio Clini" : [
+         "Advancee",
+         "Hpl402",
+         "3655D"
+      ],
+      "Lci Medical Inc" : [
+         "Gsd115"
+      ],
+      "Acist Medical Systems Inc" : [
+         "Rxi"
+      ],
+      "Datcard Systems Inc" : [
+         "Pacscubeexpress100X",
+         "5100N",
+         "Pacsexpress200X",
+         "3400 Pro",
+         "3410"
+      ],
+      "Dynex Technologies Inc" : [
+         "Dsx"
+      ],
+      "Truevision" : [
+         "Cpf46"
+      ],
+      "Cyberonics Inc" : [
+         "Mp150"
+      ],
+      "Radionics" : [
+         "Rfg3Av",
+         "Rfg3B",
+         "Pepm",
+         "Cc1117"
+      ],
+      "Roche Diagnostic Systems" : [
+         "Cobasamplicor",
+         "Pcr9600",
+         "Criterionii",
+         "Magnapureje379",
+         "Lightcycler",
+         "Accuchek",
+         "C0Basamplicor",
+         "Cobas Amplicor",
+         "Je379",
+         "Accucheck",
+         "Cobasintegra800",
+         "Magnapurelc",
+         "Lightcycler2.0",
+         "Accu-Chek Inform Ii"
+      ],
+      "Teca Corp" : [
+         "Synergyt2X",
+         "Sapphire2M",
+         "Synergyn2"
+      ],
+      "American Echo Inc" : [
+         "96030"
+      ],
+      "Icomm" : [
+         "Btr700"
+      ],
+      "Uromed Corporation" : [
+         "Solar Blue Module"
+      ],
+      "Siemens Healthcare Diagnostics" : [
+         "Dcavantage",
+         "Advia1800",
+         "Centauraxp",
+         "Acusons2000"
+      ],
+      "Millipore Corp" : [
+         "Synthesis"
+      ],
+      "International Technidyne Corp" : [
+         "Hemochron401",
+         "Hemochronjrii",
+         "Response",
+         "Hemochron Jr",
+         "Signature Elite",
+         "Signatureelite",
+         "Avox4000",
+         "Avoximeter1000E",
+         "Hemochronelite"
+      ],
+      "Instrumentation Laboratory" : [
+         "Gempremier4000",
+         "Gempremier3500"
+      ],
+      "Lkc Systems" : [
+         "3000Utase"
+      ],
+      "Control Research Inc" : [
+         "Rolloscope M",
+         "Rolloscope Ml"
+      ],
+      "Nanosphere" : [
+         "Verigene"
+      ],
+      "Bransonic" : [
+         "1510R"
+      ],
+      "Varian" : [
+         "Clinac21Exs",
+         "21Ex",
+         "Ixclinac",
+         "Clinac600Cd",
+         "Trilogy"
+      ],
+      "Thermo Scientific" : [
+         "Multifuge35",
+         "Legend23R",
+         "Cytospin4",
+         "Legendmicro17",
+         "M48725",
+         "Nanodrop2000",
+         "Cl2",
+         "Hm355S",
+         "M76541A",
+         "Nd2000",
+         "M71015",
+         "St16",
+         "Sesititre",
+         "Biofugeprimor",
+         "Legendxtr",
+         "3851/3950M29",
+         "Shandon Clear View",
+         "Legendxfr",
+         "Ogh60",
+         "M16715"
+      ],
+      "Ametek" : [
+         "Abce300011",
+         "Abc3144011"
+      ],
+      "Ellex Inc" : [
+         "Tangoslt/Yag",
+         "Abdu",
+         "Ellex"
+      ],
+      "Life-Tech Inc" : [
+         "Es300",
+         "Es400",
+         "Msiva",
+         "Maiva",
+         "MS-Iva",
+         "Msiv4A",
+         "Ministem",
+         "Iononetouches",
+         "Onetouch2",
+         "Icnchipminifuge",
+         "Pmg",
+         "MS-Ivb"
+      ],
+      "Zeiss Optical Sys Inc" : [
+         "Axioskop",
+         "PhotoMicro",
+         "Stemis V6",
+         "AxioStar Plus",
+         "A1"
+      ],
+      "Boston Scientific Corp Ep Tec" : [
+         "Epworkmate",
+         "Maestro",
+         "Ep4",
+         "200P7Eb27",
+         "930115P01",
+         "200P7Eb0640",
+         "200P7Eb",
+         "200Pt7Eb27",
+         "Ilab",
+         "Zoom Latitude"
+      ],
+      "Gvision Usa Inc" : [
+         "Ma15Bxab2220"
+      ],
+      "Biotronik" : [
+         "Renamic",
+         "Ics3000",
+         "Ics 3000",
+         "3200"
+      ],
+      "Angio Dynamics" : [
+         "Hvt 100",
+         "Venacure1470"
+      ],
+      "Braun Industries" : [
+         "Hns11",
+         "Diapactcrrt"
+      ],
+      "Cooper Instrument Corporation" : [
+         "Srh122",
+         "Ct2503Cleartone",
+         "Optik204002",
+         "Bf5A",
+         "Clear Tone"
+      ],
+      "Best Power Technology" : [
+         "2250"
+      ],
+      "Ingram & Bell/Meditron" : [
+         "Dca2000"
+      ],
+      "Bayer Healthcare Diagnostics" : [
+         "4488A",
+         "Dca2000",
+         "Pvcn100"
+      ],
+      "Circon Acmi" : [
+         "Aeh3"
+      ],
+      "LG" : [
+         "E220T",
+         "M237Wdt",
+         "M3704Ccba"
+      ],
+      "Bien-Air Dental" : [
+         "Ichiripro"
+      ],
+      "Oculus" : [
+         "Pentacam"
+      ],
+      "Stockert" : [
+         "Stockert70"
+      ],
+      "Devicor Medical" : [
+         "Mscm1"
+      ],
+      "Plagens Associates Inc" : [
+         "Ssx300St",
+         "Sl3100Vhb",
+         "Sl3110Vhb"
+      ],
+      "Nonin Medical Inc" : [
+         "Fingerprint",
+         "N200",
+         "Respsense",
+         "Ls1R9R"
+      ],
+      "Bard Medsystems Div" : [
+         "Fst661502"
+      ],
+      "DNI Nevada" : [
+         "Ds6100",
+         "Impulse4000",
+         "Oxitestplus7",
+         "207B",
+         "454A(Rarf)"
+      ],
+      "Intermetro Industries" : [
+         "Mbp4101Sb",
+         "Mbp3210Tn",
+         "Metrobasixplus",
+         "Basixplus"
+      ],
+      "JM Specialty" : [
+         "Acr Ph1"
+      ],
+      "Biochrom" : [
+         "Biochrom30"
+      ],
+      "Techno-Aide" : [
+         "Fuji 450 D"
+      ],
+      "Mesa Laboratories Inc" : [
+         "Phoenix"
+      ],
+      "Henry Troemner Llc" : [
+         "Heatblockii"
+      ],
+      "Hako" : [
+         "821So703"
+      ],
+      "Ritter Midmark" : [
+         "253-400616"
+      ],
+      "Denver Instruments" : [
+         "Tg114"
+      ],
+      "Iscience" : [
+         "Fi100"
+      ],
+      "Miccormick Scientific" : [
+         "IV",
+         "Cineratoriv",
+         "Bacticineratoriv"
+      ],
+      "Quinton" : [
+         "Angio Review",
+         "Omnibook4150",
+         "Carriage",
+         "Vcdts21542",
+         "Q710",
+         "Cr60"
+      ],
+      "Puritan-Bennett Corp" : [
+         "Pb100",
+         "Pb710"
+      ],
+      "Sinties Scientific Inc" : [
+         "Powertrainer"
+      ],
+      "Tokyo Boeki" : [
+         "Spaplus"
+      ],
+      "Cardinal Detecto" : [
+         "C30"
+      ],
+      "PPG Biomedical Systems" : [
+         "Bhs616"
+      ],
+      "Supersonic Imagine" : [
+         "Ssip92029",
+         "Se12-3",
+         "Sl15-4",
+         "Smc12-3",
+         "Sl10-2",
+         "Sc6-1"
+      ],
+      "VWR Scientific Products Corp" : [
+         "Gs6R",
+         "1245Pc",
+         "X22R",
+         "Opsysmr",
+         "Clinical50",
+         "Allegrax22R",
+         "Allegrax22",
+         "Vm5000",
+         "Vortexer",
+         "Minicentrifuge",
+         "1167D",
+         "C1413V115",
+         "Thermalshaker",
+         "2Block",
+         "Fibrinotherm",
+         "C1413",
+         "Galaxymini",
+         "Bsh1001",
+         "Symphony",
+         "1160S",
+         "Vwrii",
+         "Sfl6111Wpa",
+         "Vwr",
+         "Xh2001"
+      ],
+      "Life Technologies Inc" : [
+         "1066Ps",
+         "Steponeplus",
+         "Iononetouch",
+         "Ionchipminifuge",
+         "Ion Torrent 8441-21",
+         "Ion Torrent",
+         "Ion Chef 01150",
+         "Qubit Flurometer",
+         "Minifuge 4479672",
+         "Ionchef",
+         "Ionproton",
+         "Ion One Touch 2"
+      ],
+      "Keeler Optical Products Instru" : [
+         "Vantage",
+         "Vantageplus"
+      ],
+      "Integri Tech" : [
+         "Caretalk",
+         "Caretalk Platinum"
+      ],
+      "Panasonic" : [
+         "Wvbm503",
+         "Ag1300P",
+         "Ct1386Y",
+         "Ag7350",
+         "Ag7750P",
+         "Ag7300",
+         "Agmd835P",
+         "Agw1P",
+         "Bth1350Y",
+         "Ag7350P",
+         "Tr930",
+         "Ct1384Y",
+         "Ag1300",
+         "Ag2550",
+         "Ag1330P",
+         "Ct2086Yd",
+         "Ag5710P",
+         "Ag1980P",
+         "Ct1386Yd",
+         "Agm835P",
+         "Wv1550",
+         "Lqmd800",
+         "Agmd830P",
+         "Wjms424",
+         "Agmdr15Pu",
+         "Ejmla26U"
+      ],
+      "Detecto Scale Co" : [
+         "Detecto",
+         "Ap4Kd",
+         "Mv1",
+         "C30"
+      ],
+      "Fuji Medical Systems Usa Inc" : [
+         "Fcr 5000",
+         "Xg5000",
+         "Drypix 5000",
+         "Drypix5000",
+         "Dpls452",
+         "X-Porte",
+         "Scoli Cassette Holde",
+         "Carbon",
+         "Scoli Cassette Stand",
+         "Fdx"
+      ],
+      "Helena Laboratories" : [
+         "G5810000",
+         "G5840000"
+      ],
+      "Vapotherm Inc" : [
+         "Precision Flow"
+      ],
+      "Empi Inc" : [
+         "Dupel",
+         "Focus",
+         "300Pv",
+         "Infinity",
+         "Infinity Plus",
+         "Select",
+         "Epixxl",
+         "Hybresis",
+         "XL",
+         "Epix982",
+         "Empiselect",
+         "Pv300",
+         "Continuum",
+         "Ems2C"
+      ],
+      "Intuitive Surgical Inc" : [
+         "Ss4000",
+         "Vs4000",
+         "PS Cart Is4000 4 Arm"
+      ],
+      "Pari Innovative Inc" : [
+         "058B0000",
+         "678B4019",
+         "85B0000",
+         "086B0000",
+         "Eflow",
+         "085B0000Pronebultra",
+         "Vios",
+         "678G3008"
+      ],
+      "Burdick Inc" : [
+         "Eclipse8"
+      ],
+      "Dornier Medical Systems Inc" : [
+         "Medilas"
+      ],
+      "Pharmacia Inc Laboratory" : [
+         "Unicap250"
+      ]
+   },
+   "networks" : {
+      "Guest Network" : "172.18.31.128/28",
+      "Labor & Delivery" : "10.0.34.0/24",
+      "Cancer Care" : "10.0.31.0/23",
+      "Outpatient Clinic" : "192.168.1.0/22",
+      "Recovery" : "192.168.4.0/22",
+      "Pediatrics" : "192.168.8.0/23",
+      "Radiology" : "192.168.100.0/22"
+   },
+   "os": [
+     "Windows 7",
+     "Windows XP",
+     "Windows for Workgroups 3.11",
+     "Linux 4.x",
+     "Linux 3.x",
+     "Linux 2.x",
+     "MS-DOS 6.11",
+     "Proprietary"
+   ],
+   "owners": [
+     "Clinical Engineering",
+     "Radiology",
+     "Healthcare Technology Management",
+     "Administrative",
+     "Nursing"
+   ],
+   "tags" : {
+       "Rented" : {
+           "percent": 25,
+           "color": "#dd8833"
+       }
+   },
+   "risk_factors": {
+       "ePHI" : {
+           "percent": 50
+       },
+       "Critical" : {
+           "percent": 25,
+           "shortname": "critical",
+           "description": "Asset failure could harm patient",
+           "factor_type": "cli",
+           "weight": 0.5,
+           "invert": false,
+           "range_min": 0.0,
+           "range_max": 1.0,
+           "default_value": 0.0,
+           "user_editable": true,
+           "user_remediable": true,
+           "scalar": false
+       },
+       "Nessus": {
+           "percent": 40
+       },
+       "FDA Class": {
+           "percent": 60
+       }
+   },
+    "vulnerabilities": {
+        "Vuln 1": {
+            "percent": 50,
+            "synopsis": "Example Vulnerability 1",
+            "description": "A vulnerability exists in this asset.",
+            "cvss_score": 7.3
+        },
+        "Vuln 2": {
+            "percent": 50,
+            "synopsis": "Example Vulnerability 2",
+            "description": "A vulnerability exists in this asset.",
+            "cvss_score": 5.3
+        },
+        "Vuln 3": {
+            "percent": 50,
+            "synopsis": "Example Vulnerability 3",
+            "description": "A vulnerability exists in this asset.",
+            "cvss_score": 2.3
+        },
+        "Vuln 4": {
+            "percent": 50,
+            "synopsis": "Example Vulnerability 4",
+            "description": "A vulnerability exists in this asset.",
+            "cvss_score": 6.3
+        },
+        "Vuln 5": {
+            "percent": 50,
+            "synopsis": "Example Vulnerability 5",
+            "description": "A vulnerability exists in this asset.",
+            "cvss_score": 9.3
+        },
+        "Vuln 6": {
+            "percent": 50,
+            "synopsis": "Example Vulnerability 6",
+            "description": "A vulnerability exists in this asset.",
+            "cvss_score": 1.3
+        },
+        "Vuln 7": {
+            "percent": 50,
+            "synopsis": "Example Vulnerability 7",
+            "description": "A vulnerability exists in this asset.",
+            "cvss_score": 4.3
+        }
+   }
+}
