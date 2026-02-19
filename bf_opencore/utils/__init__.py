@@ -5,7 +5,6 @@
 from enum import Enum, auto
 from collections.abc import Iterable
 from .fieldmap import FieldMap
-from .mssql_client import MSSQLClient
 from .func import NullUnlessChanged
 from .ipset import ipset_from_network
 from .disable_signals import DisableSignals
@@ -49,7 +48,6 @@ class Created(Enum):
 
 __all__ = [
     'FieldMap',
-    'MSSQLClient',
     'NullUnlessChanged',
     'ipset_from_network',
     'DisableSignals',
