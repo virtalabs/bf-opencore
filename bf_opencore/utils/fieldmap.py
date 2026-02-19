@@ -8,7 +8,7 @@ BlueFlow's tables (its internal ORM).
 
 import ipaddress
 import netaddr
-from bf_opencore.exceptions import ConnectorTaskError
+from bf_opencore.exceptions import IntegrationTaskError
 from django.apps import apps
 
 
@@ -38,7 +38,7 @@ class FieldMap():
         - keymap maps an orm_key to an external_key or [list of external_key]
 
         Every key from the keymap is included.  Any key that does not map
-        will raise a ConnectorTaskError.  Some data items will be
+        will raise a IntegrationTaskError.  Some data items will be
         ignored.
 
         Lookups return the first value that is not None or whitespace.  If all
@@ -87,7 +87,7 @@ class FieldMap():
         Asset = apps.get_model('bf_opencore', 'Asset')
         for orm_key in keymap.keys():
             if not Asset.is_valid_field_name(orm_key):
-                raise ConnectorTaskError(
+                raise IntegrationTaskError(
                     "'{}' key in FieldMap".format(orm_key) +
                     " does not match any Asset field"
                 )
@@ -112,7 +112,7 @@ class FieldMap():
     def validate(self):
         """Validate ORM keys and external keys.
 
-        Raises ConnectorTaskError on mismatch.
+        Raises IntegrationTaskError on mismatch.
 
         A longer explanation: Every keymap key (an ORM key) must be a valid
         Asset field.  Every keymap value (an external database key) must be a
@@ -126,7 +126,7 @@ class FieldMap():
             for extkey in extkey_list:
                 # External keys must be strings
                 if not isinstance(extkey, str):
-                    raise ConnectorTaskError(
+                    raise IntegrationTaskError(
                         "keymap value '{}': ".format(extkey) +
                         "Expected a string.  Got {}.".format(
                             type(extkey).__name__)
@@ -134,7 +134,7 @@ class FieldMap():
 
                 # External keys must map to a data key
                 if extkey not in self._data.keys():
-                    raise ConnectorTaskError(
+                    raise IntegrationTaskError(
                         "keymap value '{}' ".format(extkey) +
                         "does not map to a data key '{}'".format(
                             ", ".join(self._data.keys()))
@@ -145,7 +145,7 @@ class FieldMap():
         Map every key in the keymap to a value from the data.
 
         If any key in the keymap that does not map to a data value, raise a
-        ConnectorTaskError.  Note that this means some data values may be
+        IntegrationTaskError.  Note that this means some data values may be
         ignored.
         """
         self._joined = {}
@@ -215,12 +215,12 @@ class FieldMap():
         """
         Return the mapped value of an internal field name.
 
-        Raise ConnectorTaskError if not found.
+        Raise IntegrationTaskError if not found.
         """
         try:
             return self._joined[orm_key]
         except KeyError:
-            raise ConnectorTaskError(
+            raise IntegrationTaskError(
                 "orm key '{}' not in FieldMap".format(orm_key)
             )
 
