@@ -25,7 +25,6 @@ import celery
 # these signals in ./signals.py
 #
 # The purpose of this import is to register the callbacks.
-# pylint: disable=unused-import
 from bf_opencore import signals
 
 # Create a Celery instance (sometimes called an app)

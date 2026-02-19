@@ -5,6 +5,7 @@ from django.core.management.base import BaseCommand
 import bf_opencore
 from bf_opencore.models import Connector
 
+# TODO: review this when we have mock data to import
 
 class Command(BaseCommand):  # noqa: D101
     """Django manage.py sub command creates connectors."""
