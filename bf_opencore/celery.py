@@ -56,7 +56,10 @@ def viper_webhook(viper_data: ViperWebhookRequest):
     """Process a viper webhook."""
     logger.info(f"Processing viper webhook: {viper_data}")
     Asset = apps.get_model('bf_opencore', 'Asset')
-    assets = Asset.objects.filter(last_pinged__gte=viper_data.since).filter(last_pinged__lte=viper_data.before).order_by('last_pinged').all()
+    assets = Asset.objects.filter(last_pinged__gte=viper_data.since)
+    if viper_data.before:
+        assets = assets.filter(last_pinged__lte=viper_data.before)
+    assets = assets.order_by('last_pinged').all()
     total = assets.count()
     total_pages = math.ceil(total / viper_data.page_size)
     for i in range(0, len(assets), viper_data.page_size):

@@ -43,6 +43,10 @@ router.register(r'crontabs', views.CrontabScheduleViewSet)
 router.register(r'intervals', views.IntervalScheduleViewSet)
 router.register(r'periodictask', views.PeriodicTaskViewSet)
 
+# Viper integration
+router.register(r'viper', views.ViperViewSet, basename='viper')
+
+
 urlpatterns = [
     path('schema/', SpectacularAPIView.as_view(), name='schema'),
     path('docs/', SpectacularSwaggerView.as_view(url_name='bf_opencore:schema'), name='swagger-ui'),

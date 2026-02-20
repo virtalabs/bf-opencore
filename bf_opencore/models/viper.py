@@ -1,4 +1,4 @@
-from dataclasses import dataclass
+from dataclasses import dataclass, asdict
 from bf_opencore.models import Asset
 
 @dataclass
@@ -9,6 +9,10 @@ class ViperWebhookRequest:
     before: str # iso8601
     page: int
     page_size: int
+
+    def to_dict(self):
+        """Return a JSON-serializable dict (for json.dumps or requests)."""
+        return asdict(self)
 
 class ViperAsset:
     """Data for a viper asset."""
@@ -34,6 +38,10 @@ class ViperAsset:
         self.serial_number = asset.serial_number
         self.udi = asset.udi
 
+    def to_dict(self):
+        """Return a JSON-serializable dict (for json.dumps or requests)."""
+        return asdict(self)
+
 @dataclass
 class ViperWebhookResponse:
     """Response for a viper webhook."""
@@ -44,3 +52,7 @@ class ViperWebhookResponse:
     total_pages: int
     next_page: str | None # url to the next page: {BASE_URL}/api/assets/?page={page+1}&page_size={page_size}
     previous_page: str | None # url to the previous page: {BASE_URL}/api/assets/?page={page-1}&page_size={page_size}
+
+    def to_dict(self):
+        """Return a JSON-serializable dict (for json.dumps or requests)."""
+        return asdict(self)
