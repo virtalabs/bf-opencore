@@ -1,0 +1,25 @@
+from unittest.mock import patch
+from bf_opencore.models.viper import ViperWebhookRequest
+
+def test_viper_webhook(auth_client):
+    '''
+    Asserts our 202 response and call to the celery task.
+    '''
+    breakpoint()
+    with patch('bf_opencore.celery.viper_webhook') as mock_viper_webhook:
+        response = auth_client.post('/api/viper/webhook/', {
+            'callback': 'https://example.com/viper/webhook/',
+            'since': '2026-01-01T00:00:00Z',
+            'before': '2026-01-02T00:00:00Z',
+            'page': 1,
+            'page_size': 10,
+        })
+        assert response.status_code == 202
+        assert response.data == None
+        mock_viper_webhook.assert_called_once_with(ViperWebhookRequest(
+            callback='https://example.com/viper/webhook/',
+            since='2026-01-01T00:00:00Z',
+            before='2026-01-02T00:00:00Z',
+            page=1,
+            page_size=10,
+        ))
