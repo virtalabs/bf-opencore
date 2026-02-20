@@ -33,7 +33,7 @@ class ViperAsset:
         self.id = asset.id
         self.name = asset.name
         self.ip_address = asset.ip_address
-        self.mac_address = asset.mac_address
+        self.mac_address = str(asset.mac_address)
         self.vendor = asset.manufacturer
         self.model = asset.model
         self.serial_number = asset.serial_number
@@ -42,12 +42,13 @@ class ViperAsset:
         self.cpe = '' # TODO: get cpe from asset.cpe_qset()
         self.role = ''
         self.upstream_api = ''
-        self.hostname = asset.hostname
-        self.mac_address = asset.mac_address
-        self.serial_number = asset.serial_number
+        self.hostname = asset.hostname or ''
+        # Coerce to str so payload is JSON-serializable (Asset uses netaddr.EUI / InetAddress)
+        self.mac_address = str(asset.mac_address) if asset.mac_address is not None else ''
+        self.serial_number = asset.serial_number or ''
         self.location = {} # TODO: custom fields?
         self.status = 'active' # TODO: how do we want to determine this?
-        self.vendorID = asset.nic_vendor
+        self.vendorID = str(asset.nic_vendor)
 
     def to_dict(self):
         """Return a JSON-serializable dict (for json.dumps or requests)."""
