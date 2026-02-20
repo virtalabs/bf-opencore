@@ -29,6 +29,7 @@ dependencies = [
     "click>=8.3.1",
     "sh>=2.2.2",
     "python-nmap>=0.7.1",
+    "requests>=2.32.5",
 ]
 
 [project.optional-dependencies]
