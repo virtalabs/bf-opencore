@@ -22,7 +22,7 @@ class ViperWebhookSerializer(serializers.Serializer):
     callback = serializers.URLField()
     since = serializers.DateTimeField()
     before = serializers.DateTimeField(required=False, default=None)
-    page = serializers.IntegerField()
+    max_pages = serializers.IntegerField()
     page_size = serializers.IntegerField()
 
 
