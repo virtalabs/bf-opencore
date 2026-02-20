@@ -10,6 +10,7 @@ def auth_client():
 def celery_app():
     cp.conf.update({
         'broker_url': 'memory://',
-        'result_backend': 'memory://',
+        'result_backend': None,
+        'task_always_eager': True,
     })
     return cp
