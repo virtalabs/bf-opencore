@@ -10,8 +10,9 @@ import json
 logger = logging.getLogger(__name__)
 
 @celery_app.task
-def viper_webhook(viper_data: ViperWebhookRequest):
+def viper_webhook(viper_data: dict):
     """Process a viper webhook."""
+    viper_data = ViperWebhookRequest(**viper_data)
     logger.info(f"Processing viper webhook: {viper_data}")
     Asset = apps.get_model('bf_opencore', 'Asset')
     assets = Asset.objects.filter(last_pinged__gte=viper_data.since)
