@@ -1,7 +1,9 @@
 from unittest.mock import patch
 from bf_opencore.models.viper import ViperWebhookRequest, ViperWebhookResponse, ViperAsset
 from bf_opencore.celery.tasks import viper_webhook
+import pytest
 
+@pytest.mark.django_db
 def test_viper_webhook_output(celery_app):
     '''
     Captures the output from the celery task.
