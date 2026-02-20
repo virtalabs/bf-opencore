@@ -13,8 +13,8 @@ from rest_framework.decorators import action
 from rest_framework.permissions import AllowAny
 from rest_framework.parsers import JSONParser
 
-from bf_opencore.celery import viper_webhook, ViperWebhookRequest
-
+from bf_opencore.celery.tasks import viper_webhook
+from bf_opencore.models.viper import ViperWebhookRequest
 
 
 class ViperViewSet(viewsets.ViewSet):
