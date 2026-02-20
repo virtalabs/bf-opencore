@@ -36,4 +36,4 @@ def viper_webhook(viper_data: dict):
             previous_page=None
         )
         page += 1
-        requests.post(viper_data.callback, viper_response.to_dict(), headers={'Content-Type': 'application/json'})
+        requests.post(viper_data.callback, json=viper_response.to_dict(), headers={'Content-Type': 'application/json'})

@@ -46,7 +46,7 @@ def test_viper_webhook_output_with_assets(celery_app, setup_assets):
         assert mock_post.call_count == total_pages
         assert mock_post.call_args[0][0] == 'https://example.com/viper/webhook/'
         for i, call in enumerate(mock_post.call_args_list):
-            payload = call.args[1]
+            payload = call.kwargs['json']
             assert payload['page'] == 1 + i
             assert payload['page_size'] == page_size
             assert payload['total'] == total_assets
