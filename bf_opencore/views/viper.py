@@ -12,9 +12,18 @@ from rest_framework.request import Request
 from rest_framework.decorators import action
 from rest_framework.permissions import AllowAny
 from rest_framework.parsers import JSONParser
+from rest_framework import serializers
 
 from bf_opencore.celery.tasks import viper_webhook
 from bf_opencore.models.viper import ViperWebhookRequest
+
+class ViperWebhookSerializer(serializers.Serializer):
+    """Serializer for the Viper webhook."""
+    callback = serializers.URLField()
+    since = serializers.DateTimeField()
+    before = serializers.DateTimeField(required=False, default=None)
+    page = serializers.IntegerField()
+    page_size = serializers.IntegerField()
 
 
 class ViperViewSet(viewsets.ViewSet):
@@ -23,10 +32,13 @@ class ViperViewSet(viewsets.ViewSet):
     # TODO review authentication
     permission_classes = [AllowAny]
     parser_classes = [JSONParser]
+    serializer_class = ViperWebhookSerializer
 
     @action(detail=False, methods=['post'])
     def webhook(self, request: Request) -> Response:
         """Registers a viper webhook."""
-        viper_data = ViperWebhookRequest(**request.data)
+        serializer = self.serializer_class(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        viper_data = ViperWebhookRequest(**serializer.validated_data)
         viper_webhook.delay(viper_data.to_dict())
         return Response(status=status.HTTP_202_ACCEPTED)
