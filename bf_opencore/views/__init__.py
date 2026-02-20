@@ -26,6 +26,7 @@ from .scan import ScanViewSet, ScanSerializer
 from .tag import TagViewSet, TagSerializer
 from .user import UserViewSet, UserSerializer
 from .vulnerability import VulnerabilityViewSet, VulnerabilitySerializer
+from .viper import ViperViewSet
 
 __all__ = [
     # ViewSets
@@ -77,4 +78,5 @@ __all__ = [
     'TagSerializer',
     'UserSerializer',
     'VulnerabilitySerializer',
+    'ViperViewSet',
 ]

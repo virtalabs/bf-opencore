@@ -11,8 +11,10 @@ from rest_framework.response import Response
 from rest_framework.request import Request
 from rest_framework.decorators import action
 from rest_framework.permissions import AllowAny
+from rest_framework.parsers import JSONParser
 
-from bf_opencore.celery import celery_app, ViperWebhookRequest
+from bf_opencore.celery import viper_webhook, ViperWebhookRequest
+
 
 
 class ViperViewSet(viewsets.ViewSet):
@@ -20,10 +22,11 @@ class ViperViewSet(viewsets.ViewSet):
 
     # TODO review authentication
     permission_classes = [AllowAny]
+    parser_classes = [JSONParser]
 
     @action(detail=False, methods=['post'])
     def webhook(self, request: Request) -> Response:
         """Registers a viper webhook."""
         viper_data = ViperWebhookRequest(**request.data)
-        celery_app.send_task('viper.webhook', args=[viper_data])
+        viper_webhook.delay(viper_data.to_dict())
         return Response(status=status.HTTP_202_ACCEPTED)
