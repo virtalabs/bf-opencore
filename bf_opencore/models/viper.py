@@ -7,13 +7,14 @@ class ViperWebhookRequest:
     callback: str
     since: str # iso8601 
     before: str # iso8601
-    page: int
+    max_pages: int
     page_size: int
 
     def to_dict(self):
         """Return a JSON-serializable dict (for json.dumps or requests)."""
         return asdict(self)
 
+@dataclass
 class ViperAsset:
     """Data for a viper asset."""
     id: int
@@ -37,6 +38,16 @@ class ViperAsset:
         self.model = asset.model
         self.serial_number = asset.serial_number
         self.udi = asset.udi
+        self.network_segment = '' # TODO: get network segment from asset.network_qset()
+        self.cpe = '' # TODO: get cpe from asset.cpe_qset()
+        self.role = ''
+        self.upstream_api = ''
+        self.hostname = asset.hostname
+        self.mac_address = asset.mac_address
+        self.serial_number = asset.serial_number
+        self.location = asset.location
+        self.status = asset.status
+        self.vendorID = asset.vendorID
 
     def to_dict(self):
         """Return a JSON-serializable dict (for json.dumps or requests)."""

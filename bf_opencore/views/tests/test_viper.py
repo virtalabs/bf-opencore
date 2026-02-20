@@ -1,4 +1,5 @@
 from unittest.mock import patch
+import datetime
 from bf_opencore.models.viper import ViperWebhookRequest
 
 def test_viper_webhook(auth_client, celery_app):
@@ -10,16 +11,16 @@ def test_viper_webhook(auth_client, celery_app):
             'callback': 'https://example.com/viper/webhook/',
             'since': '2026-01-01T00:00:00Z',
             'before': '2026-01-02T00:00:00Z',
-            'page': 1,
+            'max_pages': 1,
             'page_size': 10,
         }, content_type='application/json')
-        assert response.status_code == 202
+        assert response.status_code == 202, response.data
         assert response.data == None
         assert mock_viper_webhook.call_count == 1
         mock_viper_webhook.assert_called_once_with(ViperWebhookRequest(
             callback='https://example.com/viper/webhook/',
-            since='2026-01-01T00:00:00Z',
-            before='2026-01-02T00:00:00Z',
-            page=1,
+            since=datetime.datetime.fromisoformat('2026-01-01T00:00:00Z'),
+            before=datetime.datetime.fromisoformat('2026-01-02T00:00:00Z'),
+            max_pages=1,
             page_size=10,
         ).to_dict())

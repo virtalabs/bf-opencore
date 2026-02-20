@@ -20,10 +20,12 @@ def viper_webhook(viper_data: dict):
     assets = assets.order_by('last_pinged').all()
     total = assets.count()
     total_pages = math.ceil(total / viper_data.page_size)
-    page = int(viper_data.page)
+    page = 1
     for i in range(0, len(assets), viper_data.page_size):
+        if page > viper_data.max_pages:
+            raise ValueError(f"Max pages exceeded: {viper_data.max_pages}")
         assets_chunk = assets[i:i + viper_data.page_size]
-        viper_assets = [ViperAsset(asset) for asset in assets_chunk]
+        viper_assets = [ViperAsset(asset).to_dict() for asset in assets_chunk]
         viper_response = ViperWebhookResponse(
             items=viper_assets,
             page=page,
