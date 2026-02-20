@@ -21,7 +21,7 @@ def test_viper_webhook_output_no_assets(celery_app):
             callback='https://example.com/viper/webhook/',
             since='2026-01-01T00:00:00Z',
             before='2026-01-02T00:00:00Z',
-            page=1,
+            max_pages=1,
             page_size=10,
         ).to_dict()])
         assert mock_post.call_count == 0
@@ -40,7 +40,7 @@ def test_viper_webhook_output_with_assets(celery_app, setup_assets):
             callback='https://example.com/viper/webhook/',
             since='1800-01-01T00:00:00Z', # some arbitrary date in the past to get all assets
             before=None,
-            page=1,
+            max_pages=100, # high enough to get all assets
             page_size=page_size,
         ).to_dict()])
         assert mock_post.call_count == total_pages

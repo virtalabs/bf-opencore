@@ -45,9 +45,9 @@ class ViperAsset:
         self.hostname = asset.hostname
         self.mac_address = asset.mac_address
         self.serial_number = asset.serial_number
-        self.location = asset.location
-        self.status = asset.status
-        self.vendorID = asset.vendorID
+        self.location = {} # TODO: custom fields?
+        self.status = 'active' # TODO: how do we want to determine this?
+        self.vendorID = asset.nic_vendor
 
     def to_dict(self):
         """Return a JSON-serializable dict (for json.dumps or requests)."""
