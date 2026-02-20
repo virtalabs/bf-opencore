@@ -2,6 +2,8 @@
 
 Currently we provide a webhook registration endpoint that allows Viper to
 query for a list of assets
+
+The "real" response is handled by a Celery task.
 """
 
 from rest_framework import viewsets, status
