@@ -19,9 +19,6 @@ $ python
 import celery
 import logging
 
-# register signals
-from bf_opencore import signals
-
 logger = logging.getLogger(__name__)
 
 # Create a Celery instance (sometimes called an app)
