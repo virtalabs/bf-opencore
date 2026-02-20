@@ -79,45 +79,6 @@ def task_prerun(task_id, task, *args, **kwargs):
     connector_task.status = "Running"
     connector_task.save()
 
-
-@celery.signals.task_postrun.connect()
-def task_postrun(task_id, task, retval, state, *args, **kwargs):
-    """
-    Update the ConnectorTask DB with output, return value and timestamp.
-
-    Celery Documentation:
-    http://docs.celeryproject.org/en/latest/userguide/signals.html#task-postrun
-    Dispatched after a task has been executed.  Sender is the task object
-    executed.  Note that this hook runs even when there has been an exception
-    thrown by the task
-    """
-    raise NotImplementedError("Connectors have been removed")
-    logger.debug("task_postrun(task_id=%s)", task_id)
-    ConnectorTask = apps.get_model('bf_opencore', 'ConnectorTask')
-    try:
-        connector_task = ConnectorTask.objects.get(
-            celery_task_id=task_id)
-    except ConnectorTask.DoesNotExist:
-        # This case will be triggered by non-BlueFlow tasks
-        return
-
-    # Remove ConnectorTask object binding
-    if hasattr(task, "ct"):
-        delattr(task, "ct")
-
-    # Update the database
-    # NOTE: we're not using the `task.ct` attribute because it may have been
-    # updated in the mean time by a different Celery signal.  Safer to use the
-    # object retrieved from the database.
-    if connector_task.status == "Running":
-        connector_task.status = "Finished"
-    if retval is not None:
-        connector_task.retval = retval
-    connector_task.date_finished = django.utils.timezone.now()
-    connector_task.progress_count = connector_task.progress_total
-    connector_task.save()
-
-
 @celery.signals.task_retry.connect()
 def task_retry(request, reason, einfo, *args, **kwargs):
     """
