@@ -5,7 +5,7 @@ def test_viper_webhook(auth_client, celery_app):
     '''
     Asserts our 202 response and call to the celery task.
     '''
-    with patch('bf_opencore.celery.viper_webhook.delay') as mock_viper_webhook:
+    with patch('bf_opencore.celery.tasks.viper_webhook.delay') as mock_viper_webhook:
         response = auth_client.post('/api/viper/webhook/', {
             'callback': 'https://example.com/viper/webhook/',
             'since': '2026-01-01T00:00:00Z',
