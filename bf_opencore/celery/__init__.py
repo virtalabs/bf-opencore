@@ -17,11 +17,9 @@ $ python
 <AsyncResult: e8cfbb56-eca7-491d-a3a3-c15819cad8b8>
 """
 import celery
-from dataclasses import dataclass
 import logging
 import requests
 from django.apps import apps
-from django.conf import settings
 from bf_opencore.models import Asset
 import json
 import math
