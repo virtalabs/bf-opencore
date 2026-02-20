@@ -5,7 +5,6 @@ from django.apps import apps
 import logging
 import math
 import requests
-import json
 
 logger = logging.getLogger(__name__)
 
@@ -21,16 +20,18 @@ def viper_webhook(viper_data: dict):
     assets = assets.order_by('last_pinged').all()
     total = assets.count()
     total_pages = math.ceil(total / viper_data.page_size)
+    page = int(viper_data.page)
     for i in range(0, len(assets), viper_data.page_size):
         assets_chunk = assets[i:i + viper_data.page_size]
         viper_assets = [ViperAsset(asset) for asset in assets_chunk]
         viper_response = ViperWebhookResponse(
             items=viper_assets,
-            page=viper_data.page,
+            page=page,
             page_size=viper_data.page_size,
             total=total,
             total_pages=total_pages,
             next_page=None,
             previous_page=None
         )
-        requests.post(viper_data.callback, json.dumps(viper_response))
+        page += 1
+        requests.post(viper_data.callback, viper_response.to_dict(), headers={'Content-Type': 'application/json'})

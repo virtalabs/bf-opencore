@@ -1,4 +1,5 @@
 import pytest
+import django.core.management
 from rest_framework.test import APIClient
 from bf_opencore.celery import celery_app as cp
 
@@ -14,3 +15,12 @@ def celery_app():
         'task_always_eager': True,
     })
     return cp
+
+
+@pytest.fixture
+def setup_assets(django_db_setup, django_db_blocker):
+    '''
+    Setup the assets in the database.
+    '''
+    with django_db_blocker.unblock():
+        django.core.management.call_command('loaddata', 'data/assets.json')
