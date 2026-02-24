@@ -1,4 +1,5 @@
 from dataclasses import dataclass, asdict
+from django.conf import settings
 from bf_opencore.models import Asset
 
 @dataclass
@@ -44,7 +45,7 @@ class ViperAsset:
         self.upstream_api = ''
         self.hostname = asset.hostname or ''
         # Coerce to str so payload is JSON-serializable (Asset uses netaddr.EUI / InetAddress)
-        self.mac_address = str(asset.mac_address) if asset.mac_address is not None else ''
+        self.mac_address = str(asset.mac_address) if asset.mac_address else ''
         self.serial_number = asset.serial_number or ''
         self.location = {} # TODO: custom fields?
         self.status = 'active' # TODO: how do we want to determine this?
@@ -62,9 +63,34 @@ class ViperWebhookResponse:
     page_size: int
     total: int
     total_pages: int
-    next_page: str | None # url to the next page: {BASE_URL}/api/assets/?page={page+1}&page_size={page_size}
-    previous_page: str | None # url to the previous page: {BASE_URL}/api/assets/?page={page-1}&page_size={page_size}
+    webhook_path = "/api/viper/webhook/"
 
     def to_dict(self):
         """Return a JSON-serializable dict (for json.dumps or requests)."""
         return asdict(self)
+
+    @property
+    def next_page(self):
+        """Return the URL to the next page."""
+        if self.page + 1 >= self.total_pages:
+            return None
+        if hasattr(self, '_next_page'):
+            return self._next_page
+        params_next = f"page={self.page + 1}&page_size={self.page_size}&last_sync={self.last_sync_iso}"
+        if self.not_after_iso:
+            params_next += f"&not_after={self.not_after_iso}"
+        self._next_page = f"{settings.BASE_URL}{self.webhook_path}?{params_next}"
+        return self._next_page
+
+    @property
+    def previous_page(self):
+        """Return the URL to the previous page."""
+        if self.page <= 1:
+            return None
+        if hasattr(self, '_previous_page'):
+            return self._previous_page
+        params_prev = f"page={self.page - 1}&page_size={self.page_size}&last_sync={self.last_sync_iso}"
+        if self.not_after_iso:
+            params_prev += f"&not_after={self.not_after_iso}"
+        self._previous_page = f"{settings.BASE_URL}{self.webhook_path}?{params_prev}"
+        return self.previous_page
