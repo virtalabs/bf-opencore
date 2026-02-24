@@ -2,6 +2,10 @@
 
 """Base Django settings (build-time config). Do not set DATABASES, SECRET_KEY, DEBUG, ALLOWED_HOSTS here."""
 
+import os
+
+BASE_URL = os.environ.get("BASE_URL", "http://localhost:8000")
+
 INSTALLED_APPS = [
     "bf_opencore.apps.BfOpenCoreConfig",
     "django.contrib.admin",

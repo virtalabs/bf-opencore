@@ -32,8 +32,9 @@ def viper_webhook(viper_data: dict):
             page_size=viper_data.page_size,
             total=total,
             total_pages=total_pages,
-            next_page=None,
-            previous_page=None
+            since=viper_data.since,
+            before=viper_data.before,
         )
         page += 1
-        requests.post(viper_data.callback, json=viper_response.to_dict(), headers={'Content-Type': 'application/json'})
+        as_dict = viper_response.to_dict()
+        requests.post(viper_data.callback, json=as_dict, headers={'Content-Type': 'application/json'})
