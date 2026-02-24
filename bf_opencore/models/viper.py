@@ -63,34 +63,41 @@ class ViperWebhookResponse:
     page_size: int
     total: int
     total_pages: int
-    webhook_path = "/api/viper/webhook/"
+    since: str
+    before: str | None = None
+    # settings?
+    webhook_path: str = "/api/viper/webhook/"
 
     def to_dict(self):
         """Return a JSON-serializable dict (for json.dumps or requests)."""
-        return asdict(self)
+        base = asdict(self)
+        base['next_page'] = self.next_page
+        base['previous_page'] = self.previous_page
+        return base
+
+    def _gen_page(self, page: int) -> str:
+        """Generate a page URL based on the page number, page size, and last sync time."""
+        params = f"page={page}&page_size={self.page_size}&since={self.since}"
+        if self.before:
+            params += f"&before={self.before}"
+        return f"{settings.BASE_URL}{self.webhook_path}?{params}"
 
     @property
-    def next_page(self):
+    def next_page(self) -> str | None:
         """Return the URL to the next page."""
-        if self.page + 1 >= self.total_pages:
+        if self.page >= self.total_pages:
             return None
         if hasattr(self, '_next_page'):
             return self._next_page
-        params_next = f"page={self.page + 1}&page_size={self.page_size}&last_sync={self.last_sync_iso}"
-        if self.not_after_iso:
-            params_next += f"&not_after={self.not_after_iso}"
-        self._next_page = f"{settings.BASE_URL}{self.webhook_path}?{params_next}"
+        self._next_page = self._gen_page(self.page + 1)
         return self._next_page
 
     @property
-    def previous_page(self):
+    def previous_page(self) -> str | None:
         """Return the URL to the previous page."""
         if self.page <= 1:
             return None
         if hasattr(self, '_previous_page'):
             return self._previous_page
-        params_prev = f"page={self.page - 1}&page_size={self.page_size}&last_sync={self.last_sync_iso}"
-        if self.not_after_iso:
-            params_prev += f"&not_after={self.not_after_iso}"
-        self._previous_page = f"{settings.BASE_URL}{self.webhook_path}?{params_prev}"
-        return self.previous_page
+        self._previous_page = self._gen_page(self.page - 1)
+        return self._previous_page

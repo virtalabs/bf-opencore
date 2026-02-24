@@ -51,5 +51,12 @@ def test_viper_webhook_output_with_assets(celery_app, setup_assets):
             assert payload['page_size'] == page_size
             assert payload['total'] == total_assets
             assert payload['total_pages'] == total_pages
-            assert payload['next_page'] is None
-            assert payload['previous_page'] is None
+            # urls should only be none at the first and last pages, respectively
+            if i > 0:
+                assert isinstance(payload['previous_page'], str)
+            else:
+                assert payload['previous_page'] is None
+            if i + 1 < total_pages:
+                assert isinstance(payload['next_page'], str)
+            else:
+                assert payload['next_page'] is None

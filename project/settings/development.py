@@ -2,9 +2,10 @@
 
 """Development settings. Runtime config from environment variables."""
 
+from .base import *
+
 import os
 
-from .base import *
 
 DEBUG = os.environ.get("DJANGO_DEBUG", "true").lower() in ("1", "true", "yes")
 SECRET_KEY = os.environ.get("DJANGO_SECRET_KEY", "dev-secret-key-not-for-production")
