@@ -1,14 +1,15 @@
 from unittest.mock import patch
-from bf_opencore.models.viper import ViperWebhookRequest, ViperWebhookResponse, ViperAsset
+from bf_opencore.models.viper import ViperWebhookRequest
 from bf_opencore.celery.tasks import viper_webhook
 from django.apps import apps
+from typing import Any
 import pytest
 import math
-import json
 
 def get_asset_count():
     Asset = apps.get_model('bf_opencore', 'Asset')
     return Asset.objects.count()
+
 
 @pytest.mark.django_db
 def test_viper_webhook_output_no_assets(celery_app):
@@ -25,6 +26,25 @@ def test_viper_webhook_output_no_assets(celery_app):
             page_size=10,
         ).to_dict()])
         assert mock_post.call_count == 0
+
+def _assert_previous(previous: Any) -> None:
+    assert isinstance(previous, str)
+    # ensure constructed kwargs exist
+    args = [
+        "page",
+        "page_size",
+        "since",
+    ]
+    for ar in args:
+        assert ar in previous
+    not_args = [
+        "before"
+    ]
+    for ar in not_args:
+        assert ar not in previous
+
+def _assert_next(_next: Any) -> None:
+    assert isinstance(_next, str)
 
 @pytest.mark.django_db
 def test_viper_webhook_output_with_all_assets(celery_app, setup_assets):
@@ -53,26 +73,13 @@ def test_viper_webhook_output_with_all_assets(celery_app, setup_assets):
             assert payload['total_pages'] == total_pages
             # urls should only be none at the first and last pages, respectively
             previous = payload['previous_page']
-            _next = payload['next_page']
             if i > 0:
-                assert isinstance(previous, str)
-                # ensure constructed kwargs exist
-                args = [
-                    "page",
-                    "page_size",
-                    "since",
-                ]
-                for ar in args:
-                    assert ar in previous
-                not_args = [
-                    "before"
-                ]
-                for ar in not_args:
-                    assert ar not in previous
+                _assert_previous(previous)
             else:
                 assert previous is None
+            _next = payload['next_page']
             if i + 1 < total_pages:
-                assert isinstance(_next, str)
+                _assert_next(_next)
             else:
                 assert _next is None
 
