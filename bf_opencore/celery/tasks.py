@@ -11,7 +11,7 @@ class Task(BaseTask):
     # https://docs.celeryq.dev/en/main/userguide/tasks.html#Task.autoretry_for
     max_retries = 5
     retry_backoff = True
-    retry_backoff_max = 10 # seconds
+    retry_backoff_max = 60 # seconds
     retry_jitter = True
     dont_auto_retry_for = (TypeError,)
 
