@@ -1,12 +1,15 @@
 from dataclasses import dataclass, asdict
 from django.conf import settings
 from bf_opencore.models import Asset
+from django.apps import apps
+import math
+from typing import Generator
 
 @dataclass
 class ViperWebhookRequest:
     """Data for a viper webhook."""
     callback: str
-    since: str # iso8601 
+    since: str # iso8601
     before: str # iso8601
     max_pages: int
     page_size: int
@@ -101,3 +104,35 @@ class ViperWebhookResponse:
             return self._previous_page
         self._previous_page = self._gen_page(self.page - 1)
         return self._previous_page
+
+@dataclass
+class ViperWebhookResponseList:
+    responses: list[ViperWebhookResponse]
+
+    @classmethod
+    def from_request(cls, request: ViperWebhookRequest) -> Generator[ViperWebhookResponse, None, None]:
+        Asset = apps.get_model('bf_opencore', 'Asset')
+        assets = Asset.objects.filter(last_pinged__gte=request.since)
+        if request.before:
+            assets = assets.filter(last_pinged__lte=request.before)
+        assets = assets.order_by('last_pinged').all()
+        total = assets.count()
+        total_pages = math.ceil(total / request.page_size)
+        page = 1
+        for i in range(0, len(assets), request.page_size):
+            if page > request.max_pages:
+                raise ValueError(f"Max pages exceeded: {request.max_pages}")
+            assets_chunk = assets[i:i + request.page_size]
+            response = ViperWebhookResponse(
+                items=assets_chunk,
+                page=page,
+                page_size=request.page_size,
+                total=total,
+                total_pages=total_pages,
+                since=request.since,
+                before=request.before,
+            )
+            page += 1
+            yield response
+
+
