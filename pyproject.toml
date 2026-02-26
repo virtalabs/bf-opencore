@@ -39,6 +39,7 @@ dev = [
     "model_bakery",
     "django-test-migrations",
     "freezegun>=1.0,<3",
+    "django-stubs[compatible-mypy]"
 ]
 
 [tool.setuptools.packages.find]

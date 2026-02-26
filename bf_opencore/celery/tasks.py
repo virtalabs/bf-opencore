@@ -2,7 +2,6 @@ from bf_opencore.celery import celery_app
 from bf_opencore.models.viper import ViperWebhookRequest, ViperWebhookResponseList
 
 import logging
-import math
 import requests
 
 logger = logging.getLogger(__name__)

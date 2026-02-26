@@ -31,7 +31,7 @@ class ViperAsset:
     serial_number: str
     location: dict[str, str]
     status: str
-    vendorID: int
+    vendorID: str
 
     def __init__(self, asset: Asset):
         self.id = asset.id
@@ -107,10 +107,8 @@ class ViperWebhookResponse:
 
 @dataclass
 class ViperWebhookResponseList:
-    responses: list[ViperWebhookResponse]
-
-    @classmethod
-    def from_request(cls, request: ViperWebhookRequest) -> Generator[ViperWebhookResponse, None, None]:
+    @staticmethod
+    def from_request(request: ViperWebhookRequest) -> Generator[ViperWebhookResponse, None, None]:
         Asset = apps.get_model('bf_opencore', 'Asset')
         assets = Asset.objects.filter(last_pinged__gte=request.since)
         if request.before:
