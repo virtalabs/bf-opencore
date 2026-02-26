@@ -27,24 +27,12 @@ def test_viper_webhook_output_no_assets(celery_app):
         ).to_dict()])
         assert mock_post.call_count == 0
 
-def _assert_previous(previous: Any) -> None:
-    assert isinstance(previous, str)
-    # ensure constructed kwargs exist
-    args = [
-        "page",
-        "page_size",
-        "since",
-    ]
-    for ar in args:
-        assert ar in previous
-    not_args = [
-        "before"
-    ]
-    for ar in not_args:
-        assert ar not in previous
-
-def _assert_next(_next: Any) -> None:
-    assert isinstance(_next, str)
+def _assert_page_query(page_qstring: str, has: list[str], doesnt: list[str]) -> None:
+    assert isinstance(page_qstring, str)
+    for arg in has:
+        assert arg in page_qstring
+    for arg in doesnt:
+        assert arg not in page_qstring
 
 @pytest.mark.django_db
 def test_viper_webhook_output_with_all_assets(celery_app, setup_assets):
@@ -71,15 +59,26 @@ def test_viper_webhook_output_with_all_assets(celery_app, setup_assets):
             assert payload['page_size'] == page_size
             assert payload['total'] == total_assets
             assert payload['total_pages'] == total_pages
+
             # urls should only be none at the first and last pages, respectively
+            args = [
+                "page",
+                "page_size",
+                "since",
+            ]
+            not_args = [
+                "before"
+            ]
+
             previous = payload['previous_page']
             if i > 0:
-                _assert_previous(previous)
+                _assert_page_query(previous, args, not_args)
             else:
                 assert previous is None
+
             _next = payload['next_page']
             if i + 1 < total_pages:
-                _assert_next(_next)
+                _assert_page_query(_next, args, not_args)
             else:
                 assert _next is None
 
