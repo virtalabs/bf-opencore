@@ -10,7 +10,7 @@ class ViperWebhookRequest:
     """Data for a viper webhook."""
     callback: str
     since: str # iso8601
-    before: str # iso8601
+    before: str | None # iso8601
     max_pages: int
     page_size: int
 
