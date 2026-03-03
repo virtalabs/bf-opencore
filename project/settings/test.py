@@ -1,5 +1,3 @@
-# Copyright (C) 2026 Virta Laboratories, Inc.  All rights reserved.
-
 """Minimal Django settings for bf-opencore tests (pytest). Use DJANGO_SETTINGS_MODULE=project.settings.test."""
 
 import os

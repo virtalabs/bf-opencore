@@ -1,5 +1,3 @@
-# Copyright (C) 2026 Virta Laboratories, Inc.  All rights reserved.
-
 """Root URL configuration. Includes bf_opencore app URLs."""
 
 from django.contrib import admin

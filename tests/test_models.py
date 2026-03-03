@@ -1,5 +1,3 @@
-# Copyright (C) 2026 Virta Laboratories, Inc.  All rights reserved.
-
 """Tests for bf_opencore models (mirrors bf_opencore/models)."""
 
 import pytest

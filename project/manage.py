@@ -1,5 +1,4 @@
 #!/usr/bin/env python
-# Copyright (C) 2026 Virta Laboratories, Inc.  All rights reserved.
 
 """Django's command-line utility for the minimal bf-opencore project."""
 

@@ -1,4 +1,3 @@
-# Copyright (C) 2026 Virta Laboratories, Inc.  All rights reserved.
 # Minimal Django project for standalone bf-opencore run.
 
 FROM python:3.12-slim
