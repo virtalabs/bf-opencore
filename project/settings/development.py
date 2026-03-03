@@ -1,5 +1,3 @@
-# Copyright (C) 2026 Virta Laboratories, Inc.  All rights reserved.
-
 """Development settings. Runtime config from environment variables."""
 
 from .base import *

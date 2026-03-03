@@ -1,5 +1,3 @@
-# Copyright (C) 2026 Virta Laboratories, Inc.  All rights reserved.
-
 """Base Django settings (build-time config). Do not set DATABASES, SECRET_KEY, DEBUG, ALLOWED_HOSTS here."""
 
 import os

@@ -1,6 +1,5 @@
 #! /usr/bin/env python3
 """Discover BlueFlow app in Django settings."""
-# Copyright (C) 2026 Virta Laboratories, Inc.  All rights reserved.
 
 import os
 import django

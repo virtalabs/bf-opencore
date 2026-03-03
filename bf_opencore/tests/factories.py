@@ -1,5 +1,3 @@
-# Copyright (C) 2026 Virta Laboratories, Inc.  All rights reserved.
-
 """Factory helpers for bf_opencore tests (model_bakery). Use these instead of ad hoc Model.objects.create()."""
 
 from model_bakery import baker
