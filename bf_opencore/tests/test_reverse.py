@@ -1,8 +1,9 @@
 """Test that reverse URL lookup works as expected."""
 
-import pytest
 import django
+import pytest
 from rest_framework.reverse import reverse
+
 from bf_opencore import models
 
 # models do have 'objects' member, but it's being lazy loaded
@@ -43,7 +44,7 @@ def test_reverse_asset_groups():
 def test_asset_tags_api(auth_client):
     """API for tags associated with asset works."""
     asset_obj = models.Asset.objects.create()
-    res = auth_client.get("/api/assets/{}/tags/".format(asset_obj.id))
+    res = auth_client.get(f"/api/assets/{asset_obj.id}/tags/")
     assert res.status_code == 200
     assert res.json()["count"] == 0
 
@@ -54,5 +55,5 @@ def test_asset_groups_api(auth_client):
     (see test_groups.py)
     """
     asset_obj = models.Asset.objects.create()
-    res = auth_client.get("/api/assets/{}/groups/".format(asset_obj.id))
+    res = auth_client.get(f"/api/assets/{asset_obj.id}/groups/")
     assert res.status_code == 404

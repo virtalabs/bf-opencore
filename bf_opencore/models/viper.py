@@ -1,13 +1,17 @@
-from dataclasses import dataclass, asdict
-from django.conf import settings
-from bf_opencore.models import Asset
-from django.apps import apps
 import math
-from typing import Generator
+from collections.abc import Generator
+from dataclasses import asdict, dataclass
+
+from django.apps import apps
+from django.conf import settings
+
+from bf_opencore.models import Asset
+
 
 @dataclass
 class ViperWebhookRequest:
     """Data for a viper webhook."""
+
     callback: str
     since: str # iso8601
     before: str | None # iso8601
@@ -21,6 +25,7 @@ class ViperWebhookRequest:
 @dataclass
 class ViperAsset:
     """Data for a viper asset."""
+
     id: int
     network_segment: str
     cpe: str
@@ -42,16 +47,16 @@ class ViperAsset:
         self.model = asset.model
         self.serial_number = asset.serial_number
         self.udi = asset.udi
-        self.network_segment = '' # TODO: get network segment from asset.network_qset()
-        self.cpe = '' # TODO: get cpe from asset.cpe_qset()
-        self.role = ''
-        self.upstream_api = ''
-        self.hostname = asset.hostname or ''
+        self.network_segment = "" # TODO: get network segment from asset.network_qset()
+        self.cpe = "" # TODO: get cpe from asset.cpe_qset()
+        self.role = ""
+        self.upstream_api = ""
+        self.hostname = asset.hostname or ""
         # Coerce to str so payload is JSON-serializable (Asset uses netaddr.EUI / InetAddress)
-        self.mac_address = str(asset.mac_address) if asset.mac_address else ''
-        self.serial_number = asset.serial_number or ''
+        self.mac_address = str(asset.mac_address) if asset.mac_address else ""
+        self.serial_number = asset.serial_number or ""
         self.location = {} # TODO: custom fields?
-        self.status = 'active' # TODO: how do we want to determine this?
+        self.status = "active" # TODO: how do we want to determine this?
         self.vendorID = str(asset.nic_vendor)
 
     def to_dict(self):
@@ -61,6 +66,7 @@ class ViperAsset:
 @dataclass
 class ViperWebhookResponse:
     """Response for a viper webhook."""
+
     items: list[ViperAsset]
     page: int
     page_size: int
@@ -74,8 +80,8 @@ class ViperWebhookResponse:
     def to_dict(self):
         """Return a JSON-serializable dict (for json.dumps or requests)."""
         base = asdict(self)
-        base['next_page'] = self.next_page
-        base['previous_page'] = self.previous_page
+        base["next_page"] = self.next_page
+        base["previous_page"] = self.previous_page
         return base
 
     def _gen_page(self, page: int) -> str:
@@ -90,7 +96,7 @@ class ViperWebhookResponse:
         """Return the URL to the next page."""
         if self.page >= self.total_pages:
             return None
-        if hasattr(self, '_next_page'):
+        if hasattr(self, "_next_page"):
             return self._next_page
         self._next_page = self._gen_page(self.page + 1)
         return self._next_page
@@ -100,7 +106,7 @@ class ViperWebhookResponse:
         """Return the URL to the previous page."""
         if self.page <= 1:
             return None
-        if hasattr(self, '_previous_page'):
+        if hasattr(self, "_previous_page"):
             return self._previous_page
         self._previous_page = self._gen_page(self.page - 1)
         return self._previous_page
@@ -109,11 +115,11 @@ class ViperWebhookResponse:
 class ViperWebhookResponseList:
     @staticmethod
     def from_request(request: ViperWebhookRequest) -> Generator[ViperWebhookResponse, None, None]:
-        Asset = apps.get_model('bf_opencore', 'Asset')
+        Asset = apps.get_model("bf_opencore", "Asset")
         assets = Asset.objects.filter(last_pinged__gte=request.since)
         if request.before:
             assets = assets.filter(last_pinged__lte=request.before)
-        assets = assets.order_by('last_pinged').all()
+        assets = assets.order_by("last_pinged").all()
         total = assets.count()
         total_pages = math.ceil(total / request.page_size)
         page = 1

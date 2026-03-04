@@ -1,15 +1,16 @@
 """BlueFlow Pulse models."""
 
-from functools import reduce
 import logging
+from functools import reduce
 from operator import and_, or_
 
-from django.db import models
+from django.apps import apps
 from django.contrib.postgres.fields import ArrayField
+from django.db import models
 from django.utils import timezone
 from simple_history.models import HistoricalRecords
-from django.apps import apps
-from bf_opencore.utils import quarter_start, prev_quarter_start, NullUnlessChanged
+
+from bf_opencore.utils import NullUnlessChanged, prev_quarter_start, quarter_start
 
 logger = logging.getLogger(__name__)
 
@@ -21,9 +22,9 @@ class PulseFeedItemManager(models.Manager):
         """Return a list of 'closed' items, within a date range."""
         # PulseFeedItem.history is a manager so has all the members we need
         qset_a = (PulseFeedItem.history
-                  .order_by('-history_date')
+                  .order_by("-history_date")
                   .filter(history_date__range=[start, end])
-                  .annotate(status__changed=NullUnlessChanged('status')))
+                  .annotate(status__changed=NullUnlessChanged("status")))
         return [pfih for pfih in qset_a
                 if pfih.status__changed == PulseFeedItem.STATUS_CLOSED]
 
@@ -69,13 +70,13 @@ class PulseFeedItem(models.Model):
      - Autocomplete feed items by title
     """
 
-    STATUS_OPEN = 'open'
-    STATUS_IN_PROGRESS = 'in-progress'
-    STATUS_CLOSED = 'closed'
+    STATUS_OPEN = "open"
+    STATUS_IN_PROGRESS = "in-progress"
+    STATUS_CLOSED = "closed"
     STATUS_CHOICES = (
-        (STATUS_OPEN, 'Open'),
-        (STATUS_IN_PROGRESS, 'In Progress'),
-        (STATUS_CLOSED, 'Closed'),
+        (STATUS_OPEN, "Open"),
+        (STATUS_IN_PROGRESS, "In Progress"),
+        (STATUS_CLOSED, "Closed"),
     )
 
     external_pulse_id = models.IntegerField(unique=True, null=False,
@@ -109,10 +110,7 @@ class PulseFeedItem(models.Model):
     objects = PulseFeedItemManager()
 
     def __str__(self):  # noqa
-        return "<PFI {}:{} {} '{}'>".format(self.id,
-                                            self.external_pulse_id,
-                                            self.date_last_updated,
-                                            self.title)
+        return f"<PFI {self.id}:{self.external_pulse_id} {self.date_last_updated} '{self.title}'>"
 
     def _search_query(self):
         """Return an asset search query as a Django query (Q) object.
@@ -127,7 +125,7 @@ class PulseFeedItem(models.Model):
             return None
 
         try:
-            affected = self.json['data']['affected']
+            affected = self.json["data"]["affected"]
             if not affected:
                 return None
         except KeyError:
@@ -152,13 +150,13 @@ class PulseFeedItem(models.Model):
             # FooCorp and model is either XYZ5000 or XYZ6000".
             conjuncts = []
 
-            cond_manufs = compound_condition.get('manufacturer')
+            cond_manufs = compound_condition.get("manufacturer")
             if cond_manufs:
                 conjuncts.append(
                     reduce(or_, [models.Q(manufacturer__iregex=m)
                                  for m in cond_manufs]))
 
-            cond_models = compound_condition.get('model')
+            cond_models = compound_condition.get("model")
             if cond_models:
                 conjuncts.append(
                     reduce(or_, [models.Q(model__iregex=m)
@@ -173,7 +171,7 @@ class PulseFeedItem(models.Model):
             # Postgres to compare strings like '8.0.2' and '8.1.3',
             # which happens lexically but not in a way that necessarily
             # respects semantic versioning (so '8.0.2' > '10.1.3').
-            cond_sw_versions = compound_condition.get('app_sw_version')
+            cond_sw_versions = compound_condition.get("app_sw_version")
             if cond_sw_versions:
                 conds = []
                 for ver in cond_sw_versions:
@@ -181,26 +179,26 @@ class PulseFeedItem(models.Model):
                         conds.append(models.Q(app_sw_version=ver))
                     elif isinstance(ver, list) and len(ver) == 2:
                         cmp, val = ver
-                        if cmp in ('lte', 'lt', 'gte', 'gt'):
+                        if cmp in ("lte", "lt", "gte", "gt"):
                             conds.append(models.Q(**{
-                                'app_sw_version__{}'.format(cmp): val,
+                                f"app_sw_version__{cmp}": val,
                             }))
                         else:
-                            logger.warning('Invalid app_sw_version comparator '
-                                           '%s; skipping app_sw_version '
-                                           'comparison.', cmp)
+                            logger.warning("Invalid app_sw_version comparator "
+                                           "%s; skipping app_sw_version "
+                                           "comparison.", cmp)
                     else:
-                        logger.warning('Invalid app_sw_version condition %s',
+                        logger.warning("Invalid app_sw_version condition %s",
                                        ver)
 
                 if conds:
                     # also match on null app_sw_version b/c we don't know
                     conds.append(models.Q(app_sw_version__isnull=True))
-                    conds.append(models.Q(app_sw_version=''))
+                    conds.append(models.Q(app_sw_version=""))
                     conjuncts.append(reduce(or_, conds))
 
             # match exactly on operating system
-            cond_oses = compound_condition.get('os')
+            cond_oses = compound_condition.get("os")
             if cond_oses:
                 # OS matches one of these OS regexes, or is null
                 os_conds = [models.Q(os__iregex=o) for o in cond_oses]
@@ -219,11 +217,11 @@ class PulseFeedItem(models.Model):
         asset_search_qset(), which uses this PulseFeedItem's search criteria
         (such as "manufacturer is FooCorp") to search for affected assets.
         """
-        if self.json['type'] != 'vulnerability':
+        if self.json["type"] != "vulnerability":
             return self.asset_search_qset()
 
         # assemble a query for assets via this PulseFeedItem's vulnerabilities
-        Asset = apps.get_model('bf_opencore', 'Asset')
+        Asset = apps.get_model("bf_opencore", "Asset")
         vulns = Asset.objects.none()
 
         for vuln in self.vulnerabilities.all():
@@ -235,28 +233,28 @@ class PulseFeedItem(models.Model):
 
     def asset_search_qset(self):
         """Get a set of assets by this PulseFeedItem's matching criteria."""
-        Asset = apps.get_model('bf_opencore', 'Asset')
+        Asset = apps.get_model("bf_opencore", "Asset")
         return Asset.objects.filter(self._search_query())
 
     def reload_from_json(self):
         """Reload several data fields from self.json."""
         try:
-            self.title = self.json['title']
+            self.title = self.json["title"]
         except KeyError:
-            logger.warning('Missing title in Pulse feed item')
+            logger.warning("Missing title in Pulse feed item")
 
         try:
-            affected = self.json['data']['affected']
+            affected = self.json["data"]["affected"]
         except KeyError:
             logger.warning('Missing "affected" stanza in Pulse feed item')
         else:
             manufs = set()
             affmodels = set()
             for aff in affected:
-                if 'manufacturer' in aff:
-                    manufs.update(aff['manufacturer'])
-                if 'model' in aff:
-                    affmodels.update(aff['model'])
+                if "manufacturer" in aff:
+                    manufs.update(aff["manufacturer"])
+                if "model" in aff:
+                    affmodels.update(aff["model"])
             if manufs:
                 self.affected_manufs = list(manufs)
             if affmodels:

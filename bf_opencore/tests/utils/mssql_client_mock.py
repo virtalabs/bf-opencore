@@ -1,19 +1,18 @@
 """Utilities for creating a mock MSSQL Client."""
 
-import tempfile
 import csv
+import tempfile
 
 
 def write_temp_csv(data, fieldnames):
-    """
-    Write a temporary file that mimics one downloaded by MSSQLClient.
+    """Write a temporary file that mimics one downloaded by MSSQLClient.
 
     INPUTS
     - data is a list-of-dict keyed on fieldnames
     - fieldnames is a list of columns names for the CSV header row
     """
-    csvfd, csvfilename = tempfile.mkstemp(suffix='.csv')
-    with open(csvfd, 'w') as csvfile:
+    csvfd, csvfilename = tempfile.mkstemp(suffix=".csv")
+    with open(csvfd, "w") as csvfile:
         writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
         writer.writeheader()
         for row in data:

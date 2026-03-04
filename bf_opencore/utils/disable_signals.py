@@ -4,11 +4,20 @@ Lifted from https://gist.github.com/shibocuhk/fd0e3f5e2360c64bc9ce2efb254744f7
 """
 
 from collections import defaultdict
-from django.db.models.signals import pre_init, post_init, pre_save, \
-    post_save, pre_delete, post_delete, pre_migrate, post_migrate
+
+from django.db.models.signals import (
+    post_delete,
+    post_init,
+    post_migrate,
+    post_save,
+    pre_delete,
+    pre_init,
+    pre_migrate,
+    pre_save,
+)
 
 
-class DisableSignals():
+class DisableSignals:
     """Context manager that will disable all (or specified) signals.
 
     Example usage:

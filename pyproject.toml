@@ -39,7 +39,8 @@ dev = [
     "model_bakery",
     "django-test-migrations",
     "freezegun>=1.0,<3",
-    "django-stubs[compatible-mypy]"
+    "django-stubs[compatible-mypy]",
+    "ruff",
 ]
 
 [tool.setuptools.packages.find]
@@ -56,4 +57,18 @@ venvPath = "."
 venv = ".venv"
 
 [dependency-groups]
-dev = ["django-stubs>=5.2.9"]
+dev = [
+    "django-stubs>=5.2.9",
+    "ruff>=0.15.4",
+]
+
+[tool.ruff]
+target-version = "py312"
+exclude = [".venv"]
+fix = true
+
+[tool.ruff.lint]
+select = ["ALL"]
+
+[tool.ruff.format]
+skip-magic-trailing-comma = false

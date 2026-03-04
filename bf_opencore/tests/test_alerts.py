@@ -5,7 +5,9 @@ http://pytest-django.readthedocs.io/en/latest/helpers.html
 """
 
 from datetime import timedelta
+
 from django.utils import timezone
+
 from bf_opencore.models import Alert
 
 # models do have 'objects' member, but it's being lazy loaded
@@ -15,8 +17,8 @@ def test_simple(auth_client):
     """Alert API simple test."""
     Alert.objects.create(text="Alert 1")  # date_created is "now"
     Alert.objects.create(text="Alert 2")
-    response = auth_client.get('/api/alerts/')
-    assert response.data['count'] == 2
+    response = auth_client.get("/api/alerts/")
+    assert response.data["count"] == 2
 
 
 def test_order(auth_client):
@@ -26,8 +28,8 @@ def test_order(auth_client):
         text="Alert 2",
         date_created=timezone.now() - timedelta(1),  # yesterday
     )
-    response = auth_client.get('/api/alerts/')
-    assert response.data['results'][0]['text'] == 'Alert 1'
+    response = auth_client.get("/api/alerts/")
+    assert response.data["results"][0]["text"] == "Alert 1"
 
 
 def test_count_expiration(auth_client):
@@ -62,7 +64,7 @@ def test_count_expiration(auth_client):
         date_read=None,  # Not read
         date_expiration=timezone.now() + timedelta(1),  # Expires tomorrow
     )
-    response = auth_client.get('/api/alerts/')
-    assert response.data['count'] == 4
-    assert response.data['count_unread'] == 2
-    assert response.data['count_read'] == 2
+    response = auth_client.get("/api/alerts/")
+    assert response.data["count"] == 4
+    assert response.data["count_unread"] == 2
+    assert response.data["count_read"] == 2

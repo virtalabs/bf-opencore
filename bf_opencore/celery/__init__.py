@@ -1,5 +1,4 @@
-"""
-Celery instance for integrations.
+"""Celery instance for integrations.
 
 One instance of Celery lives in this file.  All tasks in the integrations will
 use this instance.
@@ -16,14 +15,15 @@ $ python
 >>> bf_opencore.celery.celery_app.tasks.ping.main.delay(hostname='localhost')
 <AsyncResult: e8cfbb56-eca7-491d-a3a3-c15819cad8b8>
 """
-import celery
 import logging
+
+import celery
 
 logger = logging.getLogger(__name__)
 
 # Create a Celery instance (sometimes called an app)
 # http://docs.celeryproject.org/en/latest/getting-started/next-steps.html
-celery_app = celery.Celery('bf_opencore')
+celery_app = celery.Celery("bf_opencore")
 
 # Use Django settings module for configuration
 #
@@ -34,8 +34,8 @@ celery_app = celery.Celery('bf_opencore')
 # Celery docs
 # http://docs.celeryproject.org/en/latest/django/first-steps-with-django.html
 celery_app.config_from_object(
-    'django.conf:settings',
-    namespace='CELERY',
+    "django.conf:settings",
+    namespace="CELERY",
     silent=False,
 )
 

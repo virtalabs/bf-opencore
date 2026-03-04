@@ -1,12 +1,11 @@
 """ViewSet for periodic tasks, part of django-celery-beat."""
 
 import logging
+
 import django_filters
-from rest_framework import viewsets, serializers
+from django_celery_beat.models import CrontabSchedule, IntervalSchedule, PeriodicTask
+from rest_framework import serializers, viewsets
 from waffle.mixins import WaffleSwitchMixin
-
-from django_celery_beat.models import PeriodicTask, IntervalSchedule, CrontabSchedule
-
 
 logger = logging.getLogger(__name__)
 
@@ -21,7 +20,7 @@ class CrontabScheduleSerializer(serializers.HyperlinkedModelSerializer):
         view_name="bf_opencore:crontabschedule-detail")
 
     # Human-readable name
-    display_name = serializers.SerializerMethodField('do_display_name')
+    display_name = serializers.SerializerMethodField("do_display_name")
 
     def do_display_name(self, crontabschedule):
         """Human-readable name."""
@@ -61,7 +60,7 @@ class IntervalScheduleSerializer(serializers.HyperlinkedModelSerializer):
         view_name="bf_opencore:intervalschedule-detail")
 
     # Human-readable name
-    display_name = serializers.SerializerMethodField('do_display_name')
+    display_name = serializers.SerializerMethodField("do_display_name")
 
     def do_display_name(self, intervalschedule):
         """Human-readable name."""
@@ -96,8 +95,8 @@ class PeriodicTaskSerializer(serializers.HyperlinkedModelSerializer):
 
     url = serializers.HyperlinkedIdentityField(
         view_name="bf_opencore:periodictask-detail")
-    display_name = serializers.SerializerMethodField('do_display_name')
-    display_schedule = serializers.SerializerMethodField('do_display_schedule')
+    display_name = serializers.SerializerMethodField("do_display_name")
+    display_schedule = serializers.SerializerMethodField("do_display_schedule")
 
     def do_display_name(self, periodictask):
         """Server-controlled human-readable name."""
@@ -135,7 +134,7 @@ class PeriodicTaskSerializer(serializers.HyperlinkedModelSerializer):
         Django REST API documentation on validators:
         http://www.django-rest-framework.org/api-guide/validators/
         """
-        if self.context['request'].method == 'PATCH' and \
+        if self.context["request"].method == "PATCH" and \
            "interval" not in attrs and "crontab" not in attrs:
             return attrs
         if not bool("interval" in attrs) ^ bool("crontab" in attrs):
@@ -179,8 +178,8 @@ class PeriodicTaskFilter(django_filters.rest_framework.FilterSet):
         model = PeriodicTask
 
         fields = {
-            'name': ['exact'],
-            'task': ['exact'],
+            "name": ["exact"],
+            "task": ["exact"],
             }
 
 
@@ -192,5 +191,5 @@ class PeriodicTaskViewSet(WaffleSwitchMixin, viewsets.ModelViewSet):
     queryset = PeriodicTask.objects.all()
     serializer_class = PeriodicTaskSerializer
 
-    search_fields = ['name']
+    search_fields = ["name"]
     filterset_class = PeriodicTaskFilter

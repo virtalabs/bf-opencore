@@ -1,13 +1,14 @@
 """Join table for assets and vulns."""
 
 import django_filters
+from rest_framework import serializers, viewsets
 from rest_framework.exceptions import MethodNotAllowed
-from rest_framework import viewsets, serializers
 from rest_framework.fields import IntegerField
-from rest_framework.generics import get_object_or_404, Http404
+from rest_framework.generics import Http404, get_object_or_404
 from waffle.mixins import WaffleSwitchMixin
 
 from bf_opencore.models import AssetGroup
+
 from .group import GroupSerializer
 from .utils import HugeLimitOffsetPagination
 
@@ -26,15 +27,15 @@ class AssetGroupSerializer(serializers.HyperlinkedModelSerializer):
     class Meta:  # noqa
         model = AssetGroup
         fields = (
-            'id',
-            'asset_id',
-            'group_id',
-            'date_added',
-            'provenance',
+            "id",
+            "asset_id",
+            "group_id",
+            "date_added",
+            "provenance",
 
             # Fields that are created (not stored directly in schema)
-            'group',
-            'url',
+            "group",
+            "url",
         )
 
 
@@ -49,8 +50,8 @@ class AssetGroupFilter(django_filters.rest_framework.FilterSet):
         # Documentation about lookups is here:
         # https://docs.djangoproject.com/en/1.11/ref/models/querysets/#field-lookups
         fields = {
-            'asset': ['exact'],
-            'group': ['exact'],
+            "asset": ["exact"],
+            "group": ["exact"],
             }
 
 
@@ -86,13 +87,13 @@ class AssetGroupViewSet(WaffleSwitchMixin, viewsets.ModelViewSet):
             # We don't have 'pk'
             # Ensure we have one and only one AssetGroup, retrieved by
             # asset / group combo
-            if self.request.method != 'DELETE':
+            if self.request.method != "DELETE":
                 raise MethodNotAllowed(self.request.method)
-            if not (('asset' in self.request.query_params) and
-                    ('group' in self.request.query_params)):
+            if not (("asset" in self.request.query_params) and
+                    ("group" in self.request.query_params)):
                 msg = ("To DELETE one AssetGroup, specify both 'asset' and "
                        "'group'.")
-                raise MethodNotAllowed('DELETE', detail=msg)
+                raise MethodNotAllowed("DELETE", detail=msg)
             assert queryset.count() <= 1, (
                 "Should only be possible to get 0 or 1 assetgroups here")
             if queryset.count() < 1:

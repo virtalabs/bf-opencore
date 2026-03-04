@@ -1,3 +1,2 @@
-"""
-Blueflow Open-Core Django app.
+"""Blueflow Open-Core Django app.
 """

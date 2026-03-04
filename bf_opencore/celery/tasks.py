@@ -1,9 +1,10 @@
-from bf_opencore.celery import celery_app
-from celery import Task as BaseTask
-from bf_opencore.models.viper import ViperWebhookRequest, ViperWebhookResponseList
-
 import logging
+
 import requests
+from celery import Task as BaseTask
+
+from bf_opencore.celery import celery_app
+from bf_opencore.models.viper import ViperWebhookRequest, ViperWebhookResponseList
 
 logger = logging.getLogger(__name__)
 
@@ -26,5 +27,5 @@ def viper_webhook(data: dict):
     response_list= ViperWebhookResponseList.from_request(viper_data)
     for response in response_list:
         as_dict = response.to_dict()
-        requests.post(viper_data.callback, json=as_dict, headers={'Content-Type': 'application/json'})
+        requests.post(viper_data.callback, json=as_dict, headers={"Content-Type": "application/json"})
 

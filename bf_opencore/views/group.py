@@ -2,17 +2,17 @@
 
 import logging
 
+import django_filters
 from django.core.exceptions import ObjectDoesNotExist
 from django.db.utils import IntegrityError
-
-import django_filters
-from rest_framework import viewsets, serializers, status
-from rest_framework.response import Response
+from rest_framework import serializers, status, viewsets
 from rest_framework.decorators import action
+from rest_framework.response import Response
 from waffle.mixins import WaffleSwitchMixin
 
-from bf_opencore.models import Group, Asset, AssetGroup
+from bf_opencore.models import Asset, AssetGroup, Group
 from bf_opencore.utils import iterable
+
 from .utils import HugeLimitOffsetPagination
 
 logger = logging.getLogger(__name__)
@@ -33,7 +33,7 @@ class GroupSerializer(serializers.HyperlinkedModelSerializer):
     #     view_name='bf_opencore:asset-detail'
     # )
 
-    class Meta:  # noqa
+    class Meta:
         """Wire this serializer to a model."""
 
         model = Group
@@ -43,10 +43,10 @@ class GroupSerializer(serializers.HyperlinkedModelSerializer):
 
         # Fields that are computed (not stored directly in schema)
         computed_fields = (
-            'url',
-            'add_assets_url',
-            'num_assets',
-            'identified_statistics',
+            "url",
+            "add_assets_url",
+            "num_assets",
+            "identified_statistics",
         )
 
         fields = group_fields + computed_fields
@@ -61,7 +61,7 @@ class GroupFilter(django_filters.rest_framework.FilterSet):
         # Documentation about lookups is here:
         # https://docs.djangoproject.com/en/1.11/ref/models/querysets/#field-lookups
         fields = {
-            'asset': ['exact'],
+            "asset": ["exact"],
             }
 
 
@@ -76,7 +76,7 @@ class GroupViewSet(WaffleSwitchMixin, viewsets.ModelViewSet):
     filterset_class = GroupFilter
     pagination_class = HugeLimitOffsetPagination
 
-    @action(detail=True, methods=['POST'])
+    @action(detail=True, methods=["POST"])
     def assets(self, request, pk):
         """Add several assets to this Group."""
         group = self.get_object()
@@ -84,16 +84,16 @@ class GroupViewSet(WaffleSwitchMixin, viewsets.ModelViewSet):
         # Add several new assets to this group with a POST
         # request to /api/groups/<n>/assets/.
         # The POST data must contain a list of asset IDs.
-        asset_ids = request.data.get('asset_ids')
+        asset_ids = request.data.get("asset_ids")
         logger.debug("Got asset IDs '%s' of type '%s'",
                      asset_ids, type(asset_ids))
 
         if asset_ids is None:
             raise serializers.ValidationError({
-                'asset_ids': ["'asset_ids' is required"]})
+                "asset_ids": ["'asset_ids' is required"]})
         if not iterable(asset_ids):
             raise serializers.ValidationError({
-                'asset_ids': ["'asset_ids' must be a list"]})
+                "asset_ids": ["'asset_ids' must be a list"]})
 
         assets_existing = assets_new = 0
         for asset_id in asset_ids:
@@ -101,11 +101,10 @@ class GroupViewSet(WaffleSwitchMixin, viewsets.ModelViewSet):
                 asset = Asset.objects.get(pk=asset_id)
             except (ObjectDoesNotExist, ValueError):
                 raise serializers.ValidationError({
-                    'asset_ids': ["Asset does not exist: id={}"
-                                  "".format(asset_id)]
+                    "asset_ids": [f"Asset does not exist: id={asset_id}"],
                     })
             asset_group = AssetGroup(asset=asset, group=group,
-                                     provenance='Bulk Add via API')
+                                     provenance="Bulk Add via API")
             try:
                 asset_group.save()
                 logger.debug("Created new asset-group link between "

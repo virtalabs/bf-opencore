@@ -3,13 +3,13 @@
 import logging
 
 import django_filters
-from rest_framework import viewsets, serializers, permissions, mixins
+from rest_framework import mixins, permissions, serializers, viewsets
+from rest_framework.decorators import action
 from rest_framework.fields import IntegerField
 from rest_framework.response import Response
-from rest_framework.decorators import action
 from waffle.mixins import WaffleSwitchMixin
 
-from bf_opencore.models import Network, SavedSearch, Asset, Cidr
+from bf_opencore.models import Asset, Cidr, Network, SavedSearch
 from bf_opencore.utils import ipset_from_network
 
 from .utils import HugeLimitOffsetPagination
@@ -31,22 +31,22 @@ class NetworkSerializer(serializers.HyperlinkedModelSerializer):
         # We have to specify these fields since most of them are properties
         # (only name, ok_to_scan, and date_added are real DB fields.)
         fields = (
-            'url', 'id', 'name', 'cidr', 'ok_to_scan', 'date_added',
-            'display_name', 'type', 'num_assets',
-            'identified_statistics',
+            "url", "id", "name", "cidr", "ok_to_scan", "date_added",
+            "display_name", "type", "num_assets",
+            "identified_statistics",
             )
 
     def create(self, validated_data):
         """Override in order to debug-print."""
         logger.debug("Creating: Network validated data is '%s'",
                      validated_data)
-        return super(NetworkSerializer, self).create(validated_data)
+        return super().create(validated_data)
 
     def update(self, instance, validated_data):
         """Override in order to debug-print."""
         logger.debug("Updating: Network validated data is '%s' "
                      "(instance is '%s')", validated_data, instance)
-        return super(NetworkSerializer, self).update(instance, validated_data)
+        return super().update(instance, validated_data)
 
     def validate_cidr(self, cidr_string):
         """Take a CIDR or comma-separated list of CIDRs and make it a list."""
@@ -61,7 +61,7 @@ class NetworkFilter(django_filters.rest_framework.FilterSet):
     @staticmethod
     def filter_asset(queryset, name, value):
         """Get networks that belong to a certain asset."""
-        assert name == 'asset'
+        assert name == "asset"
         asset_id = value
         asset = Asset.objects.get(id=asset_id)
 
@@ -81,7 +81,7 @@ class NetworkFilter(django_filters.rest_framework.FilterSet):
         # fields = {
         #     'asset': ['exact'],
         #     }
-        fields = '__all__'              # Why limit the lookups
+        fields = "__all__"              # Why limit the lookups
 
         # NOTE: if you want to filter on IP addresses etc., this is
         #   probably possible -- look to
@@ -106,11 +106,11 @@ class NetworkViewSet(WaffleSwitchMixin, viewsets.ModelViewSet):
         num_assets = asset_qset.count()
         identified_statistics = asset_qset.identified_statistics()
         data = {
-            'id': 'no_network',
-            'name': "Other Assets",
-            'cidr': [],
-            'num_assets': num_assets,
-            'identified_statistics': identified_statistics,
+            "id": "no_network",
+            "name": "Other Assets",
+            "cidr": [],
+            "num_assets": num_assets,
+            "identified_statistics": identified_statistics,
         }
         return Response(data)
 
@@ -126,7 +126,7 @@ class CidrSerializer(serializers.HyperlinkedModelSerializer):
 
     class Meta:  # noqa
         model = Cidr
-        fields = ('id', 'url', 'cidr', 'network_id')
+        fields = ("id", "url", "cidr", "network_id")
 
 
 class CidrViewSet(mixins.DestroyModelMixin,
@@ -150,7 +150,7 @@ class SavedSearchSerializer(serializers.HyperlinkedModelSerializer):
     class Meta:  # noqa
         model = SavedSearch
         fields = (
-            'url', 'id', 'name', 'search_query', 'ok_to_scan', 'date_added',
+            "url", "id", "name", "search_query", "ok_to_scan", "date_added",
             )
         # We also want to have the URL for the actual search here.  Have
         # to think about how to accomplish this...

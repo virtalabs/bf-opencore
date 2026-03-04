@@ -3,17 +3,18 @@
 import logging
 import re
 import socket
+
 import celery
 import sh
 from django.apps import apps
 from django.utils import timezone
-from bf_opencore.exceptions import IntegrationTaskError
-from bf_opencore.celery import celery_app
 
+from bf_opencore.celery import celery_app
+from bf_opencore.exceptions import IntegrationTaskError
 
 # Configure logging.  Disable logging in sh module.
 logger = celery.utils.log.get_task_logger(__name__)
-logging.getLogger('sh').setLevel(logging.WARNING)
+logging.getLogger("sh").setLevel(logging.WARNING)
 
 
 # TODO: review this when we are ready to setup the ping integration
@@ -31,14 +32,14 @@ logging.getLogger('sh').setLevel(logging.WARNING)
 # }
 
 PING_OPTS = [
-    '-c 3',        # number of ping packets to send
+    "-c 3",        # number of ping packets to send
 ]
 
 # http://stackoverflow.com/questions/1418423/the-hostname-regex
 # imperfect but good enough for input sanitization
-PING_TARGET_RE = r'^(?=.{1,255}$)[0-9A-Za-z](?:(?:[0-9A-Za-z]|-){0,' \
-    r'61}[0-9A-Za-z])?(?:\.[0-9A-Za-z](?:(?:[0-9A-Za-z]' \
-    r'|-){0,61}[0-9A-Za-z])?)*\.?$'
+PING_TARGET_RE = r"^(?=.{1,255}$)[0-9A-Za-z](?:(?:[0-9A-Za-z]|-){0," \
+    r"61}[0-9A-Za-z])?(?:\.[0-9A-Za-z](?:(?:[0-9A-Za-z]" \
+    r"|-){0,61}[0-9A-Za-z])?)*\.?$"
 
 
 @celery_app.task(bind=True)
@@ -66,24 +67,24 @@ def main(ctx, hostname):
     args = PING_OPTS
     args.append(hostname)
 
-    ping_cmd = sh.Command('ping')
+    ping_cmd = sh.Command("ping")
     ping_cmd = ping_cmd.bake(*args)
     try:
         output = ping_cmd()
     except sh.ErrorReturnCode as err:
         ctx.ct.print("Host '%s' is offline" % hostname)
-        ctx.ct.print(err.stderr.decode('utf-8'))
+        ctx.ct.print(err.stderr.decode("utf-8"))
         return err.exit_code
 
-    stdout = output.stdout.decode('utf-8')
-    stderr = output.stderr.decode('utf-8')
+    stdout = output.stdout.decode("utf-8")
+    stderr = output.stderr.decode("utf-8")
     if stdout:
         ctx.ct.print(stdout)
     if stderr:
         ctx.ct.print(stderr)
     ctx.ct.print("Host '%s' is online" % hostname)
 
-    Asset = apps.get_model('bf_opencore', 'Asset')
+    Asset = apps.get_model("bf_opencore", "Asset")
     asset, _ = Asset.objects.all().get_or_create(
         ip_address=ipv4addr)
     asset.last_pinged = timezone.now()

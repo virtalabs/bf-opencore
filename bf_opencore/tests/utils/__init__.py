@@ -1,6 +1,7 @@
 """Connector test utilities."""
 
 import os
+
 from .mssql_client_mock import configure_mock_mssqlclient
 
 

@@ -3,11 +3,13 @@
 import logging
 
 import django_filters
-from rest_framework import viewsets, serializers, status
-from rest_framework.response import Response
+from rest_framework import serializers, status, viewsets
 from rest_framework.decorators import action
+from rest_framework.response import Response
 from waffle.mixins import WaffleSwitchMixin
+
 from bf_opencore.models import PulseFeedItem
+
 from .utils import PaginateRelationsMixin
 from .vulnerability import VulnerabilitySerializer
 
@@ -16,7 +18,6 @@ logger = logging.getLogger(__name__)
 
 class PulseFeedItemSerializer(serializers.HyperlinkedModelSerializer):
     """Serialize Pulse feed items."""
-
 
     url = serializers.HyperlinkedIdentityField(
         view_name="bf_opencore:pulsefeeditem-detail",
@@ -33,10 +34,10 @@ class PulseFeedItemSerializer(serializers.HyperlinkedModelSerializer):
         model = PulseFeedItem
         model_fields = tuple(f.name for f in model._meta.fields)
         computed_fields = (
-            'url',
-            'last_notes_editor',
-            'last_notes_date',
-            'vulnerabilities',
+            "url",
+            "last_notes_editor",
+            "last_notes_date",
+            "vulnerabilities",
         )
         fields = model_fields + computed_fields
 
@@ -46,12 +47,12 @@ class PulseFeedItemFilter(django_filters.rest_framework.FilterSet):
 
     # Few public methods; that's just how django-filters work
 
-    status__ne = django_filters.CharFilter('status', exclude=True)
+    status__ne = django_filters.CharFilter("status", exclude=True)
 
     class Meta:  # noqa
         model = PulseFeedItem
         fields = {
-            'status': ['exact'],
+            "status": ["exact"],
         }
 
 
@@ -61,8 +62,8 @@ class PulseFeedItemViewSet(WaffleSwitchMixin, PaginateRelationsMixin, viewsets.M
     waffle_switch = "core"
 
     # yes, there are objects
-    queryset = PulseFeedItem.objects.order_by('-date_last_updated')
-    lookup_field = 'external_pulse_id'
+    queryset = PulseFeedItem.objects.order_by("-date_last_updated")
+    lookup_field = "external_pulse_id"
 
     serializer_class = PulseFeedItemSerializer
     filterset_class = PulseFeedItemFilter
@@ -75,12 +76,13 @@ class PulseFeedItemViewSet(WaffleSwitchMixin, PaginateRelationsMixin, viewsets.M
     def closed_by_quarter(self, request):
         """Return a list of `closed` feed items for past quarters.
 
-        Parameters:
+        Parameters
+        ----------
          - `quarters`: number of quarters, including the current quarter, for
            which to fetch data.
 
         """
-        quarters = request.GET.get('quarters')
+        quarters = request.GET.get("quarters")
         if quarters is not None:
             try:
                 nquarters = int(quarters)
@@ -93,12 +95,12 @@ class PulseFeedItemViewSet(WaffleSwitchMixin, PaginateRelationsMixin, viewsets.M
         for qtr_start, qtr in qtr_data:
             qtr_starts.append(qtr_start)
             serializer = PulseFeedItemSerializer(qtr, many=True,
-                                                 context={'request': request})
+                                                 context={"request": request})
             ser_data.append(serializer.data)
 
         response = {
-            'count': len(ser_data),
-            'qtr_starts': qtr_starts,
-            'feed_items': ser_data,
+            "count": len(ser_data),
+            "qtr_starts": qtr_starts,
+            "feed_items": ser_data,
         }
         return Response(response)

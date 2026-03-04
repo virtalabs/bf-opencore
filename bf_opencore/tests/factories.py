@@ -28,5 +28,5 @@ def make_superuser(**kwargs):
     email = kwargs.pop("email", "admin@test.example")
     password = kwargs.pop("password", "adminpass")
     return User.objects.create_superuser(
-        username=username, email=email, password=password, **kwargs
+        username=username, email=email, password=password, **kwargs,
     )

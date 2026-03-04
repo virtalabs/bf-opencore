@@ -1,15 +1,13 @@
 """Utilities for our views."""
 
-from __future__ import print_function, division, absolute_import
 
-import logging
 import importlib
+import logging
+
+from rest_framework.pagination import LimitOffsetPagination
 
 # Not using this decorator here but keeping it to help our clients
-from django.utils.decorators import method_decorator
-
 from rest_framework.response import Response
-from rest_framework.pagination import LimitOffsetPagination
 from simple_history import utils as hist_utils
 
 logger = logging.getLogger(__name__)
@@ -40,8 +38,8 @@ def request_debug(fn):
             query_params = request.query_params
             data = request.data
         except AttributeError:
-            query_params = "GET:{}".format(request.GET)
-            data = "POST:{}".format(request.POST)
+            query_params = f"GET:{request.GET}"
+            data = f"POST:{request.POST}"
         logger.debug(
             "request='%s'(m:%s,v:%s), args='%s', kwargs='%s'",
             request,

@@ -3,7 +3,7 @@
 import logging
 
 import django_filters
-from rest_framework import viewsets, serializers
+from rest_framework import serializers, viewsets
 from waffle.mixins import WaffleSwitchMixin
 
 from bf_opencore.models import Scan
@@ -21,15 +21,15 @@ class ScanSerializer(serializers.HyperlinkedModelSerializer):
     asset = serializers.HyperlinkedRelatedField(
         #     many=True,
         read_only=True,
-        view_name='bf_opencore:asset-detail'
+        view_name="bf_opencore:asset-detail",
         )
     connector_task = serializers.HyperlinkedRelatedField(
         #     many=True,
         read_only=True,
-        view_name='bf_opencore:connectortask-detail'
+        view_name="bf_opencore:connectortask-detail",
         )
 
-    class Meta:  # noqa
+    class Meta:
         """Wire this serializer to a model."""
 
         model = Scan
@@ -39,7 +39,7 @@ class ScanSerializer(serializers.HyperlinkedModelSerializer):
 
         # Fields that are computed (not stored directly in schema)
         computed_fields = (
-            'url',
+            "url",
         )
 
         fields = scan_fields + computed_fields
@@ -54,7 +54,7 @@ class ScanFilter(django_filters.rest_framework.FilterSet):
         # Documentation about lookups is here:
         # https://docs.djangoproject.com/en/1.11/ref/models/querysets/#field-lookups
         fields = {
-            'asset': ['exact'],
+            "asset": ["exact"],
             }
 
 

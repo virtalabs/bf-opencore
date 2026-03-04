@@ -1,6 +1,5 @@
 """Test autocomplete interface."""
 
-import pytest
 from bf_opencore import models
 
 
@@ -13,7 +12,7 @@ def test_autocomplete_no_error(auth_client):
 def test_autocomplete_no_error_order(auth_client):
     """Simply test that we don't get a 500 error when attempting ordering."""
     candidates = auth_client.get(
-        "/api/autocomplete/" "?autocomplete=spam&ordering=suggestion"
+        "/api/autocomplete/?autocomplete=spam&ordering=suggestion",
     )
     assert candidates.status_code == 200
 
@@ -45,7 +44,7 @@ def test_autocomplete_fields(auth_client, completables):
     candidates = auth_client.get("/api/autocomplete/?autocomplete=acm")
     first_c = candidates.data["results"][0]
     assert set(first_c.keys()) == set(
-        ["term", "suggestion", "suggestion_type", "url", "query"]
+        ["term", "suggestion", "suggestion_type", "url", "query"],
     )
 
 
@@ -195,7 +194,7 @@ def test_autocomplete_manufs_space(auth_client, completables):
     ]
     assert len(manuf_cands) == 2
     assert manuf_cands[0]["url"] == (
-        "/api/assets/?manufacturer__istartswith=" "ACME+In"
+        "/api/assets/?manufacturer__istartswith=ACME+In"
     )
     assert manuf_cands[1]["url"] == "/api/assets/?manufacturer=ACME+Inc."
     assert manuf_cands[0]["query"] == {"manufacturer__istartswith": "ACME In"}
@@ -297,10 +296,10 @@ def test_autocomplete_custom_value(auth_client, cfield):
         == "/api/assets/?asset_custom_fields__value_text__istartswith=rather+dull"
     )
     assert cv_cands[0]["query"] == {
-        "asset_custom_fields__value_text__istartswith": "rath"
+        "asset_custom_fields__value_text__istartswith": "rath",
     }
     assert cv_cands[1]["query"] == {
-        "asset_custom_fields__value_text__istartswith": "rather dull"
+        "asset_custom_fields__value_text__istartswith": "rather dull",
     }
 
 
@@ -330,7 +329,7 @@ def test_autocomplete_custom_value_duplicate_1(auth_client, cfield):
     shiny_field = models.AssetCustomFieldName.objects.get(field_name="shinyness")
     assert models.AssetCustomField.objects.count() == 1
     models.AssetCustomField.objects.create(
-        field=shiny_field, asset=asset, value_text="rather dull"
+        field=shiny_field, asset=asset, value_text="rather dull",
     )
     assert models.AssetCustomField.objects.count() == 2
 
@@ -348,10 +347,10 @@ def test_autocomplete_custom_value_duplicate_1(auth_client, cfield):
         == "/api/assets/?asset_custom_fields__value_text__istartswith=rather+dull"
     )
     assert cv_cands[0]["query"] == {
-        "asset_custom_fields__value_text__istartswith": "rath"
+        "asset_custom_fields__value_text__istartswith": "rath",
     }
     assert cv_cands[1]["query"] == {
-        "asset_custom_fields__value_text__istartswith": "rather dull"
+        "asset_custom_fields__value_text__istartswith": "rather dull",
     }
 
 
@@ -367,7 +366,7 @@ def test_autocomplete_custom_value_duplicate_2(auth_client, cfield):
     sparkly_field = models.AssetCustomFieldName.objects.get(field_name="sparkliness")
     assert models.AssetCustomField.objects.count() == 1
     models.AssetCustomField.objects.create(
-        field=sparkly_field, asset=asset, value_text="rather dull"
+        field=sparkly_field, asset=asset, value_text="rather dull",
     )
     assert models.AssetCustomField.objects.count() == 2
 
@@ -385,10 +384,10 @@ def test_autocomplete_custom_value_duplicate_2(auth_client, cfield):
         == "/api/assets/?asset_custom_fields__value_text__istartswith=rather+dull"
     )
     assert cv_cands[0]["query"] == {
-        "asset_custom_fields__value_text__istartswith": "rath"
+        "asset_custom_fields__value_text__istartswith": "rath",
     }
     assert cv_cands[1]["query"] == {
-        "asset_custom_fields__value_text__istartswith": "rather dull"
+        "asset_custom_fields__value_text__istartswith": "rather dull",
     }
 
 
@@ -404,7 +403,7 @@ def test_autocomplete_custom_value_duplicate_3(auth_client, cfield):
     sparkly_field = models.AssetCustomFieldName.objects.get(field_name="sparkliness")
     assert models.AssetCustomField.objects.count() == 1
     models.AssetCustomField.objects.create(
-        field=sparkly_field, asset=asset, value_text="rather dull"
+        field=sparkly_field, asset=asset, value_text="rather dull",
     )
     assert models.AssetCustomField.objects.count() == 2
 
@@ -422,10 +421,10 @@ def test_autocomplete_custom_value_duplicate_3(auth_client, cfield):
         == "/api/assets/?asset_custom_fields__value_text__istartswith=rather+dull"
     )
     assert cv_cands[0]["query"] == {
-        "asset_custom_fields__value_text__istartswith": "rath"
+        "asset_custom_fields__value_text__istartswith": "rath",
     }
     assert cv_cands[1]["query"] == {
-        "asset_custom_fields__value_text__istartswith": "rather dull"
+        "asset_custom_fields__value_text__istartswith": "rather dull",
     }
 
 
