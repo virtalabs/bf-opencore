@@ -3,6 +3,7 @@
 
 import ipaddress
 import re
+
 import netaddr
 
 
@@ -14,17 +15,16 @@ def hostname_ok(hostname):
     """
     # adapted from SO:
     # https://stackoverflow.com/questions/2532053/validate-a-hostname-string
-    if hostname.endswith('.'):
-        hostname = hostname[:-1]
+    hostname = hostname.removesuffix(".")
     if len(hostname) > 253:
         return False
 
-    chunks = hostname.split('.')
+    chunks = hostname.split(".")
 
     # disallow numeric TLD
-    if re.match(r'[0-9]+$', chunks[-1]):
+    if re.match(r"[0-9]+$", chunks[-1]):
         return False
-    chunk_ok = re.compile(r'(?!-)[A-Z\d-]{1,63}(?<!-)$', re.IGNORECASE)
+    chunk_ok = re.compile(r"(?!-)[A-Z\d-]{1,63}(?<!-)$", re.IGNORECASE)
 
     return all(chunk_ok.match(chunk) for chunk in chunks)
 

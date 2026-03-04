@@ -42,7 +42,6 @@ def django_db_setup(
 ):
     """Use default DB setup for PostgreSQL (tests use PostgreSQL only, no SQLite)."""
     from django.test.utils import setup_databases, teardown_databases
-
     from pytest_django.fixtures import _get_databases_for_setup
 
     setup_databases_args = {}

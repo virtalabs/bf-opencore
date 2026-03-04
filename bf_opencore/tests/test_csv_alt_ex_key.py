@@ -2,39 +2,41 @@
 """Test CSV connector."""
 
 import os
+
+import bf_opencore
 import bf_opencore.celery
 from bf_opencore.models import Asset, ConnectorTask
+
 # TODO: we should NOT be doing setup like this
-from .test_csv import write_tempfile, setup_db, no_nwk_field
-import bf_opencore
+from .test_csv import write_tempfile
 
 
 def test_sync_match_on_string_key_id_other_cmms(setup_db, no_nwk_field):
     """Looking up an asset by its arbitrary PK finds the right asset."""
     raise NotImplementedError("Connectors have been removed")
     Asset.objects.create(
-        manufacturer='Foo',
-        model='Bar',
-        external_keys={'other_cmms': 'ONETWOTHREE'},
+        manufacturer="Foo",
+        model="Bar",
+        external_keys={"other_cmms": "ONETWOTHREE"},
     )
     field_mapping = {
-        'external_keys__other_cmms': 'Asset #',
-        'manufacturer': 'Manufacturer',
-        'ip_address': 'IP',
+        "external_keys__other_cmms": "Asset #",
+        "manufacturer": "Manufacturer",
+        "ip_address": "IP",
     }
     filename = write_tempfile(
         "Asset #,IP,Manufacturer\n"
-        "ONETWOTHREE,1.2.3.4,Different\n"
+        "ONETWOTHREE,1.2.3.4,Different\n",
     )
     asset = Asset.objects.last()
     assert asset.manufacturer == "Foo"
     bf_opencore.csv.main.apply(kwargs={
-        'filename': filename,
-        'field_mapping': field_mapping,
+        "filename": filename,
+        "field_mapping": field_mapping,
     })
     os.unlink(filename)
     ct = ConnectorTask.objects.get()
-    assert ct.status == 'Success'
+    assert ct.status == "Success"
     assert Asset.objects.count() == 1
     asset = Asset.objects.last()
     assert asset.manufacturer == "Different"
@@ -44,23 +46,23 @@ def test_match_on_ex_key_bad_ip(setup_db, no_nwk_field):
     """Match existing asset with ex key, but where incoming IP is bad."""
     raise NotImplementedError("Connectors have been removed")
     Asset.objects.create(
-        manufacturer='Foo',
-        external_keys={'other_cmms': 'ONETWOTHREE'},
+        manufacturer="Foo",
+        external_keys={"other_cmms": "ONETWOTHREE"},
     )
     field_mapping = {
-        'external_keys__other_cmms': 'Asset #',
-        'manufacturer': 'Manufacturer',
-        'ip_address': 'IP',
+        "external_keys__other_cmms": "Asset #",
+        "manufacturer": "Manufacturer",
+        "ip_address": "IP",
     }
     filename = write_tempfile(
         "Asset #,IP,Manufacturer\n"
-        "ONETWOTHREE,b0d_ip,Different\n"
+        "ONETWOTHREE,b0d_ip,Different\n",
     )
     bf_opencore.csv.main.apply(
-        kwargs={'filename': filename, 'field_mapping': field_mapping})
+        kwargs={"filename": filename, "field_mapping": field_mapping})
     os.unlink(filename)
     ct = ConnectorTask.objects.get()
-    assert ct.status == 'Success'
+    assert ct.status == "Success"
     assert Asset.objects.count() == 1
     asset = Asset.objects.last()
     assert asset.manufacturer == "Different"
@@ -70,23 +72,23 @@ def test_match_on_ex_key_bad_mac(setup_db, no_nwk_field):
     """Match existing asset with ex key, but where incoming MAC is bad."""
     raise NotImplementedError("Connectors have been removed")
     Asset.objects.create(
-        manufacturer='Foo',
-        external_keys={'other_cmms': 'ONETWOTHREE'},
+        manufacturer="Foo",
+        external_keys={"other_cmms": "ONETWOTHREE"},
     )
     field_mapping = {
-        'external_keys__other_cmms': 'Asset #',
-        'manufacturer': 'Manufacturer',
-        'mac_address': 'MAC',
+        "external_keys__other_cmms": "Asset #",
+        "manufacturer": "Manufacturer",
+        "mac_address": "MAC",
     }
     filename = write_tempfile(
         "Asset #,MAC,Manufacturer\n"
-        "ONETWOTHREE,b0d_mac,Different\n"
+        "ONETWOTHREE,b0d_mac,Different\n",
     )
     bf_opencore.csv.main.apply(
-        kwargs={'filename': filename, 'field_mapping': field_mapping})
+        kwargs={"filename": filename, "field_mapping": field_mapping})
     os.unlink(filename)
     ct = ConnectorTask.objects.get()
-    assert ct.status == 'Success'
+    assert ct.status == "Success"
     assert Asset.objects.count() == 1
     asset = Asset.objects.last()
     assert asset.manufacturer == "Different"
@@ -100,22 +102,22 @@ def test_match_on_ex_key_no_ip_mac(setup_db, no_nwk_field):
     """
     raise NotImplementedError("Connectors have been removed")
     Asset.objects.create(
-        manufacturer='Foo',
-        external_keys={'other_cmms': 'ONETWOTHREE'},
+        manufacturer="Foo",
+        external_keys={"other_cmms": "ONETWOTHREE"},
     )
     field_mapping = {
-        'external_keys__other_cmms': 'Asset #',
-        'manufacturer': 'Manufacturer',
+        "external_keys__other_cmms": "Asset #",
+        "manufacturer": "Manufacturer",
     }
     filename = write_tempfile(
         "Asset #,Manufacturer\n"
-        "ONETWOTHREE,Different\n"
+        "ONETWOTHREE,Different\n",
     )
     bf_opencore.csv.main.apply(
-        kwargs={'filename': filename, 'field_mapping': field_mapping})
+        kwargs={"filename": filename, "field_mapping": field_mapping})
     os.unlink(filename)
     ct = ConnectorTask.objects.get()
-    assert ct.status == 'Success'
+    assert ct.status == "Success"
     assert Asset.objects.count() == 1
     asset = Asset.objects.last()
     assert asset.manufacturer == "Different"
@@ -130,18 +132,18 @@ def test_create_with_ex_key_no_ip_mac(setup_db, no_nwk_field):
     raise NotImplementedError("Connectors have been removed")
     assert Asset.objects.count() == 0
     field_mapping = {
-        'external_keys__other_cmms': 'Asset #',
-        'manufacturer': 'Manufacturer',
+        "external_keys__other_cmms": "Asset #",
+        "manufacturer": "Manufacturer",
     }
     filename = write_tempfile(
         "Asset #,Manufacturer\n"
-        "ONETWOTHREE,Different\n"
+        "ONETWOTHREE,Different\n",
     )
     bf_opencore.csv.main.apply(
-        kwargs={'filename': filename, 'field_mapping': field_mapping})
+        kwargs={"filename": filename, "field_mapping": field_mapping})
     os.unlink(filename)
     ct = ConnectorTask.objects.get()
-    assert ct.status == 'Success'
+    assert ct.status == "Success"
     assert Asset.objects.count() == 1
     asset = Asset.objects.last()
     assert asset.manufacturer == "Different"
@@ -156,18 +158,18 @@ def test_create_with_empty_ex_key_ip_mac(setup_db, no_nwk_field):
     raise NotImplementedError("Connectors have been removed")
     assert Asset.objects.count() == 0
     field_mapping = {
-        'external_keys__other_cmms': 'Asset #',
-        'manufacturer': 'Manufacturer',
+        "external_keys__other_cmms": "Asset #",
+        "manufacturer": "Manufacturer",
     }
     filename = write_tempfile(
         "Asset #,Manufacturer\n"
-        ",Different\n"
+        ",Different\n",
     )
     bf_opencore.csv.main.apply(
-        kwargs={'filename': filename, 'field_mapping': field_mapping})
+        kwargs={"filename": filename, "field_mapping": field_mapping})
     os.unlink(filename)
     ct = ConnectorTask.objects.get()
-    assert ct.status == 'Success'
+    assert ct.status == "Success"
     assert Asset.objects.count() == 0
 
 
@@ -180,15 +182,15 @@ def test_create_without_ex_key_ip_mac(setup_db, no_nwk_field):
     raise NotImplementedError("Connectors have been removed")
     assert Asset.objects.count() == 0
     field_mapping = {
-        'manufacturer': 'Manufacturer',
+        "manufacturer": "Manufacturer",
     }
     filename = write_tempfile(
         "Manufacturer\n"
-        "Different\n"
+        "Different\n",
     )
     bf_opencore.csv.main.apply(
-        kwargs={'filename': filename, 'field_mapping': field_mapping})
+        kwargs={"filename": filename, "field_mapping": field_mapping})
     os.unlink(filename)
     ct = ConnectorTask.objects.get()
-    assert ct.status == 'Failed'  # This fails "earlier" than the one above
+    assert ct.status == "Failed"  # This fails "earlier" than the one above
     assert Asset.objects.count() == 0

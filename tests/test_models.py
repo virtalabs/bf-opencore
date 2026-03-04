@@ -1,6 +1,5 @@
 """Tests for bf_opencore models (mirrors bf_opencore/models)."""
 
-import pytest
 
 
 def test_asset_model(db):

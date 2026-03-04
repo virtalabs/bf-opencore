@@ -18,26 +18,32 @@ $ curl localhost:8000/api/autocomplete/?term=192 | python -m json.tool
         }
     ]
 }
+
 """
 
-import logging
 import copy
-import urllib.parse
 import ipaddress
+import logging
+import urllib.parse
+
 import netaddr
-
+from django.core.exceptions import FieldError, ObjectDoesNotExist
 from django.db.models import Q
-from django.core.exceptions import ObjectDoesNotExist, FieldError
 from django.urls import reverse_lazy
-
-from rest_framework import serializers, viewsets, permissions, status
-from rest_framework.viewsets import ViewSet
+from rest_framework import permissions, serializers, status, viewsets
 from rest_framework.response import Response
+from rest_framework.viewsets import ViewSet
 
-from bf_opencore.models import \
-    Asset, Tag, SavedSearch, Vulnerability, Group, Network, AssetCustomField
+from bf_opencore.models import (
+    Asset,
+    AssetCustomField,
+    Group,
+    Network,
+    SavedSearch,
+    Tag,
+    Vulnerability,
+)
 from bf_opencore.views.asset import AssetFilter, AssetViewSet
-
 
 logger = logging.getLogger(__name__)
 
@@ -45,14 +51,14 @@ logger = logging.getLogger(__name__)
 AUTOCOMPLETE_LIMIT = 3
 
 
-class Autocomplete():
+class Autocomplete:
     """Represent one Autocomplete object."""
 
     def __init__(self, term, suggestion, suggestion_type, query_dict,
                  base_url=None, append_query_params=True):
         """Copy inputs to member variables."""
         if base_url is None:
-            base_url = reverse_lazy('bf_opencore:asset-list')
+            base_url = reverse_lazy("bf_opencore:asset-list")
         self.term = term
         self.suggestion = suggestion
         self.suggestion_type = \
@@ -68,19 +74,18 @@ class Autocomplete():
         # special cases
         if orig_type is None:
             return None
-        if orig_type == 'os':
-            return 'OS'
+        if orig_type == "os":
+            return "OS"
 
         # otherwise: replace underscores and use title caps
-        ret = orig_type.replace('_', ' ')
+        ret = orig_type.replace("_", " ")
         ret = ret.title()
 
         return ret
 
 
 class AutocompleteSerializer(serializers.Serializer):
-    """
-    A serializer for Autocomplete search suggestions.
+    """A serializer for Autocomplete search suggestions.
 
     Ref http://www.django-rest-framework.org/api-guide/serializers/
     """
@@ -121,7 +126,7 @@ class AutocompleteViewSet(viewsets.ReadOnlyModelViewSet):
         """Return {count, results} format for autocomplete API consumers."""
         queryset = self.filter_queryset(self.get_queryset())
         serializer = self.get_serializer(queryset, many=True)
-        return Response({'count': len(queryset), 'results': serializer.data})
+        return Response({"count": len(queryset), "results": serializer.data})
 
     def get_queryset(self):
         """Return Autocomplete objects that match request."""
@@ -140,11 +145,11 @@ class AutocompleteViewSet(viewsets.ReadOnlyModelViewSet):
 
         # remove some query params so they don't find their way to Asset
         # queries
-        base_query_params.pop('offset', None)
-        base_query_params.pop('limit', None)
+        base_query_params.pop("offset", None)
+        base_query_params.pop("limit", None)
 
         # the actual search term
-        term = base_query_params.pop('autocomplete').strip()
+        term = base_query_params.pop("autocomplete").strip()
 
         # Blank autocomplete requests return no results
         results = []
@@ -201,7 +206,7 @@ class AutocompleteViewSet(viewsets.ReadOnlyModelViewSet):
         fields = AssetFilter.Meta.fields
         for column, lookups in fields.items():
             # skip some columns
-            if column == 'id' or column.startswith('risk_score'):
+            if column == "id" or column.startswith("risk_score"):
                 continue
             lookup = lookups[0]  # first lookup is the default
             results.extend(autocomplete_column(
@@ -225,7 +230,7 @@ def autocomplete_column(term, column, lookup, base_query,
 
     # Build a Django ORM compatible filter string, e.g., model__icontains
     # Include any additional query params sent by the user
-    orm_filter = "{}__{}".format(column, lookup)
+    orm_filter = f"{column}__{lookup}"
 
     # Add filter to the query
     query = copy.deepcopy(base_query)  # copy
@@ -256,14 +261,14 @@ def autocomplete_column(term, column, lookup, base_query,
     for asset in assets:
         suggestion = getattr(asset, column)  # Equivalent to "asset.model"
         query_dict = dict(base_query_params)
-        if column == 'manufacturer':
-            base_url = reverse_lazy('bf_opencore:asset-list')
-            query_dict['manufacturer'] = suggestion
-        elif column == 'model':
-            base_url = reverse_lazy('bf_opencore:asset-list')
-            query_dict['manufacturer'] = asset.manufacturer
-            query_dict['model'] = suggestion
-            suggestion = '{} {}'.format(asset.manufacturer, suggestion)
+        if column == "manufacturer":
+            base_url = reverse_lazy("bf_opencore:asset-list")
+            query_dict["manufacturer"] = suggestion
+        elif column == "model":
+            base_url = reverse_lazy("bf_opencore:asset-list")
+            query_dict["manufacturer"] = asset.manufacturer
+            query_dict["model"] = suggestion
+            suggestion = f"{asset.manufacturer} {suggestion}"
         else:
             # Other columns will just use the '/search/' page (the default)
             base_url = None
@@ -309,7 +314,7 @@ def autocomplete_cidr(term, base_query_params, limit=AUTOCOMPLETE_LIMIT):
     # We allow a trailing '.', i.e., "192.168." is eqiuivalent to "192.168"
 
     try:
-        cleaned_ip_str = str(netaddr.IPNetwork(term.rstrip('.')).ip)
+        cleaned_ip_str = str(netaddr.IPNetwork(term.rstrip(".")).ip)
     except netaddr.core.AddrFormatError:
         return []
 
@@ -321,8 +326,7 @@ def autocomplete_cidr(term, base_query_params, limit=AUTOCOMPLETE_LIMIT):
     nets = []
     for net_mask_bits in [8, 16, 24]:
         try:
-            nets.append(str(ipaddress.ip_network('{}/{}'.format(
-                cleaned_ip_str, net_mask_bits))))
+            nets.append(str(ipaddress.ip_network(f"{cleaned_ip_str}/{net_mask_bits}")))
         except ValueError:
             pass
 
@@ -334,8 +338,8 @@ def autocomplete_cidr(term, base_query_params, limit=AUTOCOMPLETE_LIMIT):
         autocomplete = Autocomplete(
             term=term,
             suggestion=str(net),
-            suggestion_type='CIDR',
-            query_dict=query_dict
+            suggestion_type="CIDR",
+            query_dict=query_dict,
         )
         results.append(autocomplete)
 
@@ -380,12 +384,12 @@ def autocomplete_tag(term, base_query, base_query_params,
     results = []
     for tag in tags[:limit]:
         query_dict = dict(base_query_params)
-        query_dict['tag'] = tag.id
-        base_url = reverse_lazy('bf_opencore:tag-detail', args=[tag.id])
+        query_dict["tag"] = tag.id
+        base_url = reverse_lazy("bf_opencore:tag-detail", args=[tag.id])
         autocomplete = Autocomplete(
             term=term,
             suggestion=tag.name,
-            suggestion_type='Tag',
+            suggestion_type="Tag",
             query_dict=query_dict,
             base_url=base_url,
             append_query_params=False,
@@ -400,12 +404,12 @@ def autocomplete_vulnerability(term, limit=AUTOCOMPLETE_LIMIT):
 
     results = []
     for vuln in vulns[:limit]:
-        base_url = reverse_lazy('bf_opencore:vulnerability-detail', args=[vuln.id])
+        base_url = reverse_lazy("bf_opencore:vulnerability-detail", args=[vuln.id])
         autocomplete = Autocomplete(
             term=term,
             suggestion=vuln.synopsis,
-            suggestion_type='Vulnerability',
-            query_dict={'vulnerability': vuln.id},
+            suggestion_type="Vulnerability",
+            query_dict={"vulnerability": vuln.id},
             base_url=base_url,
             append_query_params=False,
         )
@@ -419,13 +423,13 @@ def autocomplete_group(term, limit=AUTOCOMPLETE_LIMIT):
 
     results = []
     for group in groups[:limit]:
-        base_url = reverse_lazy('bf_opencore:group-detail', args=[group.id])
+        base_url = reverse_lazy("bf_opencore:group-detail", args=[group.id])
         autocomplete = Autocomplete(
             term=term,
             suggestion=group.name,
-            suggestion_type='Group',
+            suggestion_type="Group",
             base_url=base_url,
-            query_dict={'group': group.id},
+            query_dict={"group": group.id},
             append_query_params=False,
         )
         results.append(autocomplete)
@@ -442,7 +446,7 @@ def autocomplete_saved_search(term, limit=AUTOCOMPLETE_LIMIT):
         autocomplete = Autocomplete(
             term=term,
             suggestion=search.name,
-            suggestion_type='Saved search',
+            suggestion_type="Saved search",
             query_dict=search.search_query_dict,
         )
         results.append(autocomplete)
@@ -456,13 +460,13 @@ def autocomplete_network(term, limit=AUTOCOMPLETE_LIMIT):
 
     results = []
     for network in networks[:limit]:
-        base_url = reverse_lazy('bf_opencore:network-detail', args=[network.id])
+        base_url = reverse_lazy("bf_opencore:network-detail", args=[network.id])
         autocomplete = Autocomplete(
             term=term,
             suggestion=network.name,
-            suggestion_type='Network',
+            suggestion_type="Network",
             base_url=base_url,
-            query_dict={'network': network.id},
+            query_dict={"network": network.id},
             append_query_params=False,
         )
         results.append(autocomplete)
@@ -473,7 +477,7 @@ def autocomplete_network(term, limit=AUTOCOMPLETE_LIMIT):
 def autocomplete_custom_fields(term, limit=3):
     """Return list of Autocomplete objects for custom fields."""
     custom_fields = AssetCustomField.objects.filter(
-        value_text__istartswith=term).distinct('value_text')
+        value_text__istartswith=term).distinct("value_text")
 
     results = []
     if custom_fields.count() > 0:
@@ -481,8 +485,8 @@ def autocomplete_custom_fields(term, limit=3):
         raw_column_autocomplete = Autocomplete(
             term=term,
             suggestion=term,
-            suggestion_type='Custom Field',
-            query_dict={'asset_custom_fields__value_text__istartswith': term},
+            suggestion_type="Custom Field",
+            query_dict={"asset_custom_fields__value_text__istartswith": term},
             append_query_params=True,
         )
         results.append(raw_column_autocomplete)
@@ -491,8 +495,8 @@ def autocomplete_custom_fields(term, limit=3):
         autocomplete = Autocomplete(
             term=term,
             suggestion=suggestion,
-            suggestion_type='Custom Field',
-            query_dict={'asset_custom_fields__value_text__istartswith':
+            suggestion_type="Custom Field",
+            query_dict={"asset_custom_fields__value_text__istartswith":
                         custom_field.value_text},
             append_query_params=True,
         )
@@ -543,7 +547,7 @@ class AutocompleteAssetFieldViewSet(ViewSet):
         params = request.GET.copy()
 
         # name of an Asset field to fetch all values of
-        field = params.pop('field', None)
+        field = params.pop("field", None)
         if field is None:
             return Response([], status=status.HTTP_400_BAD_REQUEST)
 
@@ -556,7 +560,7 @@ class AutocompleteAssetFieldViewSet(ViewSet):
         # Asset.model where Asset.manufacturer has a certain value.
         constraints = params.dict()
 
-        isnull_p = '{}__isnull'.format(field)
+        isnull_p = f"{field}__isnull"
         try:
             vals = (Asset.objects.values(field)
                     .distinct()

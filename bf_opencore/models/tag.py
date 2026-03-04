@@ -2,10 +2,10 @@
 
 import logging
 
+from django.apps import apps
 from django.db import models
 from django.utils import timezone
 from simple_history.models import HistoricalRecords
-from django.apps import apps
 
 logger = logging.getLogger(__name__)
 
@@ -25,12 +25,12 @@ class Tag(models.Model):
     history = HistoricalRecords()
 
     def __str__(self):  # noqa
-        return '{}:{}:{}'.format(self.id, self.name, self.color)
+        return f"{self.id}:{self.name}:{self.color}"
 
     @property
     def num_assets(self):
         """Calculate number of assets with this tag."""
-        Asset = apps.get_model('bf_opencore', 'Asset')
+        Asset = apps.get_model("bf_opencore", "Asset")
         asset_qset = Asset.objects.filter(tags__id=self.id)
         return asset_qset.count
 
@@ -42,8 +42,8 @@ class AssetTag(models.Model):
     """
 
     # Use a string "Asset" instead of an object to avoid circular import
-    asset = models.ForeignKey('Asset', on_delete=models.CASCADE,
-                              related_name='asset_tags')
+    asset = models.ForeignKey("Asset", on_delete=models.CASCADE,
+                              related_name="asset_tags")
     tag = models.ForeignKey(Tag, on_delete=models.CASCADE)
     date_added = models.DateTimeField(default=timezone.now)
     provenance = models.TextField(
@@ -53,5 +53,5 @@ class AssetTag(models.Model):
     history = HistoricalRecords()
 
     class Meta:  # noqa
-        db_table = 'blueflow_asset_tag'
+        db_table = "blueflow_asset_tag"
         unique_together = ("asset", "tag")

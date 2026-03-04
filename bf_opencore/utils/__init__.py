@@ -2,13 +2,14 @@
 """Utilities for connectors."""
 
 
-from enum import Enum, auto
 from collections.abc import Iterable
+from enum import Enum, auto
+
+from .disable_signals import DisableSignals
 from .fieldmap import FieldMap
 from .func import NullUnlessChanged
 from .ipset import ipset_from_network
-from .disable_signals import DisableSignals
-from .quarters import quarter_start, prev_quarter_start
+from .quarters import prev_quarter_start, quarter_start
 
 
 class password(str):  # pylint: disable=invalid-name
@@ -47,14 +48,14 @@ class Created(Enum):
         return self._value_ == self.CREATED._value_
 
 __all__ = [
-    'FieldMap',
-    'NullUnlessChanged',
-    'ipset_from_network',
-    'DisableSignals',
-    'quarter_start',
-    'prev_quarter_start',
-    'password',
-    'FileWrapper',
-    'iterable',
-    'Created',
+    "Created",
+    "DisableSignals",
+    "FieldMap",
+    "FileWrapper",
+    "NullUnlessChanged",
+    "ipset_from_network",
+    "iterable",
+    "password",
+    "prev_quarter_start",
+    "quarter_start",
 ]

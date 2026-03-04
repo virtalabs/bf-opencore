@@ -1,18 +1,19 @@
 """CSV import"""
+import csv as pycsv
+import json
+import logging
 import os
 from collections import OrderedDict
-import logging
-import json
-import csv as pycsv
+
 import celery
 from django.apps import apps
 from django.conf import settings as django_settings
 from django.core.exceptions import ValidationError
 from django.db.utils import IntegrityError
 from simple_history import utils as hist_utils
+
 from bf_opencore.celery import celery_app
 from bf_opencore.utils import FieldMap, FileWrapper
-
 
 logger = celery.utils.log.get_task_logger(__name__)
 
@@ -27,25 +28,25 @@ logger = celery.utils.log.get_task_logger(__name__)
 #     'model': 'Model',
 # }
 # _DEFAULT_FIELD_NAMES = list(DEFAULT_FIELD_MAPPING.values())
-# 
+#
 # CONNECTOR_SPEC = {
 #     "display_name": "CSV",
 #     "description": """Load assets from a CSV file.
-# 
+#
 # By default, BlueFlow imports from columns with these names: {fieldnames}.
 # You can change how BlueFlow imports data by configuring the CSV connector at
 # its [connector settings page]({settings}).
-# 
+#
 # Assets to be imported must have a value in at least one of the following
 # fields:
-# 
+#
 #  - An IP address
 #  - A MAC address
 #  - An external key (such as a unique asset ID from another system)
-# 
+#
 # When exporting data from Excel or a similar tool, choose `ASCII` or `UTF-8`
 # encoding.
-# 
+#
 # A sample CSV file is available [here](bf_opencore/csv/sample.csv).
 # """.format(settings='/settings/csv/',
 #            fieldnames=', '.join(
@@ -76,14 +77,14 @@ logger = celery.utils.log.get_task_logger(__name__)
 #         }),
 #     ]),
 # }
-# 
+#
 # DEFAULTS = {k: v["default"] for k, v in CONNECTOR_SPEC["kwargs"].items()}
 # TYPES = {k: v["type"] for k, v in CONNECTOR_SPEC["kwargs"].items()}
 
 
 def linecount(filename):
     """Return the number of lines in a file."""
-    with open(filename, 'r') as filehandle:
+    with open(filename) as filehandle:
         return sum(1 for row in filehandle)
 
 
@@ -93,12 +94,12 @@ def process_csv(ctx, filename, field_mapping, require_network_info,
     # Yea, there's a lot of branches
     # pylint: disable=too-many-branches
 
-    Asset = apps.get_model('bf_opencore', 'Asset')
+    Asset = apps.get_model("bf_opencore", "Asset")
     logger.debug("Reading CSV file %s", filename)
     # The 'utf-8-sig' encoding makes us robust to Excel-exported CSV
     # files (they contain a 3-byte "byte order mark" at the beginning of
     # the file.)
-    with open(filename, 'r', encoding='utf-8-sig') as csv_file:
+    with open(filename, encoding="utf-8-sig") as csv_file:
         stats = {
             "total": 0,
             "updated": 0,
@@ -117,8 +118,8 @@ def process_csv(ctx, filename, field_mapping, require_network_info,
 
             # Ignore assets that lack MAC or IP.
             if require_network_info and not (
-                    "ip_address" in rowmap.todict() and rowmap["ip_address"] or
-                    "mac_address" in rowmap.todict() and rowmap["mac_address"]
+                    ("ip_address" in rowmap.todict() and rowmap["ip_address"]) or
+                    ("mac_address" in rowmap.todict() and rowmap["mac_address"])
             ):
                 logger.debug("Skipped asset (no MAC or IP) %s", rowmap)
                 stats["skipped"] += 1
@@ -150,10 +151,9 @@ def process_csv(ctx, filename, field_mapping, require_network_info,
                     Asset.MultipleObjectsReturned,
                     IntegrityError) as err:
                 ctx.ct.error(
-                    "Error updating or creating asset: {}.\n"
-                    "Raw data: {}\n"
-                    "Mapped data: {}"
-                    "".format(err, row, rowmap)
+                    f"Error updating or creating asset: {err}.\n"
+                    f"Raw data: {row}\n"
+                    f"Mapped data: {rowmap}",
                 )
                 stats["errored"] += 1
                 continue
@@ -162,44 +162,41 @@ def process_csv(ctx, filename, field_mapping, require_network_info,
             if created == created.CREATED:
                 logger.debug(
                     "Created asset %s\nRaw data: %s\nMapped data: %s",
-                    asset, row, rowmap
+                    asset, row, rowmap,
                 )
                 stats["created"] += 1
             elif created == created.UPDATED:
                 logger.debug(
                     "Updated asset %s. Raw data: %s. Mapped data: %s",
-                    asset, row, rowmap
+                    asset, row, rowmap,
                 )
                 stats["updated"] += 1
             elif created == created.UPTODATE:
                 logger.debug(
                     "Update-to-date asset %s. Raw data: %s. Mapped data: %s",
-                    asset, row, rowmap
+                    asset, row, rowmap,
                 )
                 stats["up-to-date"] += 1
             else:
                 logger.error(
                     "update_or_create_by_priority() returned an unrecognized"
-                    "value: %s", created
+                    "value: %s", created,
                 )
                 stats["errored"] += 1
 
             # Update the asset's history.  The CSV connector is sometimes
             # called by other connectors, so we look up the connector name.
             if created:
-                reason = "Created by {} import".format(ctx.ct.display_name)
+                reason = f"Created by {ctx.ct.display_name} import"
             else:
-                reason = "Updated by {} import".format(ctx.ct.display_name)
+                reason = f"Updated by {ctx.ct.display_name} import"
             hist_utils.update_change_reason(asset, reason)
 
         # Print stats to UI
         ctx.ct.print("Finished loading assets from CSV")
-        for name in ['created', 'updated', 'up-to-date', 'skipped', 'errored']:
+        for name in ["created", "updated", "up-to-date", "skipped", "errored"]:
             value = stats[name]
-            ctx.ct.print("{}{}".format(
-                name.ljust(12),
-                str(value).rjust(12),
-            ))
+            ctx.ct.print(f"{name.ljust(12)}{str(value).rjust(12)}")
         ctx.ct.print("-" * 24)
         ctx.ct.print("{}{}".format(
             "total".ljust(12),
@@ -210,8 +207,7 @@ def process_csv(ctx, filename, field_mapping, require_network_info,
 @celery_app.task(bind=True)
 def main(ctx, filename=None, field_mapping=None, no_reset_progress=False,
          require_network_info=None, update_only=None):
-    """
-    Load a CSV file into the database through a field mapping.
+    """Load a CSV file into the database through a field mapping.
 
     no_reset_progress is a performance optimization to avoid re-reading large
     files when this connector is called by another connector, e.g., TMS.
@@ -225,9 +221,9 @@ def main(ctx, filename=None, field_mapping=None, no_reset_progress=False,
     # or AIMS) and they didn't explicitly pass these parameters, *their*
     # settings would still be used here - not the CSV settings.
     if require_network_info is None:
-        require_network_info = ctx.ct.connector.settings['require_network_info']  # pylint: disable=line-too-long
+        require_network_info = ctx.ct.connector.settings["require_network_info"]  # pylint: disable=line-too-long
     if update_only is None:
-        update_only = ctx.ct.connector.settings['update_only']
+        update_only = ctx.ct.connector.settings["update_only"]
 
     # Save attachment provided by the web UI, if any
     if ctx.ct.attachment:
@@ -237,15 +233,15 @@ def main(ctx, filename=None, field_mapping=None, no_reset_progress=False,
         )
         logger.debug("Saved file %s", filename)
         if not os.path.exists(filename):
-            raise ValueError("File not found: {}".format(filename))
+            raise ValueError(f"File not found: {filename}")
 
     # Read field mapping from the database if one is not provided
     if not field_mapping:
         raise NotImplementedError("Connectors have been removed")
-        Connector = apps.get_model('bf_opencore', 'Connector')
+        Connector = apps.get_model("bf_opencore", "Connector")
         connector = Connector.objects.get(id="csv")
         logger.debug("Settings: %s", connector.settings)
-        field_mapping = connector.settings['field_mapping']
+        field_mapping = connector.settings["field_mapping"]
 
     # Set up progress bar
     if not no_reset_progress:

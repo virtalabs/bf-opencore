@@ -2,20 +2,19 @@
 
 import logging
 
+import django_filters
 from django.core.exceptions import ObjectDoesNotExist
 from django.db.utils import IntegrityError
-
-import django_filters
-from rest_framework import viewsets, serializers, status
-from rest_framework.response import Response
+from rest_framework import serializers, status, viewsets
 from rest_framework.decorators import action
+from rest_framework.response import Response
 from simple_history import utils as hist_utils
 from waffle.mixins import WaffleSwitchMixin
 
-from bf_opencore.models import Tag, Asset, AssetTag
+from bf_opencore.models import Asset, AssetTag, Tag
 from bf_opencore.utils import iterable
-from .utils import HugeLimitOffsetPagination
-from .utils import ChangeReasonMixin
+
+from .utils import ChangeReasonMixin, HugeLimitOffsetPagination
 
 logger = logging.getLogger(__name__)
 
@@ -30,7 +29,7 @@ class TagSerializer(serializers.HyperlinkedModelSerializer):
     add_assets_url = serializers.HyperlinkedIdentityField(
         view_name="bf_opencore:tag-assets")
 
-    class Meta:  # noqa
+    class Meta:
         """Wire this serializer to a model."""
 
         model = Tag
@@ -40,9 +39,9 @@ class TagSerializer(serializers.HyperlinkedModelSerializer):
 
         # Fields that are computed (not stored directly in schema)
         computed_fields = (
-            'url',
-            'add_assets_url',
-            'num_assets',
+            "url",
+            "add_assets_url",
+            "num_assets",
         )
 
         fields = tag_fields + computed_fields
@@ -56,16 +55,15 @@ class TagSerializer(serializers.HyperlinkedModelSerializer):
         - Ensure valid hex
         """
         # logger.debug("Validating color '%s'", color)
-        if len(color) < 7 and color[0] != '#':
-            color = '#' + color
-        if not color[0] == '#':
-            raise serializers.ValidationError("{} is not a valid color, must "
-                                              "start with '#'".format(color))
+        if len(color) < 7 and color[0] != "#":
+            color = "#" + color
+        if not color[0] == "#":
+            raise serializers.ValidationError(f"{color} is not a valid color, must "
+                                              "start with '#'")
         try:
             dummy_int = int(color[1:], 16)
         except ValueError:
-            raise serializers.ValidationError("{} is not a valid RGB color"
-                                              "".format(color))
+            raise serializers.ValidationError(f"{color} is not a valid RGB color")
         return color
 
 
@@ -78,7 +76,7 @@ class TagFilter(django_filters.rest_framework.FilterSet):
         # Documentation about lookups is here:
         # https://docs.djangoproject.com/en/1.11/ref/models/querysets/#field-lookups
         fields = {
-            'asset': ['exact'],
+            "asset": ["exact"],
             }
 
 
@@ -88,12 +86,12 @@ class TagViewSet(WaffleSwitchMixin, ChangeReasonMixin, viewsets.ModelViewSet):
     waffle_switch = "core"
 
     # Tag model does have 'objects'
-    queryset = Tag.objects.order_by('name')
+    queryset = Tag.objects.order_by("name")
     serializer_class = TagSerializer
     filterset_class = TagFilter
     pagination_class = HugeLimitOffsetPagination
 
-    @action(detail=True, methods=['POST'])
+    @action(detail=True, methods=["POST"])
     def assets(self, request, pk):
         """Add several assets to this Tag."""
         tag = self.get_object()
@@ -101,16 +99,16 @@ class TagViewSet(WaffleSwitchMixin, ChangeReasonMixin, viewsets.ModelViewSet):
         # Add several new assets to this tag with a POST
         # request to /api/tags/<n>/assets/.
         # The POST data must contain a list of asset IDs.
-        asset_ids = request.data.get('asset_ids')
+        asset_ids = request.data.get("asset_ids")
         logger.debug("Got asset IDs '%s' of type '%s'",
                      asset_ids, type(asset_ids))
 
         if asset_ids is None:
             raise serializers.ValidationError({
-                'asset_ids': ["'asset_ids' is required"]})
+                "asset_ids": ["'asset_ids' is required"]})
         if not iterable(asset_ids):
             raise serializers.ValidationError({
-                'asset_ids': ["'asset_ids' must be a list"]})
+                "asset_ids": ["'asset_ids' must be a list"]})
 
         assets_existing = assets_new = 0
         for asset_id in asset_ids:
@@ -118,10 +116,9 @@ class TagViewSet(WaffleSwitchMixin, ChangeReasonMixin, viewsets.ModelViewSet):
                 asset = Asset.objects.get(pk=asset_id)
             except (ObjectDoesNotExist, ValueError):
                 raise serializers.ValidationError({
-                    'asset_ids': ["Asset does not exist: id={}"
-                                  "".format(asset_id)]
+                    "asset_ids": [f"Asset does not exist: id={asset_id}"],
                     })
-            reason = 'Bulk Add via API'
+            reason = "Bulk Add via API"
             asset_tag = AssetTag(asset=asset, tag=tag,
                                  provenance=reason)
             try:

@@ -14,8 +14,8 @@ class Attachment(models.Model):
 
     name = models.TextField(null=True, blank=True)
     file_name = models.TextField()  # Original filename
-    file = models.FileField(upload_to='attachments')  # upload_to is a folder
-    asset = models.ForeignKey('Asset', on_delete=models.CASCADE, null=True)
+    file = models.FileField(upload_to="attachments")  # upload_to is a folder
+    asset = models.ForeignKey("Asset", on_delete=models.CASCADE, null=True)
     manufacturer = models.TextField(blank=True, null=True)
     model = models.TextField(blank=True, null=True)
     date_added = models.DateTimeField(default=timezone.now)
@@ -27,7 +27,7 @@ class Attachment(models.Model):
         """Return user.id of original creator."""
         # There can be only one 'creation', so we could have used
         # 'get()' but let's be robust.
-        hist_created = self.history.filter(history_type='+').first()
+        hist_created = self.history.filter(history_type="+").first()
         return hist_created.history_user.username
 
     @property

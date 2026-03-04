@@ -1,13 +1,12 @@
 """Model for devices seen on the network."""
 
-from django.db import models
-from django.core.exceptions import ValidationError
 import django.contrib.postgres.fields as pg_fields
-from django.db.models.signals import post_save
-
-from netfields import MACAddressField, InetAddressField
-
 from django.apps import apps
+from django.core.exceptions import ValidationError
+from django.db import models
+from django.db.models.signals import post_save
+from netfields import InetAddressField, MACAddressField
+
 from bf_opencore.utils import DisableSignals
 
 
@@ -19,40 +18,39 @@ class NetworkEndpointManager(models.Manager):
         fields_by_priority = ["mac_address", "ipv4_address", "ipv6_address"]
         f = models.Q()
         for field in fields_by_priority:
-            if field in kwargs and kwargs[field]:
+            if kwargs.get(field):
                 f |= models.Q(**{field: kwargs[field]})
 
         results = super().filter(f)
 
         if results.count() == 0:
-            NetworkEndpoint = apps.get_model('bf_opencore', 'NetworkEndpoint')
+            NetworkEndpoint = apps.get_model("bf_opencore", "NetworkEndpoint")
             raise NetworkEndpoint.DoesNotExist()
         if results.count() == 1:
             return results.first()
-        else:
-            # if there is more than one match, mac_address must be set
-            chosen = results.get(mac_address=kwargs["mac_address"])
-            others = results.exclude(pk=chosen.pk)
-            for endpoint in others:
-                success = chosen.merge(endpoint)
-                if success:
-                    # merged the details we care about
-                    endpoint.delete()
-                else:
-                    # IP conflicts exist, clear them
-                    if endpoint.ipv4_address == kwargs.get("ipv4_address"):
-                        endpoint.ipv4_address = None
-                    if endpoint.ipv6_address == kwargs.get("ipv6_address"):
-                        endpoint.ipv6_address = None
-                    endpoint.save()
-                chosen.save()
-            return chosen
+        # if there is more than one match, mac_address must be set
+        chosen = results.get(mac_address=kwargs["mac_address"])
+        others = results.exclude(pk=chosen.pk)
+        for endpoint in others:
+            success = chosen.merge(endpoint)
+            if success:
+                # merged the details we care about
+                endpoint.delete()
+            else:
+                # IP conflicts exist, clear them
+                if endpoint.ipv4_address == kwargs.get("ipv4_address"):
+                    endpoint.ipv4_address = None
+                if endpoint.ipv6_address == kwargs.get("ipv6_address"):
+                    endpoint.ipv6_address = None
+                endpoint.save()
+            chosen.save()
+        return chosen
 
     def update_or_create_by_priority(self, defaults=None, **kwargs):
         """Return or create a NetworkEndpoint, prefering Mac address."""
         if not defaults:
             defaults = {}
-        NetworkEndpoint = apps.get_model('bf_opencore', 'NetworkEndpoint')
+        NetworkEndpoint = apps.get_model("bf_opencore", "NetworkEndpoint")
         try:
             match = self.normalize_and_get(**kwargs)
             for key, value in defaults.items():
@@ -71,8 +69,8 @@ class NetworkEndpointManager(models.Manager):
 class EndpointSuggestion(models.Model):
     """An inferred connection between an Asset and a NetworkEndpoint."""
 
-    asset = models.ForeignKey('Asset', on_delete=models.CASCADE)
-    network_endpoint = models.ForeignKey('NetworkEndpoint',
+    asset = models.ForeignKey("Asset", on_delete=models.CASCADE)
+    network_endpoint = models.ForeignKey("NetworkEndpoint",
                                          on_delete=models.CASCADE)
     confidence = models.SmallIntegerField(default=0)
     confidence_limit = models.SmallIntegerField(default=0)
@@ -84,8 +82,8 @@ class NetworkEndpoint(models.Model):
 
     class Meta:  # noqa
         unique_together = (
-            ('mac_address', 'ipv4_address'),
-            ('mac_address', 'ipv6_address'))
+            ("mac_address", "ipv4_address"),
+            ("mac_address", "ipv6_address"))
 
     mac_address = MACAddressField(unique=True, null=True, blank=True)
     ipv4_address = InetAddressField(store_prefix_length=False,
@@ -94,9 +92,9 @@ class NetworkEndpoint(models.Model):
                                     blank=True, null=True, unique=True)
 
     # user indicated this NetworkEndpoint definitely refers to one asset
-    _user_asset_match = models.ForeignKey('Asset',
+    _user_asset_match = models.ForeignKey("Asset",
                                           on_delete=models.SET_NULL,
-                                          related_name='network_endpoints',
+                                          related_name="network_endpoints",
                                           blank=True, null=True)
 
     # user indicated that the following guesses were wrong
@@ -136,24 +134,22 @@ class NetworkEndpoint(models.Model):
         if self._user_asset_match:
             # if corresponding asset was set manually, use it
             return self._user_asset_match
-        else:
-            sieve = models.Q()
-            if self.mac_address:
-                sieve |= models.Q(mac_address=self.mac_address)
-            if self.ipv4_address:
-                sieve |= models.Q(ip_address=self.ipv4_address)
-            if self.ipv6_address:
-                sieve |= models.Q(ip_address=self.ipv6_address)
+        sieve = models.Q()
+        if self.mac_address:
+            sieve |= models.Q(mac_address=self.mac_address)
+        if self.ipv4_address:
+            sieve |= models.Q(ip_address=self.ipv4_address)
+        if self.ipv6_address:
+            sieve |= models.Q(ip_address=self.ipv6_address)
 
-            Asset = apps.get_model('bf_opencore', 'Asset')
-            mac_matches = Asset.objects.filter(sieve)
+        Asset = apps.get_model("bf_opencore", "Asset")
+        mac_matches = Asset.objects.filter(sieve)
 
-            if mac_matches.count() == 1:
-                # there is one, unambigious corresponding asset
-                return mac_matches.first()
-            else:
-                # there are multiple possible corresponding assets, or none
-                return None
+        if mac_matches.count() == 1:
+            # there is one, unambigious corresponding asset
+            return mac_matches.first()
+        # there are multiple possible corresponding assets, or none
+        return None
 
     @asset.setter
     def asset(self, value):
@@ -162,7 +158,7 @@ class NetworkEndpoint(models.Model):
         Will clear all suggestions.
         """
         self._user_asset_match = value
-        EndpointSuggestion = apps.get_model('bf_opencore', 'EndpointSuggestion')
+        EndpointSuggestion = apps.get_model("bf_opencore", "EndpointSuggestion")
         EndpointSuggestion.objects.filter(
             network_endpoint=self).delete()
 
@@ -172,9 +168,9 @@ class NetworkEndpoint(models.Model):
 
         Return None if asset has been set, never return assets in blacklist.
         """
-        EndpointSuggestion = apps.get_model('bf_opencore', 'EndpointSuggestion')
+        EndpointSuggestion = apps.get_model("bf_opencore", "EndpointSuggestion")
         return (EndpointSuggestion.objects.filter(network_endpoint=self)
-                .order_by('-confidence'))
+                .order_by("-confidence"))
 
     @property
     def blacklist(self):
@@ -189,7 +185,7 @@ class NetworkEndpoint(models.Model):
         Asset IDs.
         """
         self._asset_match_blacklist = value
-        EndpointSuggestion = apps.get_model('bf_opencore', 'EndpointSuggestion')
+        EndpointSuggestion = apps.get_model("bf_opencore", "EndpointSuggestion")
         EndpointSuggestion.objects.filter(network_endpoint=self,
                                           asset__in=value).delete()
         self.update_suggestions()
@@ -214,7 +210,7 @@ class NetworkEndpoint(models.Model):
                                        asset.network_qset()
                                        .filter(cidr__cidr__net_contains=self
                                                .ipv4_address)
-                                       .exists())
+                                       .exists()),
             },
             {
                 "reason": "Devices on same network",
@@ -230,17 +226,17 @@ class NetworkEndpoint(models.Model):
                                        asset.network_qset()
                                        .filter(cidr__cidr__net_contains=self
                                                .ipv6_address)
-                                       .exists())
+                                       .exists()),
             },
             {
                 "reason": "Shared MAC address range",
-                "value": lambda asset: "{}*".format(str(self.mac_address)[:9]),
+                "value": lambda asset: f"{str(self.mac_address)[:9]}*",
                 "weight": lambda asset: 4,
                 "max_weight": 4,
                 "test": lambda asset: (self.mac_address and asset
                                        .mac_address and
                                        self.mac_address.value >> 24 == asset
-                                       .mac_address.value >> 24)
+                                       .mac_address.value >> 24),
             },
             {
                 "reason": "Shared TCP ports",
@@ -258,8 +254,8 @@ class NetworkEndpoint(models.Model):
                 "test": lambda asset: (not {int(port.strip("/TCP"))
                                             for port in self.receive_ports
                                             if port.endswith("/TCP")}
-                                       .isdisjoint(set(asset.open_ports_tcp)))
-            }
+                                       .isdisjoint(set(asset.open_ports_tcp))),
+            },
         ]
 
         for criteria in matching_criteria:
@@ -267,7 +263,7 @@ class NetworkEndpoint(models.Model):
                 confidence += criteria["weight"](asset)
                 evidence.append({
                     "reason": str(criteria["reason"]),
-                    "value": str(criteria["value"](asset))
+                    "value": str(criteria["value"](asset)),
                 })
 
         return {
@@ -288,14 +284,14 @@ class NetworkEndpoint(models.Model):
         # start at no confidence
         self.max_confidence = 0
 
-        Asset = apps.get_model('bf_opencore', 'Asset')
+        Asset = apps.get_model("bf_opencore", "Asset")
         for asset in (Asset.objects
                       .exclude(id__in=self.blacklist)):
             report = self.compare(asset)
             confidence = int(report["confidence"])
             if confidence:
                 # only record if confidence > 0
-                EndpointSuggestion = apps.get_model('bf_opencore', 'EndpointSuggestion')
+                EndpointSuggestion = apps.get_model("bf_opencore", "EndpointSuggestion")
                 change, _ = EndpointSuggestion.objects.update_or_create(
                     asset=asset, network_endpoint=self)
                 change.confidence = confidence
@@ -315,8 +311,7 @@ class NetworkEndpoint(models.Model):
             raise ValidationError("A MAC or IP address must be provided")
 
     def merge(self, other):
-        """
-        Merge with another NetworkEndpoint.
+        """Merge with another NetworkEndpoint.
 
         If MAC and IP addresses don't conflict, incorporates transmit_ports and
         receive_ports from NetworkEndpoint. If they are unset in self,
@@ -356,7 +351,4 @@ class NetworkEndpoint(models.Model):
         return isinstance(other, self.__class__) and self.pk == other.pk
 
     def __str__(self):  # noqa
-        return "Netflow endpoint with MAC {} and IP {}".format(
-            self.mac_address,
-            (self.ipv4_address, self.ipv6_address)
-        )
+        return f"Netflow endpoint with MAC {self.mac_address} and IP {(self.ipv4_address, self.ipv6_address)}"

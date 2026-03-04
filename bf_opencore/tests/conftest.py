@@ -4,7 +4,6 @@ from collections import namedtuple
 
 import pytest
 
-
 # ---------------------------------------------------------------------------
 # Role-scoped API clients (alias to auth_client when no per-resource perms)
 # ---------------------------------------------------------------------------
@@ -73,16 +72,16 @@ def cfield(cleandb):
     """Prepare some things for reuse: an asset, custom field names, and a custom field value."""
     from bf_opencore import models
 
-    asset = models.Asset.objects.create(hostname='foo.com')
+    asset = models.Asset.objects.create(hostname="foo.com")
     sparkly_field = models.AssetCustomFieldName.objects.create(
-        field_name='sparkliness')
+        field_name="sparkliness")
     shiny_field = models.AssetCustomFieldName.objects.create(
-        field_name='shinyness')
+        field_name="shinyness")
     custom_field = models.AssetCustomField.objects.create(
-        field=shiny_field, asset=asset, value_text='rather dull')
+        field=shiny_field, asset=asset, value_text="rather dull")
     cfield_tuple = namedtuple(
-        'cfield_tuple',
-        ['asset', 'sparkly_field', 'shiny_field', 'custom_field'])
+        "cfield_tuple",
+        ["asset", "sparkly_field", "shiny_field", "custom_field"])
     return cfield_tuple(asset, sparkly_field, shiny_field, custom_field)
 
 
@@ -91,12 +90,12 @@ def asset_vulnerabilities(db):
     """Set up some database objects to test asset-vulnerability relations."""
     from bf_opencore import models
 
-    asset = models.Asset.objects.create(hostname='foo.com')
-    asset_2 = models.Asset.objects.create(hostname='bar.com')
-    models.Vulnerability.objects.create(name='eggs')
-    vulnerability_spam = models.Vulnerability.objects.create(name='spam')
-    vulnerability_red = models.Vulnerability.objects.create(name='red')
-    vulnerability_green = models.Vulnerability.objects.create(name='green')
+    asset = models.Asset.objects.create(hostname="foo.com")
+    asset_2 = models.Asset.objects.create(hostname="bar.com")
+    models.Vulnerability.objects.create(name="eggs")
+    vulnerability_spam = models.Vulnerability.objects.create(name="spam")
+    vulnerability_red = models.Vulnerability.objects.create(name="red")
+    vulnerability_green = models.Vulnerability.objects.create(name="green")
     models.AssetVulnerability.objects.create(vulnerability=vulnerability_red,
                                              asset=asset)
     models.AssetVulnerability.objects.create(vulnerability=vulnerability_green,
@@ -111,24 +110,24 @@ def completables(db):
     """Sample assets and other items to be completed."""
     from bf_opencore import models
 
-    models.Asset.objects.create(mac_address='88:aa:bb:cc:dd:ee')
+    models.Asset.objects.create(mac_address="88:aa:bb:cc:dd:ee")
     models.Asset.objects.create(manufacturer="ACME Inc.",
                                 model="Instant Tunnel",
                                 serial_number="WILE-E-1234")
     models.Asset.objects.create(manufacturer="ACME",
                                 model="Instant Tunnel",
                                 serial_number="RR-6789")
-    w95 = models.Asset.objects.create(os="Windows 95", ip_address='10.2.3.5')
+    w95 = models.Asset.objects.create(os="Windows 95", ip_address="10.2.3.5")
     models.Tag.objects.create(name="ACME products")
     models.Tag.objects.create(name="FooTag")
     barv = models.Vulnerability.objects.create(
-        name='foo', synopsis='Bar Baz Quux')
+        name="foo", synopsis="Bar Baz Quux")
     models.AssetVulnerability.objects.create(asset=w95,
                                              vulnerability=barv)
-    grp = models.Group.objects.create(name='Bargle')
+    grp = models.Group.objects.create(name="Bargle")
     models.AssetGroup.objects.create(asset=w95, group=grp)
-    blorp = models.Network.objects.create(name='BlorpNet')
-    blorp.cidr = ['10.2.3.0/24']
+    blorp = models.Network.objects.create(name="BlorpNet")
+    blorp.cidr = ["10.2.3.0/24"]
     blorp.save()
 
 
@@ -138,14 +137,14 @@ def complete_us(db):
     from bf_opencore import models
 
     mfmods = {
-        'Foo': ['One', 'Two', 'Three'],
-        'Bar': ['Four', 'Five', 'Six'],
+        "Foo": ["One", "Two", "Three"],
+        "Bar": ["Four", "Five", "Six"],
     }
     assets = []
     for manuf, model_list in mfmods.items():
         for model_name in model_list:
             assets.append(
-                models.Asset(manufacturer=manuf, model=model_name)
+                models.Asset(manufacturer=manuf, model=model_name),
             )
     models.Asset.objects.bulk_create(assets)
 
@@ -155,16 +154,16 @@ def asset_groups(db):
     """Set up some assets and groups."""
     from bf_opencore import models
 
-    asset_a = models.Asset.objects.create(hostname='foo.com')
-    asset_b = models.Asset.objects.create(hostname='bar.com')
-    group_red = models.Group.objects.create(name='red')
-    group_green = models.Group.objects.create(name='green')
-    group_yellow = models.Group.objects.create(name='yellow')
+    asset_a = models.Asset.objects.create(hostname="foo.com")
+    asset_b = models.Asset.objects.create(hostname="bar.com")
+    group_red = models.Group.objects.create(name="red")
+    group_green = models.Group.objects.create(name="green")
+    group_yellow = models.Group.objects.create(name="yellow")
     agra = models.AssetGroup.objects.create(group=group_red, asset=asset_a)
     agga = models.AssetGroup.objects.create(group=group_green, asset=asset_a)
     aggb = models.AssetGroup.objects.create(group=group_green, asset=asset_b)
-    ag = namedtuple('AssetGroups',
-                    'aa, ab, gr, gg, gy, agra, agga, aggb')
+    ag = namedtuple("AssetGroups",
+                    "aa, ab, gr, gg, gy, agra, agga, aggb")
     return ag(aa=asset_a, ab=asset_b,
               gr=group_red, gg=group_green, gy=group_yellow,
               agra=agra, agga=agga, aggb=aggb)

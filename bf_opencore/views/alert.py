@@ -1,9 +1,11 @@
 """ViewSet for alerts."""
 
 import logging
+
 from django.utils import timezone
-from rest_framework import viewsets, serializers
+from rest_framework import serializers, viewsets
 from waffle.mixins import WaffleSwitchMixin
+
 from bf_opencore.models import Alert
 
 logger = logging.getLogger(__name__)
@@ -49,14 +51,14 @@ class AlertSerializer(serializers.HyperlinkedModelSerializer):
 
         # Fields that are computed (not stored directly in schema)
         computed_fields = (
-            'url',
-            'asset',
-            'connector',
-            'connectortask',
-            'riskmetrics',
-            'vulnerability',
-            'status',
-            'display_text',
+            "url",
+            "asset",
+            "connector",
+            "connectortask",
+            "riskmetrics",
+            "vulnerability",
+            "status",
+            "display_text",
         )
 
         fields = asset_fields + computed_fields
@@ -82,7 +84,7 @@ class AlertViewSet(WaffleSwitchMixin, viewsets.ModelViewSet):
 
     queryset = Alert.objects.\
         exclude(date_expiration__lt=timezone.now()).\
-        order_by('-date_created')
+        order_by("-date_created")
     serializer_class = AlertSerializer
 
     def list(self, request, *args, **kwargs):
@@ -101,6 +103,6 @@ class AlertViewSet(WaffleSwitchMixin, viewsets.ModelViewSet):
             filter(date_read__isnull=False).\
             count()
         response = super().list(request, *args, **kwargs)
-        response.data['count_unread'] = count_unread
-        response.data['count_read'] = count_read
+        response.data["count_unread"] = count_unread
+        response.data["count_read"] = count_read
         return response

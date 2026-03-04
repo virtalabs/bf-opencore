@@ -3,9 +3,12 @@
 import io
 import json
 import urllib
+
 import pytest
 from django.conf import settings as django_settings
+
 from bf_opencore import models
+
 from .utils import AttrDict
 
 
@@ -18,11 +21,11 @@ def qparam(pardict):
 
 def test_upload_bad(asset_edit_client, media_root):
     """Upload that doesn't contain a file."""
-    resp = asset_edit_client.post('/api/attachments/',
-                                  json.dumps({'foo': 'bar'}),
-                                  content_type='application/json')
+    resp = asset_edit_client.post("/api/attachments/",
+                                  json.dumps({"foo": "bar"}),
+                                  content_type="application/json")
     assert resp.status_code == 400
-    assert str(resp.data['file'][0]) == 'No file was submitted.'
+    assert str(resp.data["file"][0]) == "No file was submitted."
 
 
 @pytest.mark.parametrize(
@@ -80,28 +83,28 @@ def test_upload_variants(asset_edit_client, media_root, variant):
 
 def test_get_attachments(asset_edit_client, media_root):
     """Get the attachment object(s) we just uploaded (list)."""
-    resp = asset_edit_client.post('/api/attachments/',
-                                  {'file': io.BytesIO(b'bar')})
+    resp = asset_edit_client.post("/api/attachments/",
+                                  {"file": io.BytesIO(b"bar")})
     assert resp.status_code == 201
-    resp = asset_edit_client.get('/api/attachments/')
+    resp = asset_edit_client.get("/api/attachments/")
     assert resp.status_code == 200
-    assert resp.data['count'] == 1
-    assert len(resp.data['results']) == 1
+    assert resp.data["count"] == 1
+    assert len(resp.data["results"]) == 1
 
 
 def test_get_attachment(asset_edit_client, media_root):
     """Get the attachment object we just uploaded (detail)."""
-    resp = asset_edit_client.post('/api/attachments/',
-                                  {'file': io.BytesIO(b'bar')})
+    resp = asset_edit_client.post("/api/attachments/",
+                                  {"file": io.BytesIO(b"bar")})
     assert resp.status_code == 201
-    att_id = resp.data['id']
-    resp = asset_edit_client.get('/api/attachments/{}/'.format(att_id))
+    att_id = resp.data["id"]
+    resp = asset_edit_client.get(f"/api/attachments/{att_id}/")
     assert resp.status_code == 200
     attachment = AttrDict(resp.data)
     assert attachment.id == att_id
 
 
-MEDIA_URL_PREFIX = f'http://testserver{django_settings.MEDIA_URL}attachments/'
+MEDIA_URL_PREFIX = f"http://testserver{django_settings.MEDIA_URL}attachments/"
 
 
 @pytest.mark.parametrize(
@@ -120,7 +123,7 @@ def test_get_attachment_file_url(asset_edit_client, media_root, endpoint_style):
     resp = asset_edit_client.post("/api/attachments/", {"file": io.BytesIO(b"bar")})
     att_id = resp.data["id"]
     if endpoint_style == "detail":
-        resp = asset_edit_client.get("/api/attachments/{}/".format(att_id))
+        resp = asset_edit_client.get(f"/api/attachments/{att_id}/")
         attachment = AttrDict(resp.data)
     else:
         resp = asset_edit_client.get("/api/attachments/")
@@ -130,14 +133,14 @@ def test_get_attachment_file_url(asset_edit_client, media_root, endpoint_style):
 
 def test_delete_attachment(asset_edit_client, media_root):
     """Delete the attachment object we just uploaded (detail)."""
-    resp = asset_edit_client.post('/api/attachments/',
-                                  {'file': io.BytesIO(b'bar')})
-    att_id = resp.data['id']
-    resp = asset_edit_client.delete('/api/attachments/{}/'.format(att_id))
+    resp = asset_edit_client.post("/api/attachments/",
+                                  {"file": io.BytesIO(b"bar")})
+    att_id = resp.data["id"]
+    resp = asset_edit_client.delete(f"/api/attachments/{att_id}/")
     assert resp.status_code == 204
-    resp = asset_edit_client.get('/api/attachments/')
+    resp = asset_edit_client.get("/api/attachments/")
     assert resp.status_code == 200
-    assert resp.data['count'] == 0
+    assert resp.data["count"] == 0
 
 
 @pytest.mark.xfail(raises=AssertionError)
@@ -149,8 +152,8 @@ def test_upload_attachment_no_manuf_no_mod(asset_edit_client, media_root):
       one passes, many other tests will fail (since they rely on the
       current loophole.)
     """
-    resp = asset_edit_client.post('/api/attachments/',
-                                  {'file': io.BytesIO(b'bar')})
+    resp = asset_edit_client.post("/api/attachments/",
+                                  {"file": io.BytesIO(b"bar")})
     assert resp.status_code == 403
 
 
@@ -160,27 +163,27 @@ def test_upload_attachment_no_manuf_yes_mod(asset_edit_client, media_root):
 
     NOTE: this currently fails; we *are* allowed to upload such attachments.
     """
-    resp = asset_edit_client.post('/api/attachments/', {
-        'file': io.BytesIO(b'bar'),
-        'model': "Instant Tunnel",
+    resp = asset_edit_client.post("/api/attachments/", {
+        "file": io.BytesIO(b"bar"),
+        "model": "Instant Tunnel",
     })
     assert resp.status_code == 403
 
 
 def test_get_attachment_manuf_model(asset_edit_client, media_root):
     """Get attachment based on manufacturer and model."""
-    resp = asset_edit_client.post('/api/attachments/', {
-        'file': io.BytesIO(b'bar'),
-        'manufacturer': "ACME, Inc.",
-        'model': "Instant Tunnel",
+    resp = asset_edit_client.post("/api/attachments/", {
+        "file": io.BytesIO(b"bar"),
+        "manufacturer": "ACME, Inc.",
+        "model": "Instant Tunnel",
     })
     assert resp.status_code == 201
-    resp = asset_edit_client.get('/api/attachments/' + '?' + qparam({
-        'manufacturer__iexact': "ACME, Inc.",
-        'model__iexact': "Instant Tunnel",
+    resp = asset_edit_client.get("/api/attachments/" + "?" + qparam({
+        "manufacturer__iexact": "ACME, Inc.",
+        "model__iexact": "Instant Tunnel",
     }))
     assert resp.status_code == 200
-    assert resp.data['count'] == 1
+    assert resp.data["count"] == 1
 
 
 @pytest.mark.parametrize(
@@ -210,7 +213,7 @@ def test_get_attachment_manuf_model(asset_edit_client, media_root):
     ],
 )
 def test_get_attachment_manuf_model_filters(
-    asset_edit_client, media_root, upload_manuf, upload_model, filter_params, expected_count
+    asset_edit_client, media_root, upload_manuf, upload_model, filter_params, expected_count,
 ):
     """Upload with manufacturer/model; filter with different params; assert count."""
     body = {"file": io.BytesIO(b"bar"), "manufacturer": upload_manuf}
@@ -225,29 +228,29 @@ def test_get_attachment_manuf_model_filters(
 
 def test_disappearing_attachment(asset_edit_client, media_root):
     """Should still be able to respond if attachment goes missing."""
-    resp = asset_edit_client.post('/api/attachments/', {
-        'file': io.BytesIO(b'bar'),
-        'manufacturer': "ACME, Inc.",
+    resp = asset_edit_client.post("/api/attachments/", {
+        "file": io.BytesIO(b"bar"),
+        "manufacturer": "ACME, Inc.",
     })
     assert resp.status_code == 201
-    att_url = resp.data['file']
-    filename = urllib.parse.urlparse(att_url).path.split('/')[-1]
+    att_url = resp.data["file"]
+    filename = urllib.parse.urlparse(att_url).path.split("/")[-1]
     fs_path = media_root / "attachments" / filename
     assert fs_path.exists()
 
     # file should be gettable
-    resp = asset_edit_client.get('/api/attachments/' + '?' + qparam({
-        'manufacturer__iexact': "ACME, Inc.",
+    resp = asset_edit_client.get("/api/attachments/" + "?" + qparam({
+        "manufacturer__iexact": "ACME, Inc.",
     }))
     assert resp.status_code == 200
-    assert resp.data['count'] == 1
-    assert resp.data['results'][0]['size_bytes'] == 3
+    assert resp.data["count"] == 1
+    assert resp.data["results"][0]["size_bytes"] == 3
 
     # now delete the file; should still be gettable w/ HTTP 200
     fs_path.unlink()
-    resp = asset_edit_client.get('/api/attachments/' + '?' + qparam({
-        'manufacturer__iexact': "ACME, Inc.",
+    resp = asset_edit_client.get("/api/attachments/" + "?" + qparam({
+        "manufacturer__iexact": "ACME, Inc.",
     }))
     assert resp.status_code == 200
-    assert resp.data['count'] == 1
-    assert resp.data['results'][0]['size_bytes'] is None
+    assert resp.data["count"] == 1
+    assert resp.data["results"][0]["size_bytes"] is None

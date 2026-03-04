@@ -5,16 +5,16 @@ To accompany the model Asset in asset.py (in this folder).
 
 import logging
 import statistics
+from collections import defaultdict
 from functools import reduce
 from operator import or_
-from collections import defaultdict
 
+from django.apps import apps
+from django.core.exceptions import FieldError, ValidationError
 from django.db import models
 from django.db.models import Q
 from django.db.models.functions import Coalesce
-from django.core.exceptions import FieldError, ValidationError
 
-from django.apps import apps
 from bf_opencore.utils import Created
 
 from .network import Network
@@ -29,7 +29,7 @@ class AssetManager(models.Manager):
         """Rescore all assets."""
         # TODO: Implement after we have a generalized algorithm for risk scoring
         raise NotImplementedError("Rescore all is not implemented")
-        RiskFactor = apps.get_model('bf_opencore', 'RiskFactor')
+        RiskFactor = apps.get_model("bf_opencore", "RiskFactor")
         RiskFactor.objects.normalize_weights()  # Abundance of caution
         summaries = []
         remediable_risk_sum = defaultdict(int)
@@ -43,19 +43,19 @@ class AssetManager(models.Manager):
             # Eng desc of why and what do
             for entry in summary:
                 # Check to see if this stuff is remediable
-                if (entry['user_remediable'] == 'True' and
-                        entry['contribution_raw'] > 0):
-                    rf_id = entry['rf_id']
+                if (entry["user_remediable"] == "True" and
+                        entry["contribution_raw"] > 0):
+                    rf_id = entry["rf_id"]
                     # Update the scores
                     # Note: We divide by 2 to get the TOTAL contribution,
                     # rather than just the contribution to cli or sec
                     remediable_risk_sum[rf_id] += (
-                        entry['contribution_raw'] / 2)
+                        entry["contribution_raw"] / 2)
                     # Update the number of remediable assets
                     remediable_asset_count[rf_id] += 1
         # We now have the user_remediable information
         # Now, we just need to update it in risk factor
-        RiskFactor = apps.get_model('bf_opencore', 'RiskFactor')
+        RiskFactor = apps.get_model("bf_opencore", "RiskFactor")
         for key in remediable_risk_sum:
             rf = RiskFactor.objects.get(id=key)
             rf.remediable_asset_count = remediable_asset_count[key]
@@ -63,8 +63,7 @@ class AssetManager(models.Manager):
             rf.save()
 
     def get_by_priority(self, **kwargs):
-        """
-        Get an Asset, checking kwargs in priority order and ignoring the rest.
+        """Get an Asset, checking kwargs in priority order and ignoring the rest.
 
         "Priority" here refers to how *exactly* a certain lookup key will
         identify an individual asset. For example, an Asset record bearing a
@@ -99,9 +98,9 @@ class AssetManager(models.Manager):
             """
             return False if (val is None) or (val == "") else True
 
-        mac_kwarg = kwargs.pop('mac_address', None)
-        ip_kwarg = kwargs.pop('ip_address', None)
-        ekeys = [k for k in kwargs if k.startswith('external_keys')]
+        mac_kwarg = kwargs.pop("mac_address", None)
+        ip_kwarg = kwargs.pop("ip_address", None)
+        ekeys = [k for k in kwargs if k.startswith("external_keys")]
         if not ekeys:
             ekey_fn, ekey_kwarg = None, None
         elif len(ekeys) == 1:
@@ -114,16 +113,16 @@ class AssetManager(models.Manager):
             # and `external_keys__tms` in the same call (it would make no
             # sense to do so, anyway.)
             raise FieldError(
-                "Multiple JSONField keys are not allowed: {}".format(ekeys))
+                f"Multiple JSONField keys are not allowed: {ekeys}")
 
         if not any(valid_val(v) for v in [ekey_kwarg, mac_kwarg, ip_kwarg]):
             raise FieldError(
                 "No lookup field provided.  Got: {}.  Expected 1 or more: {}."
                 .format(kwargs.keys(),
-                        ('external_keys', 'mac_address', 'ip_address')))
+                        ("external_keys", "mac_address", "ip_address")))
 
         # Perform lookup in priority order.
-        Asset = apps.get_model('bf_opencore', 'Asset')
+        Asset = apps.get_model("bf_opencore", "Asset")
         if valid_val(ekey_kwarg):
             try:
                 asset = super().get(**{ekey_fn: ekey_kwarg})
@@ -174,8 +173,7 @@ class AssetManager(models.Manager):
         raise Asset.DoesNotExist()
 
     def update_or_create_by_priority(self, defaults=None, **kwargs):
-        """
-        Update or create an asset using get_by_priority().
+        """Update or create an asset using get_by_priority().
 
         Returns a tuple of (object, created), where object is the created or
         updated object and created is a boolean specifying whether a new object
@@ -196,7 +194,7 @@ class AssetManager(models.Manager):
         _validate_external_keys(defaults)
 
         # Either get or create an asset using kwargs
-        Asset = apps.get_model('bf_opencore', 'Asset')
+        Asset = apps.get_model("bf_opencore", "Asset")
         try:
             asset = self.get_by_priority(**kwargs)
             created = Created.UPDATED
@@ -230,9 +228,9 @@ class AssetManager(models.Manager):
         # Update foreign key relationships
         if created:
             for k, v in kwargs_fk.items():
-                asset.update_or_create_fk_field(k, v, reason='created')
+                asset.update_or_create_fk_field(k, v, reason="created")
         for k, v in defaults_fk.items():
-            asset.update_or_create_fk_field(k, v, reason='updated')
+            asset.update_or_create_fk_field(k, v, reason="updated")
 
         # Avoid later errors when updating the history on this asset.  If you
         # try to hist_utils.update_change_reason(asset, reason) on an asset
@@ -282,7 +280,7 @@ class AssetQuerySet(models.QuerySet):
             # This happens if cidr_disjucnts is empty.  In this case we
             # return a special queryset that never returns anything, but
             # otherwise behaves in a robust way.
-            Asset = apps.get_model('bf_opencore', 'Asset')
+            Asset = apps.get_model("bf_opencore", "Asset")
             return Asset.objects.none()
         return qset
 
@@ -300,8 +298,8 @@ class AssetQuerySet(models.QuerySet):
         # First, remove all assets that don't have an IP address.
         nn_qset = self.filter(~Q(ip_address=None))
         # Then, for each CIDR we've registered, remove any asset that matches.
-        Asset = apps.get_model('bf_opencore', 'Asset')
-        Cidr = apps.get_model('bf_opencore', 'Cidr')
+        Asset = apps.get_model("bf_opencore", "Asset")
+        Cidr = apps.get_model("bf_opencore", "Cidr")
         for c in Cidr.objects.all():
             nn_qset &= Asset.objects.filter(
                 ~Q(ip_address__net_contained_or_equal=c.cidr))
@@ -334,10 +332,10 @@ class AssetQuerySet(models.QuerySet):
             not_pct = 100.0 - pct
 
         return {
-            'num': num,
-            'not': (self.count() - num),
-            'pct': pct,
-            'not_pct': not_pct,
+            "num": num,
+            "not": (self.count() - num),
+            "pct": pct,
+            "not_pct": not_pct,
         }
 
     def risk_histogram(self):
@@ -409,32 +407,32 @@ class AssetQuerySet(models.QuerySet):
         else:
             median = statistics.median(a.risk_score for a in notnull)
         s = dict(
-            sum=self.aggregate(models.Sum('risk_score'))['risk_score__sum'],
-            mean=self.aggregate(models.Avg('risk_score'))['risk_score__avg'],
-            max=self.aggregate(models.Max('risk_score'))['risk_score__max'],
-            min=self.aggregate(models.Min('risk_score'))['risk_score__min'],
+            sum=self.aggregate(models.Sum("risk_score"))["risk_score__sum"],
+            mean=self.aggregate(models.Avg("risk_score"))["risk_score__avg"],
+            max=self.aggregate(models.Max("risk_score"))["risk_score__max"],
+            min=self.aggregate(models.Min("risk_score"))["risk_score__min"],
             median=median,
 
             sec_sum=self.aggregate(
-                val=Coalesce(models.Sum('risk_score_sec'), 0))['val'],
+                val=Coalesce(models.Sum("risk_score_sec"), 0))["val"],
             sec_mean=self.aggregate(
-                val=Coalesce(models.Avg('risk_score_sec'), 0))['val'],
+                val=Coalesce(models.Avg("risk_score_sec"), 0))["val"],
             pri_sum=self.aggregate(
-                val=Coalesce(models.Sum('risk_score_pri'), 0))['val'],
+                val=Coalesce(models.Sum("risk_score_pri"), 0))["val"],
             pri_mean=self.aggregate(
-                val=Coalesce(models.Avg('risk_score_pri'), 0))['val'],
+                val=Coalesce(models.Avg("risk_score_pri"), 0))["val"],
             cli_sum=self.aggregate(
-                val=Coalesce(models.Sum('risk_score_cli'), 0))['val'],
+                val=Coalesce(models.Sum("risk_score_cli"), 0))["val"],
             cli_mean=self.aggregate(
-                val=Coalesce(models.Avg('risk_score_cli'), 0))['val'],
+                val=Coalesce(models.Avg("risk_score_cli"), 0))["val"],
             likelihood_sum=self.aggregate(
-                val=Coalesce(models.Sum('risk_score_likelihood'), 0))['val'],
+                val=Coalesce(models.Sum("risk_score_likelihood"), 0))["val"],
             likelihood_mean=self.aggregate(
-                val=Coalesce(models.Avg('risk_score_likelihood'), 0))['val'],
+                val=Coalesce(models.Avg("risk_score_likelihood"), 0))["val"],
             impact_sum=self.aggregate(
-                val=Coalesce(models.Sum('risk_score_impact'), 0))['val'],
+                val=Coalesce(models.Sum("risk_score_impact"), 0))["val"],
             impact_mean=self.aggregate(
-                val=Coalesce(models.Avg('risk_score_impact'), 0))['val'],
+                val=Coalesce(models.Avg("risk_score_impact"), 0))["val"],
         )
         return s
 
@@ -449,14 +447,14 @@ class AssetQuerySet(models.QuerySet):
         raise NotImplementedError("Risk factor statistics is not implemented")
         rf_stats = []
 
-        RiskFactor = apps.get_model('bf_opencore', 'RiskFactor')
-        for fac_type in ['sec', 'pri', 'cli']:
+        RiskFactor = apps.get_model("bf_opencore", "RiskFactor")
+        for fac_type in ["sec", "pri", "cli"]:
             rf_substats = []
             for rf in RiskFactor.objects.filter(factor_type=fac_type):
                 rf_substats.append(rf.asset_risk_factor_statistics(self))
-                assert 'num_affected' in rf_substats[-1]
+                assert "num_affected" in rf_substats[-1]
             rf_substats.sort(
-                key=lambda x: (x['weight'] > 0.0, x['num_affected']),
+                key=lambda x: (x["weight"] > 0.0, x["num_affected"]),
                 reverse=True)
             rf_stats.extend(rf_substats)
 
@@ -464,7 +462,7 @@ class AssetQuerySet(models.QuerySet):
 
     def _asset_vuln_query(self):
         """Queryset of asset_vulnerabilities attached to these assets."""
-        AssetVulnerability = apps.get_model('bf_opencore', 'AssetVulnerability')
+        AssetVulnerability = apps.get_model("bf_opencore", "AssetVulnerability")
         return AssetVulnerability.objects.filter(asset__in=self)
 
     def vulnerability_statistics(self):
@@ -475,10 +473,10 @@ class AssetQuerySet(models.QuerySet):
         stats["open"] = avulns.open().count()
         stats["remediated"] = avulns.remediated().count()
         stats["accepted"] = avulns.accepted().count()
-        stats["avg_dwell_open"] = avulns.open().avg_dwell()['avg_dwell']
+        stats["avg_dwell_open"] = avulns.open().avg_dwell()["avg_dwell"]
         # NOTE: 'null' values are ignored when averaging
         avg_dwell = avulns.avg_dwell()
-        avg_dwell.pop('avg_dwell')  # Only want accepted and remediated
+        avg_dwell.pop("avg_dwell")  # Only want accepted and remediated
         stats.update(avg_dwell)
         return stats
 
@@ -493,7 +491,7 @@ def _unflatten_json_field_helper(name, value):
         return {name: value}
 
     # Recursive step
-    key, value_str = name.split('__', maxsplit=1)  # only split on first "__"
+    key, value_str = name.split("__", maxsplit=1)  # only split on first "__"
     return {key: _unflatten_json_field_helper(value_str, value)}
 
 
@@ -506,8 +504,7 @@ def _unflatten_json_field(field, value):
 
 
 def _unflatten_json_params(params):
-    """
-    Convert JSON field notation with double underscore to nested dict.
+    """Convert JSON field notation with double underscore to nested dict.
 
     Example:
     Input: {'external_keys__tms': 'X'}
@@ -516,16 +513,17 @@ def _unflatten_json_params(params):
     Example:
     Input: {'external_keys__tms': 'X', 'name': 'Drew'}
     Output: {'external_keys': {'tms': 'X'}, 'name': 'Drew'}
+
     """
     if params is None:
         return dict()
 
     output = {}
-    Asset = apps.get_model('bf_opencore', 'Asset')
+    Asset = apps.get_model("bf_opencore", "Asset")
     for k, v in params.items():
         field, value = _unflatten_json_field(k, v)
         fieldtype = Asset._meta.get_field(field).get_internal_type()
-        if fieldtype == 'JSONField':
+        if fieldtype == "JSONField":
             # Use unflattened values for a JSONField
             if field not in output:
                 output[field] = value
@@ -573,8 +571,8 @@ def _partition_fk_params(params):
     def is_fk_field(name):
         """Return True if name refers to a foreign key relationship."""
         # Extract 'asset_risk_factors' from 'asset_risk_factors__tms'
-        Asset = apps.get_model('bf_opencore', 'Asset')
-        basename = name.split('__')[0]
+        Asset = apps.get_model("bf_opencore", "Asset")
+        basename = name.split("__")[0]
         fieldtype = Asset._meta.get_field(basename).get_internal_type()
         return fieldtype == "ForeignKey"
 
@@ -618,8 +616,7 @@ def _validate_external_keys(params):
         for k, v in value.items():
             if v is None or v == "":
                 raise ValidationError(
-                    "External keys may not be empty or None: {} {}={}".format(
-                        field, k, v))
+                    f"External keys may not be empty or None: {field} {k}={v}")
 
 
 def _validate_external_keys_overlap(asset, kwargs, defaults):
@@ -627,18 +624,11 @@ def _validate_external_keys_overlap(asset, kwargs, defaults):
     overlap = _external_keys_overlap(asset, defaults)
     if overlap:
         raise ValidationError(
-            "Existing asset {asset} matched parameters {kwargs}. "
-            "This asset has external_keys={external_keys} "
-            "and mac_address={mac_address}. "
-            "An update would overwrite external_keys {overlap}. "
-            "Refuse to overwrite."
-            "".format(
-                asset=asset,
-                kwargs=kwargs,
-                external_keys=asset.external_keys,
-                mac_address=asset.mac_address,
-                overlap=overlap,
-            )
+            f"Existing asset {asset} matched parameters {kwargs}. "
+            f"This asset has external_keys={asset.external_keys} "
+            f"and mac_address={asset.mac_address}. "
+            f"An update would overwrite external_keys {overlap}. "
+            "Refuse to overwrite.",
         )
 
 

@@ -2,9 +2,11 @@
 
 from rest_framework import serializers, viewsets
 from waffle.mixins import WaffleSwitchMixin
-from bf_opencore.models import NetworkEndpoint, Asset, EndpointSuggestion
-from .utils import PaginateRelationsMixin
+
+from bf_opencore.models import Asset, EndpointSuggestion, NetworkEndpoint
+
 from .asset import AssetSerializer
+from .utils import PaginateRelationsMixin
 
 
 class EndpointSuggestionSerializer(serializers.ModelSerializer):
@@ -12,8 +14,9 @@ class EndpointSuggestionSerializer(serializers.ModelSerializer):
 
     asset = AssetSerializer()
 
-    class Meta:  # noqa
+    class Meta:
         """Wire this serializer to a model."""
+
         model = EndpointSuggestion
         fields = (tuple(f.name for f
                         in model._meta.fields))
@@ -28,13 +31,13 @@ class NetworkEndpointSerializer(serializers.HyperlinkedModelSerializer):
     blacklist = serializers.ListField(
         child=serializers.IntegerField(min_value=0))
 
-    class Meta:  # noqa
+    class Meta:
         """Wire this serializer to a model."""
 
         model = NetworkEndpoint
         fields = (tuple(f.name for f
                         in model._meta.fields
-                        if not f.name.startswith('_')) +
+                        if not f.name.startswith("_")) +
                   ("asset_id", "asset", "suggestions", "blacklist"))
 
     def validate_asset_id(self, value):
@@ -59,7 +62,7 @@ class NetworkEndpointSerializer(serializers.HyperlinkedModelSerializer):
     def update(self, instance, validated_data):
         """Update a NetworkEndpoint, assigning Asset by asset_id."""
         definite_asset = validated_data.pop("asset", None)
-        super(NetworkEndpointSerializer, self).update(instance, validated_data)
+        super().update(instance, validated_data)
         if definite_asset:
             asset = Asset.objects.get(id=definite_asset["id"])
             instance.asset = asset
@@ -72,5 +75,5 @@ class NetworkEndpointViewSet(WaffleSwitchMixin, PaginateRelationsMixin, viewsets
 
     waffle_switch = "core"
 
-    queryset = NetworkEndpoint.objects.order_by('-max_confidence')
+    queryset = NetworkEndpoint.objects.order_by("-max_confidence")
     serializer_class = NetworkEndpointSerializer

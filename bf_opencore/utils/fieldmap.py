@@ -1,5 +1,4 @@
-"""
-Map BlueFlow ORM fields to external database column names.
+"""Map BlueFlow ORM fields to external database column names.
 
 For example, the names of the fields (AKA table column names) in a customer's
 inventory database are probably different that the names of the columns in
@@ -7,16 +6,17 @@ BlueFlow's tables (its internal ORM).
 """
 
 import ipaddress
+
 import netaddr
-from bf_opencore.exceptions import IntegrationTaskError
 from django.apps import apps
 
+from bf_opencore.exceptions import IntegrationTaskError
 
-class FieldMap():
-    """
-    Dictionary with a layer of indirection for the keys.
 
-    EXAMPLE
+class FieldMap:
+    """Dictionary with a layer of indirection for the keys.
+
+    Example:
     data = {
         "MAC_2": "",
         "MAC_1": "00:00:00:00:00:00",
@@ -28,11 +28,11 @@ class FieldMap():
         },
     indirect = FieldMap(data, keymap)
     assert indirect['mac_address'] == "00:00:00:00:00:00"
+
     """
 
     def __init__(self, data, keymap):
-        """
-        Create a new FieldMap from two Dictionaries.
+        """Create a new FieldMap from two Dictionaries.
 
         - data is dictionary of external_key -> value pairs
         - keymap maps an orm_key to an external_key or [list of external_key]
@@ -52,10 +52,9 @@ class FieldMap():
         self.forward_map_all()   # Modified self._joined
 
     def normalize_keymap(self):
-        """
-        Coerce self._keymap to a dict where each value is a list.
+        """Coerce self._keymap to a dict where each value is a list.
 
-        EXAMPLE:
+        Example:
         self._keymap before:
         {
             'mac_address': ['MAC_1', 'MAC_2'],
@@ -66,6 +65,7 @@ class FieldMap():
             'mac_address': ['MAC_1', 'MAC_2'],
             'ip_address': ['IP'],
         }
+
         """
         new_keymap = {}  # Can't change a dict while iterating over it, so copy
         for key, value in self._keymap.items():
@@ -79,23 +79,21 @@ class FieldMap():
 
     @staticmethod
     def validate_orm_keys(keymap):
-        """
-        Validate keymap keys against Asset fields.
+        """Validate keymap keys against Asset fields.
 
         This method exists so that we can have fail-fast behavior.
         """
-        Asset = apps.get_model('bf_opencore', 'Asset')
+        Asset = apps.get_model("bf_opencore", "Asset")
         for orm_key in keymap.keys():
             if not Asset.is_valid_field_name(orm_key):
                 raise IntegrationTaskError(
-                    "'{}' key in FieldMap".format(orm_key) +
-                    " does not match any Asset field"
+                    f"'{orm_key}' key in FieldMap"
+                    " does not match any Asset field",
                 )
 
     @staticmethod
     def unique_keymap_values(keymap):
-        """
-        Return a unique list of values from a keymap.
+        """Return a unique list of values from a keymap.
 
         This method exists for the database to use later to speed up SQL
         queries.  It will only query for column names mentioned in a
@@ -127,22 +125,20 @@ class FieldMap():
                 # External keys must be strings
                 if not isinstance(extkey, str):
                     raise IntegrationTaskError(
-                        "keymap value '{}': ".format(extkey) +
-                        "Expected a string.  Got {}.".format(
-                            type(extkey).__name__)
+                        f"keymap value '{extkey}': "
+                        f"Expected a string.  Got {type(extkey).__name__}.",
                     )
 
                 # External keys must map to a data key
                 if extkey not in self._data.keys():
                     raise IntegrationTaskError(
-                        "keymap value '{}' ".format(extkey) +
+                        f"keymap value '{extkey}' " +
                         "does not map to a data key '{}'".format(
-                            ", ".join(self._data.keys()))
+                            ", ".join(self._data.keys())),
                     )
 
     def forward_map_all(self):
-        """
-        Map every key in the keymap to a value from the data.
+        """Map every key in the keymap to a value from the data.
 
         If any key in the keymap that does not map to a data value, raise a
         IntegrationTaskError.  Note that this means some data values may be
@@ -153,8 +149,7 @@ class FieldMap():
             self._joined[orm_key] = self.forward_map(orm_key)
 
     def forward_map(self, orm_key):
-        """
-        Map ORM key to external data value.
+        """Map ORM key to external data value.
 
         Assumes that every key in the keymap successfully maps to a data value.
         Successful mapping was already checked by self.validate() in the
@@ -197,7 +192,7 @@ class FieldMap():
                     continue
 
             # Ignore anything that Django's ORM type system doesn't like
-            Asset = apps.get_model('bf_opencore', 'Asset')
+            Asset = apps.get_model("bf_opencore", "Asset")
             if not Asset.is_valid_field_value(orm_key, value):
                 continue
 
@@ -212,8 +207,7 @@ class FieldMap():
         return self._joined
 
     def __getitem__(self, orm_key):
-        """
-        Return the mapped value of an internal field name.
+        """Return the mapped value of an internal field name.
 
         Raise IntegrationTaskError if not found.
         """
@@ -221,7 +215,7 @@ class FieldMap():
             return self._joined[orm_key]
         except KeyError:
             raise IntegrationTaskError(
-                "orm key '{}' not in FieldMap".format(orm_key)
+                f"orm key '{orm_key}' not in FieldMap",
             )
 
     def __repr__(self):
@@ -234,8 +228,7 @@ class FieldMap():
 
 
 def valid_mac_address(mac_address):
-    """
-    Return cleaned MAC string if mac_address is "reasonable", otherwise None.
+    """Return cleaned MAC string if mac_address is "reasonable", otherwise None.
 
     "Reasonable" means a valid EUI 48 address and not an integer.
     """
@@ -271,8 +264,7 @@ def valid_mac_address(mac_address):
 
 
 def valid_ip_address(ip_address):
-    """
-    Return cleaned IP string if ip "reasonable", otherwise return None.
+    """Return cleaned IP string if ip "reasonable", otherwise return None.
 
     "Reasonable" means likely to correspond to a real thing on a real
     network, i.e., doesn't violate common numbering rules.
@@ -333,7 +325,7 @@ def valid_ip_address(ip_address):
 
     # This is reserved for hosts that don't know their address and use BOOTP or
     # DHCP protocols to determine their addresses.
-    if str(iface.network) == '0.0.0.0/0':
+    if str(iface.network) == "0.0.0.0/0":
         return None
 
     # All checks pass

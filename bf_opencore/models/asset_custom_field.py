@@ -10,6 +10,7 @@ both Asset and AssetCustomFieldName.
 """
 
 import logging
+
 from django.db import models
 from django.utils import timezone
 from simple_history.models import HistoricalRecords
@@ -29,22 +30,21 @@ class AssetCustomFieldName(models.Model):
     """
 
     DISPLAY_TYPES = (
-        ('text', 'Short text field'),
-        ('textarea', 'Multi-line text field'),
+        ("text", "Short text field"),
+        ("textarea", "Multi-line text field"),
         # 'markdown_textarea',
         # 'checkbox',
     )
 
     field_name = models.CharField(max_length=126, unique=True)
     display_type = models.TextField(null=False, choices=DISPLAY_TYPES,
-                                    default='text')
+                                    default="text")
     enabled = models.BooleanField(default=True)
     date_added = models.DateTimeField(default=timezone.now)
 
     def __str__(self):
         """Return a string representation of this AssetCustomFieldName."""
-        return '{} (type={}, enabled={})'.format(
-            self.field_name, self.display_type, self.enabled)
+        return f"{self.field_name} (type={self.display_type}, enabled={self.enabled})"
 
     @property
     def num_assets(self):
@@ -54,17 +54,17 @@ class AssetCustomFieldName(models.Model):
 class AssetCustomField(models.Model):
     """Holds Custom field values."""
 
-    asset = models.ForeignKey('Asset', on_delete=models.CASCADE,
-                              related_name='asset_custom_fields')
-    field = models.ForeignKey('AssetCustomFieldName', on_delete=models.CASCADE)
+    asset = models.ForeignKey("Asset", on_delete=models.CASCADE,
+                              related_name="asset_custom_fields")
+    field = models.ForeignKey("AssetCustomFieldName", on_delete=models.CASCADE)
     value_text = models.TextField(blank=True, null=True)
     date_added = models.DateTimeField(default=timezone.now)
 
     history = HistoricalRecords()
 
     class Meta:  # noqa
-        unique_together = ('asset', 'field')
+        unique_together = ("asset", "field")
 
     def __str__(self):
         """Return a string representation of this AssetCustomField."""
-        return '({})'.format(self.field.field_name)
+        return f"({self.field.field_name})"

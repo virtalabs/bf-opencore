@@ -1,12 +1,12 @@
 """Joint table for assets and vulns."""
-from rest_framework import viewsets, serializers
+from rest_framework import serializers, viewsets
 from rest_framework.fields import IntegerField
 from waffle.mixins import WaffleSwitchMixin
 
 from bf_opencore.models import AssetTag
+
 from .tag import TagSerializer
-from .utils import HugeLimitOffsetPagination
-from .utils import ChangeReasonMixin
+from .utils import ChangeReasonMixin, HugeLimitOffsetPagination
 
 
 class AssetTagSerializer(serializers.HyperlinkedModelSerializer):
@@ -20,15 +20,15 @@ class AssetTagSerializer(serializers.HyperlinkedModelSerializer):
     class Meta:  # noqa
         model = AssetTag
         fields = (
-            'id',
-            'asset_id',
-            'tag_id',
-            'date_added',
-            'provenance',
+            "id",
+            "asset_id",
+            "tag_id",
+            "date_added",
+            "provenance",
 
             # Fields that are created (not stored directly in schema)
-            'tag',
-            'url',
+            "tag",
+            "url",
         )
 
 

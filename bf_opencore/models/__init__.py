@@ -2,33 +2,33 @@
 
 from .alert import Alert
 from .asset import Asset
-from .asset_custom_field import AssetCustomFieldName, AssetCustomField
+from .asset_custom_field import AssetCustomField, AssetCustomFieldName
 from .attachment import Attachment
-from .group import Group, AssetGroup
-from .tag import Tag, AssetTag
+from .group import AssetGroup, Group
 from .network import Cidr, Network, SavedSearch
-from .network_endpoint import NetworkEndpoint, EndpointSuggestion
+from .network_endpoint import EndpointSuggestion, NetworkEndpoint
 from .pulse import PulseFeedItem
 from .scan import Scan
-from .vulnerability import Vulnerability, AssetVulnerability
+from .tag import AssetTag, Tag
+from .vulnerability import AssetVulnerability, Vulnerability
 
 __all__ = [
-    'Alert',
-    'Asset',
-    'AssetCustomFieldName',
-    'AssetCustomField',
-    'Attachment',
-    'PulseFeedItem',
-    'Scan',
-    'Vulnerability',
-    'AssetVulnerability',
-    'Group',
-    'AssetGroup',
-    'Tag',
-    'AssetTag',
-    'Cidr',
-    'Network',
-    'SavedSearch',
-    'NetworkEndpoint',
-    'EndpointSuggestion',
+    "Alert",
+    "Asset",
+    "AssetCustomField",
+    "AssetCustomFieldName",
+    "AssetGroup",
+    "AssetTag",
+    "AssetVulnerability",
+    "Attachment",
+    "Cidr",
+    "EndpointSuggestion",
+    "Group",
+    "Network",
+    "NetworkEndpoint",
+    "PulseFeedItem",
+    "SavedSearch",
+    "Scan",
+    "Tag",
+    "Vulnerability",
 ]

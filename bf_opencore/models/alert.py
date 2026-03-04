@@ -1,6 +1,7 @@
 """Blueflow Alert model and schema."""
 
 import logging
+
 from django.db import models
 from django.utils import timezone
 
@@ -16,15 +17,15 @@ class Alert(models.Model):
     date_read = models.DateTimeField(null=True)
     date_expiration = models.DateTimeField(null=True)
     asset = models.ForeignKey(
-        'Asset',
+        "Asset",
         on_delete=models.SET_NULL,
-        related_name='alert_assets',
+        related_name="alert_assets",
         null=True,
     )
     pulsefeeditem = models.ForeignKey(
-        'PulseFeedItem',
+        "PulseFeedItem",
         on_delete=models.SET_NULL,
-        related_name='alert_pulsefeeditems',
+        related_name="alert_pulsefeeditems",
         null=True,
     )
     # TODO: Implement risk metrics after we have a generalized algorithm for risk scoring
@@ -35,9 +36,9 @@ class Alert(models.Model):
     #     null=True,
     # )
     vulnerability = models.ForeignKey(
-        'Vulnerability',
+        "Vulnerability",
         on_delete=models.SET_NULL,
-        related_name='alert_vulnerabilities',
+        related_name="alert_vulnerabilities",
         null=True,
     )
 
@@ -55,7 +56,7 @@ class Alert(models.Model):
     @property
     def display_text(self):
         """Show the beginning and end of long text."""
-        return "{} ... {}".format(self.text[:25], self.text[-15:])
+        return f"{self.text[:25]} ... {self.text[-15:]}"
 
     @property
     def riskmetrics(self) -> None:
@@ -65,4 +66,4 @@ class Alert(models.Model):
         return None
 
     def __str__(self):  # noqa
-        return '{}:{}'.format(self.id, self.text)
+        return f"{self.id}:{self.text}"
