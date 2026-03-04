@@ -46,7 +46,7 @@ class ScanSerializer(serializers.HyperlinkedModelSerializer):
 class ScanFilter(django_filters.rest_framework.FilterSet):
     """FilterSet."""
 
-    class Meta:  # noqa
+    class Meta:
         model = Scan
 
         # Documentation about lookups is here:

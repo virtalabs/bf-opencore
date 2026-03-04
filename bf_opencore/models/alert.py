@@ -65,5 +65,5 @@ class Alert(models.Model):
         """
         return None
 
-    def __str__(self):  # noqa
+    def __str__(self):
         return f"{self.id}:{self.text}"

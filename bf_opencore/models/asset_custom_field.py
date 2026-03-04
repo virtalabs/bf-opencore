@@ -63,7 +63,7 @@ class AssetCustomField(models.Model):
 
     history = HistoricalRecords()
 
-    class Meta:  # noqa
+    class Meta:
         unique_together = ("asset", "field")
 
     def __str__(self):

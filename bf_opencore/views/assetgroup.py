@@ -25,7 +25,7 @@ class AssetGroupSerializer(serializers.HyperlinkedModelSerializer):
     asset_id = IntegerField()
     group_id = IntegerField()
 
-    class Meta:  # noqa
+    class Meta:
         model = AssetGroup
         fields = (
             "id",
@@ -44,7 +44,7 @@ class AssetGroupFilter(django_filters.rest_framework.FilterSet):
 
     # Few public methods; that's just how django-filters work
 
-    class Meta:  # noqa
+    class Meta:
         model = AssetGroup
 
         # Documentation about lookups is here:

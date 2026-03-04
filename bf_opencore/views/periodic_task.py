@@ -27,7 +27,7 @@ class CrontabScheduleSerializer(serializers.HyperlinkedModelSerializer):
         """Human-readable name."""
         return str(crontabschedule)
 
-    class Meta:  # noqa
+    class Meta:
         model = CrontabSchedule
         fields = (
             "id",
@@ -68,7 +68,7 @@ class IntervalScheduleSerializer(serializers.HyperlinkedModelSerializer):
         """Human-readable name."""
         return str(intervalschedule)
 
-    class Meta:  # noqa
+    class Meta:
         model = IntervalSchedule
         fields = (
             "id",
@@ -149,7 +149,7 @@ class PeriodicTaskSerializer(serializers.HyperlinkedModelSerializer):
             )
         return attrs
 
-    class Meta:  # noqa
+    class Meta:
         model = PeriodicTask
         # NOTE HHolm 2017-08-29: I think most of these args are in fact
         #   read-only.  We should consider tagging them as such.
@@ -181,7 +181,7 @@ class PeriodicTaskSerializer(serializers.HyperlinkedModelSerializer):
 class PeriodicTaskFilter(django_filters.rest_framework.FilterSet):
     """FilterSet."""
 
-    class Meta:  # noqa
+    class Meta:
         model = PeriodicTask
 
         fields = {

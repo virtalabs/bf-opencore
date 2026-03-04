@@ -49,7 +49,7 @@ class PulseFeedItemFilter(django_filters.rest_framework.FilterSet):
 
     status__ne = django_filters.CharFilter("status", exclude=True)
 
-    class Meta:  # noqa
+    class Meta:
         model = PulseFeedItem
         fields = {
             "status": ["exact"],

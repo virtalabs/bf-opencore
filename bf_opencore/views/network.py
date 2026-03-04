@@ -26,7 +26,7 @@ class NetworkSerializer(serializers.HyperlinkedModelSerializer):
     url = serializers.HyperlinkedIdentityField(view_name="bf_opencore:network-detail")
     cidr = serializers.JSONField(required=False)
 
-    class Meta:  # noqa
+    class Meta:
         model = Network
         # We have to specify these fields since most of them are properties
         # (only name, ok_to_scan, and date_added are real DB fields.)
@@ -81,7 +81,7 @@ class NetworkFilter(django_filters.rest_framework.FilterSet):
         network_qset = queryset.filter(cidr__cidr__net_contains=asset.ip_address)
         return network_qset
 
-    class Meta:  # noqa
+    class Meta:
         model = Network
 
         # Documentation about lookups is here:
@@ -132,7 +132,7 @@ class CidrSerializer(serializers.HyperlinkedModelSerializer):
     url = serializers.HyperlinkedIdentityField(view_name="bf_opencore:cidr-detail")
     network_id = IntegerField()
 
-    class Meta:  # noqa
+    class Meta:
         model = Cidr
         fields = ("id", "url", "cidr", "network_id")
 
@@ -155,7 +155,7 @@ class SavedSearchSerializer(serializers.HyperlinkedModelSerializer):
         view_name="bf_opencore:savedsearch-detail"
     )
 
-    class Meta:  # noqa
+    class Meta:
         model = SavedSearch
         fields = (
             "url",

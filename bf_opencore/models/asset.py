@@ -738,7 +738,7 @@ class Asset(models.Model):
             return False
         return True
 
-    def __str__(self):  # noqa
+    def __str__(self):
         return f"{self.id}:{self.display_name}:{self.ip_address}"
 
     def todict(self):

@@ -115,7 +115,7 @@ class PulseFeedItem(models.Model):
     history = HistoricalRecords()
     objects = PulseFeedItemManager()
 
-    def __str__(self):  # noqa
+    def __str__(self):
         return f"<PFI {self.id}:{self.external_pulse_id} {self.date_last_updated} '{self.title}'>"
 
     def _search_query(self):
