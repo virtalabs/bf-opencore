@@ -42,11 +42,11 @@ def test_get_asset_csv(auth_client):
 
 def test_get_asset_csv_specify_fields(auth_client):
     """With CSV format we generally would specify which headers we want."""
-    dummy_asset = models.Asset.objects.create(name="spam",
-                                              ip_address="10.0.0.1")
+    dummy_asset = models.Asset.objects.create(name="spam", ip_address="10.0.0.1")
     # import pdb ; pdb.set_trace()
-    response = auth_client.get("/api/assets/?fields=name,ip_address,model",
-                               HTTP_ACCEPT="text/csv")
+    response = auth_client.get(
+        "/api/assets/?fields=name,ip_address,model", HTTP_ACCEPT="text/csv"
+    )
     header, *assets = response.content.splitlines()
     header = header.decode("utf-8").split(",")
     assert len(assets) == 1
@@ -68,9 +68,11 @@ def test_export_assets_json(auth_client):
 def test_api_create_asset(asset_edit_client):
     """Create an asset with authorized client."""
     client = asset_edit_client
-    response = client.post("/api/assets/",
-                           json.dumps({"hostname": "nospam"}),
-                           content_type="application/json")
+    response = client.post(
+        "/api/assets/",
+        json.dumps({"hostname": "nospam"}),
+        content_type="application/json",
+    )
     assert response.status_code == 201  # 201 = Created
     assets = client.get("/api/assets/")
     assert assets.data["count"] == 1
@@ -81,9 +83,11 @@ def test_api_create_asset(asset_edit_client):
 def test_api_create_asset_maconly(asset_edit_client):
     """Create an asset with authorized client."""
     client = asset_edit_client
-    response = client.post("/api/assets/",
-                           json.dumps({"mac_address": "1"}),
-                           content_type="application/json")
+    response = client.post(
+        "/api/assets/",
+        json.dumps({"mac_address": "1"}),
+        content_type="application/json",
+    )
     assert response.status_code == 201  # 201 = Created
     assets = client.get("/api/assets/")
     assert assets.data["count"] == 1
@@ -98,9 +102,11 @@ def test_api_create_asset_addinventory_maconly(asset_edit_client):
     gets sent as '' rather than as 'null'.
     """
     client = asset_edit_client
-    response = client.post("/api/assets/",
-                           json.dumps({"mac_address": "1", "ip_address": ""}),
-                           content_type="application/json")
+    response = client.post(
+        "/api/assets/",
+        json.dumps({"mac_address": "1", "ip_address": ""}),
+        content_type="application/json",
+    )
     assert response.status_code == 201  # 201 = Created
     assets = client.get("/api/assets/")
     assert assets.data["count"] == 1
@@ -116,9 +122,11 @@ def test_api_create_asset_addinventory_empty_mac(asset_edit_client):
     gets sent as '' rather than as 'null'.
     """
     client = asset_edit_client
-    response = client.post("/api/assets/",
-                           json.dumps({"mac_address": "", "ip_address": ""}),
-                           content_type="application/json")
+    response = client.post(
+        "/api/assets/",
+        json.dumps({"mac_address": "", "ip_address": ""}),
+        content_type="application/json",
+    )
     assert response.status_code == 201  # 201 = Created
     assets = client.get("/api/assets/")
     assert assets.data["count"] == 1
@@ -136,16 +144,20 @@ def test_api_create_asset_addinventory_empty_mac_times_two(asset_edit_client):
     """
     client = asset_edit_client
     # Create the first asset
-    response = client.post("/api/assets/",
-                           json.dumps({"mac_address": "", "ip_address": ""}),
-                           content_type="application/json")
+    response = client.post(
+        "/api/assets/",
+        json.dumps({"mac_address": "", "ip_address": ""}),
+        content_type="application/json",
+    )
     assert response.status_code == 201  # 201 = Created
     assets = client.get("/api/assets/")
     assert assets.data["count"] == 1
     # Create the second asset
-    response = client.post("/api/assets/",
-                           json.dumps({"mac_address": "", "ip_address": ""}),
-                           content_type="application/json")
+    response = client.post(
+        "/api/assets/",
+        json.dumps({"mac_address": "", "ip_address": ""}),
+        content_type="application/json",
+    )
     assert response.status_code == 201  # 201 = Created
     assets = client.get("/api/assets/")
     assert assets.data["count"] == 2
@@ -154,9 +166,11 @@ def test_api_create_asset_addinventory_empty_mac_times_two(asset_edit_client):
 def test_api_create_asset_unauthorized(auth_client):
     """Can't create an asset with an unauthorized client."""
     client = auth_client
-    response = client.post("/api/assets/",
-                           json.dumps({"hostname": "nospam"}),
-                           content_type="application/json")
+    response = client.post(
+        "/api/assets/",
+        json.dumps({"hostname": "nospam"}),
+        content_type="application/json",
+    )
     assert response.status_code == 403  # 403 = Not permitted
     assets = client.get("/api/assets/")
     assert assets.data["count"] == 0
@@ -165,9 +179,11 @@ def test_api_create_asset_unauthorized(auth_client):
 
 def test_api_create_get_asset(auth_client, asset_edit_client):
     """Create an asset, read with less-authorized client."""
-    response = asset_edit_client.post("/api/assets/",
-                                      json.dumps({"hostname": "nospam"}),
-                                      content_type="application/json")
+    response = asset_edit_client.post(
+        "/api/assets/",
+        json.dumps({"hostname": "nospam"}),
+        content_type="application/json",
+    )
     assert response.status_code == 201  # 201 = Created
     assets = auth_client.get("/api/assets/")
     assert assets.data["count"] == 1
@@ -182,9 +198,9 @@ def test_api_create_asset_open_ports(asset_edit_client):
     """
     client = asset_edit_client
     post_data = {"open_ports_tcp": "8000 80,443, 80"}
-    response = client.post("/api/assets/",
-                           json.dumps(post_data),
-                           content_type="application/json")
+    response = client.post(
+        "/api/assets/", json.dumps(post_data), content_type="application/json"
+    )
     assert response.status_code == 201  # 201 = Created
     assets = client.get("/api/assets/")
     assert assets.data["count"] == 1
@@ -194,15 +210,19 @@ def test_api_create_asset_open_ports(asset_edit_client):
 
 def test_api_create_patch_asset(auth_client, asset_edit_client):
     """Create an asset, then patch."""
-    response = asset_edit_client.post("/api/assets/",
-                                      json.dumps({"hostname": "nospam"}),
-                                      content_type="application/json")
+    response = asset_edit_client.post(
+        "/api/assets/",
+        json.dumps({"hostname": "nospam"}),
+        content_type="application/json",
+    )
     assert response.status_code == 201  # 201 = Created
     assert response.data["hostname"] == "nospam"
     asset_id = response.data["id"]
-    response = asset_edit_client.patch(f"/api/assets/{asset_id}/",
-                                       json.dumps({"hostname": "spam"}),
-                                       content_type="application/json")
+    response = asset_edit_client.patch(
+        f"/api/assets/{asset_id}/",
+        json.dumps({"hostname": "spam"}),
+        content_type="application/json",
+    )
     assert response.status_code == 200
     assert response.data["hostname"] == "spam"
     assets = auth_client.get("/api/assets/")
@@ -214,9 +234,11 @@ def test_api_create_patch_asset(auth_client, asset_edit_client):
 def test_api_create_asset_displayname(asset_edit_client):
     """Create an asset with a display_name."""
     client = asset_edit_client
-    response = client.post("/api/assets/",
-                           json.dumps({"display_name": "foobar"}),
-                           content_type="application/json")
+    response = client.post(
+        "/api/assets/",
+        json.dumps({"display_name": "foobar"}),
+        content_type="application/json",
+    )
     assert response.status_code == 201  # 201 = Created
     assert response.data["name"] == "foobar"
     assert response.data["display_name"] == "foobar"
@@ -232,10 +254,11 @@ def test_api_create_asset_displayname_name(asset_edit_client):
     really a minor issue IMHO.)
     """
     client = asset_edit_client
-    response = client.post("/api/assets/",
-                           json.dumps({"name": "foobaz",
-                                       "display_name": "foobar"}),
-                           content_type="application/json")
+    response = client.post(
+        "/api/assets/",
+        json.dumps({"name": "foobaz", "display_name": "foobar"}),
+        content_type="application/json",
+    )
     assert response.status_code == 201  # 201 = Created
     assert response.data["name"] == "foobar"  # NOTE: display_name is favored
     assert response.data["display_name"] == "foobar"
@@ -248,10 +271,11 @@ def test_api_create_asset_displayname_name_2(asset_edit_client):
     display_name is still favoured.
     """
     client = asset_edit_client
-    response = client.post("/api/assets/",
-                           json.dumps({"display_name": "foobar",
-                                       "name": "foobaz"}),
-                           content_type="application/json")
+    response = client.post(
+        "/api/assets/",
+        json.dumps({"display_name": "foobar", "name": "foobaz"}),
+        content_type="application/json",
+    )
     assert response.status_code == 201  # 201 = Created
     assert response.data["name"] == "foobar"  # NOTE: display_name is favored
     assert response.data["display_name"] == "foobar"
@@ -260,23 +284,27 @@ def test_api_create_asset_displayname_name_2(asset_edit_client):
 def test_api_update_asset_displayname(asset_edit_client):
     """Create an asset, update display_name later."""
     client = asset_edit_client
-    response = client.post("/api/assets/",
-                           json.dumps({"name": "nospam"}),
-                           content_type="application/json")
+    response = client.post(
+        "/api/assets/", json.dumps({"name": "nospam"}), content_type="application/json"
+    )
     assert response.data["name"] == "nospam"
     assert response.data["display_name"] == "nospam"
     asset_id = response.data["id"]
-    response = client.patch(f"/api/assets/{asset_id}/",
-                            json.dumps({"display_name": "spam"}),
-                            content_type="application/json")
+    response = client.patch(
+        f"/api/assets/{asset_id}/",
+        json.dumps({"display_name": "spam"}),
+        content_type="application/json",
+    )
     assert response.status_code == 200  # 200 = Updated
     assert response.data["name"] == "spam"
     assert response.data["display_name"] == "spam"
 
 
-@pytest.mark.xfail(raises=AssertionError,
-                   reason="Not sure why, but we *are* allowed to patch.  "
-                          "Maybe there's a mix-up re: which user is which.")
+@pytest.mark.xfail(
+    raises=AssertionError,
+    reason="Not sure why, but we *are* allowed to patch.  "
+    "Maybe there's a mix-up re: which user is which.",
+)
 def test_api_create_unauth_patch_asset(auth_client, asset_edit_client):
     """Create an asset, patch with less-authorized client...
 
@@ -287,15 +315,19 @@ def test_api_create_unauth_patch_asset(auth_client, asset_edit_client):
       (test_unauth_patch_asset) where a client with insufficient
       authorization is unable to PATCH an asset.
     """
-    response = asset_edit_client.post("/api/assets/",
-                                      json.dumps({"hostname": "nospam"}),
-                                      content_type="application/json")
+    response = asset_edit_client.post(
+        "/api/assets/",
+        json.dumps({"hostname": "nospam"}),
+        content_type="application/json",
+    )
     assert response.status_code == 201  # 201 = Created
     assert response.data["hostname"] == "nospam"
     asset_id = response.data["id"]
-    response = auth_client.patch(f"/api/assets/{asset_id}/",
-                                 json.dumps({"hostname": "spam"}),
-                                 content_type="application/json")
+    response = auth_client.patch(
+        f"/api/assets/{asset_id}/",
+        json.dumps({"hostname": "spam"}),
+        content_type="application/json",
+    )
     assert response.status_code == 403  # <- this fails...
     assets = auth_client.get("/api/assets/")
     assert assets.data["count"] == 1
@@ -314,9 +346,11 @@ def test_unauth_patch_asset(auth_client):
     assert response.json()["count"] == 1
     asset = response.json()["results"][0]
     assert asset["hostname"] is None
-    response = auth_client.patch("/api/assets/{}/".format(asset["id"]),
-                                 json.dumps({"hostname": "spam"}),
-                                 content_type="application/json")
+    response = auth_client.patch(
+        "/api/assets/{}/".format(asset["id"]),
+        json.dumps({"hostname": "spam"}),
+        content_type="application/json",
+    )
     assert response.status_code == 403
     response = auth_client.get("/api/assets/")
     assert response.status_code == 200  # 200 = Created
@@ -362,9 +396,11 @@ def test_patch_asset(asset_edit_client):
     # Verify that hostname is what we set it to
     assert spam_asset.hostname == "spam"
     # Send PATCH request
-    _ = client.patch(f"/api/assets/{spam_asset.id}/",
-                     json.dumps({"hostname": "nospam"}),
-                     content_type="application/json")
+    _ = client.patch(
+        f"/api/assets/{spam_asset.id}/",
+        json.dumps({"hostname": "nospam"}),
+        content_type="application/json",
+    )
     # Query for the new version of spam_asset, verify that its
     # hostname has changed.
     spam_asset = models.Asset.objects.get(id=spam_asset.id)
@@ -385,9 +421,11 @@ def test_patch_asset_open_ports_tcp_string(asset_edit_client):
     # Port list is entered by a slob who uses inconsistent separators,
     # not ordered, and repeated values!
     port_string = "8000 80,443, 80"
-    response = client.patch(f"/api/assets/{spam_asset.id}/",
-                            json.dumps({"open_ports_tcp": port_string}),
-                            content_type="application/json")
+    response = client.patch(
+        f"/api/assets/{spam_asset.id}/",
+        json.dumps({"open_ports_tcp": port_string}),
+        content_type="application/json",
+    )
     assert response.status_code == 200
     # Query for the new version of spam_asset, verify that the list of
     # ports is correct.
@@ -409,9 +447,11 @@ def test_patch_asset_open_ports_tcp_list(asset_edit_client):
     # Send PATCH request
     # Port list is entered by a slob who has repeated values and isn't ordered.
     port_list = [8000, 80, 443, 80]
-    response = client.patch(f"/api/assets/{spam_asset.id}/",
-                            json.dumps({"open_ports_tcp": port_list}),
-                            content_type="application/json")
+    response = client.patch(
+        f"/api/assets/{spam_asset.id}/",
+        json.dumps({"open_ports_tcp": port_list}),
+        content_type="application/json",
+    )
     assert response.status_code == 200
     # Query for the new version of spam_asset, verify that the list of
     # ports is correct.
@@ -433,9 +473,11 @@ def test_patch_asset_open_ports_tcp_list_bad(asset_edit_client):
     # Send PATCH request
     # Port list has a bad value
     port_list = [80, 443, "foo"]
-    response = client.patch(f"/api/assets/{spam_asset.id}/",
-                            json.dumps({"open_ports_tcp": port_list}),
-                            content_type="application/json")
+    response = client.patch(
+        f"/api/assets/{spam_asset.id}/",
+        json.dumps({"open_ports_tcp": port_list}),
+        content_type="application/json",
+    )
     assert response.status_code == 400
 
 
@@ -448,9 +490,11 @@ def test_patch_asset_open_ports_tcp_bad(asset_edit_client):
     assert spam_asset.open_ports_tcp == []
     # Send PATCH request with bad port
     port_string = "80,443, 66000"
-    response = client.patch(f"/api/assets/{spam_asset.id}/",
-                            json.dumps({"open_ports_tcp": port_string}),
-                            content_type="application/json")
+    response = client.patch(
+        f"/api/assets/{spam_asset.id}/",
+        json.dumps({"open_ports_tcp": port_string}),
+        content_type="application/json",
+    )
     assert response.status_code == 400
     # Query for the new version of spam_asset, verify that the list of
     # ports is correct.
@@ -465,16 +509,17 @@ def test_patch_asset_open_ports_tcp_null(asset_edit_client):
     We try to be helpful, and sort the resulting list & make it unique.
     """
     client = asset_edit_client
-    spam_asset = models.Asset.objects.create(hostname="spam",
-                                             open_ports_tcp=[80, 443])
+    spam_asset = models.Asset.objects.create(hostname="spam", open_ports_tcp=[80, 443])
     # Verify that hostname is what we set it to
     assert spam_asset.open_ports_tcp == [80, 443]
     # Send PATCH request
     # Empty port string
     port_string = None
-    response = client.patch(f"/api/assets/{spam_asset.id}/",
-                            json.dumps({"open_ports_tcp": port_string}),
-                            content_type="application/json")
+    response = client.patch(
+        f"/api/assets/{spam_asset.id}/",
+        json.dumps({"open_ports_tcp": port_string}),
+        content_type="application/json",
+    )
     assert response.status_code == 200
     # Query for the new version of spam_asset, verify that the list of
     # ports is correct.
@@ -489,16 +534,17 @@ def test_patch_asset_open_ports_tcp_empty(asset_edit_client):
     We try to be helpful, and sort the resulting list & make it unique.
     """
     client = asset_edit_client
-    spam_asset = models.Asset.objects.create(hostname="spam",
-                                             open_ports_tcp=[80, 443])
+    spam_asset = models.Asset.objects.create(hostname="spam", open_ports_tcp=[80, 443])
     # Verify that hostname is what we set it to
     assert spam_asset.open_ports_tcp == [80, 443]
     # Send PATCH request
     # Empty port string
     port_string = ""
-    response = client.patch(f"/api/assets/{spam_asset.id}/",
-                            json.dumps({"open_ports_tcp": port_string}),
-                            content_type="application/json")
+    response = client.patch(
+        f"/api/assets/{spam_asset.id}/",
+        json.dumps({"open_ports_tcp": port_string}),
+        content_type="application/json",
+    )
     assert response.status_code == 200
     # Query for the new version of spam_asset, verify that the list of
     # ports is correct.
@@ -514,9 +560,11 @@ def test_set_name_empty(asset_edit_client):
     # Verify that hostname is what we set it to
     assert spam_asset.hostname == "spam"
     # Send PATCH request
-    _ = client.patch(f"/api/assets/{spam_asset.id}/",
-                     json.dumps({"hostname": ""}),
-                     content_type="application/json")
+    _ = client.patch(
+        f"/api/assets/{spam_asset.id}/",
+        json.dumps({"hostname": ""}),
+        content_type="application/json",
+    )
     # Query for the new version of spam_asset, verify that its
     # hostname has changed.
     spam_asset = models.Asset.objects.get(id=spam_asset.id)
@@ -530,9 +578,11 @@ def test_set_name_null(asset_edit_client):
     # Verify that hostname is what we set it to
     assert spam_asset.hostname == "spam"
     # Send PATCH request
-    response = client.patch(f"/api/assets/{spam_asset.id}/",
-                            json.dumps({"hostname": None}),
-                            content_type="application/json")
+    response = client.patch(
+        f"/api/assets/{spam_asset.id}/",
+        json.dumps({"hostname": None}),
+        content_type="application/json",
+    )
     assert response.status_code == 200
     # Query for the new version of spam_asset, verify that its
     # hostname has changed.
@@ -549,8 +599,7 @@ def test_field_histogram(auth_client):
     models.Asset.objects.create(manufacturer="Bar")
     models.Asset.objects.create(manufacturer="Foo")
 
-    response = auth_client.get("/api/assets/histogram/",
-                               {"field": "manufacturer"})
+    response = auth_client.get("/api/assets/histogram/", {"field": "manufacturer"})
     qset = response.data
 
     assert len(qset) == 3
@@ -612,7 +661,8 @@ def test_api_duplicate_ips_one(auth_client):
 
 @pytest.mark.xfail(
     raises=AssertionError,
-    reason="not allowed to spell out 'exact' in URL for some reason.")
+    reason="not allowed to spell out 'exact' in URL for some reason.",
+)
 def test_api_duplicate_ips_one_spell_exact(auth_client):
     """Check for duplicate IP addresses in the asset population."""
     response = auth_client.get("/api/assets/duplicate_ips/")
@@ -625,8 +675,7 @@ def test_api_duplicate_ips_one_spell_exact(auth_client):
     models.Asset.objects.create(ip_address="1.2.3.5")
     models.Asset.objects.create(ip_address="1.2.3.5")
     models.Asset.objects.create(manufacturer="Foo", ip_address=None)
-    response = auth_client.get(
-        "/api/assets/duplicate_ips/?ip_address__exact=1.2.3.4")
+    response = auth_client.get("/api/assets/duplicate_ips/?ip_address__exact=1.2.3.4")
     assert response.status_code == 200
     assert response.json() == [
         ["1.2.3.4", 3],
@@ -683,12 +732,15 @@ def test_fetch_by_os(auth_client):
 
 def test_app_sw_version_needs_update(auth_client):
     """Test whether assets need software updates."""
-    oldest = models.Asset.objects.create(manufacturer="Foo", model="Bar",
-                                         app_sw_version="1.2.3")
-    newer = models.Asset.objects.create(manufacturer="Foo", model="Bar",
-                                        app_sw_version="1.2.4")
-    newest = models.Asset.objects.create(manufacturer="Foo", model="Bar",
-                                         app_sw_version="1.2.5")
+    oldest = models.Asset.objects.create(
+        manufacturer="Foo", model="Bar", app_sw_version="1.2.3"
+    )
+    newer = models.Asset.objects.create(
+        manufacturer="Foo", model="Bar", app_sw_version="1.2.4"
+    )
+    newest = models.Asset.objects.create(
+        manufacturer="Foo", model="Bar", app_sw_version="1.2.5"
+    )
 
     response = auth_client.get(f"/api/assets/{oldest.id}/needs_sw_update/")
     assert response.status_code == 200
@@ -708,24 +760,28 @@ def test_app_sw_version_needs_update(auth_client):
 
 def test_nonsense_app_sw_version_needs_update(auth_client):
     """Test whether a silly asset needs an update."""
-    a = models.Asset.objects.create(manufacturer="Foo", model="Bar",
-                                    app_sw_version="Henrik Holm")
+    a = models.Asset.objects.create(
+        manufacturer="Foo", model="Bar", app_sw_version="Henrik Holm"
+    )
     resp = auth_client.get(f"/api/assets/{a.id}/needs_sw_update/")
     assert resp.json()["needs_update"] is False
 
     # create another asset; how does it sort? parsable > legacy...
-    models.Asset.objects.create(manufacturer="Foo", model="Bar",
-                                app_sw_version="3.54.5")
+    models.Asset.objects.create(
+        manufacturer="Foo", model="Bar", app_sw_version="3.54.5"
+    )
     resp = auth_client.get(f"/api/assets/{a.id}/needs_sw_update/")
     assert resp.json()["needs_update"] is True
 
 
 def test_app_sw_version_not_needs_update(auth_client):
     """Test whether two equal assets need updates."""
-    a1 = models.Asset.objects.create(manufacturer="Foo", model="Bar",
-                                     app_sw_version="1.2.3")
-    a2 = models.Asset.objects.create(manufacturer="Foo", model="Bar",
-                                     app_sw_version="1.2.3")
+    a1 = models.Asset.objects.create(
+        manufacturer="Foo", model="Bar", app_sw_version="1.2.3"
+    )
+    a2 = models.Asset.objects.create(
+        manufacturer="Foo", model="Bar", app_sw_version="1.2.3"
+    )
 
     response1 = auth_client.get(f"/api/assets/{a1.id}/needs_sw_update/")
     response2 = auth_client.get(f"/api/assets/{a2.id}/needs_sw_update/")
@@ -749,9 +805,11 @@ def test_app_sw_no_version_needs_update(auth_client):
 def test_api_create_asset_mac_autofill_nic(asset_edit_client):
     """Create an asset with NIC vendor."""
     client = asset_edit_client
-    response = client.post("/api/assets/",
-                           json.dumps({"mac_address": "34:36:3b:c4:7d:ec"}),
-                           content_type="application/json")
+    response = client.post(
+        "/api/assets/",
+        json.dumps({"mac_address": "34:36:3b:c4:7d:ec"}),
+        content_type="application/json",
+    )
     assert response.status_code == 201  # 201 = Created
     assets = client.get("/api/assets/")
     assert assets.data["count"] == 1
@@ -763,12 +821,16 @@ def test_api_create_asset_mac_autofill_nic(asset_edit_client):
 def test_api_create_asset_mac_reject_nic(asset_edit_client):
     """Provided NIC vendor will be silently ignored."""
     client = asset_edit_client
-    response = client.post("/api/assets/",
-                           json.dumps({
-                               "mac_address": "34:36:3b:c4:7d:ec",
-                               "nic_vendor": "Appletown USA",
-                           }),
-                           content_type="application/json")
+    response = client.post(
+        "/api/assets/",
+        json.dumps(
+            {
+                "mac_address": "34:36:3b:c4:7d:ec",
+                "nic_vendor": "Appletown USA",
+            }
+        ),
+        content_type="application/json",
+    )
     assert response.status_code == 201  # 201 = Created
     assets = client.get("/api/assets/")
     assert assets.data["count"] == 1
@@ -782,9 +844,11 @@ def test_upsert_create(asset_edit_client):
     macaddr = "00:03:b1:b5:b6:48"
     response = asset_edit_client.post(
         "/api/assets/upsert/",
-        json.dumps({
-            "mac_address": macaddr,
-        }),
+        json.dumps(
+            {
+                "mac_address": macaddr,
+            }
+        ),
         content_type="application/json",
     )
     assert response.status_code == 201  # Created
@@ -801,10 +865,12 @@ def test_upsert_update(asset_edit_client):
     models.Asset.objects.create(mac_address="11:22:33:44:55:66")
     response = asset_edit_client.post(
         "/api/assets/upsert/",
-        json.dumps({
-            "mac_address": "11:22:33:44:55:66",
-            "ip_address": "10.0.0.1",
-        }),
+        json.dumps(
+            {
+                "mac_address": "11:22:33:44:55:66",
+                "ip_address": "10.0.0.1",
+            }
+        ),
         content_type="application/json",
     )
     assert response.status_code == 200  # OK
@@ -820,9 +886,11 @@ def test_upsert_no_mac_address(asset_edit_client):
     """Upsert endpoint ignores calls that lack a MAC address."""
     response = asset_edit_client.post(
         "/api/assets/upsert/",
-        json.dumps({
-            "ip_address": "10.0.0.1",
-        }),
+        json.dumps(
+            {
+                "ip_address": "10.0.0.1",
+            }
+        ),
         content_type="application/json",
     )
     assert response.status_code == 412  # Precondition failed
@@ -837,18 +905,22 @@ def test_upsert_no_mac_address_duplicate(asset_edit_client):
     """
     response = asset_edit_client.post(
         "/api/assets/upsert/",
-        json.dumps({
-            "mac_address": "11:22:33:44:55:66",
-            "ip_address": "10.0.0.1",
-        }),
+        json.dumps(
+            {
+                "mac_address": "11:22:33:44:55:66",
+                "ip_address": "10.0.0.1",
+            }
+        ),
         content_type="application/json",
     )
     assert response.status_code == 201  # Created
     response = asset_edit_client.post(
         "/api/assets/upsert/",
-        json.dumps({
-            "ip_address": "10.0.0.1",
-        }),
+        json.dumps(
+            {
+                "ip_address": "10.0.0.1",
+            }
+        ),
         content_type="application/json",
     )
     assert response.status_code == 412  # Precondition failed
@@ -863,10 +935,12 @@ def test_upsert_ipv6(asset_edit_client):
     """
     response = asset_edit_client.post(
         "/api/assets/upsert/",
-        json.dumps({
-            "mac_address": "11:22:33:44:55:66",
-            "ipv6_address": "0:0:0:0:0:ffff:a00:1",
-        }),
+        json.dumps(
+            {
+                "mac_address": "11:22:33:44:55:66",
+                "ipv6_address": "0:0:0:0:0:ffff:a00:1",
+            }
+        ),
         content_type="application/json",
     )
     assert response.status_code == 201  # Created
@@ -877,17 +951,19 @@ def test_upsert_many_fields(asset_edit_client):
     """Call upsert endpoint with a fields typically provided by sniffer."""
     response = asset_edit_client.post(
         "/api/assets/upsert/",
-        json.dumps({
-            "ipv4_address": "10.0.0.155",
-            "ipv6_address": "",
-            "open_port_tcp": "",
-            "connect_port_tcp": "",
-            "mac_address": "00:03:b1:b5:b6:48",
-            "identifier": "Hospira Plum A+",
-            "provenance": "HL7 PRT-10",
-            "last_seen": "2018-12-21T11:39:05.897236-08:00",
-            "client_id": "ohm.virta.io",
-        }),
+        json.dumps(
+            {
+                "ipv4_address": "10.0.0.155",
+                "ipv6_address": "",
+                "open_port_tcp": "",
+                "connect_port_tcp": "",
+                "mac_address": "00:03:b1:b5:b6:48",
+                "identifier": "Hospira Plum A+",
+                "provenance": "HL7 PRT-10",
+                "last_seen": "2018-12-21T11:39:05.897236-08:00",
+                "client_id": "ohm.virta.io",
+            }
+        ),
         content_type="application/json",
     )
     assert response.status_code == 201  # Created
@@ -902,10 +978,12 @@ def test_upsert_ipv4(asset_edit_client):
     """
     response = asset_edit_client.post(
         "/api/assets/upsert/",
-        json.dumps({
-            "mac_address": "11:22:33:44:55:66",
-            "ipv4_address": "10.0.0.1",
-        }),
+        json.dumps(
+            {
+                "mac_address": "11:22:33:44:55:66",
+                "ipv4_address": "10.0.0.1",
+            }
+        ),
         content_type="application/json",
     )
     assert response.status_code == 201  # Created
@@ -919,10 +997,12 @@ def test_upsert_bad_key(asset_edit_client):
     with pytest.raises(django.core.exceptions.FieldDoesNotExist):
         _ = asset_edit_client.post(
             "/api/assets/upsert/",
-            json.dumps({
-                "mac_address": "11:22:33:44:55:66",
-                "ipv12345_address": "10.0.0.1",  # Bad key!
-            }),
+            json.dumps(
+                {
+                    "mac_address": "11:22:33:44:55:66",
+                    "ipv12345_address": "10.0.0.1",  # Bad key!
+                }
+            ),
             content_type="application/json",
         )
 
@@ -935,10 +1015,12 @@ def test_upsert_open_port_tcp(asset_edit_client):
     """
     response = asset_edit_client.post(
         "/api/assets/upsert/",
-        json.dumps({
-            "mac_address": "11:22:33:44:55:66",
-            "open_port_tcp": "80",
-        }),
+        json.dumps(
+            {
+                "mac_address": "11:22:33:44:55:66",
+                "open_port_tcp": "80",
+            }
+        ),
         content_type="application/json",
     )
     assert response.status_code == 201  # Created
@@ -954,10 +1036,12 @@ def test_upsert_identifier(asset_edit_client):
     """
     response = asset_edit_client.post(
         "/api/assets/upsert/",
-        json.dumps({
-            "mac_address": "11:22:33:44:55:66",
-            "identifier": "Alaris 8100",
-        }),
+        json.dumps(
+            {
+                "mac_address": "11:22:33:44:55:66",
+                "identifier": "Alaris 8100",
+            }
+        ),
         content_type="application/json",
     )
     assert response.status_code == 201  # Created

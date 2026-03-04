@@ -31,21 +31,30 @@ class NetworkSerializer(serializers.HyperlinkedModelSerializer):
         # We have to specify these fields since most of them are properties
         # (only name, ok_to_scan, and date_added are real DB fields.)
         fields = (
-            "url", "id", "name", "cidr", "ok_to_scan", "date_added",
-            "display_name", "type", "num_assets",
+            "url",
+            "id",
+            "name",
+            "cidr",
+            "ok_to_scan",
+            "date_added",
+            "display_name",
+            "type",
+            "num_assets",
             "identified_statistics",
-            )
+        )
 
     def create(self, validated_data):
         """Override in order to debug-print."""
-        logger.debug("Creating: Network validated data is '%s'",
-                     validated_data)
+        logger.debug("Creating: Network validated data is '%s'", validated_data)
         return super().create(validated_data)
 
     def update(self, instance, validated_data):
         """Override in order to debug-print."""
-        logger.debug("Updating: Network validated data is '%s' "
-                     "(instance is '%s')", validated_data, instance)
+        logger.debug(
+            "Updating: Network validated data is '%s' (instance is '%s')",
+            validated_data,
+            instance,
+        )
         return super().update(instance, validated_data)
 
     def validate_cidr(self, cidr_string):
@@ -69,8 +78,7 @@ class NetworkFilter(django_filters.rest_framework.FilterSet):
             # objects.none() gives us an empty QuerySet.
             return Network.objects.none()
 
-        network_qset = queryset.filter(
-            cidr__cidr__net_contains=asset.ip_address)
+        network_qset = queryset.filter(cidr__cidr__net_contains=asset.ip_address)
         return network_qset
 
     class Meta:  # noqa
@@ -81,7 +89,7 @@ class NetworkFilter(django_filters.rest_framework.FilterSet):
         # fields = {
         #     'asset': ['exact'],
         #     }
-        fields = "__all__"              # Why limit the lookups
+        fields = "__all__"  # Why limit the lookups
 
         # NOTE: if you want to filter on IP addresses etc., this is
         #   probably possible -- look to
@@ -129,8 +137,7 @@ class CidrSerializer(serializers.HyperlinkedModelSerializer):
         fields = ("id", "url", "cidr", "network_id")
 
 
-class CidrViewSet(mixins.DestroyModelMixin,
-                  viewsets.ReadOnlyModelViewSet):
+class CidrViewSet(mixins.DestroyModelMixin, viewsets.ReadOnlyModelViewSet):
     """CIDR-based collection/network of Assets."""
 
     # Model does have objects...
@@ -145,13 +152,19 @@ class SavedSearchSerializer(serializers.HyperlinkedModelSerializer):
     """
 
     url = serializers.HyperlinkedIdentityField(
-        view_name="bf_opencore:savedsearch-detail")
+        view_name="bf_opencore:savedsearch-detail"
+    )
 
     class Meta:  # noqa
         model = SavedSearch
         fields = (
-            "url", "id", "name", "search_query", "ok_to_scan", "date_added",
-            )
+            "url",
+            "id",
+            "name",
+            "search_query",
+            "ok_to_scan",
+            "date_added",
+        )
         # We also want to have the URL for the actual search here.  Have
         # to think about how to accomplish this...
 

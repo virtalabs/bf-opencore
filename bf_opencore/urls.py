@@ -22,8 +22,11 @@ router.register(r"assetgroups", views.AssetGroupViewSet)
 router.register(r"assettags", views.AssetTagViewSet)
 router.register(r"assetvulnerabilities", views.AssetVulnerabilityViewSet)
 router.register(r"attachments", views.AttachmentViewSet)
-router.register(r"autocomplete_field", views.AutocompleteAssetFieldViewSet,
-                basename="autocomplete_field")
+router.register(
+    r"autocomplete_field",
+    views.AutocompleteAssetFieldViewSet,
+    basename="autocomplete_field",
+)
 router.register(r"cidrs", views.CidrViewSet)
 router.register(r"groups", views.GroupViewSet)
 router.register(r"networks", views.NetworkViewSet)
@@ -35,8 +38,7 @@ router.register(r"scans", views.ScanViewSet)
 router.register(r"users", views.UserViewSet)
 router.register(r"vulnerabilities", views.VulnerabilityViewSet)
 # Synthetic Models
-router.register(r"autocomplete", views.AutocompleteViewSet,
-                basename="autocomplete")
+router.register(r"autocomplete", views.AutocompleteViewSet, basename="autocomplete")
 # Celery Beat (periodic tasks) models
 router.register(r"crontabs", views.CrontabScheduleViewSet)
 router.register(r"intervals", views.IntervalScheduleViewSet)
@@ -48,7 +50,11 @@ router.register(r"viper", views.ViperViewSet, basename="viper")
 
 urlpatterns = [
     path("schema/", SpectacularAPIView.as_view(), name="schema"),
-    path("docs/", SpectacularSwaggerView.as_view(url_name="bf_opencore:schema"), name="swagger-ui"),
+    path(
+        "docs/",
+        SpectacularSwaggerView.as_view(url_name="bf_opencore:schema"),
+        name="swagger-ui",
+    ),
     path(r"api-token-auth/", authview.obtain_auth_token, name="auth-token"),
     path("", include(router.urls)),
 ]

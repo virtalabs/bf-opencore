@@ -1,4 +1,5 @@
 """CSV import"""
+
 import csv as pycsv
 import json
 import logging
@@ -88,8 +89,7 @@ def linecount(filename):
         return sum(1 for row in filehandle)
 
 
-def process_csv(ctx, filename, field_mapping, require_network_info,
-                update_only):
+def process_csv(ctx, filename, field_mapping, require_network_info, update_only):
     """Read assets from CSV file and add to database."""
     # Yea, there's a lot of branches
     # pylint: disable=too-many-branches
@@ -118,8 +118,8 @@ def process_csv(ctx, filename, field_mapping, require_network_info,
 
             # Ignore assets that lack MAC or IP.
             if require_network_info and not (
-                    ("ip_address" in rowmap.todict() and rowmap["ip_address"]) or
-                    ("mac_address" in rowmap.todict() and rowmap["mac_address"])
+                ("ip_address" in rowmap.todict() and rowmap["ip_address"])
+                or ("mac_address" in rowmap.todict() and rowmap["mac_address"])
             ):
                 logger.debug("Skipped asset (no MAC or IP) %s", rowmap)
                 stats["skipped"] += 1
@@ -142,14 +142,15 @@ def process_csv(ctx, filename, field_mapping, require_network_info,
             # The parameters for Django's update_or_create() are confusing!
             # https://docs.djangoproject.com/en/2.0/ref/models/querysets/#update-or-create
             try:
-                asset, created = \
-                    Asset.objects.update_or_create_by_priority(
-                        defaults=rowmap.todict(),
-                        **rowmap.todict(),
-                    )
-            except (ValidationError,
-                    Asset.MultipleObjectsReturned,
-                    IntegrityError) as err:
+                asset, created = Asset.objects.update_or_create_by_priority(
+                    defaults=rowmap.todict(),
+                    **rowmap.todict(),
+                )
+            except (
+                ValidationError,
+                Asset.MultipleObjectsReturned,
+                IntegrityError,
+            ) as err:
                 ctx.ct.error(
                     f"Error updating or creating asset: {err}.\n"
                     f"Raw data: {row}\n"
@@ -162,25 +163,31 @@ def process_csv(ctx, filename, field_mapping, require_network_info,
             if created == created.CREATED:
                 logger.debug(
                     "Created asset %s\nRaw data: %s\nMapped data: %s",
-                    asset, row, rowmap,
+                    asset,
+                    row,
+                    rowmap,
                 )
                 stats["created"] += 1
             elif created == created.UPDATED:
                 logger.debug(
                     "Updated asset %s. Raw data: %s. Mapped data: %s",
-                    asset, row, rowmap,
+                    asset,
+                    row,
+                    rowmap,
                 )
                 stats["updated"] += 1
             elif created == created.UPTODATE:
                 logger.debug(
                     "Update-to-date asset %s. Raw data: %s. Mapped data: %s",
-                    asset, row, rowmap,
+                    asset,
+                    row,
+                    rowmap,
                 )
                 stats["up-to-date"] += 1
             else:
                 logger.error(
-                    "update_or_create_by_priority() returned an unrecognized"
-                    "value: %s", created,
+                    "update_or_create_by_priority() returned an unrecognizedvalue: %s",
+                    created,
                 )
                 stats["errored"] += 1
 
@@ -198,15 +205,23 @@ def process_csv(ctx, filename, field_mapping, require_network_info,
             value = stats[name]
             ctx.ct.print(f"{name.ljust(12)}{str(value).rjust(12)}")
         ctx.ct.print("-" * 24)
-        ctx.ct.print("{}{}".format(
-            "total".ljust(12),
-            str(stats["total"]).rjust(12),
-        ))
+        ctx.ct.print(
+            "{}{}".format(
+                "total".ljust(12),
+                str(stats["total"]).rjust(12),
+            )
+        )
 
 
 @celery_app.task(bind=True)
-def main(ctx, filename=None, field_mapping=None, no_reset_progress=False,
-         require_network_info=None, update_only=None):
+def main(
+    ctx,
+    filename=None,
+    field_mapping=None,
+    no_reset_progress=False,
+    require_network_info=None,
+    update_only=None,
+):
     """Load a CSV file into the database through a field mapping.
 
     no_reset_progress is a performance optimization to avoid re-reading large
@@ -249,8 +264,7 @@ def main(ctx, filename=None, field_mapping=None, no_reset_progress=False,
         ctx.ct.set_progress_total(nrows / 1000)  # Increment every 1000 assets
 
     # Process CSV downloaded file
-    process_csv(ctx, filename, field_mapping, require_network_info,
-                update_only)
+    process_csv(ctx, filename, field_mapping, require_network_info, update_only)
 
     # Remove temporary file
     if ctx.ct.attachment:

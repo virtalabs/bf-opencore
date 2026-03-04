@@ -33,9 +33,7 @@ class Group(models.Model):
     def identified_statistics(self):
         """Percent identified assets."""
         Asset = apps.get_model("bf_opencore", "Asset")
-        return (Asset.objects
-                .filter(groups__id=self.id)
-                .identified_statistics())
+        return Asset.objects.filter(groups__id=self.id).identified_statistics()
 
 
 class AssetGroup(models.Model):
@@ -45,14 +43,16 @@ class AssetGroup(models.Model):
     """
 
     # Use a string "Asset" instead of an object to avoid circular import
-    asset = models.ForeignKey("Asset", on_delete=models.CASCADE,
-                              related_name="asset_groups")
+    asset = models.ForeignKey(
+        "Asset", on_delete=models.CASCADE, related_name="asset_groups"
+    )
     group = models.ForeignKey(Group, on_delete=models.CASCADE)
     date_added = models.DateTimeField(default=timezone.now)
     provenance = models.TextField(
-        blank=True, null=True,
-        help_text="Reason why asset was added to group: "
-                  "automatic, manual, etc.")
+        blank=True,
+        null=True,
+        help_text="Reason why asset was added to group: automatic, manual, etc.",
+    )
 
     class Meta:  # noqa
         db_table = "blueflow_asset_group"

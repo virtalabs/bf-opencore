@@ -1,4 +1,3 @@
-
 """Portscan connector tests."""
 
 # These pylint warnings are endemic to pytest

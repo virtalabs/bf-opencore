@@ -90,7 +90,8 @@ class NessusBrowseViewSet(WaffleSwitchMixin, viewsets.ViewSet):
             action = request.query_params["action"]
         except KeyError:
             raise serializers.ValidationError(
-                f"No 'action' in query params '{request.query_params}', don't know what to do")
+                f"No 'action' in query params '{request.query_params}', don't know what to do"
+            )
         try:
             nc = NessusConnection()
         except exceptions.ConnectorConfigError as err:
@@ -109,12 +110,14 @@ class NessusBrowseViewSet(WaffleSwitchMixin, viewsets.ViewSet):
                 scan_id = request.query_params["scan_id"]
             except KeyError:
                 raise serializers.ValidationError(
-                    f"No 'scan_id' in query params '{request.query_params}', cannot get history")
+                    f"No 'scan_id' in query params '{request.query_params}', cannot get history"
+                )
             try:
                 scan_id = int(scan_id)
             except ValueError:
                 raise serializers.ValidationError(
-                    f"Invalid parameter scan_id='{scan_id}'")
+                    f"Invalid parameter scan_id='{scan_id}'"
+                )
             try:
                 history = nc.history(scan_id)
             except exceptions.ConnectorRemoteError as err:
@@ -125,5 +128,6 @@ class NessusBrowseViewSet(WaffleSwitchMixin, viewsets.ViewSet):
             raise serializers.ValidationError("details: not yet implemented")
         else:
             raise serializers.ValidationError(
-                f"No response for query params '{request.query_params}'")
+                f"No response for query params '{request.query_params}'"
+            )
         return Response(response)

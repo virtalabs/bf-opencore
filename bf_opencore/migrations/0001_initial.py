@@ -12,7 +12,6 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     initial = True
 
     dependencies = [
@@ -37,13 +36,19 @@ class Migration(migrations.Migration):
                 (
                     "ip_address",
                     netfields.fields.InetAddressField(
-                        blank=True, max_length=39, null=True, verbose_name="IP address",
+                        blank=True,
+                        max_length=39,
+                        null=True,
+                        verbose_name="IP address",
                     ),
                 ),
                 (
                     "mac_address",
                     netfields.fields.MACAddressField(
-                        blank=True, null=True, unique=True, verbose_name="MAC address",
+                        blank=True,
+                        null=True,
+                        unique=True,
+                        verbose_name="MAC address",
                     ),
                 ),
                 (
@@ -60,31 +65,41 @@ class Migration(migrations.Migration):
                 (
                     "risk_score_cli",
                     models.FloatField(
-                        blank=True, null=True, verbose_name="Safety risk score",
+                        blank=True,
+                        null=True,
+                        verbose_name="Safety risk score",
                     ),
                 ),
                 (
                     "risk_score_sec",
                     models.FloatField(
-                        blank=True, null=True, verbose_name="Security risk score",
+                        blank=True,
+                        null=True,
+                        verbose_name="Security risk score",
                     ),
                 ),
                 (
                     "risk_score_pri",
                     models.FloatField(
-                        blank=True, null=True, verbose_name="Privacy risk score",
+                        blank=True,
+                        null=True,
+                        verbose_name="Privacy risk score",
                     ),
                 ),
                 (
                     "risk_score_likelihood",
                     models.FloatField(
-                        blank=True, null=True, verbose_name="Likelihood risk score",
+                        blank=True,
+                        null=True,
+                        verbose_name="Likelihood risk score",
                     ),
                 ),
                 (
                     "risk_score_impact",
                     models.FloatField(
-                        blank=True, null=True, verbose_name="Impact risk score",
+                        blank=True,
+                        null=True,
+                        verbose_name="Impact risk score",
                     ),
                 ),
                 ("date_added", models.DateTimeField(default=django.utils.timezone.now)),
@@ -92,7 +107,9 @@ class Migration(migrations.Migration):
                 (
                     "os",
                     models.TextField(
-                        blank=True, null=True, verbose_name="Operating System",
+                        blank=True,
+                        null=True,
+                        verbose_name="Operating System",
                     ),
                 ),
                 (
@@ -449,7 +466,8 @@ class Migration(migrations.Migration):
             model_name="asset",
             name="groups",
             field=models.ManyToManyField(
-                through="bf_opencore.AssetGroup", to="bf_opencore.group",
+                through="bf_opencore.AssetGroup",
+                to="bf_opencore.group",
             ),
         ),
         migrations.CreateModel(
@@ -458,7 +476,10 @@ class Migration(migrations.Migration):
                 (
                     "id",
                     models.BigIntegerField(
-                        auto_created=True, blank=True, db_index=True, verbose_name="ID",
+                        auto_created=True,
+                        blank=True,
+                        db_index=True,
+                        verbose_name="ID",
                     ),
                 ),
                 ("name", models.CharField(blank=True, max_length=126, null=True)),
@@ -466,13 +487,19 @@ class Migration(migrations.Migration):
                 (
                     "ip_address",
                     netfields.fields.InetAddressField(
-                        blank=True, max_length=39, null=True, verbose_name="IP address",
+                        blank=True,
+                        max_length=39,
+                        null=True,
+                        verbose_name="IP address",
                     ),
                 ),
                 (
                     "mac_address",
                     netfields.fields.MACAddressField(
-                        blank=True, db_index=True, null=True, verbose_name="MAC address",
+                        blank=True,
+                        db_index=True,
+                        null=True,
+                        verbose_name="MAC address",
                     ),
                 ),
                 (
@@ -489,31 +516,41 @@ class Migration(migrations.Migration):
                 (
                     "risk_score_cli",
                     models.FloatField(
-                        blank=True, null=True, verbose_name="Safety risk score",
+                        blank=True,
+                        null=True,
+                        verbose_name="Safety risk score",
                     ),
                 ),
                 (
                     "risk_score_sec",
                     models.FloatField(
-                        blank=True, null=True, verbose_name="Security risk score",
+                        blank=True,
+                        null=True,
+                        verbose_name="Security risk score",
                     ),
                 ),
                 (
                     "risk_score_pri",
                     models.FloatField(
-                        blank=True, null=True, verbose_name="Privacy risk score",
+                        blank=True,
+                        null=True,
+                        verbose_name="Privacy risk score",
                     ),
                 ),
                 (
                     "risk_score_likelihood",
                     models.FloatField(
-                        blank=True, null=True, verbose_name="Likelihood risk score",
+                        blank=True,
+                        null=True,
+                        verbose_name="Likelihood risk score",
                     ),
                 ),
                 (
                     "risk_score_impact",
                     models.FloatField(
-                        blank=True, null=True, verbose_name="Impact risk score",
+                        blank=True,
+                        null=True,
+                        verbose_name="Impact risk score",
                     ),
                 ),
                 ("date_added", models.DateTimeField(default=django.utils.timezone.now)),
@@ -521,7 +558,9 @@ class Migration(migrations.Migration):
                 (
                     "os",
                     models.TextField(
-                        blank=True, null=True, verbose_name="Operating System",
+                        blank=True,
+                        null=True,
+                        verbose_name="Operating System",
                     ),
                 ),
                 (
@@ -579,7 +618,10 @@ class Migration(migrations.Migration):
                 (
                     "id",
                     models.BigIntegerField(
-                        auto_created=True, blank=True, db_index=True, verbose_name="ID",
+                        auto_created=True,
+                        blank=True,
+                        db_index=True,
+                        verbose_name="ID",
                     ),
                 ),
                 ("value_text", models.TextField(blank=True, null=True)),
@@ -640,7 +682,10 @@ class Migration(migrations.Migration):
                 (
                     "id",
                     models.BigIntegerField(
-                        auto_created=True, blank=True, db_index=True, verbose_name="ID",
+                        auto_created=True,
+                        blank=True,
+                        db_index=True,
+                        verbose_name="ID",
                     ),
                 ),
                 ("name", models.TextField(blank=True, null=True)),
@@ -694,7 +739,10 @@ class Migration(migrations.Migration):
                 (
                     "id",
                     models.BigIntegerField(
-                        auto_created=True, blank=True, db_index=True, verbose_name="ID",
+                        auto_created=True,
+                        blank=True,
+                        db_index=True,
+                        verbose_name="ID",
                     ),
                 ),
                 (
@@ -769,7 +817,10 @@ class Migration(migrations.Migration):
                 (
                     "id",
                     models.BigIntegerField(
-                        auto_created=True, blank=True, db_index=True, verbose_name="ID",
+                        auto_created=True,
+                        blank=True,
+                        db_index=True,
+                        verbose_name="ID",
                     ),
                 ),
                 ("name", models.CharField(db_index=True, max_length=126)),
@@ -840,19 +891,27 @@ class Migration(migrations.Migration):
                 (
                     "mac_address",
                     netfields.fields.MACAddressField(
-                        blank=True, null=True, unique=True,
+                        blank=True,
+                        null=True,
+                        unique=True,
                     ),
                 ),
                 (
                     "ipv4_address",
                     netfields.fields.InetAddressField(
-                        blank=True, max_length=39, null=True, unique=True,
+                        blank=True,
+                        max_length=39,
+                        null=True,
+                        unique=True,
                     ),
                 ),
                 (
                     "ipv6_address",
                     netfields.fields.InetAddressField(
-                        blank=True, max_length=39, null=True, unique=True,
+                        blank=True,
+                        max_length=39,
+                        null=True,
+                        unique=True,
                     ),
                 ),
                 (
@@ -951,7 +1010,9 @@ class Migration(migrations.Migration):
                 (
                     "provenance",
                     models.TextField(
-                        blank=True, help_text="Tool that scanned Asset", null=True,
+                        blank=True,
+                        help_text="Tool that scanned Asset",
+                        null=True,
                     ),
                 ),
                 (
@@ -987,7 +1048,8 @@ class Migration(migrations.Migration):
             model_name="asset",
             name="scans",
             field=models.ManyToManyField(
-                through="bf_opencore.Scan", to="bf_opencore.connectortask",
+                through="bf_opencore.Scan",
+                to="bf_opencore.connectortask",
             ),
         ),
         migrations.CreateModel(
@@ -996,7 +1058,10 @@ class Migration(migrations.Migration):
                 (
                     "id",
                     models.BigIntegerField(
-                        auto_created=True, blank=True, db_index=True, verbose_name="ID",
+                        auto_created=True,
+                        blank=True,
+                        db_index=True,
+                        verbose_name="ID",
                     ),
                 ),
                 ("date_added", models.DateTimeField(default=django.utils.timezone.now)),
@@ -1104,7 +1169,8 @@ class Migration(migrations.Migration):
             model_name="asset",
             name="tags",
             field=models.ManyToManyField(
-                through="bf_opencore.AssetTag", to="bf_opencore.tag",
+                through="bf_opencore.AssetTag",
+                to="bf_opencore.tag",
             ),
         ),
         migrations.CreateModel(
@@ -1208,7 +1274,8 @@ class Migration(migrations.Migration):
             model_name="asset",
             name="vulnerabilities",
             field=models.ManyToManyField(
-                through="bf_opencore.AssetVulnerability", to="bf_opencore.vulnerability",
+                through="bf_opencore.AssetVulnerability",
+                to="bf_opencore.vulnerability",
             ),
         ),
         migrations.CreateModel(

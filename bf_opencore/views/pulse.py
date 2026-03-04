@@ -56,7 +56,9 @@ class PulseFeedItemFilter(django_filters.rest_framework.FilterSet):
         }
 
 
-class PulseFeedItemViewSet(WaffleSwitchMixin, PaginateRelationsMixin, viewsets.ModelViewSet):
+class PulseFeedItemViewSet(
+    WaffleSwitchMixin, PaginateRelationsMixin, viewsets.ModelViewSet
+):
     """View Pulse feed items."""
 
     waffle_switch = "core"
@@ -70,6 +72,7 @@ class PulseFeedItemViewSet(WaffleSwitchMixin, PaginateRelationsMixin, viewsets.M
 
     def destroy(self, request, *args, **kwargs):
         from rest_framework.exceptions import PermissionDenied
+
         raise PermissionDenied("Deleting pulse feed items is not allowed.")
 
     @action(detail=False)
@@ -94,8 +97,9 @@ class PulseFeedItemViewSet(WaffleSwitchMixin, PaginateRelationsMixin, viewsets.M
         qtr_data = PulseFeedItem.objects.closed_quarterly(nquarters)
         for qtr_start, qtr in qtr_data:
             qtr_starts.append(qtr_start)
-            serializer = PulseFeedItemSerializer(qtr, many=True,
-                                                 context={"request": request})
+            serializer = PulseFeedItemSerializer(
+                qtr, many=True, context={"request": request}
+            )
             ser_data.append(serializer.data)
 
         response = {

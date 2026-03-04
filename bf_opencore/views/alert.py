@@ -19,8 +19,7 @@ class AlertSerializer(serializers.HyperlinkedModelSerializer):
 
     # Few public methods; that's just how serializers work
 
-    url = serializers.HyperlinkedIdentityField(
-        view_name="bf_opencore:alert-detail")
+    url = serializers.HyperlinkedIdentityField(view_name="bf_opencore:alert-detail")
     asset = serializers.HyperlinkedRelatedField(
         read_only=True,
         view_name="bf_opencore:asset-detail",
@@ -82,9 +81,9 @@ class AlertViewSet(WaffleSwitchMixin, viewsets.ModelViewSet):
 
     # Alert model does have 'objects'
 
-    queryset = Alert.objects.\
-        exclude(date_expiration__lt=timezone.now()).\
-        order_by("-date_created")
+    queryset = Alert.objects.exclude(date_expiration__lt=timezone.now()).order_by(
+        "-date_created"
+    )
     serializer_class = AlertSerializer
 
     def list(self, request, *args, **kwargs):
@@ -96,12 +95,8 @@ class AlertViewSet(WaffleSwitchMixin, viewsets.ModelViewSet):
         Based on this stackoverflow post:
         https://stackoverflow.com/questions/24164160/adding-extra-data-to-django-rest-framework-results-for-entire-result-set
         """
-        count_unread = self.queryset.\
-            filter(date_read__isnull=True).\
-            count()
-        count_read = self.queryset.\
-            filter(date_read__isnull=False).\
-            count()
+        count_unread = self.queryset.filter(date_read__isnull=True).count()
+        count_read = self.queryset.filter(date_read__isnull=False).count()
         response = super().list(request, *args, **kwargs)
         response.data["count_unread"] = count_unread
         response.data["count_read"] = count_read

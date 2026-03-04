@@ -1,4 +1,3 @@
-
 """Calculate beginning and end dates of quarters."""
 
 import datetime
@@ -20,10 +19,7 @@ def quarter(dt):
 def quarter_start(dt):
     """Return datetime object for date/time of start of quarter."""
     q = quarter(dt)
-    return datetime.datetime(year=dt.year,
-                             month=(q * 3) - 2,
-                             day=1,
-                             tzinfo=dt.tzinfo)
+    return datetime.datetime(year=dt.year, month=(q * 3) - 2, day=1, tzinfo=dt.tzinfo)
 
 
 def quarter_end(dt):

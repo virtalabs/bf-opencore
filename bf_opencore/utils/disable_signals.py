@@ -34,10 +34,14 @@ class DisableSignals:
     def __init__(self, disabled_signals=None):  # noqa=D107
         self.stashed_signals = defaultdict(list)
         self.disabled_signals = disabled_signals or [
-            pre_init, post_init,
-            pre_save, post_save,
-            pre_delete, post_delete,
-            pre_migrate, post_migrate,
+            pre_init,
+            post_init,
+            pre_save,
+            post_save,
+            pre_delete,
+            post_delete,
+            pre_migrate,
+            post_migrate,
         ]
 
     def __enter__(self):  # noqa=D105

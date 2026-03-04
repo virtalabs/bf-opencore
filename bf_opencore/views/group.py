@@ -26,7 +26,8 @@ class GroupSerializer(serializers.HyperlinkedModelSerializer):
 
     url = serializers.HyperlinkedIdentityField(view_name="bf_opencore:group-detail")
     add_assets_url = serializers.HyperlinkedIdentityField(
-        view_name="bf_opencore:group-assets")
+        view_name="bf_opencore:group-assets"
+    )
     # assets = serializers.HyperlinkedRelatedField(
     #     many=True,
     #     read_only=True,
@@ -62,7 +63,7 @@ class GroupFilter(django_filters.rest_framework.FilterSet):
         # https://docs.djangoproject.com/en/1.11/ref/models/querysets/#field-lookups
         fields = {
             "asset": ["exact"],
-            }
+        }
 
 
 class GroupViewSet(WaffleSwitchMixin, viewsets.ModelViewSet):
@@ -85,39 +86,50 @@ class GroupViewSet(WaffleSwitchMixin, viewsets.ModelViewSet):
         # request to /api/groups/<n>/assets/.
         # The POST data must contain a list of asset IDs.
         asset_ids = request.data.get("asset_ids")
-        logger.debug("Got asset IDs '%s' of type '%s'",
-                     asset_ids, type(asset_ids))
+        logger.debug("Got asset IDs '%s' of type '%s'", asset_ids, type(asset_ids))
 
         if asset_ids is None:
-            raise serializers.ValidationError({
-                "asset_ids": ["'asset_ids' is required"]})
+            raise serializers.ValidationError(
+                {"asset_ids": ["'asset_ids' is required"]}
+            )
         if not iterable(asset_ids):
-            raise serializers.ValidationError({
-                "asset_ids": ["'asset_ids' must be a list"]})
+            raise serializers.ValidationError(
+                {"asset_ids": ["'asset_ids' must be a list"]}
+            )
 
         assets_existing = assets_new = 0
         for asset_id in asset_ids:
             try:
                 asset = Asset.objects.get(pk=asset_id)
             except (ObjectDoesNotExist, ValueError):
-                raise serializers.ValidationError({
-                    "asset_ids": [f"Asset does not exist: id={asset_id}"],
-                    })
-            asset_group = AssetGroup(asset=asset, group=group,
-                                     provenance="Bulk Add via API")
+                raise serializers.ValidationError(
+                    {
+                        "asset_ids": [f"Asset does not exist: id={asset_id}"],
+                    }
+                )
+            asset_group = AssetGroup(
+                asset=asset, group=group, provenance="Bulk Add via API"
+            )
             try:
                 asset_group.save()
-                logger.debug("Created new asset-group link between "
-                             "%s and %s: %s", asset, group, asset_group)
+                logger.debug(
+                    "Created new asset-group link between %s and %s: %s",
+                    asset,
+                    group,
+                    asset_group,
+                )
                 assets_new += 1
             except IntegrityError:
                 asset_group = AssetGroup.objects.get(asset=asset, group=group)
-                logger.debug("Asset-group link between %s and %s already "
-                             "existed: %s", asset, group, asset_group)
+                logger.debug(
+                    "Asset-group link between %s and %s already existed: %s",
+                    asset,
+                    group,
+                    asset_group,
+                )
                 assets_existing += 1
 
-        return Response({"# New assets added": assets_new,
-                         "# Existing assets": assets_existing},
-                        status=(status.HTTP_201_CREATED
-                                if assets_new
-                                else status.HTTP_200_OK))
+        return Response(
+            {"# New assets added": assets_new, "# Existing assets": assets_existing},
+            status=(status.HTTP_201_CREATED if assets_new else status.HTTP_200_OK),
+        )

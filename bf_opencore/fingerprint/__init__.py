@@ -1,5 +1,5 @@
-
 """Fingerprinting connector."""
+
 import celery
 import nmap
 from django.apps import apps
@@ -60,8 +60,7 @@ def main(ctx, hostname):
     ctx.ct.print("Version %s.%s" % (v_major, v_minor))
 
     ConnectorTask = apps.get_model("bf_opencore", "ConnectorTask")
-    connector_task = ConnectorTask.objects.get(
-        celery_task_id=ctx.request.id)
+    connector_task = ConnectorTask.objects.get(celery_task_id=ctx.request.id)
     # Update database
     Asset = apps.get_model("bf_opencore", "Asset")
     Scan = apps.get_model("bf_opencore", "Scan")
@@ -70,8 +69,7 @@ def main(ctx, hostname):
         asset, dummy = Asset.objects.get_or_create(ip_address=host)
         if "tcp" in nm[host]:
             open_tcp_ports = list(nm[host]["tcp"].keys())
-            ctx.ct.print(
-                "%s: %s TCP ports open" % (host, open_tcp_ports))
+            ctx.ct.print("%s: %s TCP ports open" % (host, open_tcp_ports))
             for port in open_tcp_ports:
                 asset.open_ports_tcp_add(port)
         if "osmatch" in nm[host]:
@@ -88,5 +86,5 @@ def main(ctx, hostname):
             num_plugins=0,
             provenance=f"Fingerprint ({nm.command_line()})",
             external_url=None,
-            )
+        )
         scan.save()

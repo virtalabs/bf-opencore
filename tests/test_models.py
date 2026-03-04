@@ -1,7 +1,6 @@
 """Tests for bf_opencore models (mirrors bf_opencore/models)."""
 
 
-
 def test_asset_model(db):
     """Smoke test: Asset can be created."""
     from bf_opencore.models import Asset

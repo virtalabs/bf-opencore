@@ -32,14 +32,16 @@ logging.getLogger("sh").setLevel(logging.WARNING)
 # }
 
 PING_OPTS = [
-    "-c 3",        # number of ping packets to send
+    "-c 3",  # number of ping packets to send
 ]
 
 # http://stackoverflow.com/questions/1418423/the-hostname-regex
 # imperfect but good enough for input sanitization
-PING_TARGET_RE = r"^(?=.{1,255}$)[0-9A-Za-z](?:(?:[0-9A-Za-z]|-){0," \
-    r"61}[0-9A-Za-z])?(?:\.[0-9A-Za-z](?:(?:[0-9A-Za-z]" \
+PING_TARGET_RE = (
+    r"^(?=.{1,255}$)[0-9A-Za-z](?:(?:[0-9A-Za-z]|-){0,"
+    r"61}[0-9A-Za-z])?(?:\.[0-9A-Za-z](?:(?:[0-9A-Za-z]"
     r"|-){0,61}[0-9A-Za-z])?)*\.?$"
+)
 
 
 @celery_app.task(bind=True)
@@ -85,8 +87,7 @@ def main(ctx, hostname):
     ctx.ct.print("Host '%s' is online" % hostname)
 
     Asset = apps.get_model("bf_opencore", "Asset")
-    asset, _ = Asset.objects.all().get_or_create(
-        ip_address=ipv4addr)
+    asset, _ = Asset.objects.all().get_or_create(ip_address=ipv4addr)
     asset.last_pinged = timezone.now()
     asset.save()
 

@@ -17,7 +17,8 @@ class CrontabScheduleSerializer(serializers.HyperlinkedModelSerializer):
     """
 
     url = serializers.HyperlinkedIdentityField(
-        view_name="bf_opencore:crontabschedule-detail")
+        view_name="bf_opencore:crontabschedule-detail"
+    )
 
     # Human-readable name
     display_name = serializers.SerializerMethodField("do_display_name")
@@ -57,7 +58,8 @@ class IntervalScheduleSerializer(serializers.HyperlinkedModelSerializer):
     """
 
     url = serializers.HyperlinkedIdentityField(
-        view_name="bf_opencore:intervalschedule-detail")
+        view_name="bf_opencore:intervalschedule-detail"
+    )
 
     # Human-readable name
     display_name = serializers.SerializerMethodField("do_display_name")
@@ -94,7 +96,8 @@ class PeriodicTaskSerializer(serializers.HyperlinkedModelSerializer):
     """
 
     url = serializers.HyperlinkedIdentityField(
-        view_name="bf_opencore:periodictask-detail")
+        view_name="bf_opencore:periodictask-detail"
+    )
     display_name = serializers.SerializerMethodField("do_display_name")
     display_schedule = serializers.SerializerMethodField("do_display_schedule")
 
@@ -134,12 +137,16 @@ class PeriodicTaskSerializer(serializers.HyperlinkedModelSerializer):
         Django REST API documentation on validators:
         http://www.django-rest-framework.org/api-guide/validators/
         """
-        if self.context["request"].method == "PATCH" and \
-           "interval" not in attrs and "crontab" not in attrs:
+        if (
+            self.context["request"].method == "PATCH"
+            and "interval" not in attrs
+            and "crontab" not in attrs
+        ):
             return attrs
         if not bool("interval" in attrs) ^ bool("crontab" in attrs):
             raise serializers.ValidationError(
-                "Exactly one of (interval, crontab) is required")
+                "Exactly one of (interval, crontab) is required"
+            )
         return attrs
 
     class Meta:  # noqa
@@ -168,7 +175,7 @@ class PeriodicTaskSerializer(serializers.HyperlinkedModelSerializer):
             "url",
             "display_name",
             "display_schedule",
-            ]
+        ]
 
 
 class PeriodicTaskFilter(django_filters.rest_framework.FilterSet):
@@ -180,7 +187,7 @@ class PeriodicTaskFilter(django_filters.rest_framework.FilterSet):
         fields = {
             "name": ["exact"],
             "task": ["exact"],
-            }
+        }
 
 
 class PeriodicTaskViewSet(WaffleSwitchMixin, viewsets.ModelViewSet):

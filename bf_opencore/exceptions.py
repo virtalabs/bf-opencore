@@ -4,6 +4,7 @@
 class BlueFlowError(Exception):
     """Generic base exception class for BlueFlow errors."""
 
+
 class IntegrationTaskError(BlueFlowError):
     """Thrown by integration tasks."""
 

@@ -70,8 +70,7 @@ class EndpointSuggestion(models.Model):
     """An inferred connection between an Asset and a NetworkEndpoint."""
 
     asset = models.ForeignKey("Asset", on_delete=models.CASCADE)
-    network_endpoint = models.ForeignKey("NetworkEndpoint",
-                                         on_delete=models.CASCADE)
+    network_endpoint = models.ForeignKey("NetworkEndpoint", on_delete=models.CASCADE)
     confidence = models.SmallIntegerField(default=0)
     confidence_limit = models.SmallIntegerField(default=0)
     evidence = models.JSONField(default=list)
@@ -83,32 +82,41 @@ class NetworkEndpoint(models.Model):
     class Meta:  # noqa
         unique_together = (
             ("mac_address", "ipv4_address"),
-            ("mac_address", "ipv6_address"))
+            ("mac_address", "ipv6_address"),
+        )
 
     mac_address = MACAddressField(unique=True, null=True, blank=True)
-    ipv4_address = InetAddressField(store_prefix_length=False,
-                                    blank=True, null=True, unique=True)
-    ipv6_address = InetAddressField(store_prefix_length=False,
-                                    blank=True, null=True, unique=True)
+    ipv4_address = InetAddressField(
+        store_prefix_length=False, blank=True, null=True, unique=True
+    )
+    ipv6_address = InetAddressField(
+        store_prefix_length=False, blank=True, null=True, unique=True
+    )
 
     # user indicated this NetworkEndpoint definitely refers to one asset
-    _user_asset_match = models.ForeignKey("Asset",
-                                          on_delete=models.SET_NULL,
-                                          related_name="network_endpoints",
-                                          blank=True, null=True)
+    _user_asset_match = models.ForeignKey(
+        "Asset",
+        on_delete=models.SET_NULL,
+        related_name="network_endpoints",
+        blank=True,
+        null=True,
+    )
 
     # user indicated that the following guesses were wrong
-    _asset_match_blacklist = pg_fields.ArrayField(models.IntegerField(),
-                                                  default=list, blank=True)
+    _asset_match_blacklist = pg_fields.ArrayField(
+        models.IntegerField(), default=list, blank=True
+    )
 
     first_seen = models.DateTimeField(auto_now_add=True, editable=False)
     last_seen = models.DateTimeField(auto_now=True)
 
     # port can look like: "80/TCP", "ICMP" and "62000/UDP"
-    transmit_ports = pg_fields.ArrayField(models.CharField(max_length=9),
-                                          default=list, blank=True)
-    receive_ports = pg_fields.ArrayField(models.CharField(max_length=9),
-                                         default=list, blank=True)
+    transmit_ports = pg_fields.ArrayField(
+        models.CharField(max_length=9), default=list, blank=True
+    )
+    receive_ports = pg_fields.ArrayField(
+        models.CharField(max_length=9), default=list, blank=True
+    )
 
     max_confidence = models.SmallIntegerField(default=0)
 
@@ -159,8 +167,7 @@ class NetworkEndpoint(models.Model):
         """
         self._user_asset_match = value
         EndpointSuggestion = apps.get_model("bf_opencore", "EndpointSuggestion")
-        EndpointSuggestion.objects.filter(
-            network_endpoint=self).delete()
+        EndpointSuggestion.objects.filter(network_endpoint=self).delete()
 
     @property
     def suggestions(self):
@@ -169,8 +176,9 @@ class NetworkEndpoint(models.Model):
         Return None if asset has been set, never return assets in blacklist.
         """
         EndpointSuggestion = apps.get_model("bf_opencore", "EndpointSuggestion")
-        return (EndpointSuggestion.objects.filter(network_endpoint=self)
-                .order_by("-confidence"))
+        return EndpointSuggestion.objects.filter(network_endpoint=self).order_by(
+            "-confidence"
+        )
 
     @property
     def blacklist(self):
@@ -186,8 +194,9 @@ class NetworkEndpoint(models.Model):
         """
         self._asset_match_blacklist = value
         EndpointSuggestion = apps.get_model("bf_opencore", "EndpointSuggestion")
-        EndpointSuggestion.objects.filter(network_endpoint=self,
-                                          asset__in=value).delete()
+        EndpointSuggestion.objects.filter(
+            network_endpoint=self, asset__in=value
+        ).delete()
         self.update_suggestions()
 
     def compare(self, asset):
@@ -198,78 +207,92 @@ class NetworkEndpoint(models.Model):
         matching_criteria = [
             {
                 "reason": "Devices on same network",
-                "value": lambda asset: (self.ipv4_address and
-                                        asset.network_qset()
-                                        .filter(cidr__cidr__net_contains=self
-                                                .ipv4_address)
-                                        .first()
-                                        .name),
+                "value": lambda asset: (
+                    self.ipv4_address
+                    and asset.network_qset()
+                    .filter(cidr__cidr__net_contains=self.ipv4_address)
+                    .first()
+                    .name
+                ),
                 "weight": lambda asset: 1,
                 "max_weight": 1,
-                "test": lambda asset: (self.ipv4_address and
-                                       asset.network_qset()
-                                       .filter(cidr__cidr__net_contains=self
-                                               .ipv4_address)
-                                       .exists()),
+                "test": lambda asset: (
+                    self.ipv4_address
+                    and asset.network_qset()
+                    .filter(cidr__cidr__net_contains=self.ipv4_address)
+                    .exists()
+                ),
             },
             {
                 "reason": "Devices on same network",
-                "value": lambda asset: (self.ipv6_address and
-                                        asset.network_qset()
-                                        .filter(cidr__cidr__net_contains=self
-                                                .ipv6_address)
-                                        .first()
-                                        .name),
+                "value": lambda asset: (
+                    self.ipv6_address
+                    and asset.network_qset()
+                    .filter(cidr__cidr__net_contains=self.ipv6_address)
+                    .first()
+                    .name
+                ),
                 "weight": lambda asset: 1,
                 "max_weight": 1,
-                "test": lambda asset: (self.ipv6_address and
-                                       asset.network_qset()
-                                       .filter(cidr__cidr__net_contains=self
-                                               .ipv6_address)
-                                       .exists()),
+                "test": lambda asset: (
+                    self.ipv6_address
+                    and asset.network_qset()
+                    .filter(cidr__cidr__net_contains=self.ipv6_address)
+                    .exists()
+                ),
             },
             {
                 "reason": "Shared MAC address range",
                 "value": lambda asset: f"{str(self.mac_address)[:9]}*",
                 "weight": lambda asset: 4,
                 "max_weight": 4,
-                "test": lambda asset: (self.mac_address and asset
-                                       .mac_address and
-                                       self.mac_address.value >> 24 == asset
-                                       .mac_address.value >> 24),
+                "test": lambda asset: (
+                    self.mac_address
+                    and asset.mac_address
+                    and self.mac_address.value >> 24 == asset.mac_address.value >> 24
+                ),
             },
             {
                 "reason": "Shared TCP ports",
-                "value": lambda asset: {int(port.strip("/TCP")) for port
-                                        in self.receive_ports
-                                        if port.endswith("/TCP")}.intersection(
-                                            set(asset.open_ports_tcp)),
+                "value": lambda asset: {
+                    int(port.strip("/TCP"))
+                    for port in self.receive_ports
+                    if port.endswith("/TCP")
+                }.intersection(set(asset.open_ports_tcp)),
                 "weight": lambda asset: min(
-                    len({int(port.strip("/TCP")) for port
-                         in self.receive_ports
-                         if port.endswith("/TCP")}
-                        .intersection(set(asset.open_ports_tcp))),
-                    3),
+                    len(
+                        {
+                            int(port.strip("/TCP"))
+                            for port in self.receive_ports
+                            if port.endswith("/TCP")
+                        }.intersection(set(asset.open_ports_tcp))
+                    ),
+                    3,
+                ),
                 "max_weight": 3,
-                "test": lambda asset: (not {int(port.strip("/TCP"))
-                                            for port in self.receive_ports
-                                            if port.endswith("/TCP")}
-                                       .isdisjoint(set(asset.open_ports_tcp))),
+                "test": lambda asset: (
+                    not {
+                        int(port.strip("/TCP"))
+                        for port in self.receive_ports
+                        if port.endswith("/TCP")
+                    }.isdisjoint(set(asset.open_ports_tcp))
+                ),
             },
         ]
 
         for criteria in matching_criteria:
             if criteria["test"](asset):
                 confidence += criteria["weight"](asset)
-                evidence.append({
-                    "reason": str(criteria["reason"]),
-                    "value": str(criteria["value"](asset)),
-                })
+                evidence.append(
+                    {
+                        "reason": str(criteria["reason"]),
+                        "value": str(criteria["value"](asset)),
+                    }
+                )
 
         return {
             "confidence": confidence,
-            "confidence_limit": sum([x["max_weight"] for x
-                                     in matching_criteria]),
+            "confidence_limit": sum([x["max_weight"] for x in matching_criteria]),
             "evidence": evidence,
             "asset": asset,
         }
@@ -285,15 +308,15 @@ class NetworkEndpoint(models.Model):
         self.max_confidence = 0
 
         Asset = apps.get_model("bf_opencore", "Asset")
-        for asset in (Asset.objects
-                      .exclude(id__in=self.blacklist)):
+        for asset in Asset.objects.exclude(id__in=self.blacklist):
             report = self.compare(asset)
             confidence = int(report["confidence"])
             if confidence:
                 # only record if confidence > 0
                 EndpointSuggestion = apps.get_model("bf_opencore", "EndpointSuggestion")
                 change, _ = EndpointSuggestion.objects.update_or_create(
-                    asset=asset, network_endpoint=self)
+                    asset=asset, network_endpoint=self
+                )
                 change.confidence = confidence
                 change.evidence = report["evidence"]
                 change.confidence_limit = report["confidence_limit"]
@@ -324,10 +347,11 @@ class NetworkEndpoint(models.Model):
 
         conflict = False
         for field in identifying_fields:
-            conflict = conflict or (getattr(self, field) and
-                                    getattr(other, field) and
-                                    getattr(self, field) !=
-                                    getattr(other, field))
+            conflict = conflict or (
+                getattr(self, field)
+                and getattr(other, field)
+                and getattr(self, field) != getattr(other, field)
+            )
 
         if conflict:
             return False

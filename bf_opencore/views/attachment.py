@@ -25,11 +25,12 @@ class AttachmentSerializer(serializers.HyperlinkedModelSerializer):
     """
 
     url = serializers.HyperlinkedIdentityField(
-        view_name="bf_opencore:attachment-detail")
+        view_name="bf_opencore:attachment-detail"
+    )
     asset = serializers.HyperlinkedRelatedField(
         read_only=True,
         view_name="bf_opencore:asset-detail",
-        )
+    )
     asset_id = serializers.IntegerField(required=False)
     file_name = serializers.CharField(required=False)
 
@@ -50,7 +51,6 @@ class AttachmentSerializer(serializers.HyperlinkedModelSerializer):
             "size_bytes",
             "date_added",
             "added_by",
-
             # Fields that are created (not stored directly in schema)
             "url",
         )

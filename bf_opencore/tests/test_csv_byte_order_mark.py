@@ -54,15 +54,19 @@ def test_process_csv_without_bom(setup_db):
         "manufacturer": "Manufacturer",
     }
     filename = write_tempfile(
-        "IP,Manufacturer\n"
-        "10.0.0.1,Bar\n",
+        "IP,Manufacturer\n10.0.0.1,Bar\n",
     )
     asset = Asset.objects.last()
     assert asset.manufacturer == "Foo"
 
     test_ctx = TestCTX()
-    process_csv(ctx=test_ctx, filename=filename, field_mapping=field_mapping,
-                require_network_info=False, update_only=True)
+    process_csv(
+        ctx=test_ctx,
+        filename=filename,
+        field_mapping=field_mapping,
+        require_network_info=False,
+        update_only=True,
+    )
     os.unlink(filename)
 
     asset = Asset.objects.last()
@@ -80,16 +84,20 @@ def test_process_csv_with_bom(setup_db):
         "manufacturer": "Manufacturer",
     }
     filename = write_tempfile(
-        "IP,Manufacturer\n"
-        "10.0.0.1,Bar\n",
+        "IP,Manufacturer\n10.0.0.1,Bar\n",
         bom_utf8=True,
     )
     asset = Asset.objects.last()
     assert asset.manufacturer == "Foo"
 
     test_ctx = TestCTX()
-    process_csv(ctx=test_ctx, filename=filename, field_mapping=field_mapping,
-                require_network_info=False, update_only=True)
+    process_csv(
+        ctx=test_ctx,
+        filename=filename,
+        field_mapping=field_mapping,
+        require_network_info=False,
+        update_only=True,
+    )
     os.unlink(filename)
 
     asset = Asset.objects.last()

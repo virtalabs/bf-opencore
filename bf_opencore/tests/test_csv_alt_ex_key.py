@@ -1,4 +1,3 @@
-
 """Test CSV connector."""
 
 import os
@@ -25,15 +24,16 @@ def test_sync_match_on_string_key_id_other_cmms(setup_db, no_nwk_field):
         "ip_address": "IP",
     }
     filename = write_tempfile(
-        "Asset #,IP,Manufacturer\n"
-        "ONETWOTHREE,1.2.3.4,Different\n",
+        "Asset #,IP,Manufacturer\nONETWOTHREE,1.2.3.4,Different\n",
     )
     asset = Asset.objects.last()
     assert asset.manufacturer == "Foo"
-    bf_opencore.csv.main.apply(kwargs={
-        "filename": filename,
-        "field_mapping": field_mapping,
-    })
+    bf_opencore.csv.main.apply(
+        kwargs={
+            "filename": filename,
+            "field_mapping": field_mapping,
+        }
+    )
     os.unlink(filename)
     ct = ConnectorTask.objects.get()
     assert ct.status == "Success"
@@ -55,11 +55,11 @@ def test_match_on_ex_key_bad_ip(setup_db, no_nwk_field):
         "ip_address": "IP",
     }
     filename = write_tempfile(
-        "Asset #,IP,Manufacturer\n"
-        "ONETWOTHREE,b0d_ip,Different\n",
+        "Asset #,IP,Manufacturer\nONETWOTHREE,b0d_ip,Different\n",
     )
     bf_opencore.csv.main.apply(
-        kwargs={"filename": filename, "field_mapping": field_mapping})
+        kwargs={"filename": filename, "field_mapping": field_mapping}
+    )
     os.unlink(filename)
     ct = ConnectorTask.objects.get()
     assert ct.status == "Success"
@@ -81,11 +81,11 @@ def test_match_on_ex_key_bad_mac(setup_db, no_nwk_field):
         "mac_address": "MAC",
     }
     filename = write_tempfile(
-        "Asset #,MAC,Manufacturer\n"
-        "ONETWOTHREE,b0d_mac,Different\n",
+        "Asset #,MAC,Manufacturer\nONETWOTHREE,b0d_mac,Different\n",
     )
     bf_opencore.csv.main.apply(
-        kwargs={"filename": filename, "field_mapping": field_mapping})
+        kwargs={"filename": filename, "field_mapping": field_mapping}
+    )
     os.unlink(filename)
     ct = ConnectorTask.objects.get()
     assert ct.status == "Success"
@@ -110,11 +110,11 @@ def test_match_on_ex_key_no_ip_mac(setup_db, no_nwk_field):
         "manufacturer": "Manufacturer",
     }
     filename = write_tempfile(
-        "Asset #,Manufacturer\n"
-        "ONETWOTHREE,Different\n",
+        "Asset #,Manufacturer\nONETWOTHREE,Different\n",
     )
     bf_opencore.csv.main.apply(
-        kwargs={"filename": filename, "field_mapping": field_mapping})
+        kwargs={"filename": filename, "field_mapping": field_mapping}
+    )
     os.unlink(filename)
     ct = ConnectorTask.objects.get()
     assert ct.status == "Success"
@@ -136,11 +136,11 @@ def test_create_with_ex_key_no_ip_mac(setup_db, no_nwk_field):
         "manufacturer": "Manufacturer",
     }
     filename = write_tempfile(
-        "Asset #,Manufacturer\n"
-        "ONETWOTHREE,Different\n",
+        "Asset #,Manufacturer\nONETWOTHREE,Different\n",
     )
     bf_opencore.csv.main.apply(
-        kwargs={"filename": filename, "field_mapping": field_mapping})
+        kwargs={"filename": filename, "field_mapping": field_mapping}
+    )
     os.unlink(filename)
     ct = ConnectorTask.objects.get()
     assert ct.status == "Success"
@@ -162,11 +162,11 @@ def test_create_with_empty_ex_key_ip_mac(setup_db, no_nwk_field):
         "manufacturer": "Manufacturer",
     }
     filename = write_tempfile(
-        "Asset #,Manufacturer\n"
-        ",Different\n",
+        "Asset #,Manufacturer\n,Different\n",
     )
     bf_opencore.csv.main.apply(
-        kwargs={"filename": filename, "field_mapping": field_mapping})
+        kwargs={"filename": filename, "field_mapping": field_mapping}
+    )
     os.unlink(filename)
     ct = ConnectorTask.objects.get()
     assert ct.status == "Success"
@@ -185,11 +185,11 @@ def test_create_without_ex_key_ip_mac(setup_db, no_nwk_field):
         "manufacturer": "Manufacturer",
     }
     filename = write_tempfile(
-        "Manufacturer\n"
-        "Different\n",
+        "Manufacturer\nDifferent\n",
     )
     bf_opencore.csv.main.apply(
-        kwargs={"filename": filename, "field_mapping": field_mapping})
+        kwargs={"filename": filename, "field_mapping": field_mapping}
+    )
     os.unlink(filename)
     ct = ConnectorTask.objects.get()
     assert ct.status == "Failed"  # This fails "earlier" than the one above

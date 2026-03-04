@@ -1,4 +1,3 @@
-
 """Translate ip addresses."""
 
 import logging

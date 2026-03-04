@@ -21,12 +21,16 @@ class PulseFeedItemManager(models.Manager):
     def closed_list(self, start, end):
         """Return a list of 'closed' items, within a date range."""
         # PulseFeedItem.history is a manager so has all the members we need
-        qset_a = (PulseFeedItem.history
-                  .order_by("-history_date")
-                  .filter(history_date__range=[start, end])
-                  .annotate(status__changed=NullUnlessChanged("status")))
-        return [pfih for pfih in qset_a
-                if pfih.status__changed == PulseFeedItem.STATUS_CLOSED]
+        qset_a = (
+            PulseFeedItem.history.order_by("-history_date")
+            .filter(history_date__range=[start, end])
+            .annotate(status__changed=NullUnlessChanged("status"))
+        )
+        return [
+            pfih
+            for pfih in qset_a
+            if pfih.status__changed == PulseFeedItem.STATUS_CLOSED
+        ]
 
     def closed_quarterly(self, quarters):
         """Return list of lists of closed PulseFeedItems.
@@ -50,7 +54,8 @@ class PulseFeedItemManager(models.Manager):
         while fetched < quarters:
             prev_qtr_start = prev_quarter_start(qtr_start)
             quarterly_list.append(
-                (prev_qtr_start, self.closed_list(prev_qtr_start, qtr_start)))
+                (prev_qtr_start, self.closed_list(prev_qtr_start, qtr_start))
+            )
             fetched += 1
             qtr_start = prev_qtr_start
         return quarterly_list
@@ -79,8 +84,7 @@ class PulseFeedItem(models.Model):
         (STATUS_CLOSED, "Closed"),
     )
 
-    external_pulse_id = models.IntegerField(unique=True, null=False,
-                                            editable=False)
+    external_pulse_id = models.IntegerField(unique=True, null=False, editable=False)
     date_last_updated = models.DateTimeField(null=False, editable=False)
     title = models.TextField(null=False, editable=False)
 
@@ -98,10 +102,12 @@ class PulseFeedItem(models.Model):
     #  flat lists (as opposed to big piles of logic we can AND & OR),
     # they aren't quite as expressive as the 'affected' field of the JSON
     # feed blob.  see search_query().
-    affected_manufs = ArrayField(models.TextField(blank=True, null=True),
-                                 null=True, editable=False)
-    affected_models = ArrayField(models.TextField(blank=True, null=True),
-                                 null=True, editable=False)
+    affected_manufs = ArrayField(
+        models.TextField(blank=True, null=True), null=True, editable=False
+    )
+    affected_models = ArrayField(
+        models.TextField(blank=True, null=True), null=True, editable=False
+    )
 
     # raw JSON data from alerts (disk is cheap)
     json = models.JSONField(blank=True, null=True, editable=False)
@@ -153,14 +159,14 @@ class PulseFeedItem(models.Model):
             cond_manufs = compound_condition.get("manufacturer")
             if cond_manufs:
                 conjuncts.append(
-                    reduce(or_, [models.Q(manufacturer__iregex=m)
-                                 for m in cond_manufs]))
+                    reduce(or_, [models.Q(manufacturer__iregex=m) for m in cond_manufs])
+                )
 
             cond_models = compound_condition.get("model")
             if cond_models:
                 conjuncts.append(
-                    reduce(or_, [models.Q(model__iregex=m)
-                                 for m in cond_models]))
+                    reduce(or_, [models.Q(model__iregex=m) for m in cond_models])
+                )
 
             # match on affected app_sw_version, which is, like manufacturer and
             # model, a set of matching criteria:
@@ -180,16 +186,22 @@ class PulseFeedItem(models.Model):
                     elif isinstance(ver, list) and len(ver) == 2:
                         cmp, val = ver
                         if cmp in ("lte", "lt", "gte", "gt"):
-                            conds.append(models.Q(**{
-                                f"app_sw_version__{cmp}": val,
-                            }))
+                            conds.append(
+                                models.Q(
+                                    **{
+                                        f"app_sw_version__{cmp}": val,
+                                    }
+                                )
+                            )
                         else:
-                            logger.warning("Invalid app_sw_version comparator "
-                                           "%s; skipping app_sw_version "
-                                           "comparison.", cmp)
+                            logger.warning(
+                                "Invalid app_sw_version comparator "
+                                "%s; skipping app_sw_version "
+                                "comparison.",
+                                cmp,
+                            )
                     else:
-                        logger.warning("Invalid app_sw_version condition %s",
-                                       ver)
+                        logger.warning("Invalid app_sw_version condition %s", ver)
 
                 if conds:
                     # also match on null app_sw_version b/c we don't know
@@ -228,7 +240,8 @@ class PulseFeedItem(models.Model):
             vulns |= Asset.objects.filter(
                 asset_vulnerabilities__vulnerability=vuln,
                 asset_vulnerabilities__date_remediated__isnull=True,
-                asset_vulnerabilities__date_ignored__isnull=True)
+                asset_vulnerabilities__date_ignored__isnull=True,
+            )
         return vulns
 
     def asset_search_qset(self):

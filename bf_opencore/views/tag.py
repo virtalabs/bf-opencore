@@ -27,7 +27,8 @@ class TagSerializer(serializers.HyperlinkedModelSerializer):
 
     url = serializers.HyperlinkedIdentityField(view_name="bf_opencore:tag-detail")
     add_assets_url = serializers.HyperlinkedIdentityField(
-        view_name="bf_opencore:tag-assets")
+        view_name="bf_opencore:tag-assets"
+    )
 
     class Meta:
         """Wire this serializer to a model."""
@@ -58,8 +59,9 @@ class TagSerializer(serializers.HyperlinkedModelSerializer):
         if len(color) < 7 and color[0] != "#":
             color = "#" + color
         if not color[0] == "#":
-            raise serializers.ValidationError(f"{color} is not a valid color, must "
-                                              "start with '#'")
+            raise serializers.ValidationError(
+                f"{color} is not a valid color, must start with '#'"
+            )
         try:
             dummy_int = int(color[1:], 16)
         except ValueError:
@@ -77,7 +79,7 @@ class TagFilter(django_filters.rest_framework.FilterSet):
         # https://docs.djangoproject.com/en/1.11/ref/models/querysets/#field-lookups
         fields = {
             "asset": ["exact"],
-            }
+        }
 
 
 class TagViewSet(WaffleSwitchMixin, ChangeReasonMixin, viewsets.ModelViewSet):
@@ -100,42 +102,51 @@ class TagViewSet(WaffleSwitchMixin, ChangeReasonMixin, viewsets.ModelViewSet):
         # request to /api/tags/<n>/assets/.
         # The POST data must contain a list of asset IDs.
         asset_ids = request.data.get("asset_ids")
-        logger.debug("Got asset IDs '%s' of type '%s'",
-                     asset_ids, type(asset_ids))
+        logger.debug("Got asset IDs '%s' of type '%s'", asset_ids, type(asset_ids))
 
         if asset_ids is None:
-            raise serializers.ValidationError({
-                "asset_ids": ["'asset_ids' is required"]})
+            raise serializers.ValidationError(
+                {"asset_ids": ["'asset_ids' is required"]}
+            )
         if not iterable(asset_ids):
-            raise serializers.ValidationError({
-                "asset_ids": ["'asset_ids' must be a list"]})
+            raise serializers.ValidationError(
+                {"asset_ids": ["'asset_ids' must be a list"]}
+            )
 
         assets_existing = assets_new = 0
         for asset_id in asset_ids:
             try:
                 asset = Asset.objects.get(pk=asset_id)
             except (ObjectDoesNotExist, ValueError):
-                raise serializers.ValidationError({
-                    "asset_ids": [f"Asset does not exist: id={asset_id}"],
-                    })
+                raise serializers.ValidationError(
+                    {
+                        "asset_ids": [f"Asset does not exist: id={asset_id}"],
+                    }
+                )
             reason = "Bulk Add via API"
-            asset_tag = AssetTag(asset=asset, tag=tag,
-                                 provenance=reason)
+            asset_tag = AssetTag(asset=asset, tag=tag, provenance=reason)
             try:
                 asset_tag.save()
                 # The ChangeReasonMixin won't work here, so we do it manually
                 hist_utils.update_change_reason(asset_tag, reason)
-                logger.debug("Created new asset-tag link between "
-                             "%s and %s: %s", asset, tag, asset_tag)
+                logger.debug(
+                    "Created new asset-tag link between %s and %s: %s",
+                    asset,
+                    tag,
+                    asset_tag,
+                )
                 assets_new += 1
             except IntegrityError:
                 asset_tag = AssetTag.objects.get(asset=asset, tag=tag)
-                logger.debug("Asset-tag link between %s and %s already "
-                             "existed: %s", asset, tag, asset_tag)
+                logger.debug(
+                    "Asset-tag link between %s and %s already existed: %s",
+                    asset,
+                    tag,
+                    asset_tag,
+                )
                 assets_existing += 1
 
-        return Response({"# New assets added": assets_new,
-                         "# Existing assets": assets_existing},
-                        status=(status.HTTP_201_CREATED
-                                if assets_new
-                                else status.HTTP_200_OK))
+        return Response(
+            {"# New assets added": assets_new, "# Existing assets": assets_existing},
+            status=(status.HTTP_201_CREATED if assets_new else status.HTTP_200_OK),
+        )

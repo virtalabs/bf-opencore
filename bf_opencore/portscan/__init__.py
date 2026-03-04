@@ -78,8 +78,7 @@ def main(ctx, hostname):
 
     if scanned_assets:
         ConnectorTask = apps.get_model("bf_opencore", "ConnectorTask")
-        connector_task = ConnectorTask.objects.get(
-            celery_task_id=ctx.request.id)
+        connector_task = ConnectorTask.objects.get(celery_task_id=ctx.request.id)
     Scan = apps.get_model("bf_opencore", "Scan")
     for asset, ports in scanned_assets.items():
         asset.open_ports_tcp_add(ports)
@@ -94,14 +93,14 @@ def main(ctx, hostname):
             num_plugins=0,
             provenance="Portscan ({})".format(" ".join(command)),
             external_url=None,
-            )
+        )
         scan.save()
 
     if new_ports:
         Alert = apps.get_model("bf_opencore", "Alert")
         Alert.objects.create(
-            text=f"Found {new_ports} new open ports",
-            connectortask=connector_task)
+            text=f"Found {new_ports} new open ports", connectortask=connector_task
+        )
 
     stdout = output.stdout.decode("utf-8")
     stderr = output.stderr.decode("utf-8")

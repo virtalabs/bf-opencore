@@ -62,7 +62,8 @@ class MiniAssetVulnerabilitySerializer(serializers.HyperlinkedModelSerializer):
     """
 
     url = serializers.HyperlinkedIdentityField(
-        view_name="bf_opencore:assetvulnerability-detail")
+        view_name="bf_opencore:assetvulnerability-detail"
+    )
 
     class Meta:  # noqa
         model = AssetVulnerability
@@ -86,17 +87,19 @@ class AssetSerializer(serializers.HyperlinkedModelSerializer):
     url = serializers.HyperlinkedIdentityField(view_name="bf_opencore:asset-detail")
     tags_url = serializers.HyperlinkedIdentityField(view_name="bf_opencore:asset-tags")
     scans_url = serializers.HyperlinkedIdentityField(
-        view_name="bf_opencore:asset-scans")
+        view_name="bf_opencore:asset-scans"
+    )
     external_links_url = serializers.HyperlinkedIdentityField(
-        view_name="bf_opencore:asset-external-links")
+        view_name="bf_opencore:asset-external-links"
+    )
 
     asset_tags = AssetTagSerializer(read_only=True, many=True)
     asset_custom_fields = AssetCustomFieldSerializer(read_only=True, many=True)
-    asset_vulnerabilities = MiniAssetVulnerabilitySerializer(
-        read_only=True, many=True)
+    asset_vulnerabilities = MiniAssetVulnerabilitySerializer(read_only=True, many=True)
 
     display_name = serializers.CharField(
-        max_length=126, allow_blank=True, allow_null=True, required=False)
+        max_length=126, allow_blank=True, allow_null=True, required=False
+    )
 
     class Meta:
         """Wire this serializer to a model."""
@@ -144,8 +147,7 @@ class AssetSerializer(serializers.HyperlinkedModelSerializer):
         This may not be necessary anymore
         """
         if mac_string == "":
-            logger.debug("Coercing empty string MAC to None (was %r)",
-                         mac_string)
+            logger.debug("Coercing empty string MAC to None (was %r)", mac_string)
             return None
         return mac_string
 
@@ -160,8 +162,7 @@ class AssetSerializer(serializers.HyperlinkedModelSerializer):
         # at the database level, then we wouldn't have needed a
         # validator here.
         if not all(1 <= port <= 65535 for port in ports_list):
-            raise serializers.ValidationError(
-                "TCP Ports must be in range 1--65535")
+            raise serializers.ValidationError("TCP Ports must be in range 1--65535")
         return sorted(set(ports_list))
 
 
@@ -171,7 +172,7 @@ class HistoricalAssetSerializer(serializers.HyperlinkedModelSerializer):
     history_user = serializers.HyperlinkedRelatedField(
         view_name="bf_opencore:user-detail",
         read_only=True,
-        )
+    )
 
     class Meta:
         """Wire this serializer to a model."""
@@ -185,7 +186,8 @@ class HistoricalAssetSerializer(serializers.HyperlinkedModelSerializer):
             "history_id",
             "history_type",
             "history_user",
-            "history_user_id")
+            "history_user_id",
+        )
         fields = AssetSerializer.Meta.asset_fields + historical_fields
 
 
@@ -220,8 +222,9 @@ class ChangeLogMetaclass(type(AssetSerializer)):
         return super().__new__(mcs, name, parents, dct)
 
 
-class ChangeLogAssetSerializer(serializers.HyperlinkedModelSerializer,
-                               metaclass=ChangeLogMetaclass):
+class ChangeLogAssetSerializer(
+    serializers.HyperlinkedModelSerializer, metaclass=ChangeLogMetaclass
+):
     """Almost like HistoricalAssetSerializer.
 
     but used to only return the "changed" fields.
@@ -230,31 +233,29 @@ class ChangeLogAssetSerializer(serializers.HyperlinkedModelSerializer,
     history_user = serializers.HyperlinkedRelatedField(
         view_name="bf_opencore:user-detail",
         read_only=True,
-        )
+    )
 
     class Meta:  # noqa
         model = Asset.history.model
         changed_fields = AssetSerializer.Meta.asset_fields
-        fields = (changed_fields +
-                  HistoricalAssetSerializer.Meta.historical_fields)
+        fields = changed_fields + HistoricalAssetSerializer.Meta.historical_fields
 
 
 class AssetFilter(django_filters.rest_framework.FilterSet):
     """FilterSet."""
 
     date_range = django_filters.DateRangeFilter(field_name="date_added")
-    datetime_range = django_filters.DateTimeFromToRangeFilter(
-        field_name="date_added")
+    datetime_range = django_filters.DateTimeFromToRangeFilter(field_name="date_added")
     network = django_filters.NumberFilter(method="filter_network")
     no_network = drf_filters.BooleanFilter(method="filter_no_network")
     unassessed = drf_filters.BooleanFilter(method="filter_unassessed")
     assessed_factor = drf_filters.NumberFilter(method="filter_assessed_factor")
     group = django_filters.NumberFilter(field_name="groups")
     tag = django_filters.NumberFilter(field_name="tags")
-    vulnerability = django_filters.NumberFilter(
-        field_name="vulnerabilities__id")
+    vulnerability = django_filters.NumberFilter(field_name="vulnerabilities__id")
     active_vulnerability = django_filters.NumberFilter(
-        method="filter_active_vulnerability")
+        method="filter_active_vulnerability"
+    )
     pulse = django_filters.NumberFilter(method="filter_pulse")
 
     @staticmethod
@@ -290,7 +291,8 @@ class AssetFilter(django_filters.rest_framework.FilterSet):
         return queryset.filter(
             asset_vulnerabilities__vulnerability=value,
             asset_vulnerabilities__date_remediated__isnull=True,
-            asset_vulnerabilities__date_ignored__isnull=True)
+            asset_vulnerabilities__date_ignored__isnull=True,
+        )
 
     @staticmethod
     def filter_unassessed(queryset, name, value):
@@ -357,17 +359,34 @@ class AssetFilter(django_filters.rest_framework.FilterSet):
             # 'risk_score_impact': ['gte', 'gt', 'lt', 'lte'],
             # 'risk_score_likelihood': ['gte', 'gt', 'lt', 'lte'],
             "id": ["in"],
-            "ip_address": ["istartswith", "exact", "net_contained",
-                           "net_contained_or_equal", "isnull"],
+            "ip_address": [
+                "istartswith",
+                "exact",
+                "net_contained",
+                "net_contained_or_equal",
+                "isnull",
+            ],
             "mac_address": ["istartswith", "lt", "lte", "gte", "gt", "isnull"],
             "serial_number": ["istartswith", "iexact", "isnull"],
             "name": ["icontains", "exact"],
             "os": ["istartswith", "icontains", "iexact", "exact", "isnull"],
             "owner": ["icontains", "exact"],
-            "manufacturer": ["istartswith", "icontains", "iregex",
-                             "iexact", "exact", "isnull"],
-            "model": ["istartswith", "icontains", "iregex",
-                      "iexact", "exact", "isnull"],
+            "manufacturer": [
+                "istartswith",
+                "icontains",
+                "iregex",
+                "iexact",
+                "exact",
+                "isnull",
+            ],
+            "model": [
+                "istartswith",
+                "icontains",
+                "iregex",
+                "iexact",
+                "exact",
+                "isnull",
+            ],
             "tag_number": ["icontains"],
             "udi": ["istartswith", "iexact"],
             "tags__name": ["istartswith"],
@@ -377,19 +396,20 @@ class AssetFilter(django_filters.rest_framework.FilterSet):
             "asset_vulnerabilities__date_ignored": ["isnull"],
             # TODO: Add asset_risk_factors filters back in once we have a generalized algorithm
             # 'asset_risk_factors': ['isnull'],
-            }
+        }
         filter_overrides = {
             netfields.InetAddressField: {
                 "filter_class": django_filters.Filter,
-                },
+            },
             netfields.MACAddressField: {
                 "filter_class": django_filters.Filter,
-                },
-            }
+            },
+        }
 
 
-class AssetViewSet(WaffleSwitchMixin, ChangeReasonMixin, PaginateRelationsMixin,
-                   viewsets.ModelViewSet):
+class AssetViewSet(
+    WaffleSwitchMixin, ChangeReasonMixin, PaginateRelationsMixin, viewsets.ModelViewSet
+):
     """API endpoint for an Asset (representing a networked device).
 
     read: Return the given asset.
@@ -425,8 +445,9 @@ class AssetViewSet(WaffleSwitchMixin, ChangeReasonMixin, PaginateRelationsMixin,
 
     waffle_switch = "core"
 
-    renderer_classes = (tuple(api_settings.DEFAULT_RENDERER_CLASSES) +
-                        (drf_csv_renderers.PaginatedCSVRenderer, ))
+    renderer_classes = tuple(api_settings.DEFAULT_RENDERER_CLASSES) + (
+        drf_csv_renderers.PaginatedCSVRenderer,
+    )
 
     # NOTE: Order of mixins/base class is important!  Mixins that override
     #   methods *must come first* in order to properly override.  This is
@@ -530,7 +551,8 @@ class AssetViewSet(WaffleSwitchMixin, ChangeReasonMixin, PaginateRelationsMixin,
         """
         if "open_ports_tcp" in request.data:
             request.data["open_ports_tcp"] = self._ports_string_to_list(
-                request.data["open_ports_tcp"])
+                request.data["open_ports_tcp"]
+            )
 
     @staticmethod
     def _validate_mac_address(request):
@@ -585,8 +607,9 @@ class AssetViewSet(WaffleSwitchMixin, ChangeReasonMixin, PaginateRelationsMixin,
 
         asset = self.get_object()
         qset = asset.changelog_qset()
-        serializer = ChangeLogAssetSerializer(qset, many=True,
-                                              context={"request": request})
+        serializer = ChangeLogAssetSerializer(
+            qset, many=True, context={"request": request}
+        )
         return Response(serializer.data)
 
     @action(detail=True)
@@ -639,31 +662,40 @@ class AssetViewSet(WaffleSwitchMixin, ChangeReasonMixin, PaginateRelationsMixin,
             name = dec[0]
             verbose_name = dec[3].get("verbose_name")
 
-            fields.append({
-                "name": name,
-                "display_name": (verbose_name if verbose_name is not None else
-                                 name.replace("_", " ").capitalize()),
-                "field_type": dec[1],
-                "is_relation": f.is_relation,  # Foreign keys, reverses, etc.
-                "is_custom": False,
-            })
+            fields.append(
+                {
+                    "name": name,
+                    "display_name": (
+                        verbose_name
+                        if verbose_name is not None
+                        else name.replace("_", " ").capitalize()
+                    ),
+                    "field_type": dec[1],
+                    "is_relation": f.is_relation,  # Foreign keys, reverses, etc.
+                    "is_custom": False,
+                }
+            )
 
         for f in AssetCustomFieldName.objects.all():
             name = f.field_name
             cfv = AssetCustomField.objects.filter(asset_id=pk, field=f).first()
-            fields.append({
-                "name": name,
-                "display_name": name.replace("_", " ").capitalize(),
-                "field_type": f.display_type,
-                "is_relation": False,
-                "is_custom": True,
-                "custom_field_id": cfv.pk if cfv else None,
-            })
+            fields.append(
+                {
+                    "name": name,
+                    "display_name": name.replace("_", " ").capitalize(),
+                    "field_type": f.display_type,
+                    "is_relation": False,
+                    "is_custom": True,
+                    "custom_field_id": cfv.pk if cfv else None,
+                }
+            )
 
-        return Response({
-            "count": len(fields),
-            "results": fields,
-        })
+        return Response(
+            {
+                "count": len(fields),
+                "results": fields,
+            }
+        )
 
     @action(detail=True)
     def history(self, request, pk):
@@ -676,23 +708,25 @@ class AssetViewSet(WaffleSwitchMixin, ChangeReasonMixin, PaginateRelationsMixin,
         if not request.query_params:
             # Full history
             qset = self.get_object().history_qset()
-            return self.paginate_relations(
-                request, qset, "HistoricalAssetSerializer")
+            return self.paginate_relations(request, qset, "HistoricalAssetSerializer")
         # History for a single field
         field_name = request.query_params.get("field")
         if field_name is None:
-            raise serializers.ValidationError({
-                "field": f"User supplied query parameters '{request.query_params}' that did "
-                         "not include a field value"})
+            raise serializers.ValidationError(
+                {
+                    "field": f"User supplied query parameters '{request.query_params}' that did "
+                    "not include a field value"
+                }
+            )
         try:
-            rqset = self.get_object().field_history_rqset(
-                field_name, newest_first=True)
+            rqset = self.get_object().field_history_rqset(field_name, newest_first=True)
         except d_ex.FieldDoesNotExist:
-            raise serializers.ValidationError({
-                "field": "User tried to query for nonexistent field "
-                         f"'{field_name}'"})
+            raise serializers.ValidationError(
+                {"field": f"User tried to query for nonexistent field '{field_name}'"}
+            )
         serializer = HistoricalAssetSerializer(
-            rqset, many=True, context={"request": request})
+            rqset, many=True, context={"request": request}
+        )
         return Response(serializer.data)
 
     @action(detail=True)
@@ -738,10 +772,9 @@ class AssetViewSet(WaffleSwitchMixin, ChangeReasonMixin, PaginateRelationsMixin,
 
         # This stuff might not be necessary.  The DRF pagination system
         # might take care of it (since it's the same serializer etc.
-        qset = (self.get_object()
-                .similar_qset(exclude_self=exclude_self))
-                # TODO: Add risk score ordering back in once we have a generalized algorithm
-                # .order_by('-risk_score'))
+        qset = self.get_object().similar_qset(exclude_self=exclude_self)
+        # TODO: Add risk score ordering back in once we have a generalized algorithm
+        # .order_by('-risk_score'))
         return self.paginate_relations(request, qset, "AssetSerializer")
 
     @action(detail=True, methods=["GET", "POST"])
@@ -755,27 +788,38 @@ class AssetViewSet(WaffleSwitchMixin, ChangeReasonMixin, PaginateRelationsMixin,
         if request.method == "POST":
             tag_id = request.data.get("tag_id")
             if tag_id is None:
-                raise serializers.ValidationError({
-                    "tag_id": ["'tag_id' is required"],
-                    })
+                raise serializers.ValidationError(
+                    {
+                        "tag_id": ["'tag_id' is required"],
+                    }
+                )
             try:
                 tag = Tag.objects.get(pk=tag_id)
             except d_ex.ObjectDoesNotExist:
-                raise serializers.ValidationError({
-                    "tag_id": [f"Tag does not exist: id={tag_id}"],
-                    })
-            asset_tag = AssetTag(asset=asset, tag=tag,
-                                 provenance="API")
+                raise serializers.ValidationError(
+                    {
+                        "tag_id": [f"Tag does not exist: id={tag_id}"],
+                    }
+                )
+            asset_tag = AssetTag(asset=asset, tag=tag, provenance="API")
             try:
                 asset_tag.save()
                 response_status = status.HTTP_201_CREATED
-                logger.debug("Created new asset-tag link between "
-                             "%s and %s: %s", asset, tag, asset_tag)
+                logger.debug(
+                    "Created new asset-tag link between %s and %s: %s",
+                    asset,
+                    tag,
+                    asset_tag,
+                )
             except IntegrityError:
                 asset_tag = AssetTag.objects.get(asset=asset, tag=tag)
                 response_status = status.HTTP_200_OK
-                logger.debug("Asset-tag link between %s and %s already "
-                             "existed: %s", asset, tag, asset_tag)
+                logger.debug(
+                    "Asset-tag link between %s and %s already existed: %s",
+                    asset,
+                    tag,
+                    asset_tag,
+                )
             views = importlib.import_module("bf_opencore.views")
             serializer = views.TagSerializer(tag, context={"request": request})
             return Response(serializer.data, status=response_status)
@@ -789,10 +833,12 @@ class AssetViewSet(WaffleSwitchMixin, ChangeReasonMixin, PaginateRelationsMixin,
     def duplicate_ips(self, request):
         """Return set of duplicate IP addresses and their counts."""
         assets = self.filter_queryset(self.get_queryset())
-        qset = (assets.values("ip_address")
-                .annotate(howmany=Count("ip_address"))
-                .filter(howmany__gte=2)
-                .order_by("-howmany"))
+        qset = (
+            assets.values("ip_address")
+            .annotate(howmany=Count("ip_address"))
+            .filter(howmany__gte=2)
+            .order_by("-howmany")
+        )
         resp = [(str(x["ip_address"]), x["howmany"]) for x in qset]
         return Response(resp)
 
@@ -804,16 +850,18 @@ class AssetViewSet(WaffleSwitchMixin, ChangeReasonMixin, PaginateRelationsMixin,
         """
         field_name = request.query_params.get("field")
         if field_name is None:
-            raise serializers.ValidationError({
-                "field": "Missing field name"})
+            raise serializers.ValidationError({"field": "Missing field name"})
 
         try:
             limit = int(request.query_params.get("limit", 0))
         except ValueError:
             raise serializers.ValidationError({"limit": "Invalid limit"})
 
-        include_null = (request.query_params.get("nulls", "").lower()
-                        in ("true", "yes", "1"))
+        include_null = request.query_params.get("nulls", "").lower() in (
+            "true",
+            "yes",
+            "1",
+        )
 
         # apply any asset filters such as 'manufacturer__iexact'
         assets = self.filter_queryset(self.get_queryset())
@@ -825,16 +873,17 @@ class AssetViewSet(WaffleSwitchMixin, ChangeReasonMixin, PaginateRelationsMixin,
                 # 1 otherwise.
                 params = {field_name + "__isnull": False, "then": 1}
                 results = assets.values(field_name).annotate(
-                    count=Count(Case(When(**params), default=1)))
+                    count=Count(Case(When(**params), default=1))
+                )
             else:
                 params = {field_name + "__isnull": True, field_name: ""}
                 assets = assets.exclude(**params)
-                results = assets.values(field_name).annotate(
-                    count=Count(field_name))
+                results = assets.values(field_name).annotate(count=Count(field_name))
 
         except d_ex.FieldError:
-            raise serializers.ValidationError({
-                "field": f"Invalid field name '{field_name}'"})
+            raise serializers.ValidationError(
+                {"field": f"Invalid field name '{field_name}'"}
+            )
         results = results.order_by("-count")
         if limit > 0:
             results = results[:limit]
@@ -872,18 +921,16 @@ class AssetViewSet(WaffleSwitchMixin, ChangeReasonMixin, PaginateRelationsMixin,
         limit = int(request.query_params.get("limit", 0))
 
         assets = self.filter_queryset(self.get_queryset())
-        qset = (assets
-                .exclude(manufacturer__isnull=True)
-                .exclude(risk_score__isnull=True)
-                .values("manufacturer")
-                .annotate(count=Count("manufacturer"),
-                          risk_score=Sum("risk_score") * 10.0)
-                .order_by("-risk_score"))
+        qset = (
+            assets.exclude(manufacturer__isnull=True)
+            .exclude(risk_score__isnull=True)
+            .values("manufacturer")
+            .annotate(count=Count("manufacturer"), risk_score=Sum("risk_score") * 10.0)
+            .order_by("-risk_score")
+        )
 
         risk_per_manufacturer = []
-        others = {"manufacturer": "others",
-                  "risk_score": 0,
-                  "count": 0}
+        others = {"manufacturer": "others", "risk_score": 0, "count": 0}
         for i, result in enumerate(qset):
             if not limit or i < limit:
                 risk_per_manufacturer.append(result)
@@ -892,12 +939,15 @@ class AssetViewSet(WaffleSwitchMixin, ChangeReasonMixin, PaginateRelationsMixin,
                 try:
                     others["risk_score"] += result["risk_score"]
                 except TypeError as err:
-                    assert result["risk_score"] is None, (
-                        f"Unexpected error: '{err}'")
-                    logger.debug("Manufacturer '%s' (count: %d) has no risk",
-                                 result["manufacturer"], result["count"])
-        response = Response({"risk_per_manufacturer": risk_per_manufacturer,
-                             "others": others})
+                    assert result["risk_score"] is None, f"Unexpected error: '{err}'"
+                    logger.debug(
+                        "Manufacturer '%s' (count: %d) has no risk",
+                        result["manufacturer"],
+                        result["count"],
+                    )
+        response = Response(
+            {"risk_per_manufacturer": risk_per_manufacturer, "others": others}
+        )
 
         return response
 
@@ -929,13 +979,15 @@ class AssetViewSet(WaffleSwitchMixin, ChangeReasonMixin, PaginateRelationsMixin,
 
         assets = self.filter_queryset(self.get_queryset())
 
-        return Response(dict(
-            count=assets.count(),
-            identified_statistics=assets.identified_statistics(),
-            risk_statistics=assets.risk_statistics(),
-            risk_factor_statistics=assets.risk_factor_statistics(),
-            risk_histogram=assets.risk_histogram(),
-        ))
+        return Response(
+            dict(
+                count=assets.count(),
+                identified_statistics=assets.identified_statistics(),
+                risk_statistics=assets.risk_statistics(),
+                risk_factor_statistics=assets.risk_factor_statistics(),
+                risk_histogram=assets.risk_histogram(),
+            )
+        )
 
     @action(detail=False, methods=["POST"])
     def upsert(self, request):
@@ -997,8 +1049,8 @@ class AssetViewSet(WaffleSwitchMixin, ChangeReasonMixin, PaginateRelationsMixin,
             defaults=request.data,
         )
         hist_utils.update_change_reason(
-            asset,
-            f"{provenance} seen by {client_id} at {last_seen}")
+            asset, f"{provenance} seen by {client_id} at {last_seen}"
+        )
 
         # Add port to list of open ports
         if open_port_tcp:

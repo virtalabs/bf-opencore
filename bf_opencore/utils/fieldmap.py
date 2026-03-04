@@ -49,7 +49,7 @@ class FieldMap:
         self._joined = {}
         self.normalize_keymap()  # Modifies self._keymap
         self.validate()
-        self.forward_map_all()   # Modified self._joined
+        self.forward_map_all()  # Modified self._joined
 
     def normalize_keymap(self):
         """Coerce self._keymap to a dict where each value is a list.
@@ -87,8 +87,7 @@ class FieldMap:
         for orm_key in keymap.keys():
             if not Asset.is_valid_field_name(orm_key):
                 raise IntegrationTaskError(
-                    f"'{orm_key}' key in FieldMap"
-                    " does not match any Asset field",
+                    f"'{orm_key}' key in FieldMap does not match any Asset field",
                 )
 
     @staticmethod
@@ -132,9 +131,10 @@ class FieldMap:
                 # External keys must map to a data key
                 if extkey not in self._data.keys():
                     raise IntegrationTaskError(
-                        f"keymap value '{extkey}' " +
-                        "does not map to a data key '{}'".format(
-                            ", ".join(self._data.keys())),
+                        f"keymap value '{extkey}' "
+                        + "does not map to a data key '{}'".format(
+                            ", ".join(self._data.keys())
+                        ),
                     )
 
     def forward_map_all(self):

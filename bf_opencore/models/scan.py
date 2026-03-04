@@ -19,12 +19,14 @@ class Scan(models.Model):
     num_vulnerabilities = models.IntegerField()
     num_plugins = models.IntegerField()
     provenance = models.TextField(
-        blank=True, null=True,
+        blank=True,
+        null=True,
         help_text="Tool that scanned Asset",
-        )
+    )
     external_url = models.TextField(
-        blank=True, null=True,
+        blank=True,
+        null=True,
         help_text="URL to results page of tool that scanned Asset",
-        )
+    )
     date_scanned = models.DateTimeField()
     date_added = models.DateTimeField(default=timezone.now)
