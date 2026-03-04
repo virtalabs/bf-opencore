@@ -42,7 +42,7 @@ class AlertSerializer(serializers.HyperlinkedModelSerializer):
         view_name="bf_opencore:vulnerability-detail",
     )
 
-    class Meta:  # noqa
+    class Meta:
         model = Alert
 
         # Fields defined in the schema

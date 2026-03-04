@@ -183,7 +183,7 @@ def test_get_attachment_manuf_model(asset_edit_client, media_root):
     assert resp.status_code == 201
     resp = asset_edit_client.get(
         "/api/attachments/"
-        + "?"
+         "?"
         + qparam(
             {
                 "manufacturer__iexact": "ACME, Inc.",
@@ -258,7 +258,7 @@ def test_disappearing_attachment(asset_edit_client, media_root):
     # file should be gettable
     resp = asset_edit_client.get(
         "/api/attachments/"
-        + "?"
+         "?"
         + qparam(
             {
                 "manufacturer__iexact": "ACME, Inc.",
@@ -273,7 +273,7 @@ def test_disappearing_attachment(asset_edit_client, media_root):
     fs_path.unlink()
     resp = asset_edit_client.get(
         "/api/attachments/"
-        + "?"
+         "?"
         + qparam(
             {
                 "manufacturer__iexact": "ACME, Inc.",

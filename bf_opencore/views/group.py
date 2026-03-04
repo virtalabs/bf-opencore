@@ -56,7 +56,7 @@ class GroupSerializer(serializers.HyperlinkedModelSerializer):
 class GroupFilter(django_filters.rest_framework.FilterSet):
     """FilterSet."""
 
-    class Meta:  # noqa
+    class Meta:
         model = Group
 
         # Documentation about lookups is here:

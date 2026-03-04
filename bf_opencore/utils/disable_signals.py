@@ -31,7 +31,7 @@ class DisableSignals:
     be only one.
     """
 
-    def __init__(self, disabled_signals=None):  # noqa=D107
+    def __init__(self, disabled_signals=None):
         self.stashed_signals = defaultdict(list)
         self.disabled_signals = disabled_signals or [
             pre_init,
@@ -44,11 +44,11 @@ class DisableSignals:
             post_migrate,
         ]
 
-    def __enter__(self):  # noqa=D105
+    def __enter__(self):
         for signal in self.disabled_signals:
             self.disconnect(signal)
 
-    def __exit__(self, exc_type, exc_val, exc_tb):  # noqa=D105
+    def __exit__(self, exc_type, exc_val, exc_tb):
         for signal in list(self.stashed_signals.keys()):
             self.reconnect(signal)
 

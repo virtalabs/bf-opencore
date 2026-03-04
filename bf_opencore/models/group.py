@@ -20,7 +20,7 @@ class Group(models.Model):
     name = models.CharField(max_length=126, unique=True)
     date_added = models.DateTimeField(default=timezone.now)
 
-    def __str__(self):  # noqa
+    def __str__(self):
         return f"{self.id}:{self.name}"
 
     @property
@@ -54,6 +54,6 @@ class AssetGroup(models.Model):
         help_text="Reason why asset was added to group: automatic, manual, etc.",
     )
 
-    class Meta:  # noqa
+    class Meta:
         db_table = "blueflow_asset_group"
         unique_together = ("asset", "group")

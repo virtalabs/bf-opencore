@@ -80,7 +80,7 @@ class Network(models.Model):
             cidr_record.save()
 
     @property
-    def display_name(self):  # noqa: D102
+    def display_name(self): D102
         if self.name:
             return self.name
         return f"Nwk {self.id}"
@@ -102,7 +102,7 @@ class Network(models.Model):
         Asset = apps.get_model("bf_opencore", "Asset")
         return Asset.objects.in_network(self.id).identified_statistics()
 
-    def __str__(self):  # noqa: D105
+    def __str__(self): D105
         network = ",".join(c for c in self.cidr)
         return f"{self.id}:{self.name}:{network}"
 
@@ -115,7 +115,7 @@ class Cidr(models.Model):
 
     objects = NetManager()
 
-    def __str__(self):  # noqa: D105
+    def __str__(self): D105
         return f"{self.id}:{self.cidr}"
 
 
@@ -127,7 +127,7 @@ class SavedSearch(models.Model):
     ok_to_scan = models.BooleanField(default=False)
     date_added = models.DateTimeField(default=timezone.now)
 
-    def __str__(self):  # noqa: D105
+    def __str__(self): D105
         return f"{self.id}:{self.name}:{self.search_query}"
 
     @property

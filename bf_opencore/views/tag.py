@@ -72,7 +72,7 @@ class TagSerializer(serializers.HyperlinkedModelSerializer):
 class TagFilter(django_filters.rest_framework.FilterSet):
     """FilterSet."""
 
-    class Meta:  # noqa
+    class Meta:
         model = Tag
 
         # Documentation about lookups is here:

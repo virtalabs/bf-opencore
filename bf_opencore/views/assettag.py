@@ -18,7 +18,7 @@ class AssetTagSerializer(serializers.HyperlinkedModelSerializer):
     asset_id = IntegerField()
     tag_id = IntegerField()
 
-    class Meta:  # noqa
+    class Meta:
         model = AssetTag
         fields = (
             "id",

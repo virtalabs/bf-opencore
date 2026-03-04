@@ -65,7 +65,7 @@ class MiniAssetVulnerabilitySerializer(serializers.HyperlinkedModelSerializer):
         view_name="bf_opencore:assetvulnerability-detail"
     )
 
-    class Meta:  # noqa
+    class Meta:
         model = AssetVulnerability
         fields = (
             "id",
@@ -201,7 +201,7 @@ class ChangeLogMetaclass(type(AssetSerializer)):
     type(AssetSerializer) ("what is the metaclass for AssetSerializer").
     """
 
-    def __new__(mcs, name, parents, dct):  # noqa=D102
+    def __new__(mcs, name, parents, dct):
         if "Meta" in dct:
             # NOTE: the changed fields are supposed to be the same as in
             #   AssetSerializer.Meta.asset_fields -- except for 'id'
@@ -235,7 +235,7 @@ class ChangeLogAssetSerializer(
         read_only=True,
     )
 
-    class Meta:  # noqa
+    class Meta:
         model = Asset.history.model
         changed_fields = AssetSerializer.Meta.asset_fields
         fields = changed_fields + HistoricalAssetSerializer.Meta.historical_fields
@@ -339,7 +339,7 @@ class AssetFilter(django_filters.rest_framework.FilterSet):
             has_rf=Exists(has_this_rf),
         ).filter(has_rf=not invert)
 
-    class Meta:  # noqa
+    class Meta:
         model = Asset
 
         # The first lookup in each field will be used as the default by

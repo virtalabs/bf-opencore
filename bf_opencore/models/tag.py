@@ -24,7 +24,7 @@ class Tag(models.Model):
 
     history = HistoricalRecords()
 
-    def __str__(self):  # noqa
+    def __str__(self):
         return f"{self.id}:{self.name}:{self.color}"
 
     @property
@@ -55,6 +55,6 @@ class AssetTag(models.Model):
 
     history = HistoricalRecords()
 
-    class Meta:  # noqa
+    class Meta:
         db_table = "blueflow_asset_tag"
         unique_together = ("asset", "tag")

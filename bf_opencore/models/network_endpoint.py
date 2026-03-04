@@ -79,7 +79,7 @@ class EndpointSuggestion(models.Model):
 class NetworkEndpoint(models.Model):
     """Holds an device observed on the network."""
 
-    class Meta:  # noqa
+    class Meta:
         unique_together = (
             ("mac_address", "ipv4_address"),
             ("mac_address", "ipv6_address"),
@@ -374,5 +374,5 @@ class NetworkEndpoint(models.Model):
         """Equal if both NetworkEndpoint and primary key is equal."""
         return isinstance(other, self.__class__) and self.pk == other.pk
 
-    def __str__(self):  # noqa
+    def __str__(self):
         return f"Netflow endpoint with MAC {self.mac_address} and IP {(self.ipv4_address, self.ipv6_address)}"
