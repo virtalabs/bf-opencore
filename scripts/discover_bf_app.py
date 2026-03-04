@@ -2,13 +2,14 @@
 """Discover BlueFlow app in Django settings."""
 
 import os
+
 import django
 
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "django.conf.global_settings")
 from django.conf import global_settings
 
 global_settings.INSTALLED_APPS = list(global_settings.INSTALLED_APPS) + [
-    "blueflow.apps.BlueflowConfig"
+    "blueflow.apps.BlueflowConfig",
 ]
 
 django.setup()
