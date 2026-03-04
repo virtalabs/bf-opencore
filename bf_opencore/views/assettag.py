@@ -1,4 +1,5 @@
 """Joint table for assets and vulns."""
+
 from rest_framework import serializers, viewsets
 from rest_framework.fields import IntegerField
 from waffle.mixins import WaffleSwitchMixin
@@ -25,7 +26,6 @@ class AssetTagSerializer(serializers.HyperlinkedModelSerializer):
             "tag_id",
             "date_added",
             "provenance",
-
             # Fields that are created (not stored directly in schema)
             "tag",
             "url",

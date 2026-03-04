@@ -9,9 +9,9 @@ from bf_opencore.management.commands import create_permission_groups as cpg
 @pytest.fixture(autouse=True)
 def setup_user(db):
     """Create a user, needed in all these tests."""
-    dummy_user = User.objects.create_user("blueflow",
-                                          "blueflow@virtalabs.com",
-                                          "blueflow")
+    dummy_user = User.objects.create_user(
+        "blueflow", "blueflow@virtalabs.com", "blueflow"
+    )
 
 
 def test_not_authenticated(client):
@@ -22,9 +22,9 @@ def test_not_authenticated(client):
 
 def test_authenticate_post(client):
     """One way to authenticate in the test system."""
-    authenticated = client.post("/accounts/login/",
-                                {"username": "blueflow",
-                                 "password": "blueflow"})
+    authenticated = client.post(
+        "/accounts/login/", {"username": "blueflow", "password": "blueflow"}
+    )
     assert authenticated.status_code == 302
 
 
@@ -101,9 +101,11 @@ def test_perm_auth_user(asset_edit_client, auth_client):
     assert names == {"blueflow", "fridtjof", "roald"}
 
 
-@pytest.mark.xfail(raises=AssertionError,
-                   reason="Not sure why, but we're not able to pass 2 "
-                          "separate clients to the test function.")
+@pytest.mark.xfail(
+    raises=AssertionError,
+    reason="Not sure why, but we're not able to pass 2 "
+    "separate clients to the test function.",
+)
 def test_perm_auth_clients(asset_edit_client, auth_client):
     """Would have expected that these two clients are, indeed, different.
 
@@ -142,14 +144,14 @@ def test_create_permission_groups_custom():
     """Test flexibility of our create_permissions_groups function."""
     # create_permission_groups.BLUEFLOW_GROUPS
     group_name = "foo"
-    perms = [("blueflow", "add_asset"),
-             ("blueflow", "change_asset")]
+    perms = [("blueflow", "add_asset"), ("blueflow", "change_asset")]
     custom_groups = {group_name: perms}
     cpg.create_permission_groups(groups=custom_groups)
     groups = Group.objects.all()
     assert groups.count() == 1
     group = groups.first()
     assert group.name == group_name
-    gperms = {(perm.content_type.app_label, perm.codename)
-              for perm in group.permissions.all()}
+    gperms = {
+        (perm.content_type.app_label, perm.codename) for perm in group.permissions.all()
+    }
     assert gperms == set(perms)

@@ -101,10 +101,12 @@ def test_csv_simple(setup_db):
         "Hospira,Plum A+,10.10.0.13,01:00:00:00:00:13,a013,This thing is totally broken\n"
         "Alaris,8100,192.168.0.1,01:00:00:00:00:01,a001,Last serviced by Ben\n",
     )
-    bf_opencore.csv.main.apply(kwargs={
-        "filename": filename,
-        "field_mapping": field_mapping,
-    })
+    bf_opencore.csv.main.apply(
+        kwargs={
+            "filename": filename,
+            "field_mapping": field_mapping,
+        }
+    )
     os.unlink(filename)
     ct = ConnectorTask.objects.get()
     assert ct.status == "Success"
@@ -133,10 +135,12 @@ def test_csv_non_default_field_mapping(setup_db):
         "Hospira,Plum A+,10.10.0.13,01:00:00:00:00:13,a013,This thing is totally broken\n"
         "Alaris,8100,192.168.0.1,01:00:00:00:00:01,a001,Last serviced by Ben\n",
     )
-    bf_opencore.csv.main.apply(kwargs={
-        "filename": filename,
-        "field_mapping": field_mapping,
-    })
+    bf_opencore.csv.main.apply(
+        kwargs={
+            "filename": filename,
+            "field_mapping": field_mapping,
+        }
+    )
     os.unlink(filename)
     ct = ConnectorTask.objects.get()
     assert ct.status == "Success"
@@ -155,13 +159,14 @@ def test_no_ip_or_mac(setup_db):
         "ip_address": "MyIP",
     }
     filename = write_tempfile(
-        "MyIP,MyMAC\n"
-        ",,\n",
+        "MyIP,MyMAC\n,,\n",
     )
-    bf_opencore.csv.main.apply(kwargs={
-        "filename": filename,
-        "field_mapping": field_mapping,
-    })
+    bf_opencore.csv.main.apply(
+        kwargs={
+            "filename": filename,
+            "field_mapping": field_mapping,
+        }
+    )
     os.unlink(filename)
     ct = ConnectorTask.objects.get()
     assert ct.status == "Success"
@@ -176,13 +181,14 @@ def test_bad_mac(setup_db):
         "mac_address": "MACAddress",
     }
     filename = write_tempfile(
-        "AssetNumber,MACAddress\n"
-        "126,72.18.10.62\n",
+        "AssetNumber,MACAddress\n126,72.18.10.62\n",
     )
-    bf_opencore.csv.main.apply(kwargs={
-        "filename": filename,
-        "field_mapping": field_mapping,
-    })
+    bf_opencore.csv.main.apply(
+        kwargs={
+            "filename": filename,
+            "field_mapping": field_mapping,
+        }
+    )
     os.unlink(filename)
     ct = ConnectorTask.objects.get()
     assert ct.status == "Success"
@@ -197,13 +203,14 @@ def test_bad_ip(setup_db):
         "ip_address": "IP1",
     }
     filename = write_tempfile(
-        "AssetNumber,IP1\n"
-        "126,192.168.0.345\n",
+        "AssetNumber,IP1\n126,192.168.0.345\n",
     )
-    bf_opencore.csv.main.apply(kwargs={
-        "filename": filename,
-        "field_mapping": field_mapping,
-    })
+    bf_opencore.csv.main.apply(
+        kwargs={
+            "filename": filename,
+            "field_mapping": field_mapping,
+        }
+    )
     os.unlink(filename)
     ct = ConnectorTask.objects.get()
     assert ct.status == "Success"
@@ -219,13 +226,14 @@ def test_to_asset_model_ok(setup_db):
         "ip_address": "LAN 1 IP",
     }
     filename = write_tempfile(
-        "Model,AssetNumber,LAN 1 IP,Manoof\n"
-        "X4000,1,10.0.0.1,FooCorp\n",
+        "Model,AssetNumber,LAN 1 IP,Manoof\nX4000,1,10.0.0.1,FooCorp\n",
     )
-    bf_opencore.csv.main.apply(kwargs={
-        "filename": filename,
-        "field_mapping": field_mapping,
-    })
+    bf_opencore.csv.main.apply(
+        kwargs={
+            "filename": filename,
+            "field_mapping": field_mapping,
+        }
+    )
     os.unlink(filename)
     ct = ConnectorTask.objects.get()
     assert ct.status == "Success"
@@ -242,13 +250,14 @@ def test_to_asset_model_bad_invalidated1(setup_db):
         "nonexistent_field": "Hi there",
     }
     filename = write_tempfile(
-        "AssetNumber,Manoof\n"
-        "124,FooCorp\n",
+        "AssetNumber,Manoof\n124,FooCorp\n",
     )
-    bf_opencore.csv.main.apply(kwargs={
-        "filename": filename,
-        "field_mapping": field_mapping,
-    })
+    bf_opencore.csv.main.apply(
+        kwargs={
+            "filename": filename,
+            "field_mapping": field_mapping,
+        }
+    )
     os.unlink(filename)
     ct = ConnectorTask.objects.get()
     assert ct.status == "Failed"
@@ -262,13 +271,14 @@ def test_to_asset_model_bad_invalidated2(setup_db):
         "manufacturer": ["M"],
     }
     filename = write_tempfile(
-        "AssetNumber,Manoof\n"
-        "124,FooCorp\n",
+        "AssetNumber,Manoof\n124,FooCorp\n",
     )
-    bf_opencore.csv.main.apply(kwargs={
-        "filename": filename,
-        "field_mapping": field_mapping,
-    })
+    bf_opencore.csv.main.apply(
+        kwargs={
+            "filename": filename,
+            "field_mapping": field_mapping,
+        }
+    )
     os.unlink(filename)
     ct = ConnectorTask.objects.get()
     assert ct.status == "Failed"
@@ -283,14 +293,14 @@ def test_fail_validation(setup_db):
         "external_keys__tms": "AssetNumber",
     }
     filename = write_tempfile(
-        "AssetNumber,MACAddress\n"
-        "1,0:1:2:3:4:5\n"
-        "2,hamburger\n",
+        "AssetNumber,MACAddress\n1,0:1:2:3:4:5\n2,hamburger\n",
     )
-    bf_opencore.csv.main.apply(kwargs={
-        "filename": filename,
-        "field_mapping": field_mapping,
-    })
+    bf_opencore.csv.main.apply(
+        kwargs={
+            "filename": filename,
+            "field_mapping": field_mapping,
+        }
+    )
     os.unlink(filename)
     ct = ConnectorTask.objects.get()
     assert ct.status == "Success"
@@ -317,13 +327,14 @@ def test_sync_match_on_integer_key_id(setup_db):
         "external_keys__tms": "AssetNumber",
     }
     filename = write_tempfile(
-        "AssetNumber,LAN 1 IP,Manufacturer\n"
-        "123,10.0.0.1,Different\n",
+        "AssetNumber,LAN 1 IP,Manufacturer\n123,10.0.0.1,Different\n",
     )
-    bf_opencore.csv.main.apply(kwargs={
-        "filename": filename,
-        "field_mapping": field_mapping,
-    })
+    bf_opencore.csv.main.apply(
+        kwargs={
+            "filename": filename,
+            "field_mapping": field_mapping,
+        }
+    )
     os.unlink(filename)
     ct = ConnectorTask.objects.get()
     assert ct.status == "Success"
@@ -346,15 +357,16 @@ def test_sync_match_on_string_key_id(setup_db):
         "ip_address": "LAN 1 IP",
     }
     filename = write_tempfile(
-        "Asset #,LAN 1 IP,Manufacturer\n"
-        "ONETWOTHREE,10.0.0.1,Different\n",
+        "Asset #,LAN 1 IP,Manufacturer\nONETWOTHREE,10.0.0.1,Different\n",
     )
     asset = Asset.objects.last()
     assert asset.manufacturer == "Foo"
-    bf_opencore.csv.main.apply(kwargs={
-        "filename": filename,
-        "field_mapping": field_mapping,
-    })
+    bf_opencore.csv.main.apply(
+        kwargs={
+            "filename": filename,
+            "field_mapping": field_mapping,
+        }
+    )
     os.unlink(filename)
     ct = ConnectorTask.objects.get()
     assert ct.status == "Success"
@@ -371,15 +383,16 @@ def test_risk_score_simple(setup_db):
         "asset_risk_factors__tms": "RISK",
     }
     filename = write_tempfile(
-        "MAC,RISK\n"
-        "11:22:33:44:55:66,5.7\n",
+        "MAC,RISK\n11:22:33:44:55:66,5.7\n",
     )
 
     # Run CSV connector
-    bf_opencore.csv.main.apply(kwargs={
-        "filename": filename,
-        "field_mapping": field_mapping,
-    })
+    bf_opencore.csv.main.apply(
+        kwargs={
+            "filename": filename,
+            "field_mapping": field_mapping,
+        }
+    )
     os.unlink(filename)
 
     # Check ConnectorTask database entry of recently run connector
@@ -405,15 +418,16 @@ def test_risk_score_invalid(setup_db):
         "asset_risk_factors__tms": "RISK",
     }
     filename = write_tempfile(
-        "MAC,RISK\n"
-        "11:22:33:44:55:66,five point seven\n",
+        "MAC,RISK\n11:22:33:44:55:66,five point seven\n",
     )
 
     # Run CSV connector
-    bf_opencore.csv.main.apply(kwargs={
-        "filename": filename,
-        "field_mapping": field_mapping,
-    })
+    bf_opencore.csv.main.apply(
+        kwargs={
+            "filename": filename,
+            "field_mapping": field_mapping,
+        }
+    )
     os.unlink(filename)
 
     # Check ConnectorTask database entry of recently run connector
@@ -440,15 +454,16 @@ def test_risk_score_none(setup_db):
         "asset_risk_factors__tms": "RISK",
     }
     filename = write_tempfile(
-        "MAC,RISK\n"
-        "11:22:33:44:55:66,\n",  # RISK value is empty string
+        "MAC,RISK\n11:22:33:44:55:66,\n",  # RISK value is empty string
     )
 
     # Run CSV connector
-    bf_opencore.csv.main.apply(kwargs={
-        "filename": filename,
-        "field_mapping": field_mapping,
-    })
+    bf_opencore.csv.main.apply(
+        kwargs={
+            "filename": filename,
+            "field_mapping": field_mapping,
+        }
+    )
     os.unlink(filename)
 
     # Check ConnectorTask database entry of recently run connector
@@ -475,13 +490,14 @@ def test_category(setup_db):
         "category": "Category",
     }
     filename = write_tempfile(
-        "MAC,Category\n"
-        "11:22:33:44:55:66,Infusion Pump\n",
+        "MAC,Category\n11:22:33:44:55:66,Infusion Pump\n",
     )
-    bf_opencore.csv.main.apply(kwargs={
-        "filename": filename,
-        "field_mapping": field_mapping,
-    })
+    bf_opencore.csv.main.apply(
+        kwargs={
+            "filename": filename,
+            "field_mapping": field_mapping,
+        }
+    )
     os.unlink(filename)
     ct = ConnectorTask.objects.get()
     assert ct.status == "Success"

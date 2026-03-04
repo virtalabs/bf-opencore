@@ -30,8 +30,7 @@ def test_get_one_pulse_feed_item(auth_client, pulse_feed_items):
 def test_delete_pulse_feed_item(pulse_feed_auth_client, pulse_feed_items):
     """Make sure that we can't delete a pulse feed item."""
     pfi = models.PulseFeedItem.objects.first()
-    response = pulse_feed_auth_client.delete(
-        f"/api/pulse/{pfi.external_pulse_id}/")
+    response = pulse_feed_auth_client.delete(f"/api/pulse/{pfi.external_pulse_id}/")
     assert response.status_code == 403  # forbidden
 
 
@@ -42,7 +41,8 @@ def test_close_pulse_feed_item(pulse_feed_auth_client, pulse_feed_items):
     response = pulse_feed_auth_client.patch(
         f"/api/pulse/{pfi.external_pulse_id}/",
         json.dumps({"status": "closed"}),
-        content_type="application/json")
+        content_type="application/json",
+    )
     assert response.status_code == 200
     pfi = models.PulseFeedItem.objects.get(pk=pfi.id)
     assert pfi.status == "closed"
@@ -51,8 +51,7 @@ def test_close_pulse_feed_item(pulse_feed_auth_client, pulse_feed_items):
 def test_delete_pulse_feed_item_unauth(auth_client, pulse_feed_items):
     """Make sure unauthorized can't delete a pulse feed item."""
     pfi = models.PulseFeedItem.objects.first()
-    response = auth_client.delete(
-        f"/api/pulse/{pfi.external_pulse_id}/")
+    response = auth_client.delete(f"/api/pulse/{pfi.external_pulse_id}/")
     assert response.status_code == 403  # forbidden
 
 
@@ -64,5 +63,6 @@ def test_close_pulse_feed_item_unauth(auth_client, pulse_feed_items):
     response = auth_client.patch(
         f"/api/pulse/{pfi.external_pulse_id}/",
         json.dumps({"status": "closed"}),
-        content_type="application/json")
+        content_type="application/json",
+    )
     assert response.status_code == 403  # forbidden

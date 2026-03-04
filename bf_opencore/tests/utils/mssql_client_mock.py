@@ -26,21 +26,17 @@ def configure_mock_mssqlclient(mock_mssqlclient, data, fieldnames):
     mock_mssqlclient.connect.return_value = None
 
     # Mock get_server_version() return value
-    mock_mssqlclient.return_value.\
-        get_server_version.return_value = "Version 14"
+    mock_mssqlclient.return_value.get_server_version.return_value = "Version 14"
 
     # Mock get_num_pages() return value, assumes pagination size = 1000
     assert len(data) <= 1000, "Assuming pagination size == 1000"
-    mock_mssqlclient.return_value.\
-        get_num_pages.return_value = 1
+    mock_mssqlclient.return_value.get_num_pages.return_value = 1
 
     # Mock get_num_assets() return value
-    mock_mssqlclient.return_value.\
-        get_num_assets.return_value = len(data)
+    mock_mssqlclient.return_value.get_num_assets.return_value = len(data)
 
     # Write data to a temp file
     csvfilename = write_temp_csv(data, fieldnames)
 
     # Mock get_all_pages_csv() to return the temp filename
-    mock_mssqlclient.return_value.\
-        get_all_pages_csv.return_value = csvfilename
+    mock_mssqlclient.return_value.get_all_pages_csv.return_value = csvfilename

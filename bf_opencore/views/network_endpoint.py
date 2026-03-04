@@ -18,8 +18,7 @@ class EndpointSuggestionSerializer(serializers.ModelSerializer):
         """Wire this serializer to a model."""
 
         model = EndpointSuggestion
-        fields = (tuple(f.name for f
-                        in model._meta.fields))
+        fields = tuple(f.name for f in model._meta.fields)
 
 
 class NetworkEndpointSerializer(serializers.HyperlinkedModelSerializer):
@@ -28,17 +27,15 @@ class NetworkEndpointSerializer(serializers.HyperlinkedModelSerializer):
     asset = AssetSerializer(read_only=True)
     asset_id = serializers.IntegerField(default=None, source="asset.id")
     suggestions = EndpointSuggestionSerializer(many=True)
-    blacklist = serializers.ListField(
-        child=serializers.IntegerField(min_value=0))
+    blacklist = serializers.ListField(child=serializers.IntegerField(min_value=0))
 
     class Meta:
         """Wire this serializer to a model."""
 
         model = NetworkEndpoint
-        fields = (tuple(f.name for f
-                        in model._meta.fields
-                        if not f.name.startswith("_")) +
-                  ("asset_id", "asset", "suggestions", "blacklist"))
+        fields = tuple(
+            f.name for f in model._meta.fields if not f.name.startswith("_")
+        ) + ("asset_id", "asset", "suggestions", "blacklist")
 
     def validate_asset_id(self, value):
         """Check asset ID is valid."""
@@ -70,7 +67,9 @@ class NetworkEndpointSerializer(serializers.HyperlinkedModelSerializer):
         return instance
 
 
-class NetworkEndpointViewSet(WaffleSwitchMixin, PaginateRelationsMixin, viewsets.ModelViewSet):
+class NetworkEndpointViewSet(
+    WaffleSwitchMixin, PaginateRelationsMixin, viewsets.ModelViewSet
+):
     """Viewset for Network Endpoints."""
 
     waffle_switch = "core"

@@ -24,13 +24,16 @@ def test_custom_field_name(cleandb, auth_client):
 ################################################################
 # Adding/deleting
 
+
 def test_api_add_custom_field_name(cleandb, auth_client, admin_client):
     """Add custom field names via API."""
     afn = auth_client.get("/api/assetcustomfieldnames/").json()
     assert afn["count"] == 0
     assert len(afn["results"]) == 0
-    kwargs = {"data": json.dumps({"field_name": "sparkliness"}),
-              "content_type": "application/json"}
+    kwargs = {
+        "data": json.dumps({"field_name": "sparkliness"}),
+        "content_type": "application/json",
+    }
     # NOTE: need admin client to add fields
     res = admin_client.post("/api/assetcustomfieldnames/", **kwargs)
     assert res.status_code == 201
@@ -44,16 +47,17 @@ def test_api_add_custom_field_name(cleandb, auth_client, admin_client):
 
 def test_api_delete_custom_field_name(cleandb, auth_client, admin_client):
     """Delete custom field names via API is allowed."""
-    kwargs = {"data": json.dumps({"field_name": "sparkliness"}),
-              "content_type": "application/json"}
+    kwargs = {
+        "data": json.dumps({"field_name": "sparkliness"}),
+        "content_type": "application/json",
+    }
     # NOTE: need admin client to add fields
     res = admin_client.post("/api/assetcustomfieldnames/", **kwargs)
     assert res.status_code == 201
     new_cfn_id = res.json()["id"]
     afn = auth_client.get("/api/assetcustomfieldnames/").json()
     assert afn["count"] == 1
-    res = admin_client.delete(
-        f"/api/assetcustomfieldnames/{new_cfn_id}/")
+    res = admin_client.delete(f"/api/assetcustomfieldnames/{new_cfn_id}/")
     assert res.status_code == 204
     afn = auth_client.get("/api/assetcustomfieldnames/").json()
     assert afn["count"] == 0
@@ -61,7 +65,8 @@ def test_api_delete_custom_field_name(cleandb, auth_client, admin_client):
 
 @pytest.mark.parametrize("num_fields", [0, 1, 20, 21, 100])
 def test_api_add_many_custom_field_names(
-        num_fields, cleandb, auth_client, admin_client):
+    num_fields, cleandb, auth_client, admin_client
+):
     """Add custom field names via API."""
     afn = auth_client.get("/api/assetcustomfieldnames/").json()
     assert afn["count"] == 0
@@ -82,8 +87,8 @@ def test_api_add_many_custom_field_names(
 ################################################################
 # Disable field name
 
-@pytest.mark.xfail(raises=AssertionError,
-                   reason="Not yet implemented")
+
+@pytest.mark.xfail(raises=AssertionError, reason="Not yet implemented")
 def test_api_disable_custom_field_name(cleandb, auth_client, admin_client):
     """Disabling custom field is allowed.  After, it shouldn't be visible.
 
@@ -94,8 +99,10 @@ def test_api_disable_custom_field_name(cleandb, auth_client, admin_client):
     afn = auth_client.get("/api/assetcustomfieldnames/").json()
     assert afn["count"] == 0
 
-    kwargs = {"data": json.dumps({"field_name": "sparkliness"}),
-              "content_type": "application/json"}
+    kwargs = {
+        "data": json.dumps({"field_name": "sparkliness"}),
+        "content_type": "application/json",
+    }
     # NOTE: need admin client to add fields
     res = admin_client.post("/api/assetcustomfieldnames/", **kwargs)
     assert res.status_code == 201
@@ -117,16 +124,17 @@ def test_api_disable_custom_field_name(cleandb, auth_client, admin_client):
     # assert afn['enabled'] is False
 
 
-def test_api_disable_custom_field_name_get_disabled(
-        cleandb, auth_client, admin_client):
+def test_api_disable_custom_field_name_get_disabled(cleandb, auth_client, admin_client):
     """Disabling custom field is allowed.
 
     After this is shouldn't be visible unless specifically asked for.
 
     NOTE: filtering isn't implemented... so this will simply pass on default.
     """
-    kwargs = {"data": json.dumps({"field_name": "sparkliness"}),
-              "content_type": "application/json"}
+    kwargs = {
+        "data": json.dumps({"field_name": "sparkliness"}),
+        "content_type": "application/json",
+    }
     # NOTE: need admin client to add fields
     res = admin_client.post("/api/assetcustomfieldnames/", **kwargs)
     afn = auth_client.get("/api/assetcustomfieldnames/").json()["results"][0]
@@ -141,18 +149,19 @@ def test_api_disable_custom_field_name_get_disabled(
     assert afn["enabled"] is False
 
 
-@pytest.mark.xfail(raises=AssertionError,
-                   reason="Not yet implemented")
+@pytest.mark.xfail(raises=AssertionError, reason="Not yet implemented")
 def test_api_disabled_custom_field(cleandb, auth_client, admin_client):
     """Disable custom field."""
     asset_id = models.Asset.objects.create(hostname="foo.com").id
-    kwargs = {"data": json.dumps({"field_name": "sparkliness"}),
-              "content_type": "application/json"}
+    kwargs = {
+        "data": json.dumps({"field_name": "sparkliness"}),
+        "content_type": "application/json",
+    }
     res = admin_client.post("/api/assetcustomfieldnames/", **kwargs)
     afn = res.json()
-    kwargs["data"] = json.dumps({"field_id": afn["id"],
-                                 "asset_id": asset_id,
-                                 "value_text": "very sparkly"})
+    kwargs["data"] = json.dumps(
+        {"field_id": afn["id"], "asset_id": asset_id, "value_text": "very sparkly"}
+    )
     res = admin_client.post("/api/assetcustomfields/", **kwargs)
     af = auth_client.get("/api/assetcustomfields/").json()
     assert af["results"][0]["field"]["field_name"] == "sparkliness"
@@ -164,22 +173,23 @@ def test_api_disabled_custom_field(cleandb, auth_client, admin_client):
     assert af["count"] == 0
 
 
-@pytest.mark.xfail(raises=AssertionError,
-                   reason="Not yet implemented")
+@pytest.mark.xfail(raises=AssertionError, reason="Not yet implemented")
 def test_api_asset_disabled_custom_field(cleandb, auth_client, admin_client):
     """No custom field arriving with the asset when disabled."""
     asset_id = models.Asset.objects.create(hostname="foo.com").id
-    kwargs = {"data": json.dumps({"field_name": "sparkliness"}),
-              "content_type": "application/json"}
+    kwargs = {
+        "data": json.dumps({"field_name": "sparkliness"}),
+        "content_type": "application/json",
+    }
     res = admin_client.post("/api/assetcustomfieldnames/", **kwargs)
     afn = res.json()
     asset = auth_client.get(f"/api/assets/{asset_id}/").json()
     assert asset["hostname"] == "foo.com"
     assert len(asset["asset_custom_fields"]) == 0
     assert asset["asset_custom_fields"] == []
-    kwargs["data"] = json.dumps({"field_id": afn["id"],
-                                 "asset_id": asset_id,
-                                 "value_text": "very sparkly"})
+    kwargs["data"] = json.dumps(
+        {"field_id": afn["id"], "asset_id": asset_id, "value_text": "very sparkly"}
+    )
     res = admin_client.post("/api/assetcustomfields/", **kwargs)
     # Disable custom field; it shouldn't be visible
     kwargs["data"] = json.dumps({"enabled": False})
@@ -192,25 +202,31 @@ def test_api_asset_disabled_custom_field(cleandb, auth_client, admin_client):
 ################################################################
 # Test post field name with different users
 
+
 @pytest.mark.xfail(reason="Open-core has no role-based write permissions")
 def test_api_field_name_unauthorized_post(auth_client):
-    kwargs = {"data": json.dumps({"field_name": "sparkliness"}),
-              "content_type": "application/json"}
+    kwargs = {
+        "data": json.dumps({"field_name": "sparkliness"}),
+        "content_type": "application/json",
+    }
     res = auth_client.post("/api/assetcustomfieldnames/", **kwargs)
     assert res.status_code == 403
 
 
 def test_api_field_name_authorized_post(custom_field_edit_client):
-    kwargs = {"data": json.dumps({"field_name": "sparkliness"}),
-              "content_type": "application/json"}
-    res = custom_field_edit_client.post("/api/assetcustomfieldnames/",
-                                        **kwargs)
+    kwargs = {
+        "data": json.dumps({"field_name": "sparkliness"}),
+        "content_type": "application/json",
+    }
+    res = custom_field_edit_client.post("/api/assetcustomfieldnames/", **kwargs)
     assert res.status_code == 201
 
 
 def test_api_field_name_admin_post(admin_client):
-    kwargs = {"data": json.dumps({"field_name": "sparkliness"}),
-              "content_type": "application/json"}
+    kwargs = {
+        "data": json.dumps({"field_name": "sparkliness"}),
+        "content_type": "application/json",
+    }
     res = admin_client.post("/api/assetcustomfieldnames/", **kwargs)
     assert res.status_code == 201
 
@@ -218,11 +234,14 @@ def test_api_field_name_admin_post(admin_client):
 ################################################################
 # Test patch field name with different users
 
+
 @pytest.mark.xfail(reason="Open-core has no role-based write permissions")
 def test_api_field_name_unauthorized_patch(cfield, auth_client):
     fn_id = cfield.shiny_field.id
-    kwargs = {"data": json.dumps({"field_name": "dullness"}),
-              "content_type": "application/json"}
+    kwargs = {
+        "data": json.dumps({"field_name": "dullness"}),
+        "content_type": "application/json",
+    }
     res = auth_client.patch(f"/api/assetcustomfieldnames/{fn_id}/", **kwargs)
     assert res.status_code == 403
 
@@ -230,9 +249,13 @@ def test_api_field_name_unauthorized_patch(cfield, auth_client):
 def test_api_field_name_authorized_patch(cfield, custom_field_edit_client):
     assert cfield.shiny_field.field_name == "shinyness"
     fn_id = cfield.shiny_field.id
-    kwargs = {"data": json.dumps({"field_name": "dullness"}),
-              "content_type": "application/json"}
-    res = custom_field_edit_client.patch(f"/api/assetcustomfieldnames/{fn_id}/", **kwargs)
+    kwargs = {
+        "data": json.dumps({"field_name": "dullness"}),
+        "content_type": "application/json",
+    }
+    res = custom_field_edit_client.patch(
+        f"/api/assetcustomfieldnames/{fn_id}/", **kwargs
+    )
     assert res.status_code == 200
     cfield.shiny_field.refresh_from_db()
     assert cfield.shiny_field.field_name == "dullness"
@@ -240,14 +263,17 @@ def test_api_field_name_authorized_patch(cfield, custom_field_edit_client):
 
 def test_api_field_name_admin_patch(cfield, admin_client):
     fn_id = cfield.shiny_field.id
-    kwargs = {"data": json.dumps({"field_name": "dullness"}),
-              "content_type": "application/json"}
+    kwargs = {
+        "data": json.dumps({"field_name": "dullness"}),
+        "content_type": "application/json",
+    }
     res = admin_client.patch(f"/api/assetcustomfieldnames/{fn_id}/", **kwargs)
     assert res.status_code == 200
 
 
 ################################################################
 # Test delete field name with different users
+
 
 @pytest.mark.xfail(reason="Open-core has no role-based write permissions")
 def test_api_field_name_unauthorized_delete(cfield, auth_client):
@@ -288,6 +314,7 @@ def test_api_field_name_admin_delete_not_with_fields(cfield, admin_client):
 
 ################################################################
 # Test field order
+
 
 def test_api_field_name_order_1(cfield, admin_client):
     """Field names are in alphabetical order."""

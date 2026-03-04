@@ -34,9 +34,11 @@ def test_tag_asset_via_api(biomed_client):
     """Admin can tag assets through assets/N/tags."""
     asset_obj = models.Asset.objects.create(hostname="foo.com")
     tag = models.Tag.objects.create(name="red", color="red")
-    resp = biomed_client.post(f"/api/assets/{asset_obj.id}/tags/",
-                              json.dumps({"tag_id": tag.id}),
-                              content_type="application/json")
+    resp = biomed_client.post(
+        f"/api/assets/{asset_obj.id}/tags/",
+        json.dumps({"tag_id": tag.id}),
+        content_type="application/json",
+    )
     assert resp.status_code == 201  # created
     assert list(asset_obj.tags.all()) == [tag]
 
@@ -50,10 +52,11 @@ def test_tag_asset_via_api_failing(biomed_client):
     """
     asset_obj = models.Asset.objects.create(hostname="foo.com")
     tag = models.Tag.objects.create(name="red", color="red")
-    resp = biomed_client.post("/api/assettags/",
-                              json.dumps({"tag_id": tag.id,
-                                          "asset_id": asset_obj.id}),
-                              content_type="application/json")
+    resp = biomed_client.post(
+        "/api/assettags/",
+        json.dumps({"tag_id": tag.id, "asset_id": asset_obj.id}),
+        content_type="application/json",
+    )
     assert resp.status_code == 201  # created
     assert list(asset_obj.tags.all()) == [tag]
 
@@ -83,14 +86,18 @@ def test_untag_asset_via_api(biomed_client):
 def test_create_tag(auth_client, biomed_client):
     """Biomed can create tags via API."""
     # invalid hexadecimal color code
-    resp = biomed_client.post("/api/tags/",
-                              json.dumps({"name": "red", "color": "red"}),
-                              content_type="application/json")
+    resp = biomed_client.post(
+        "/api/tags/",
+        json.dumps({"name": "red", "color": "red"}),
+        content_type="application/json",
+    )
     assert resp.status_code == 400  # bad request
 
-    resp2 = biomed_client.post("/api/tags/",
-                               json.dumps({"name": "grn", "color": "00ff00"}),
-                               content_type="application/json")
+    resp2 = biomed_client.post(
+        "/api/tags/",
+        json.dumps({"name": "grn", "color": "00ff00"}),
+        content_type="application/json",
+    )
     assert resp2.status_code == 201  # created
     resp = auth_client.get("/api/tags/")
     assert resp.status_code == 200
@@ -110,8 +117,7 @@ def test_create_many_tags(num_tags, auth_client, biomed_client):
     assert len(resp.json()["results"]) == 0
     kwargs = {"content_type": "application/json"}
     for n in range(num_tags):
-        kwargs["data"] = json.dumps({"name": f"tag_{n}",
-                                     "color": "00ff00"})
+        kwargs["data"] = json.dumps({"name": f"tag_{n}", "color": "00ff00"})
         resp = biomed_client.post("/api/tags/", **kwargs)
         assert resp.status_code == 201  # created
     resp = auth_client.get("/api/tags/")
@@ -125,9 +131,11 @@ def test_tag_asset_via_api_reg_user(auth_client):
     """Non-admin, non-biomed client cannot tag assets."""
     asset_obj = models.Asset.objects.create(hostname="foo.com")
     tag = models.Tag.objects.create(name="red", color="red")
-    resp = auth_client.post(f"/api/assets/{asset_obj.id}/tags/",
-                            json.dumps({"tag_id": tag.id}),
-                            content_type="application/json")
+    resp = auth_client.post(
+        f"/api/assets/{asset_obj.id}/tags/",
+        json.dumps({"tag_id": tag.id}),
+        content_type="application/json",
+    )
     assert resp.status_code == 403  # forbidden
 
 
@@ -145,18 +153,22 @@ def test_untag_asset_via_api_reg_user(auth_client):
 def test_create_tag_reg_user(auth_client):
     """Non-admin, non-biomed client cannot create tags via API."""
     # invalid hexadecimal color code
-    resp = auth_client.post("/api/tags/",
-                            json.dumps({"name": "red", "color": "ff0000"}),
-                            content_type="application/json")
+    resp = auth_client.post(
+        "/api/tags/",
+        json.dumps({"name": "red", "color": "ff0000"}),
+        content_type="application/json",
+    )
     assert resp.status_code == 403  # bad request
 
 
 def test_create_tag_biomed_user(biomed_client):
     """Non-admin biomed client can create tags via API."""
     # invalid hexadecimal color code
-    resp = biomed_client.post("/api/tags/",
-                              json.dumps({"name": "red", "color": "ff0000"}),
-                              content_type="application/json")
+    resp = biomed_client.post(
+        "/api/tags/",
+        json.dumps({"name": "red", "color": "ff0000"}),
+        content_type="application/json",
+    )
     assert resp.status_code == 201  # created
 
 

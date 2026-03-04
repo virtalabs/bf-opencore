@@ -193,9 +193,7 @@ def test_autocomplete_manufs_space(auth_client, completables):
         c for c in candidates.data["results"] if c["suggestion_type"] == "Manufacturer"
     ]
     assert len(manuf_cands) == 2
-    assert manuf_cands[0]["url"] == (
-        "/api/assets/?manufacturer__istartswith=ACME+In"
-    )
+    assert manuf_cands[0]["url"] == ("/api/assets/?manufacturer__istartswith=ACME+In")
     assert manuf_cands[1]["url"] == "/api/assets/?manufacturer=ACME+Inc."
     assert manuf_cands[0]["query"] == {"manufacturer__istartswith": "ACME In"}
     assert manuf_cands[1]["query"] == {"manufacturer": "ACME Inc."}
@@ -329,7 +327,9 @@ def test_autocomplete_custom_value_duplicate_1(auth_client, cfield):
     shiny_field = models.AssetCustomFieldName.objects.get(field_name="shinyness")
     assert models.AssetCustomField.objects.count() == 1
     models.AssetCustomField.objects.create(
-        field=shiny_field, asset=asset, value_text="rather dull",
+        field=shiny_field,
+        asset=asset,
+        value_text="rather dull",
     )
     assert models.AssetCustomField.objects.count() == 2
 
@@ -366,7 +366,9 @@ def test_autocomplete_custom_value_duplicate_2(auth_client, cfield):
     sparkly_field = models.AssetCustomFieldName.objects.get(field_name="sparkliness")
     assert models.AssetCustomField.objects.count() == 1
     models.AssetCustomField.objects.create(
-        field=sparkly_field, asset=asset, value_text="rather dull",
+        field=sparkly_field,
+        asset=asset,
+        value_text="rather dull",
     )
     assert models.AssetCustomField.objects.count() == 2
 
@@ -403,7 +405,9 @@ def test_autocomplete_custom_value_duplicate_3(auth_client, cfield):
     sparkly_field = models.AssetCustomFieldName.objects.get(field_name="sparkliness")
     assert models.AssetCustomField.objects.count() == 1
     models.AssetCustomField.objects.create(
-        field=sparkly_field, asset=asset, value_text="rather dull",
+        field=sparkly_field,
+        asset=asset,
+        value_text="rather dull",
     )
     assert models.AssetCustomField.objects.count() == 2
 

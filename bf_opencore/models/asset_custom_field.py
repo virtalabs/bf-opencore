@@ -37,8 +37,7 @@ class AssetCustomFieldName(models.Model):
     )
 
     field_name = models.CharField(max_length=126, unique=True)
-    display_type = models.TextField(null=False, choices=DISPLAY_TYPES,
-                                    default="text")
+    display_type = models.TextField(null=False, choices=DISPLAY_TYPES, default="text")
     enabled = models.BooleanField(default=True)
     date_added = models.DateTimeField(default=timezone.now)
 
@@ -51,11 +50,13 @@ class AssetCustomFieldName(models.Model):
         """Count number of assets with this custom field associated."""
         return self.asset_set.count()
 
+
 class AssetCustomField(models.Model):
     """Holds Custom field values."""
 
-    asset = models.ForeignKey("Asset", on_delete=models.CASCADE,
-                              related_name="asset_custom_fields")
+    asset = models.ForeignKey(
+        "Asset", on_delete=models.CASCADE, related_name="asset_custom_fields"
+    )
     field = models.ForeignKey("AssetCustomFieldName", on_delete=models.CASCADE)
     value_text = models.TextField(blank=True, null=True)
     date_added = models.DateTimeField(default=timezone.now)

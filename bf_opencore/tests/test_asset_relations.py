@@ -19,6 +19,7 @@ from bf_opencore import models
 ################
 # Tags
 
+
 def test_get_asset_tags_obsolete(auth_client):
     """Test old /api/assets/<n>/tags way to get tags associated with asset.
 
@@ -53,51 +54,48 @@ def test_get_asset_tags_new(auth_client):
     assert {t["id"] for t in tags} == {tag_red.pk, tag_green.pk}
 
 
-def test_get_asset_vulnerabilities_obsolete(auth_client,
-                                            asset_vulnerabilities):
+def test_get_asset_vulnerabilities_obsolete(auth_client, asset_vulnerabilities):
     """Test old /api/assets/<n>/vulnerabilities way to get vulns for asset."""
     asset = asset_vulnerabilities[0]
-    response = auth_client.get(
-        f"/api/assets/{asset.id}/vulnerabilities/")
+    response = auth_client.get(f"/api/assets/{asset.id}/vulnerabilities/")
     assert response.status_code == 404
 
 
-def test_get_asset_vulnerabilities_new(auth_client,
-                                       asset_vulnerabilities):
+def test_get_asset_vulnerabilities_new(auth_client, asset_vulnerabilities):
     """Test new /api/vulnerabilities/?asset=<n> way to get vulns for asset."""
     (asset, vulnerability_red, vulnerability_green) = asset_vulnerabilities
-    response = auth_client.get(
-        f"/api/vulnerabilities/?asset={asset.id}")
+    response = auth_client.get(f"/api/vulnerabilities/?asset={asset.id}")
     vulnerabilities = response.data["results"]
     assert len(vulnerabilities) == 2
-    assert ({v["id"] for v in vulnerabilities} ==
-            {vulnerability_red.id, vulnerability_green.id})
+    assert {v["id"] for v in vulnerabilities} == {
+        vulnerability_red.id,
+        vulnerability_green.id,
+    }
 
 
-def test_get_asset_asset_vulnerabilities_obsolete(auth_client,
-                                                  asset_vulnerabilities):
+def test_get_asset_asset_vulnerabilities_obsolete(auth_client, asset_vulnerabilities):
     """Test old /api/assets/<n>/assetvulnerabilities route for asset_vulns."""
     asset = asset_vulnerabilities[0]
-    response = auth_client.get(
-        f"/api/assets/{asset.id}/assetvulnerabilities/")
+    response = auth_client.get(f"/api/assets/{asset.id}/assetvulnerabilities/")
     assert response.status_code == 404
 
 
-def test_get_asset_asset_vulnerabilities_new(auth_client,
-                                             asset_vulnerabilities):
+def test_get_asset_asset_vulnerabilities_new(auth_client, asset_vulnerabilities):
     """Test new /api/assetvulnerabilities/?asset=<n> route for asset_vulns."""
     (asset, vulnerability_red, vulnerability_green) = asset_vulnerabilities
-    response = auth_client.get(
-        f"/api/assetvulnerabilities/?asset={asset.id}")
+    response = auth_client.get(f"/api/assetvulnerabilities/?asset={asset.id}")
     asset_vulnerabilities = response.data["results"]
     assert len(asset_vulnerabilities) == 2
-    assert ({av["vulnerability"]["id"] for av in asset_vulnerabilities} ==
-            {vulnerability_red.id, vulnerability_green.id})
+    assert {av["vulnerability"]["id"] for av in asset_vulnerabilities} == {
+        vulnerability_red.id,
+        vulnerability_green.id,
+    }
     assert all(av["asset_id"] == asset.id for av in asset_vulnerabilities)
 
 
 ################
 # Scans
+
 
 def test_get_asset_scans_obsolete(auth_client):
     """Test old /api/assets/<n>/scans way to get scans of asset.
@@ -107,31 +105,34 @@ def test_get_asset_scans_obsolete(auth_client):
     """
     raise NotImplementedError("Connectors have been removed")
     connector = models.Connector.objects.create(id="spam")
-    c_task_1 = models.ConnectorTask.objects.create(connector=connector,
-                                                   celery_task_id="1")
-    c_task_2 = models.ConnectorTask.objects.create(connector=connector,
-                                                   celery_task_id="2")
-    c_task_3 = models.ConnectorTask.objects.create(connector=connector,
-                                                   celery_task_id="3")
+    c_task_1 = models.ConnectorTask.objects.create(
+        connector=connector, celery_task_id="1"
+    )
+    c_task_2 = models.ConnectorTask.objects.create(
+        connector=connector, celery_task_id="2"
+    )
+    c_task_3 = models.ConnectorTask.objects.create(
+        connector=connector, celery_task_id="3"
+    )
     asset = models.Asset.objects.create(hostname="foo.com")
     asset_dummy = models.Asset.objects.create(hostname="spam.com")
     aux_fields = {
         "date_scanned": django.utils.timezone.now(),
         "num_vulnerabilities": 0,
         "num_plugins": 0,
-        }
-    scan_red = models.Scan.objects.create(asset=asset,
-                                          connector_task=c_task_1,
-                                          **aux_fields)
-    scan_green = models.Scan.objects.create(asset=asset,
-                                            connector_task=c_task_2,
-                                            **aux_fields)
-    dummy_scan = models.Scan.objects.create(asset=asset_dummy,
-                                            connector_task=c_task_1,
-                                            **aux_fields)
-    dummy_scan = models.Scan.objects.create(asset=asset_dummy,
-                                            connector_task=c_task_3,
-                                            **aux_fields)
+    }
+    scan_red = models.Scan.objects.create(
+        asset=asset, connector_task=c_task_1, **aux_fields
+    )
+    scan_green = models.Scan.objects.create(
+        asset=asset, connector_task=c_task_2, **aux_fields
+    )
+    dummy_scan = models.Scan.objects.create(
+        asset=asset_dummy, connector_task=c_task_1, **aux_fields
+    )
+    dummy_scan = models.Scan.objects.create(
+        asset=asset_dummy, connector_task=c_task_3, **aux_fields
+    )
     response = auth_client.get(f"/api/assets/{asset.pk}/scans/")
     # assert response.status_code == 405
     # assert response.status_text == "Method Not Allowed"
@@ -144,31 +145,34 @@ def test_get_asset_scans_new(auth_client):
     """Test new /api/scans/?asset=<n> way to get scans of asset."""
     raise NotImplementedError("Connectors have been removed")
     connector = models.Connector.objects.create(id="spam")
-    c_task_1 = models.ConnectorTask.objects.create(connector=connector,
-                                                   celery_task_id="1")
-    c_task_2 = models.ConnectorTask.objects.create(connector=connector,
-                                                   celery_task_id="2")
-    c_task_3 = models.ConnectorTask.objects.create(connector=connector,
-                                                   celery_task_id="3")
+    c_task_1 = models.ConnectorTask.objects.create(
+        connector=connector, celery_task_id="1"
+    )
+    c_task_2 = models.ConnectorTask.objects.create(
+        connector=connector, celery_task_id="2"
+    )
+    c_task_3 = models.ConnectorTask.objects.create(
+        connector=connector, celery_task_id="3"
+    )
     asset = models.Asset.objects.create(hostname="foo.com")
     asset_dummy = models.Asset.objects.create(hostname="spam.com")
     aux_fields = {
         "date_scanned": django.utils.timezone.now(),
         "num_vulnerabilities": 0,
         "num_plugins": 0,
-        }
-    scan_red = models.Scan.objects.create(asset=asset,
-                                          connector_task=c_task_1,
-                                          **aux_fields)
-    scan_green = models.Scan.objects.create(asset=asset,
-                                            connector_task=c_task_2,
-                                            **aux_fields)
-    dummy_scan = models.Scan.objects.create(asset=asset_dummy,
-                                            connector_task=c_task_1,
-                                            **aux_fields)
-    dummy_scan = models.Scan.objects.create(asset=asset_dummy,
-                                            connector_task=c_task_3,
-                                            **aux_fields)
+    }
+    scan_red = models.Scan.objects.create(
+        asset=asset, connector_task=c_task_1, **aux_fields
+    )
+    scan_green = models.Scan.objects.create(
+        asset=asset, connector_task=c_task_2, **aux_fields
+    )
+    dummy_scan = models.Scan.objects.create(
+        asset=asset_dummy, connector_task=c_task_1, **aux_fields
+    )
+    dummy_scan = models.Scan.objects.create(
+        asset=asset_dummy, connector_task=c_task_3, **aux_fields
+    )
     response = auth_client.get(f"/api/scans/?asset={asset.pk}")
     scans = response.data["results"]
     assert len(scans) == 2
@@ -181,6 +185,7 @@ def test_get_asset_scans_new(auth_client):
 
 ################
 # Networks
+
 
 def test_get_asset_network_old_api(admin_client):
     """Ensure we can determine which assets belong in network.
@@ -201,8 +206,7 @@ def test_get_asset_network_old_api(admin_client):
 def test_get_asset_network_new_api(admin_client):
     """Ensure we can determine which assets belong in network."""
     asset = models.Asset.objects.create(ip_address="10.0.0.1")
-    dummy_asset_out_of_network = models.Asset.objects.create(
-        ip_address="10.0.1.1")
+    dummy_asset_out_of_network = models.Asset.objects.create(ip_address="10.0.1.1")
     network_blue = models.Network.objects.create(name="blue")
     network_blue.cidr = ["10.0.0.0/24"]
     network_red = models.Network.objects.create(name="red")

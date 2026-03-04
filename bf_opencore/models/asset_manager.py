@@ -43,14 +43,12 @@ class AssetManager(models.Manager):
             # Eng desc of why and what do
             for entry in summary:
                 # Check to see if this stuff is remediable
-                if (entry["user_remediable"] == "True" and
-                        entry["contribution_raw"] > 0):
+                if entry["user_remediable"] == "True" and entry["contribution_raw"] > 0:
                     rf_id = entry["rf_id"]
                     # Update the scores
                     # Note: We divide by 2 to get the TOTAL contribution,
                     # rather than just the contribution to cli or sec
-                    remediable_risk_sum[rf_id] += (
-                        entry["contribution_raw"] / 2)
+                    remediable_risk_sum[rf_id] += entry["contribution_raw"] / 2
                     # Update the number of remediable assets
                     remediable_asset_count[rf_id] += 1
         # We now have the user_remediable information
@@ -112,22 +110,21 @@ class AssetManager(models.Manager):
             # E.g you're not allowed to pass both `external_keys__aims`
             # and `external_keys__tms` in the same call (it would make no
             # sense to do so, anyway.)
-            raise FieldError(
-                f"Multiple JSONField keys are not allowed: {ekeys}")
+            raise FieldError(f"Multiple JSONField keys are not allowed: {ekeys}")
 
         if not any(valid_val(v) for v in [ekey_kwarg, mac_kwarg, ip_kwarg]):
             raise FieldError(
-                "No lookup field provided.  Got: {}.  Expected 1 or more: {}."
-                .format(kwargs.keys(),
-                        ("external_keys", "mac_address", "ip_address")))
+                "No lookup field provided.  Got: {}.  Expected 1 or more: {}.".format(
+                    kwargs.keys(), ("external_keys", "mac_address", "ip_address")
+                )
+            )
 
         # Perform lookup in priority order.
         Asset = apps.get_model("bf_opencore", "Asset")
         if valid_val(ekey_kwarg):
             try:
                 asset = super().get(**{ekey_fn: ekey_kwarg})
-                logger.debug("Matched asset %s on %s=%s",
-                             asset, ekey_fn, ekey_kwarg)
+                logger.debug("Matched asset %s on %s=%s", asset, ekey_fn, ekey_kwarg)
                 return asset
             except Asset.DoesNotExist:
                 # Didn't find asset via external key, try mac
@@ -136,8 +133,7 @@ class AssetManager(models.Manager):
         if valid_val(mac_kwarg):
             try:
                 asset = super().get(mac_address=mac_kwarg)
-                logger.debug("Matched asset %s on mac_address=%s",
-                             asset, mac_kwarg)
+                logger.debug("Matched asset %s on mac_address=%s", asset, mac_kwarg)
                 return asset
             except Asset.DoesNotExist:
                 # Didn't find asset via mac, try ip
@@ -165,8 +161,7 @@ class AssetManager(models.Manager):
             if asset.external_keys and valid_val(ekey_kwarg):
                 raise Asset.DoesNotExist()
 
-            logger.debug("Matched asset %s on ip_address=%s",
-                         asset, ip_kwarg)
+            logger.debug("Matched asset %s on ip_address=%s", asset, ip_kwarg)
             return asset
 
         # Couldn't find it
@@ -272,8 +267,7 @@ class AssetQuerySet(models.QuerySet):
     def in_network(self, network_id):
         """Return queryset for asset in a certain network."""
         network = Network.objects.get(id=network_id)
-        cidr_disjuncts = (Q(ip_address__net_contained_or_equal=c)
-                          for c in network.cidr)
+        cidr_disjuncts = (Q(ip_address__net_contained_or_equal=c) for c in network.cidr)
         try:
             qset = self.filter(reduce(or_, cidr_disjuncts))
         except TypeError:
@@ -302,7 +296,8 @@ class AssetQuerySet(models.QuerySet):
         Cidr = apps.get_model("bf_opencore", "Cidr")
         for c in Cidr.objects.all():
             nn_qset &= Asset.objects.filter(
-                ~Q(ip_address__net_contained_or_equal=c.cidr))
+                ~Q(ip_address__net_contained_or_equal=c.cidr)
+            )
         # The remaining assets don't belong to a network.
         return nn_qset
 
@@ -356,20 +351,24 @@ class AssetQuerySet(models.QuerySet):
         raise NotImplementedError("Risk histogram is not implemented")
         h = dict(
             critical=self.filter(risk_score__gte=CRITICAL_RISK_LIMIT).count(),
-            high=self.filter(risk_score__lt=CRITICAL_RISK_LIMIT,
-                             risk_score__gte=HIGH_RISK_LIMIT).count(),
-            med=self.filter(risk_score__lt=HIGH_RISK_LIMIT,
-                            risk_score__gte=MED_RISK_LIMIT).count(),
-            low=self.filter(risk_score__lt=MED_RISK_LIMIT,
-                            risk_score__gt=0.0).count(),
+            high=self.filter(
+                risk_score__lt=CRITICAL_RISK_LIMIT, risk_score__gte=HIGH_RISK_LIMIT
+            ).count(),
+            med=self.filter(
+                risk_score__lt=HIGH_RISK_LIMIT, risk_score__gte=MED_RISK_LIMIT
+            ).count(),
+            low=self.filter(risk_score__lt=MED_RISK_LIMIT, risk_score__gt=0.0).count(),
             no=self.filter(risk_score=0.0).count(),
             # null=self.filter(risk_score__isnull=True).count(),
         )
         total_count = sum(h.values())
         if total_count != self.filter(risk_score__isnull=False).count():
-            logger.error("Unexpected count when calculating histogram.  "
-                         "Was '%d', expected '%d'.",
-                         total_count, self.count())
+            logger.error(
+                "Unexpected count when calculating histogram.  "
+                "Was '%d', expected '%d'.",
+                total_count,
+                self.count(),
+            )
         return h
 
     def risk_statistics(self):
@@ -412,27 +411,36 @@ class AssetQuerySet(models.QuerySet):
             max=self.aggregate(models.Max("risk_score"))["risk_score__max"],
             min=self.aggregate(models.Min("risk_score"))["risk_score__min"],
             median=median,
-
-            sec_sum=self.aggregate(
-                val=Coalesce(models.Sum("risk_score_sec"), 0))["val"],
-            sec_mean=self.aggregate(
-                val=Coalesce(models.Avg("risk_score_sec"), 0))["val"],
-            pri_sum=self.aggregate(
-                val=Coalesce(models.Sum("risk_score_pri"), 0))["val"],
-            pri_mean=self.aggregate(
-                val=Coalesce(models.Avg("risk_score_pri"), 0))["val"],
-            cli_sum=self.aggregate(
-                val=Coalesce(models.Sum("risk_score_cli"), 0))["val"],
-            cli_mean=self.aggregate(
-                val=Coalesce(models.Avg("risk_score_cli"), 0))["val"],
+            sec_sum=self.aggregate(val=Coalesce(models.Sum("risk_score_sec"), 0))[
+                "val"
+            ],
+            sec_mean=self.aggregate(val=Coalesce(models.Avg("risk_score_sec"), 0))[
+                "val"
+            ],
+            pri_sum=self.aggregate(val=Coalesce(models.Sum("risk_score_pri"), 0))[
+                "val"
+            ],
+            pri_mean=self.aggregate(val=Coalesce(models.Avg("risk_score_pri"), 0))[
+                "val"
+            ],
+            cli_sum=self.aggregate(val=Coalesce(models.Sum("risk_score_cli"), 0))[
+                "val"
+            ],
+            cli_mean=self.aggregate(val=Coalesce(models.Avg("risk_score_cli"), 0))[
+                "val"
+            ],
             likelihood_sum=self.aggregate(
-                val=Coalesce(models.Sum("risk_score_likelihood"), 0))["val"],
+                val=Coalesce(models.Sum("risk_score_likelihood"), 0)
+            )["val"],
             likelihood_mean=self.aggregate(
-                val=Coalesce(models.Avg("risk_score_likelihood"), 0))["val"],
-            impact_sum=self.aggregate(
-                val=Coalesce(models.Sum("risk_score_impact"), 0))["val"],
+                val=Coalesce(models.Avg("risk_score_likelihood"), 0)
+            )["val"],
+            impact_sum=self.aggregate(val=Coalesce(models.Sum("risk_score_impact"), 0))[
+                "val"
+            ],
             impact_mean=self.aggregate(
-                val=Coalesce(models.Avg("risk_score_impact"), 0))["val"],
+                val=Coalesce(models.Avg("risk_score_impact"), 0)
+            )["val"],
         )
         return s
 
@@ -454,8 +462,8 @@ class AssetQuerySet(models.QuerySet):
                 rf_substats.append(rf.asset_risk_factor_statistics(self))
                 assert "num_affected" in rf_substats[-1]
             rf_substats.sort(
-                key=lambda x: (x["weight"] > 0.0, x["num_affected"]),
-                reverse=True)
+                key=lambda x: (x["weight"] > 0.0, x["num_affected"]), reverse=True
+            )
             rf_stats.extend(rf_substats)
 
         return rf_stats
@@ -483,6 +491,7 @@ class AssetQuerySet(models.QuerySet):
 
 ################################################################
 # Utility functions
+
 
 def _unflatten_json_field_helper(name, value):
     """Convert one string with JSON field notation to a nested dict."""
@@ -616,7 +625,8 @@ def _validate_external_keys(params):
         for k, v in value.items():
             if v is None or v == "":
                 raise ValidationError(
-                    f"External keys may not be empty or None: {field} {k}={v}")
+                    f"External keys may not be empty or None: {field} {k}={v}"
+                )
 
 
 def _validate_external_keys_overlap(asset, kwargs, defaults):

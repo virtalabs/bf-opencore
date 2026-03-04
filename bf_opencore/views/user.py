@@ -20,8 +20,18 @@ class UserSerializer(serializers.HyperlinkedModelSerializer):
         """Wire serializer to the User model."""
 
         model = User
-        fields = ("id", "url", "email", "first_name", "last_name", "username",
-                  "is_superuser", "is_staff", "is_active", "date_joined")
+        fields = (
+            "id",
+            "url",
+            "email",
+            "first_name",
+            "last_name",
+            "username",
+            "is_superuser",
+            "is_staff",
+            "is_active",
+            "date_joined",
+        )
 
 
 class UserViewSet(WaffleSwitchMixin, viewsets.ModelViewSet):

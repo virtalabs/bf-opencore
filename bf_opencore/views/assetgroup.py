@@ -19,7 +19,8 @@ class AssetGroupSerializer(serializers.HyperlinkedModelSerializer):
     # Few public methods; that's just how serializers work
 
     url = serializers.HyperlinkedIdentityField(
-        view_name="bf_opencore:assetgroup-detail")
+        view_name="bf_opencore:assetgroup-detail"
+    )
     group = GroupSerializer(read_only=True)
     asset_id = IntegerField()
     group_id = IntegerField()
@@ -32,7 +33,6 @@ class AssetGroupSerializer(serializers.HyperlinkedModelSerializer):
             "group_id",
             "date_added",
             "provenance",
-
             # Fields that are created (not stored directly in schema)
             "group",
             "url",
@@ -52,7 +52,7 @@ class AssetGroupFilter(django_filters.rest_framework.FilterSet):
         fields = {
             "asset": ["exact"],
             "group": ["exact"],
-            }
+        }
 
 
 class AssetGroupViewSet(WaffleSwitchMixin, viewsets.ModelViewSet):
@@ -89,13 +89,15 @@ class AssetGroupViewSet(WaffleSwitchMixin, viewsets.ModelViewSet):
             # asset / group combo
             if self.request.method != "DELETE":
                 raise MethodNotAllowed(self.request.method)
-            if not (("asset" in self.request.query_params) and
-                    ("group" in self.request.query_params)):
-                msg = ("To DELETE one AssetGroup, specify both 'asset' and "
-                       "'group'.")
+            if not (
+                ("asset" in self.request.query_params)
+                and ("group" in self.request.query_params)
+            ):
+                msg = "To DELETE one AssetGroup, specify both 'asset' and 'group'."
                 raise MethodNotAllowed("DELETE", detail=msg)
             assert queryset.count() <= 1, (
-                "Should only be possible to get 0 or 1 assetgroups here")
+                "Should only be possible to get 0 or 1 assetgroups here"
+            )
             if queryset.count() < 1:
                 raise Http404("No AssetGroup matches the given query")
             obj = queryset.first()

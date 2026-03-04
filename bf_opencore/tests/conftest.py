@@ -73,15 +73,14 @@ def cfield(cleandb):
     from bf_opencore import models
 
     asset = models.Asset.objects.create(hostname="foo.com")
-    sparkly_field = models.AssetCustomFieldName.objects.create(
-        field_name="sparkliness")
-    shiny_field = models.AssetCustomFieldName.objects.create(
-        field_name="shinyness")
+    sparkly_field = models.AssetCustomFieldName.objects.create(field_name="sparkliness")
+    shiny_field = models.AssetCustomFieldName.objects.create(field_name="shinyness")
     custom_field = models.AssetCustomField.objects.create(
-        field=shiny_field, asset=asset, value_text="rather dull")
+        field=shiny_field, asset=asset, value_text="rather dull"
+    )
     cfield_tuple = namedtuple(
-        "cfield_tuple",
-        ["asset", "sparkly_field", "shiny_field", "custom_field"])
+        "cfield_tuple", ["asset", "sparkly_field", "shiny_field", "custom_field"]
+    )
     return cfield_tuple(asset, sparkly_field, shiny_field, custom_field)
 
 
@@ -96,12 +95,15 @@ def asset_vulnerabilities(db):
     vulnerability_spam = models.Vulnerability.objects.create(name="spam")
     vulnerability_red = models.Vulnerability.objects.create(name="red")
     vulnerability_green = models.Vulnerability.objects.create(name="green")
-    models.AssetVulnerability.objects.create(vulnerability=vulnerability_red,
-                                             asset=asset)
-    models.AssetVulnerability.objects.create(vulnerability=vulnerability_green,
-                                             asset=asset)
-    models.AssetVulnerability.objects.create(vulnerability=vulnerability_spam,
-                                             asset=asset_2)
+    models.AssetVulnerability.objects.create(
+        vulnerability=vulnerability_red, asset=asset
+    )
+    models.AssetVulnerability.objects.create(
+        vulnerability=vulnerability_green, asset=asset
+    )
+    models.AssetVulnerability.objects.create(
+        vulnerability=vulnerability_spam, asset=asset_2
+    )
     return (asset, vulnerability_red, vulnerability_green)
 
 
@@ -111,19 +113,17 @@ def completables(db):
     from bf_opencore import models
 
     models.Asset.objects.create(mac_address="88:aa:bb:cc:dd:ee")
-    models.Asset.objects.create(manufacturer="ACME Inc.",
-                                model="Instant Tunnel",
-                                serial_number="WILE-E-1234")
-    models.Asset.objects.create(manufacturer="ACME",
-                                model="Instant Tunnel",
-                                serial_number="RR-6789")
+    models.Asset.objects.create(
+        manufacturer="ACME Inc.", model="Instant Tunnel", serial_number="WILE-E-1234"
+    )
+    models.Asset.objects.create(
+        manufacturer="ACME", model="Instant Tunnel", serial_number="RR-6789"
+    )
     w95 = models.Asset.objects.create(os="Windows 95", ip_address="10.2.3.5")
     models.Tag.objects.create(name="ACME products")
     models.Tag.objects.create(name="FooTag")
-    barv = models.Vulnerability.objects.create(
-        name="foo", synopsis="Bar Baz Quux")
-    models.AssetVulnerability.objects.create(asset=w95,
-                                             vulnerability=barv)
+    barv = models.Vulnerability.objects.create(name="foo", synopsis="Bar Baz Quux")
+    models.AssetVulnerability.objects.create(asset=w95, vulnerability=barv)
     grp = models.Group.objects.create(name="Bargle")
     models.AssetGroup.objects.create(asset=w95, group=grp)
     blorp = models.Network.objects.create(name="BlorpNet")
@@ -162,11 +162,17 @@ def asset_groups(db):
     agra = models.AssetGroup.objects.create(group=group_red, asset=asset_a)
     agga = models.AssetGroup.objects.create(group=group_green, asset=asset_a)
     aggb = models.AssetGroup.objects.create(group=group_green, asset=asset_b)
-    ag = namedtuple("AssetGroups",
-                    "aa, ab, gr, gg, gy, agra, agga, aggb")
-    return ag(aa=asset_a, ab=asset_b,
-              gr=group_red, gg=group_green, gy=group_yellow,
-              agra=agra, agga=agga, aggb=aggb)
+    ag = namedtuple("AssetGroups", "aa, ab, gr, gg, gy, agra, agga, aggb")
+    return ag(
+        aa=asset_a,
+        ab=asset_b,
+        gr=group_red,
+        gg=group_green,
+        gy=group_yellow,
+        agra=agra,
+        agga=agga,
+        aggb=aggb,
+    )
 
 
 @pytest.fixture
@@ -176,12 +182,15 @@ def pulse_feed_items(db):
 
     from bf_opencore import models
 
-    models.PulseFeedItem.objects.create(external_pulse_id=12,
-                                        date_last_updated=timezone.now())
-    models.PulseFeedItem.objects.create(external_pulse_id=23,
-                                        date_last_updated=timezone.now())
-    models.PulseFeedItem.objects.create(external_pulse_id=34,
-                                        date_last_updated=timezone.now())
+    models.PulseFeedItem.objects.create(
+        external_pulse_id=12, date_last_updated=timezone.now()
+    )
+    models.PulseFeedItem.objects.create(
+        external_pulse_id=23, date_last_updated=timezone.now()
+    )
+    models.PulseFeedItem.objects.create(
+        external_pulse_id=34, date_last_updated=timezone.now()
+    )
 
 
 # Alias for tests that refer to completables as "acme_assets" (e.g. test_saved_search)

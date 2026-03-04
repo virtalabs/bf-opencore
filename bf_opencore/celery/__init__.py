@@ -15,6 +15,7 @@ $ python
 >>> bf_opencore.celery.celery_app.tasks.ping.main.delay(hostname='localhost')
 <AsyncResult: e8cfbb56-eca7-491d-a3a3-c15819cad8b8>
 """
+
 import logging
 
 import celery
@@ -38,4 +39,3 @@ celery_app.config_from_object(
     namespace="CELERY",
     silent=False,
 )
-

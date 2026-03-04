@@ -1,4 +1,3 @@
-
 """Utility functions for dealing with hostnames and IP addresses."""
 
 import ipaddress

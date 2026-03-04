@@ -61,7 +61,7 @@ class Alert(models.Model):
     @property
     def riskmetrics(self) -> None:
         """Return the riskmetrics of the alert.
-        Implementation is TBD the generalized algo 
+        Implementation is TBD the generalized algo
         """
         return None
 

@@ -1,6 +1,5 @@
 """Utilities for our views."""
 
-
 import importlib
 import logging
 

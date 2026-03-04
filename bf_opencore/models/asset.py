@@ -38,13 +38,13 @@ class Asset(models.Model):
     name = models.CharField(max_length=126, blank=True, null=True)
     # 'hostname' for sure does not need to be unique.
     hostname = models.TextField(blank=True, null=True)
-    ip_address = InetAddressField(store_prefix_length=False,
-                                  blank=True, null=True,
-                                  verbose_name="IP address")
-    mac_address = MACAddressField(blank=True, null=True, unique=True,
-                                  verbose_name="MAC address")
-    nic_vendor = models.TextField(blank=True, null=True,
-                                  verbose_name="NIC vendor")
+    ip_address = InetAddressField(
+        store_prefix_length=False, blank=True, null=True, verbose_name="IP address"
+    )
+    mac_address = MACAddressField(
+        blank=True, null=True, unique=True, verbose_name="MAC address"
+    )
+    nic_vendor = models.TextField(blank=True, null=True, verbose_name="NIC vendor")
     manufacturer = models.TextField(blank=True, null=True)
     model = models.TextField(blank=True, null=True)
     serial_number = models.TextField(blank=True, null=True)
@@ -55,35 +55,41 @@ class Asset(models.Model):
     # overall risk score and sub-scores for "safety" & "security"
     risk_score = models.FloatField(blank=True, null=True)
     risk_score_cli = models.FloatField(
-        blank=True, null=True, verbose_name="Safety risk score")
+        blank=True, null=True, verbose_name="Safety risk score"
+    )
     risk_score_sec = models.FloatField(
-        blank=True, null=True, verbose_name="Security risk score")
+        blank=True, null=True, verbose_name="Security risk score"
+    )
     risk_score_pri = models.FloatField(
-        blank=True, null=True, verbose_name="Privacy risk score")
+        blank=True, null=True, verbose_name="Privacy risk score"
+    )
 
     risk_score_likelihood = models.FloatField(
-        blank=True, null=True, verbose_name="Likelihood risk score")
+        blank=True, null=True, verbose_name="Likelihood risk score"
+    )
     risk_score_impact = models.FloatField(
-        blank=True, null=True, verbose_name="Impact risk score")
+        blank=True, null=True, verbose_name="Impact risk score"
+    )
 
     date_added = models.DateTimeField(default=timezone.now)
     owner = models.TextField(blank=True, null=True)
-    os = models.TextField(blank=True, null=True,
-                          verbose_name="Operating System")
+    os = models.TextField(blank=True, null=True, verbose_name="Operating System")
     app_sw_version = models.TextField(
-        blank=True, null=True, verbose_name="Application software version")
+        blank=True, null=True, verbose_name="Application software version"
+    )
     last_scanned = models.DateTimeField(blank=True, null=True)
     last_pinged = models.DateTimeField(blank=True, null=True)
     open_ports_tcp = pg_fields.ArrayField(
-        models.IntegerField(), default=list, verbose_name="Open TCP ports")
+        models.IntegerField(), default=list, verbose_name="Open TCP ports"
+    )
     external_keys = models.JSONField(blank=True, null=True)
 
     groups = models.ManyToManyField(Group, through=AssetGroup)
     tags = models.ManyToManyField(Tag, through=AssetTag)
-    vulnerabilities = models.ManyToManyField(Vulnerability,
-                                             through=AssetVulnerability)
-    custom_fields = models.ManyToManyField(AssetCustomFieldName,
-                                           through=AssetCustomField)
+    vulnerabilities = models.ManyToManyField(Vulnerability, through=AssetVulnerability)
+    custom_fields = models.ManyToManyField(
+        AssetCustomFieldName, through=AssetCustomField
+    )
     risk_score_remediable = models.FloatField(null=False, default=0.0)
 
     # note: Asset.custom_fields defined in AssetCustomField class
@@ -108,12 +114,17 @@ class Asset(models.Model):
                 logger.warning("Bad MAC address on asset %s", self)
                 self.nic_vendor = None
             except netaddr.core.NotRegisteredError:
-                logger.info("MAC address %s of asset %s lacks NIC vendor",
-                            self.mac_address, self)
+                logger.info(
+                    "MAC address %s of asset %s lacks NIC vendor",
+                    self.mac_address,
+                    self,
+                )
                 self.nic_vendor = None
             except AttributeError:  # no reg.org
-                logger.debug("NIC vendor registry lacks org detail for"
-                             " MAC address %s", self.mac_address)
+                logger.debug(
+                    "NIC vendor registry lacks org detail for MAC address %s",
+                    self.mac_address,
+                )
                 self.nic_vendor = None
 
         super().save(*args, **kwargs)
@@ -219,8 +230,7 @@ class Asset(models.Model):
             return apps.get_model("bf_opencore", "Network").objects.none()
 
         Network = apps.get_model("bf_opencore", "Network")
-        network_qset = Network.objects.filter(
-            cidr__cidr__net_contains=self.ip_address)
+        network_qset = Network.objects.filter(cidr__cidr__net_contains=self.ip_address)
         return network_qset
 
     @property
@@ -277,12 +287,10 @@ class Asset(models.Model):
             mac_pfx = ":".join(f"{s:02x}" for s in octets[:3])
             min_mac = f"{mac_pfx}:00:00:00"
             max_mac = f"{mac_pfx}:ff:ff:ff"
-            disjuncts.append(Q(mac_address__gte=min_mac,
-                               mac_address__lte=max_mac))
+            disjuncts.append(Q(mac_address__gte=min_mac, mac_address__lte=max_mac))
 
         if self.manufacturer is not None:
-            disjuncts.append(Q(manufacturer=self.manufacturer,
-                               model=self.model))
+            disjuncts.append(Q(manufacturer=self.manufacturer, model=self.model))
 
         if self.nic_vendor is not None:
             disjuncts.append(Q(nic_vendor=self.nic_vendor))
@@ -328,8 +336,9 @@ class Asset(models.Model):
         qset = self.history.order_by("history_date")
         history = [qset[0]]
         for hist_item in qset[1:]:
-            if (getattr(hist_item, sanitized_field_name) !=
-                    getattr(history[-1], sanitized_field_name)):
+            if getattr(hist_item, sanitized_field_name) != getattr(
+                history[-1], sanitized_field_name
+            ):
                 history.append(hist_item)
         if newest_first:
             # in-place reverse
@@ -441,7 +450,8 @@ class Asset(models.Model):
             fk_name_regex = fk_name.replace("_", "[ _]")
             try:
                 field = AssetCustomFieldName.objects.get(
-                    field_name__regex=fk_name_regex)
+                    field_name__regex=fk_name_regex
+                )
             except AssetCustomFieldName.DoesNotExist:
                 raise AssetCustomFieldName.DoesNotExist(
                     f"Cannot add unknown custom field {name} to asset {self}",
@@ -468,15 +478,16 @@ class Asset(models.Model):
             # external database contains an empty string.
             if value is None:
                 logger.debug(
-                    "Coercing risk factor '%s' from '%s' to 0.0", name, value,
+                    "Coercing risk factor '%s' from '%s' to 0.0",
+                    name,
+                    value,
                 )
                 value = 0.0
             # Nicer error message for non-numbers
             try:
                 value = float(value)
             except TypeError:
-                raise ValidationError(
-                    f"Not a valid risk factor value: {value}")
+                raise ValidationError(f"Not a valid risk factor value: {value}")
             arf, _ = self.asset_risk_factors.update_or_create(
                 asset=self,
                 risk_factor=rfac,
@@ -502,11 +513,11 @@ class Asset(models.Model):
         """
         assert rmin == 0, "Not set up to handle rmin != 0"
 
-        x = (x / rmax)
+        x = x / rmax
         if typ == "arctan":
-            clipped = (math.atan(a * x) / (math.pi / 2))
+            clipped = math.atan(a * x) / (math.pi / 2)
         elif typ == "inv_x":
-            clipped = (1 - (1 / ((a * x) + 1)))
+            clipped = 1 - (1 / ((a * x) + 1))
         else:
             raise ValueError(f"'typ' must be 'arctan' or 'inv_x'; was {typ}")
         return clipped * rmax
@@ -516,9 +527,11 @@ class Asset(models.Model):
         # TODO: Implement after we have a generalized algorithm for risk scoring
         raise NotImplementedError("Update cvss risk is not implemented")
         # cvss scores from vulnerabilities hanging off this (may be empty)
-        vuln_scores = [av.vulnerability.cvss_score
-                       for av in self.asset_vulnerabilities.open()
-                       if av.vulnerability.cvss_score is not None]
+        vuln_scores = [
+            av.vulnerability.cvss_score
+            for av in self.asset_vulnerabilities.open()
+            if av.vulnerability.cvss_score is not None
+        ]
 
         if vuln_scores:
             self.add_risk_factor("cvss_max", max(vuln_scores))
@@ -589,7 +602,7 @@ class Asset(models.Model):
         risk_score_remediable = 0
         for risk_factor in summary:
             if risk_factor["user_remediable"] == "True":
-                risk_score_remediable += (risk_factor["contribution_raw"] / 2)
+                risk_score_remediable += risk_factor["contribution_raw"] / 2
 
         need_to_save = False
         if self.risk_score != rft_scores["total_risk_score"]:
@@ -622,8 +635,9 @@ class Asset(models.Model):
         return summary
 
     @classmethod
-    def rescore_asset_on_save(cls, sender, instance, created, raw, using,
-                              update_fields, *args, **kwargs):
+    def rescore_asset_on_save(
+        cls, sender, instance, created, raw, using, update_fields, *args, **kwargs
+    ):
         """Rescore an asset via a Django signal."""
         # TODO: Implement after we have a generalized algorithm for risk scoring
         raise NotImplementedError("Rescore asset on save is not implemented")
@@ -686,8 +700,7 @@ class Asset(models.Model):
         """Return True if value is valid for field."""
         # TODO: Implement after we have a generalized algorithm for risk scoring
         raise NotImplementedError("Is valid field value is not implemented")
-        unflattened_field, unflattened_val = _unflatten_json_field(field,
-                                                                   value)
+        unflattened_field, unflattened_val = _unflatten_json_field(field, value)
         # Special case for asset_risk_factors__<RiskFactor shortname>
         if unflattened_field == "asset_risk_factors":
             assert len(unflattened_val.items()) == 1
@@ -710,8 +723,7 @@ class Asset(models.Model):
             # spaces replaced by underscore
             fk_name_regex = shortname.replace("_", "[ _]")
             try:
-                AssetCustomFieldName.objects.get(
-                    field_name__regex=fk_name_regex)
+                AssetCustomFieldName.objects.get(field_name__regex=fk_name_regex)
             except AssetCustomFieldName.DoesNotExist:
                 return False
             return True
@@ -733,13 +745,12 @@ class Asset(models.Model):
         """Return all fields as a dictionary of field name -> field value."""
         # TODO: Implement after we have a generalized algorithm for risk scoring
         raise NotImplementedError("To dict is not implemented")
-        output = {f.name: getattr(self, f.name, None)
-                  for f in Asset._meta.get_fields()}
-        output["asset_risk_factors"] = {x.risk_factor.name: x.value for x in
-                                        self.asset_risk_factors.all()}
+        output = {f.name: getattr(self, f.name, None) for f in Asset._meta.get_fields()}
+        output["asset_risk_factors"] = {
+            x.risk_factor.name: x.value for x in self.asset_risk_factors.all()
+        }
         output["asset_custom_fields"] = {
-            x.field.field_name: x.value_text
-            for x in self.asset_custom_fields.all()
+            x.field.field_name: x.value_text for x in self.asset_custom_fields.all()
         }
         return output
 
@@ -760,10 +771,12 @@ class Asset(models.Model):
         except (packaging.version.InvalidVersion, TypeError):
             asset_ver_ok = False
 
-        vs = (self.similar_qset()
-              .filter(app_sw_version__isnull=False)
-              .values("app_sw_version")
-              .annotate(count=Count("app_sw_version")))
+        vs = (
+            self.similar_qset()
+            .filter(app_sw_version__isnull=False)
+            .values("app_sw_version")
+            .annotate(count=Count("app_sw_version"))
+        )
 
         vcounts = Counter(dict((v["app_sw_version"], v["count"]) for v in vs))
 
@@ -783,7 +796,8 @@ class Asset(models.Model):
         if asset_ver_ok:
             for ver, _ in vcounts.items():
                 if packaging.version.parse(ver) > packaging.version.parse(
-                        self.app_sw_version):
+                    self.app_sw_version
+                ):
                     needs_update = True
                     break
 

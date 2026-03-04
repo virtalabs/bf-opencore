@@ -12,12 +12,13 @@ def test_get_asset_vulnerabilities(auth_client, asset_vulnerabilities):
     associated with the asset with the specified ID.
     """
     (asset, vulnerability_red, vulnerability_green) = asset_vulnerabilities
-    response = auth_client.get(
-        f"/api/assetvulnerabilities/?asset={asset.id}")
+    response = auth_client.get(f"/api/assetvulnerabilities/?asset={asset.id}")
     asset_vulnerabilities = response.data["results"]
     assert len(asset_vulnerabilities) == 2
-    assert ({av["vulnerability"]["id"] for av in asset_vulnerabilities} ==
-            {vulnerability_red.id, vulnerability_green.id})
+    assert {av["vulnerability"]["id"] for av in asset_vulnerabilities} == {
+        vulnerability_red.id,
+        vulnerability_green.id,
+    }
     assert all(av["asset_id"] == asset.id for av in asset_vulnerabilities)
 
 
@@ -38,12 +39,14 @@ def test_get_asset_vulnerabilities_model(auth_client, asset_vulnerabilities):
     assert a.model == asset.model
     assert a.model == "best-model"
     response = auth_client.get(
-        "/api/assetvulnerabilities/?asset__model__iexact={}"
-        "".format("best-model"))
+        "/api/assetvulnerabilities/?asset__model__iexact={}".format("best-model")
+    )
     asset_vulnerabilities = response.data["results"]
     assert len(asset_vulnerabilities) == 2
-    assert ({av["vulnerability"]["id"] for av in asset_vulnerabilities} ==
-            {vulnerability_red.id, vulnerability_green.id})
+    assert {av["vulnerability"]["id"] for av in asset_vulnerabilities} == {
+        vulnerability_red.id,
+        vulnerability_green.id,
+    }
     assert all(av["asset_id"] == asset.id for av in asset_vulnerabilities)
 
 
@@ -54,9 +57,9 @@ def test_delete_asset_vulnerability(asset_edit_client, asset_vulnerabilities):
     """
     (asset, vulnerability_red, vulnerability_green) = asset_vulnerabilities
     av = models.AssetVulnerability.objects.get(
-        asset=asset, vulnerability=vulnerability_red)
-    response = asset_edit_client.delete(
-        f"/api/assetvulnerabilities/{av.id}/")
+        asset=asset, vulnerability=vulnerability_red
+    )
+    response = asset_edit_client.delete(f"/api/assetvulnerabilities/{av.id}/")
     assert response.status_code == 204  # deleted
 
 
@@ -67,14 +70,17 @@ def test_update_asset_vulnerability(asset_edit_client, asset_vulnerabilities):
     """
     (asset, vulnerability_red, vulnerability_green) = asset_vulnerabilities
     av = models.AssetVulnerability.objects.get(
-        asset=asset, vulnerability=vulnerability_red)
+        asset=asset, vulnerability=vulnerability_red
+    )
     assert av.date_remediated is None
     assert av.date_ignored is None
     response = asset_edit_client.patch(
         f"/api/assetvulnerabilities/{av.id}/",
         json.dumps({"ignore": "true"}),
-        content_type="application/json")
+        content_type="application/json",
+    )
     assert response.status_code == 200  # deleted
     av = models.AssetVulnerability.objects.get(
-        asset=asset, vulnerability=vulnerability_red)
+        asset=asset, vulnerability=vulnerability_red
+    )
     assert av.date_ignored is not None

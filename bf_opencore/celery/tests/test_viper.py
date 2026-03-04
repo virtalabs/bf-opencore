@@ -19,14 +19,19 @@ def test_viper_webhook_output_no_assets(celery_app):
     Ensuring it's the same as the expected output.
     """
     with patch("bf_opencore.celery.tasks.requests.post") as mock_post:
-        viper_webhook.apply(args=[ViperWebhookRequest(
-            callback="https://example.com/viper/webhook/",
-            since="2026-01-01T00:00:00Z",
-            before="2026-01-02T00:00:00Z",
-            max_pages=1,
-            page_size=10,
-        ).to_dict()])
+        viper_webhook.apply(
+            args=[
+                ViperWebhookRequest(
+                    callback="https://example.com/viper/webhook/",
+                    since="2026-01-01T00:00:00Z",
+                    before="2026-01-02T00:00:00Z",
+                    max_pages=1,
+                    page_size=10,
+                ).to_dict()
+            ]
+        )
         assert mock_post.call_count == 0
+
 
 def _assert_page_query(page_qstring: str, has: list[str], doesnt: list[str]) -> None:
     assert isinstance(page_qstring, str)
@@ -34,6 +39,7 @@ def _assert_page_query(page_qstring: str, has: list[str], doesnt: list[str]) -> 
         assert arg in page_qstring
     for arg in doesnt:
         assert arg not in page_qstring
+
 
 @pytest.mark.django_db
 def test_viper_webhook_output_with_all_assets(celery_app, setup_assets):
@@ -44,13 +50,17 @@ def test_viper_webhook_output_with_all_assets(celery_app, setup_assets):
     total_assets = get_asset_count()
     total_pages = math.ceil(total_assets / page_size)
     with patch("bf_opencore.celery.tasks.requests.post") as mock_post:
-        viper_webhook.apply(args=[ViperWebhookRequest(
-            callback="https://example.com/viper/webhook/",
-            since="1800-01-01T00:00:00Z", # some arbitrary date in the past to get all assets
-            before=None,
-            max_pages=100, # high enough to get all assets
-            page_size=page_size,
-        ).to_dict()])
+        viper_webhook.apply(
+            args=[
+                ViperWebhookRequest(
+                    callback="https://example.com/viper/webhook/",
+                    since="1800-01-01T00:00:00Z",  # some arbitrary date in the past to get all assets
+                    before=None,
+                    max_pages=100,  # high enough to get all assets
+                    page_size=page_size,
+                ).to_dict()
+            ]
+        )
         assert mock_post.call_count == total_pages
         assert mock_post.call_args[0][0] == "https://example.com/viper/webhook/"
         for i, call in enumerate(mock_post.call_args_list):
@@ -82,6 +92,7 @@ def test_viper_webhook_output_with_all_assets(celery_app, setup_assets):
             else:
                 assert _next is None
 
+
 # TODO
 @pytest.mark.django_db
 def _viper_webhook_output_with_some_assets(celery_app, setup_assets):
@@ -92,13 +103,17 @@ def _viper_webhook_output_with_some_assets(celery_app, setup_assets):
     # total_assets = get_asset_count()
     # total_pages = math.ceil(total_assets / page_size)
     with patch("bf_opencore.celery.tasks.requests.post") as mock_post:
-        viper_webhook.apply(args=[ViperWebhookRequest(
-            callback="https://example.com/viper/webhook/",
-            since="1800-01-01T00:00:00Z", # some arbitrary date in the past to get all assets
-            before=None,
-            max_pages=100, # high enough to get all assets
-            page_size=page_size,
-        ).to_dict()])
+        viper_webhook.apply(
+            args=[
+                ViperWebhookRequest(
+                    callback="https://example.com/viper/webhook/",
+                    since="1800-01-01T00:00:00Z",  # some arbitrary date in the past to get all assets
+                    before=None,
+                    max_pages=100,  # high enough to get all assets
+                    page_size=page_size,
+                ).to_dict()
+            ]
+        )
         # assert mock_post.call_count == total_pages
         assert mock_post.call_args[0][0] == "https://example.com/viper/webhook/"
         for i, call in enumerate(mock_post.call_args_list):
@@ -116,4 +131,3 @@ def _viper_webhook_output_with_some_assets(celery_app, setup_assets):
             #     assert isinstance(payload['next_page'], str)
             # else:
             #     assert payload['next_page'] is None
-

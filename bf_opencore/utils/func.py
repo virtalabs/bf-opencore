@@ -1,6 +1,4 @@
-
 """Custom Django functions."""
-
 
 from django.db.models import Func
 

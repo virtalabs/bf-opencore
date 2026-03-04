@@ -22,12 +22,12 @@ class ScanSerializer(serializers.HyperlinkedModelSerializer):
         #     many=True,
         read_only=True,
         view_name="bf_opencore:asset-detail",
-        )
+    )
     connector_task = serializers.HyperlinkedRelatedField(
         #     many=True,
         read_only=True,
         view_name="bf_opencore:connectortask-detail",
-        )
+    )
 
     class Meta:
         """Wire this serializer to a model."""
@@ -38,9 +38,7 @@ class ScanSerializer(serializers.HyperlinkedModelSerializer):
         scan_fields = tuple(f.name for f in model._meta.fields)
 
         # Fields that are computed (not stored directly in schema)
-        computed_fields = (
-            "url",
-        )
+        computed_fields = ("url",)
 
         fields = scan_fields + computed_fields
 
@@ -55,7 +53,7 @@ class ScanFilter(django_filters.rest_framework.FilterSet):
         # https://docs.djangoproject.com/en/1.11/ref/models/querysets/#field-lookups
         fields = {
             "asset": ["exact"],
-            }
+        }
 
 
 class ScanViewSet(WaffleSwitchMixin, viewsets.ModelViewSet):

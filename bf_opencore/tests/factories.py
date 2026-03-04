@@ -5,7 +5,10 @@ from model_bakery import baker
 
 def make_tag(**kwargs):
     """Create a Tag for tests. Defaults: name, color."""
-    defaults = {"name": kwargs.pop("name", "test-tag"), "color": kwargs.pop("color", "#cccccc")}
+    defaults = {
+        "name": kwargs.pop("name", "test-tag"),
+        "color": kwargs.pop("color", "#cccccc"),
+    }
     return baker.make("bf_opencore.Tag", **{**defaults, **kwargs})
 
 
@@ -28,5 +31,8 @@ def make_superuser(**kwargs):
     email = kwargs.pop("email", "admin@test.example")
     password = kwargs.pop("password", "adminpass")
     return User.objects.create_superuser(
-        username=username, email=email, password=password, **kwargs,
+        username=username,
+        email=email,
+        password=password,
+        **kwargs,
     )

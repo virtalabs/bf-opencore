@@ -42,13 +42,16 @@ class AssetTag(models.Model):
     """
 
     # Use a string "Asset" instead of an object to avoid circular import
-    asset = models.ForeignKey("Asset", on_delete=models.CASCADE,
-                              related_name="asset_tags")
+    asset = models.ForeignKey(
+        "Asset", on_delete=models.CASCADE, related_name="asset_tags"
+    )
     tag = models.ForeignKey(Tag, on_delete=models.CASCADE)
     date_added = models.DateTimeField(default=timezone.now)
     provenance = models.TextField(
-        blank=True, null=True,
-        help_text="Reason why tag was added to Asset: automatic, manual, etc.")
+        blank=True,
+        null=True,
+        help_text="Reason why tag was added to Asset: automatic, manual, etc.",
+    )
 
     history = HistoricalRecords()
 

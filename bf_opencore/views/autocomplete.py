@@ -54,15 +54,21 @@ AUTOCOMPLETE_LIMIT = 3
 class Autocomplete:
     """Represent one Autocomplete object."""
 
-    def __init__(self, term, suggestion, suggestion_type, query_dict,
-                 base_url=None, append_query_params=True):
+    def __init__(
+        self,
+        term,
+        suggestion,
+        suggestion_type,
+        query_dict,
+        base_url=None,
+        append_query_params=True,
+    ):
         """Copy inputs to member variables."""
         if base_url is None:
             base_url = reverse_lazy("bf_opencore:asset-list")
         self.term = term
         self.suggestion = suggestion
-        self.suggestion_type = \
-            Autocomplete.normalize_suggestion_type(suggestion_type)
+        self.suggestion_type = Autocomplete.normalize_suggestion_type(suggestion_type)
         self.url = base_url
         if append_query_params:
             self.url += "?" + urllib.parse.urlencode(query_dict)
@@ -140,8 +146,9 @@ class AutocompleteViewSet(viewsets.ReadOnlyModelViewSet):
         if "autocomplete" not in self.request.query_params:
             return []
 
-        base_query_params = {str(k): str(v) for k, v in
-                             self.request.query_params.items()}
+        base_query_params = {
+            str(k): str(v) for k, v in self.request.query_params.items()
+        }
 
         # remove some query params so they don't find their way to Asset
         # queries
@@ -177,20 +184,24 @@ class AutocompleteViewSet(viewsets.ReadOnlyModelViewSet):
 
         # Original value in any field
         query_dict = dict(base_query_params)  # copy
-        query_dict["search"] = term           # modify copy
-        results.append(Autocomplete(
-            term=term,
-            suggestion=term,
-            suggestion_type=None,
-            query_dict=query_dict,
-        ))
+        query_dict["search"] = term  # modify copy
+        results.append(
+            Autocomplete(
+                term=term,
+                suggestion=term,
+                suggestion_type=None,
+                query_dict=query_dict,
+            )
+        )
 
         # Tag autocompletion
-        results.extend(autocomplete_tag(
-            term=term,
-            base_query=base_query,
-            base_query_params=base_query_params,
-        ))
+        results.extend(
+            autocomplete_tag(
+                term=term,
+                base_query=base_query,
+                base_query_params=base_query_params,
+            )
+        )
 
         results.extend(autocomplete_group(term))
         results.extend(autocomplete_network(term))
@@ -209,18 +220,21 @@ class AutocompleteViewSet(viewsets.ReadOnlyModelViewSet):
             if column == "id" or column.startswith("risk_score"):
                 continue
             lookup = lookups[0]  # first lookup is the default
-            results.extend(autocomplete_column(
-                term=term,
-                column=column,
-                lookup=lookup,
-                base_query=base_query,
-                base_query_params=base_query_params,
-            ))
+            results.extend(
+                autocomplete_column(
+                    term=term,
+                    column=column,
+                    lookup=lookup,
+                    base_query=base_query,
+                    base_query_params=base_query_params,
+                )
+            )
         return results
 
 
-def autocomplete_column(term, column, lookup, base_query,
-                        base_query_params, limit=AUTOCOMPLETE_LIMIT):
+def autocomplete_column(
+    term, column, lookup, base_query, base_query_params, limit=AUTOCOMPLETE_LIMIT
+):
     """Return list of Autocomplete objects that search one Asset column."""
     # Get out if this isn't a column name.  We can tell if there's a double
     # underscore, which indicates a foreign key lookup.  For example,
@@ -234,7 +248,7 @@ def autocomplete_column(term, column, lookup, base_query,
 
     # Add filter to the query
     query = copy.deepcopy(base_query)  # copy
-    query &= Q(**{orm_filter: term})   # modify
+    query &= Q(**{orm_filter: term})  # modify
 
     # Grab a few assets from the column
     try:
@@ -273,13 +287,15 @@ def autocomplete_column(term, column, lookup, base_query,
             # Other columns will just use the '/search/' page (the default)
             base_url = None
             query_dict[orm_filter] = suggestion
-        results.append(Autocomplete(
-            term=term,
-            suggestion=suggestion,
-            suggestion_type=column,
-            query_dict=query_dict,
-            base_url=base_url,
-        ))
+        results.append(
+            Autocomplete(
+                term=term,
+                suggestion=suggestion,
+                suggestion_type=column,
+                query_dict=query_dict,
+                base_url=base_url,
+            )
+        )
 
         # Avoid duplicate autocompletes.  Yes, we're removing the
         # item from the middle of the list.  This is just fine!
@@ -333,7 +349,7 @@ def autocomplete_cidr(term, base_query_params, limit=AUTOCOMPLETE_LIMIT):
     # Return a suggestion for each possible net
     results = []
     for net in nets:
-        query_dict = dict(base_query_params)                         # copy
+        query_dict = dict(base_query_params)  # copy
         query_dict["ip_address__net_contained_or_equal"] = str(net)  # modify
         autocomplete = Autocomplete(
             term=term,
@@ -346,8 +362,7 @@ def autocomplete_cidr(term, base_query_params, limit=AUTOCOMPLETE_LIMIT):
     return results[:limit]
 
 
-def autocomplete_tag(term, base_query, base_query_params,
-                     limit=AUTOCOMPLETE_LIMIT):
+def autocomplete_tag(term, base_query, base_query_params, limit=AUTOCOMPLETE_LIMIT):
     """Return list of Autocomplete objects for Tags."""
     # If there are no base query params, that means this is a fresh search.  We
     # can optimize for speed.  Any asset may be included, thus, all tags that
@@ -367,7 +382,7 @@ def autocomplete_tag(term, base_query, base_query_params,
         # inefficient.  It's not straightforward to obtain the relevant
         # Tags via SQL and espeically not via the Django ORM.  Thus we
         # resort to looping over the assets and collecting those tags.
-        query = copy.deepcopy(base_query)         # copy
+        query = copy.deepcopy(base_query)  # copy
         query &= Q(tags__name__istartswith=term)  # modify
         assets = Asset.objects.filter(query)
         # THIS IS INEFFICIENT, but with Django's ORM there may not be a
@@ -477,7 +492,8 @@ def autocomplete_network(term, limit=AUTOCOMPLETE_LIMIT):
 def autocomplete_custom_fields(term, limit=3):
     """Return list of Autocomplete objects for custom fields."""
     custom_fields = AssetCustomField.objects.filter(
-        value_text__istartswith=term).distinct("value_text")
+        value_text__istartswith=term
+    ).distinct("value_text")
 
     results = []
     if custom_fields.count() > 0:
@@ -496,8 +512,9 @@ def autocomplete_custom_fields(term, limit=3):
             term=term,
             suggestion=suggestion,
             suggestion_type="Custom Field",
-            query_dict={"asset_custom_fields__value_text__istartswith":
-                        custom_field.value_text},
+            query_dict={
+                "asset_custom_fields__value_text__istartswith": custom_field.value_text
+            },
             append_query_params=True,
         )
         results.append(autocomplete)
@@ -562,10 +579,12 @@ class AutocompleteAssetFieldViewSet(ViewSet):
 
         isnull_p = f"{field}__isnull"
         try:
-            vals = (Asset.objects.values(field)
-                    .distinct()
-                    .exclude(**{isnull_p: True})
-                    .order_by(field))
+            vals = (
+                Asset.objects.values(field)
+                .distinct()
+                .exclude(**{isnull_p: True})
+                .order_by(field)
+            )
             if constraints:
                 vals = vals.filter(**constraints)
             return Response([str(val[field]) for val in vals])

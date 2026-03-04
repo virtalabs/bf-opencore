@@ -1,6 +1,4 @@
-
 """Utilities for connectors."""
-
 
 from collections.abc import Iterable
 from enum import Enum, auto
@@ -27,8 +25,7 @@ class FileWrapper(str):
 
 def iterable(arg):
     """Check if something is really an iterable but not a string."""
-    return (isinstance(arg, Iterable) and
-            not isinstance(arg, str))
+    return isinstance(arg, Iterable) and not isinstance(arg, str)
 
 
 class Created(Enum):
@@ -46,6 +43,7 @@ class Created(Enum):
         # We need to access private member to get this job done
         # pylint: disable=protected-access,no-member
         return self._value_ == self.CREATED._value_
+
 
 __all__ = [
     "Created",

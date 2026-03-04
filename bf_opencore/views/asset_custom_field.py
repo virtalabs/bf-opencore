@@ -13,6 +13,7 @@ from .utils import ChangeReasonMixin, HugeLimitOffsetPagination
 
 logger = logging.getLogger(__name__)
 
+
 class AssetCustomFieldNameSerializer(serializers.HyperlinkedModelSerializer):
     """Serializes custom asset field names.
 
@@ -20,7 +21,8 @@ class AssetCustomFieldNameSerializer(serializers.HyperlinkedModelSerializer):
     """
 
     url = serializers.HyperlinkedIdentityField(
-        view_name="bf_opencore:assetcustomfieldname-detail")
+        view_name="bf_opencore:assetcustomfieldname-detail"
+    )
 
     re_non_alphanum = re.compile(r"[^A-Za-z0-9]+")
 
@@ -42,8 +44,7 @@ class AssetCustomFieldNameSerializer(serializers.HyperlinkedModelSerializer):
 
     def validate_display_type(self, display_type_string):
         """Check against the list of display types in the model."""
-        valid_display_types = [
-            t[0] for t in AssetCustomFieldName.DISPLAY_TYPES]
+        valid_display_types = [t[0] for t in AssetCustomFieldName.DISPLAY_TYPES]
         if display_type_string not in valid_display_types:
             raise serializers.ValidationError("Invalid display type")
         return display_type_string
@@ -55,19 +56,24 @@ class AssetCustomFieldNameSerializer(serializers.HyperlinkedModelSerializer):
         - Asset fields (both name and verbose_name)
         - Other AssetCustomFieldName objects
         """
+
         def normalize(fname):
             """Remove all non-alphanumeric chars and switch to lowercase."""
             return self.re_non_alphanum.sub("", fname.lower())
 
         other_fields = {normalize(f.name) for f in Asset._meta.fields}
         other_fields |= {normalize(f.verbose_name) for f in Asset._meta.fields}
-        other_fields |= {normalize(fname) for fname in
-                         AssetCustomFieldName.objects.values_list(
-                             "field_name", flat=True)}
+        other_fields |= {
+            normalize(fname)
+            for fname in AssetCustomFieldName.objects.values_list(
+                "field_name", flat=True
+            )
+        }
 
         if normalize(field_name) in other_fields:
             raise serializers.ValidationError(
-                "Custom field name too similar to existing field name")
+                "Custom field name too similar to existing field name"
+            )
         return field_name
 
 
@@ -95,7 +101,8 @@ class AssetCustomFieldSerializer(serializers.HyperlinkedModelSerializer):
     """
 
     url = serializers.HyperlinkedIdentityField(
-        view_name="bf_opencore:assetcustomfield-detail")
+        view_name="bf_opencore:assetcustomfield-detail"
+    )
     # asset = AssetSerializer()
     field = AssetCustomFieldNameSerializer(read_only=True)
     asset_id = IntegerField()
@@ -115,7 +122,9 @@ class AssetCustomFieldSerializer(serializers.HyperlinkedModelSerializer):
         )
 
 
-class AssetCustomFieldViewSet(WaffleSwitchMixin, ChangeReasonMixin, viewsets.ModelViewSet):
+class AssetCustomFieldViewSet(
+    WaffleSwitchMixin, ChangeReasonMixin, viewsets.ModelViewSet
+):
     """Custom asset field (value)."""
 
     waffle_switch = "core"
