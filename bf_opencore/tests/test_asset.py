@@ -9,8 +9,6 @@ import json
 import django
 import pytest
 
-pytest.importorskip("connectors")
-
 from freezegun import freeze_time
 
 from bf_opencore import models
@@ -1098,21 +1096,6 @@ def test_asset_date_range(date_range, num_assets, auth_client):
         res = auth_client.get(f"/api/assets/?date_range={date_range}")
         assert res.data["count"] == num_assets
 
-
-def test_external_key_connector(db, auth_client):
-    """Test that external_links/ detail route renders connector URLs."""
-    raise NotImplementedError("Connectors have been removed")
-    create_connectors()
-    foobar = models.Asset.objects.create(name="Foobar")
-    foobar.external_keys = {"tms": "12345"}
-    foobar.save()
-    assert foobar.external_keys["tms"] == "12345"
-
-    res = auth_client.get(f"/api/assets/{foobar.id}/external_links/")
-    assert res.status_code == 200
-    assert len(res.data) == 1
-    assert res.data["Accruent TMS"].find("://") != -1
-    assert res.data["Accruent TMS"].endswith("&key=12345")
 
 
 def test_external_key_non_connector(db, auth_client):
