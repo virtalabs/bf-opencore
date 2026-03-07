@@ -12,54 +12,6 @@ from simple_history import utils as hist_utils
 logger = logging.getLogger(__name__)
 
 
-def request_debug(fn):
-    """Decorate view *functions*.
-
-    In order to decorate viewset methods, must wrap this in
-    'method_decorator' (which takes special care with the 'self'
-    argument.)
-
-        # For debugging
-        from .utils import method_decorator, request_debug
-
-        @method_decorator(request_debug, 'create')
-        class MyViewSet(viewsets.ModelViewSet):
-            # Class whose 'create' method is decorated.  You can
-            # also specify any of the other API methods ('retrieve',
-            # 'list', 'create', 'update', 'partial_update', 'destroy'),
-            # or 'dispatch' which wraps all of them.
-    """
-
-    def wrapper(request, *args, **kwargs):
-        # Docstring: see request_debug
-        version = getattr(request, "version", None)
-        try:
-            query_params = request.query_params
-            data = request.data
-        except AttributeError:
-            query_params = f"GET:{request.GET}"
-            data = f"POST:{request.POST}"
-        logger.debug(
-            "request='%s'(m:%s,v:%s), args='%s', kwargs='%s'",
-            request,
-            request.method,
-            version,
-            args,
-            kwargs,
-        )
-        # logger.debug("request headers: %s", pprint.pformat(request.META))
-        logger.debug("request raw query: %s", request.META.get("QUERY_STRING"))
-        # NOTE:
-        #   request.query_params is basically the same as request.GET
-        #   request.data is basically the same as request.POST
-        logger.debug("request query_params: %s", query_params)
-        logger.debug("request data: %s", data)
-        # import pdb ; pdb.set_trace()
-        return fn(request, *args, **kwargs)
-
-    return wrapper
-
-
 class PaginateRelationsMixin:
     """Provides a method that paginates, and generates response."""
 
