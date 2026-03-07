@@ -9,8 +9,6 @@ from django.conf import settings as django_settings
 
 from bf_opencore import models
 
-from .utils import AttrDict
-
 
 def qparam(pardict):
     """Get query params as string based on dictionary."""
@@ -55,8 +53,7 @@ def test_upload_variants(asset_edit_client, media_root, variant):
 
     resp = asset_edit_client.post("/api/attachments/", body)
     assert resp.status_code == 201
-    attachment = AttrDict(resp.data)
-    assert int(attachment.id) > 0
+    assert int(attachment['id']) > 0
 
     if variant == "file_only":
         assert attachment.asset is None
@@ -99,8 +96,8 @@ def test_get_attachment(asset_edit_client, media_root):
     att_id = resp.data["id"]
     resp = asset_edit_client.get(f"/api/attachments/{att_id}/")
     assert resp.status_code == 200
-    attachment = AttrDict(resp.data)
-    assert attachment.id == att_id
+    attachment = resp.data
+    assert attachment['id'] == att_id
 
 
 MEDIA_URL_PREFIX = f"http://testserver{django_settings.MEDIA_URL}attachments/"
@@ -123,11 +120,12 @@ def test_get_attachment_file_url(asset_edit_client, media_root, endpoint_style):
     att_id = resp.data["id"]
     if endpoint_style == "detail":
         resp = asset_edit_client.get(f"/api/attachments/{att_id}/")
-        attachment = AttrDict(resp.data)
+        attachment = resp.data
     else:
         resp = asset_edit_client.get("/api/attachments/")
-        attachment = AttrDict(resp.data["results"][0])
-    assert attachment.file[: len(MEDIA_URL_PREFIX)] == MEDIA_URL_PREFIX
+        attachment = resp.data["results"][0]
+    file = attachment['file']
+    assert file[: len(MEDIA_URL_PREFIX)] == MEDIA_URL_PREFIX
 
 
 def test_delete_attachment(asset_edit_client, media_root):

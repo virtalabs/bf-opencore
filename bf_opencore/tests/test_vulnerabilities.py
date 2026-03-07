@@ -4,14 +4,12 @@ Uses built-in pytest-django text fixtures from
 http://pytest-django.readthedocs.io/en/latest/helpers.html
 """
 
-# import pytest
+import pytest
 from django.utils import timezone
-
 from bf_opencore import models
 
-# Many functions use Model classes which *do* have an 'objects' member
 
-
+@pytest.mark.django_db
 def test_get_vulnerable_asset_obsolete(auth_client):
     """Test a route that's now obsolete."""
     asset_obj = models.Asset.objects.create(hostname="foo.com")
@@ -27,6 +25,7 @@ def test_get_vulnerable_asset_obsolete(auth_client):
     assert response.status_code == 404
 
 
+@pytest.mark.django_db
 def test_get_vulnerable_asset_new(auth_client):
     """Test route /api/assets/?vulnerability=<id>."""
     asset_obj = models.Asset.objects.create(hostname="foo.com")
@@ -43,6 +42,7 @@ def test_get_vulnerable_asset_new(auth_client):
     assert assets[0]["id"] == asset_obj.id
 
 
+@pytest.mark.django_db
 def test_get_vulnerable_assets(auth_client):
     """Get more than one vulnerable asset."""
     asset_1 = models.Asset.objects.create(hostname="one.foo.com")
@@ -57,6 +57,7 @@ def test_get_vulnerable_assets(auth_client):
     assert {a["id"] for a in assets} == set([asset_1.id, asset_2.id])
 
 
+@pytest.mark.django_db
 def test_get_vulnerable_assets_ignored(auth_client):
     """Get all assets (also ignored) unless explicitly filtered out."""
     asset_1 = models.Asset.objects.create(hostname="one.foo.com")
@@ -72,6 +73,7 @@ def test_get_vulnerable_assets_ignored(auth_client):
     assert {a["id"] for a in assets} == set([asset_1.id, asset_2.id])
 
 
+@pytest.mark.django_db
 def test_get_vulnerable_assets_hide_ignored(auth_client):
     """Don't get ignored assets if filtered out."""
     asset_1 = models.Asset.objects.create(hostname="one.foo.com")
@@ -90,7 +92,7 @@ def test_get_vulnerable_assets_hide_ignored(auth_client):
     assert len(assets) == 1
     assert {a["id"] for a in assets} == set([asset_1.id])
 
-
+@pytest.mark.django_db
 def test_get_vulnerable_assets_remediated(auth_client):
     """Get all assets (also remediated) unless explicitly filtered out."""
     asset_1 = models.Asset.objects.create(hostname="one.foo.com")
@@ -105,7 +107,7 @@ def test_get_vulnerable_assets_remediated(auth_client):
     assert len(assets) == 2
     assert {a["id"] for a in assets} == set([asset_1.id, asset_2.id])
 
-
+@pytest.mark.django_db
 def test_get_vulnerable_assets_hide_remediated(auth_client):
     """Don't get remediated assets if filtered out."""
     asset_1 = models.Asset.objects.create(hostname="one.foo.com")
@@ -123,3 +125,4 @@ def test_get_vulnerable_assets_hide_remediated(auth_client):
     assets = response.data["results"]
     assert len(assets) == 1
     assert {a["id"] for a in assets} == set([asset_1.id])
+

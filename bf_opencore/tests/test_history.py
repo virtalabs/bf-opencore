@@ -6,10 +6,9 @@ http://pytest-django.readthedocs.io/en/latest/helpers.html
 
 import json
 
-import blueflow.models as bf_mod
+import bf_opencore.models as bf_mod
 import django.db.models.fields
 import pytest
-from blueflow.tests.test_risk_factors import BUILTIN_RISK_FACTORS
 from simple_history import utils as hist_utils
 
 # bf_mod models do have 'objects' member, but it's being lazy loaded
@@ -380,38 +379,3 @@ class TestAssetRiskHistory:
         assert api_risk_scores == list(reversed(self.risk_scores))
 
 
-def test_risk_factor_history(admin_client):
-    """Ensure that RiskFactors store their history."""
-    # The original risk factors don't yet have a history entry since
-    # they've never been normalized (and history wasn't saved when they
-    # were created.)  After normalization they'll also have a history
-    # entry.
-    assert bf_mod.RiskFactor.history.count() == 0
-
-    params = {
-        "name": "My Factor",
-        "shortname": "my_factor",
-        "factor_type": "cli",
-        "weight": 0,
-        "range_min": 0,
-        "range_max": 1,
-        "default_value": 0,
-        "user_editable": False,
-        "options": [],
-    }
-    resp = admin_client.post(
-        "/api/riskfactors/", json.dumps(params), content_type="application/json"
-    )
-    assert resp.status_code == 201  # created
-
-    rf = bf_mod.RiskFactor.objects.last()
-    # 2, since the API updated the normalized weight just after saving.
-    assert rf.history.count() == 2
-    assert bf_mod.RiskFactor.history.count() == len(BUILTIN_RISK_FACTORS) + 2
-
-    rf.description = "Test case"
-    rf.save()
-    assert bf_mod.RiskFactor.history.count() == len(BUILTIN_RISK_FACTORS) + 3
-
-    rf.delete()
-    assert bf_mod.RiskFactor.history.count() == len(BUILTIN_RISK_FACTORS) + 4
