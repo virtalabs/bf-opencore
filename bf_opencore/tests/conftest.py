@@ -41,8 +41,8 @@ def pulse_feed_auth_client(auth_client):
 @pytest.fixture
 def tapirx_token_client(db, enable_core_switch):
     """API client authenticated via Token header, mirroring Tapirx's auth method."""
-    from rest_framework.test import APIClient
     from rest_framework.authtoken.models import Token
+    from rest_framework.test import APIClient
 
     from bf_opencore.tests.factories import make_user
 
@@ -94,9 +94,9 @@ def cfield(cleandb):
     )
     cfield_tuple = namedtuple(
         "cfield_tuple",
-        ["asset", "sparkly_field", "shiny_field", "custom_field",],
+        ["asset", "sparkly_field", "shiny_field", "custom_field"],
     )
-    return cfield_tuple(asset, sparkly_field, shiny_field, custom_field,)
+    return cfield_tuple(asset, sparkly_field, shiny_field, custom_field)
 
 
 @pytest.fixture
