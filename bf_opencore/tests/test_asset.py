@@ -1097,7 +1097,6 @@ def test_asset_date_range(date_range, num_assets, auth_client):
         assert res.data["count"] == num_assets
 
 
-
 def test_external_key_non_connector(db, auth_client):
     """Test that external_links/ detail route doesn't barf on non-connector
     external key.
