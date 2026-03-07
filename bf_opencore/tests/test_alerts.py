@@ -3,6 +3,7 @@
 Uses built-in pytest-django text fixtures from
 http://pytest-django.readthedocs.io/en/latest/helpers.html
 """
+import pytest
 
 from datetime import timedelta
 
@@ -13,6 +14,7 @@ from bf_opencore.models import Alert
 # models do have 'objects' member, but it's being lazy loaded
 
 
+@pytest.mark.django_db
 def test_simple(auth_client):
     """Alert API simple test."""
     Alert.objects.create(text="Alert 1")  # date_created is "now"
@@ -21,6 +23,7 @@ def test_simple(auth_client):
     assert response.data["count"] == 2
 
 
+@pytest.mark.django_db
 def test_order(auth_client):
     """Alerts are ordered with newest first."""
     Alert.objects.create(text="Alert 1")  # date_created is "now"
@@ -32,6 +35,7 @@ def test_order(auth_client):
     assert response.data["results"][0]["text"] == "Alert 1"
 
 
+@pytest.mark.django_db
 def test_count_expiration(auth_client):
     """Alert count excludes expired."""
     Alert.objects.create(
@@ -68,3 +72,4 @@ def test_count_expiration(auth_client):
     assert response.data["count"] == 4
     assert response.data["count_unread"] == 2
     assert response.data["count_read"] == 2
+

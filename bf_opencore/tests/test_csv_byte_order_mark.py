@@ -6,7 +6,8 @@ from codecs import BOM_UTF8
 from bf_opencore.csv import process_csv
 from bf_opencore.models import Asset
 
-from .test_csv import TestCTX, write_tempfile
+from .test_csv import TestCTX
+from bf_opencore.tests.utils import write_tempfile
 
 
 def test_tempfile_plain():
