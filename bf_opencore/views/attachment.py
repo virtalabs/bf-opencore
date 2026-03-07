@@ -11,8 +11,6 @@ from bf_opencore.models import Attachment
 from .utils import (
     ChangeReasonMixin,
     HugeLimitOffsetPagination,
-    method_decorator,
-    request_debug,
 )
 
 logger = logging.getLogger(__name__)
@@ -70,7 +68,6 @@ class AttachmentSerializer(serializers.HyperlinkedModelSerializer):
         return r
 
 
-@method_decorator(request_debug, "create")
 class AttachmentViewSet(WaffleSwitchMixin, ChangeReasonMixin, viewsets.ModelViewSet):
     """Attachment associated with one or more assets."""
 
