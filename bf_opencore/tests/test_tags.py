@@ -13,6 +13,7 @@ from bf_opencore import models
 # Many functions use Model classes which *do* have an 'objects' member
 
 
+@pytest.mark.django_db
 def test_tag_asset_via_model(auth_client):
     """Tagging an asset adds tag info to an asset record."""
     asset_obj = models.Asset.objects.create(hostname="foo.com")
@@ -30,6 +31,7 @@ def test_tag_asset_via_model(auth_client):
     assert asset["asset_tags"].pop()["tag"]["id"] == tag.id
 
 
+@pytest.mark.django_db
 def test_tag_asset_via_api(biomed_client):
     """Admin can tag assets through assets/N/tags."""
     asset_obj = models.Asset.objects.create(hostname="foo.com")
@@ -43,6 +45,7 @@ def test_tag_asset_via_api(biomed_client):
     assert list(asset_obj.tags.all()) == [tag]
 
 
+@pytest.mark.django_db
 def test_tag_asset_via_api_failing(biomed_client):
     """Try to tag assets through /api/assettags/.
 
@@ -61,6 +64,7 @@ def test_tag_asset_via_api_failing(biomed_client):
     assert list(asset_obj.tags.all()) == [tag]
 
 
+@pytest.mark.django_db
 def test_get_assettag_via_api(biomed_client):
     """Admin can tag assets through assets/N/tags."""
     asset_obj = models.Asset.objects.create(hostname="foo.com")
@@ -73,6 +77,7 @@ def test_get_assettag_via_api(biomed_client):
     assert asset_tags[0]["tag"]["id"] == tag.id
 
 
+@pytest.mark.django_db
 def test_untag_asset_via_api(biomed_client):
     """Biomed can untag assets."""
     asset_obj = models.Asset.objects.create(hostname="foo.com")
@@ -83,6 +88,7 @@ def test_untag_asset_via_api(biomed_client):
     assert list(asset_obj.tags.all()) == []
 
 
+@pytest.mark.django_db
 def test_create_tag(auth_client, biomed_client):
     """Biomed can create tags via API."""
     # invalid hexadecimal color code
@@ -108,6 +114,7 @@ def test_create_tag(auth_client, biomed_client):
     assert tags[0]["color"] == "#00ff00"
 
 
+@pytest.mark.django_db
 @pytest.mark.parametrize("num_tags", [0, 1, 20, 21, 100])
 def test_create_many_tags(num_tags, auth_client, biomed_client):
     """Biomed can create tags via API."""
@@ -126,6 +133,7 @@ def test_create_many_tags(num_tags, auth_client, biomed_client):
     assert len(resp.json()["results"]) == num_tags
 
 
+@pytest.mark.django_db
 @pytest.mark.xfail(reason="Open-core has no role-based write permissions")
 def test_tag_asset_via_api_reg_user(auth_client):
     """Non-admin, non-biomed client cannot tag assets."""
@@ -139,6 +147,7 @@ def test_tag_asset_via_api_reg_user(auth_client):
     assert resp.status_code == 403  # forbidden
 
 
+@pytest.mark.django_db
 @pytest.mark.xfail(reason="Open-core has no role-based write permissions")
 def test_untag_asset_via_api_reg_user(auth_client):
     """Non-admin, non-biomed client cannot untag assets."""
@@ -149,6 +158,7 @@ def test_untag_asset_via_api_reg_user(auth_client):
     assert resp.status_code == 403  # forbidden
 
 
+@pytest.mark.django_db
 @pytest.mark.xfail(reason="Open-core has no role-based write permissions")
 def test_create_tag_reg_user(auth_client):
     """Non-admin, non-biomed client cannot create tags via API."""
@@ -161,6 +171,7 @@ def test_create_tag_reg_user(auth_client):
     assert resp.status_code == 403  # bad request
 
 
+@pytest.mark.django_db
 def test_create_tag_biomed_user(biomed_client):
     """Non-admin biomed client can create tags via API."""
     # invalid hexadecimal color code
@@ -172,10 +183,11 @@ def test_create_tag_biomed_user(biomed_client):
     assert resp.status_code == 201  # created
 
 
+@pytest.mark.django_db
 def test_get_tagged_asset_obsolete(auth_client):
     """Test a route that's now obsolete."""
     asset_obj = models.Asset.objects.create(hostname="foo.com")
-    dummy_asset_obj = models.Asset.objects.create(hostname="spam.com")
+    _ = models.Asset.objects.create(hostname="spam.com")
     tag = models.Tag.objects.create(name="red", color="red")
     models.AssetTag.objects.create(tag=tag, asset=asset_obj)
     response = auth_client.get(f"/api/tags/{tag.id}/assets/")
@@ -183,10 +195,11 @@ def test_get_tagged_asset_obsolete(auth_client):
     assert response.status_text == "Method Not Allowed"
 
 
+@pytest.mark.django_db
 def test_get_tagged_asset_new(auth_client):
     """Test new API route."""
     asset_obj = models.Asset.objects.create(hostname="foo.com")
-    dummy_asset_obj = models.Asset.objects.create(hostname="spam.com")
+    _ = models.Asset.objects.create(hostname="spam.com")
     tag = models.Tag.objects.create(name="red", color="red")
     models.AssetTag.objects.create(tag=tag, asset=asset_obj)
     response = auth_client.get(f"/api/assets/?tag={tag.id}")

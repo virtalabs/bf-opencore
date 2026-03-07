@@ -12,9 +12,10 @@ work going on, and some decisions being made, on whether custom fields
 should be accssed via the asset or via its own API.
 """
 
+import pytest
 from bf_opencore import models
 
-
+@pytest.mark.django_db
 def test_history_canonical_fields(asset_edit_client):
     """Check some rudimentary asset history."""
     a = models.Asset.objects.create()
@@ -32,6 +33,7 @@ def test_history_canonical_fields(asset_edit_client):
     assert [h["hostname"] for h in res.data["results"]] == expected_hostname_hist
 
 
+@pytest.mark.django_db
 def test_history_canonical_field_unchanged(asset_edit_client):
     """Unchanged field should show up as 'empty-ish'."""
     a = models.Asset.objects.create()
@@ -40,6 +42,7 @@ def test_history_canonical_field_unchanged(asset_edit_client):
     assert [h["hostname"] for h in res.data] == [None]
 
 
+@pytest.mark.django_db
 def test_history_canonical_one_field(asset_edit_client):
     """Field history should contain only the changes."""
     a = models.Asset.objects.create()
@@ -51,3 +54,4 @@ def test_history_canonical_one_field(asset_edit_client):
     a.save()
     res = asset_edit_client.get(f"/api/assets/{a.id}/history/?field=hostname")
     assert [h["hostname"] for h in res.data] == ["eggs", "spam", None]
+

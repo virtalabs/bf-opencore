@@ -18,6 +18,7 @@ def qparam(pardict):
 # Many functions use Model classes which *do* have an 'objects' member
 
 
+@pytest.mark.django_db
 def test_upload_bad(asset_edit_client, media_root):
     """Upload that doesn't contain a file."""
     resp = asset_edit_client.post(
@@ -27,6 +28,7 @@ def test_upload_bad(asset_edit_client, media_root):
     assert str(resp.data["file"][0]) == "No file was submitted."
 
 
+@pytest.mark.django_db
 @pytest.mark.parametrize(
     "variant",
     [
@@ -79,6 +81,7 @@ def test_upload_variants(asset_edit_client, media_root, variant):
         assert attachment.name == "Descriptive"
 
 
+@pytest.mark.django_db
 def test_get_attachments(asset_edit_client, media_root):
     """Get the attachment object(s) we just uploaded (list)."""
     resp = asset_edit_client.post("/api/attachments/", {"file": io.BytesIO(b"bar")})
@@ -89,6 +92,7 @@ def test_get_attachments(asset_edit_client, media_root):
     assert len(resp.data["results"]) == 1
 
 
+@pytest.mark.django_db
 def test_get_attachment(asset_edit_client, media_root):
     """Get the attachment object we just uploaded (detail)."""
     resp = asset_edit_client.post("/api/attachments/", {"file": io.BytesIO(b"bar")})
@@ -103,6 +107,7 @@ def test_get_attachment(asset_edit_client, media_root):
 MEDIA_URL_PREFIX = f"http://testserver{django_settings.MEDIA_URL}attachments/"
 
 
+@pytest.mark.django_db
 @pytest.mark.parametrize(
     "endpoint_style",
     [
@@ -128,6 +133,7 @@ def test_get_attachment_file_url(asset_edit_client, media_root, endpoint_style):
     assert file[: len(MEDIA_URL_PREFIX)] == MEDIA_URL_PREFIX
 
 
+@pytest.mark.django_db
 def test_delete_attachment(asset_edit_client, media_root):
     """Delete the attachment object we just uploaded (detail)."""
     resp = asset_edit_client.post("/api/attachments/", {"file": io.BytesIO(b"bar")})
@@ -139,6 +145,7 @@ def test_delete_attachment(asset_edit_client, media_root):
     assert resp.data["count"] == 0
 
 
+@pytest.mark.django_db
 @pytest.mark.xfail(raises=AssertionError)
 def test_upload_attachment_no_manuf_no_mod(asset_edit_client, media_root):
     """Can't upload attachment without manufacturer nor model.
@@ -152,6 +159,7 @@ def test_upload_attachment_no_manuf_no_mod(asset_edit_client, media_root):
     assert resp.status_code == 403
 
 
+@pytest.mark.django_db
 @pytest.mark.xfail(raises=AssertionError)
 def test_upload_attachment_no_manuf_yes_mod(asset_edit_client, media_root):
     """Can't upload attachment with model but without manufacturer.
@@ -168,6 +176,7 @@ def test_upload_attachment_no_manuf_yes_mod(asset_edit_client, media_root):
     assert resp.status_code == 403
 
 
+@pytest.mark.django_db
 def test_get_attachment_manuf_model(asset_edit_client, media_root):
     """Get attachment based on manufacturer and model."""
     resp = asset_edit_client.post(
@@ -193,6 +202,7 @@ def test_get_attachment_manuf_model(asset_edit_client, media_root):
     assert resp.data["count"] == 1
 
 
+@pytest.mark.django_db
 @pytest.mark.parametrize(
     "upload_manuf,upload_model,filter_params,expected_count",
     [
@@ -238,6 +248,7 @@ def test_get_attachment_manuf_model_filters(
     assert resp.data["count"] == expected_count
 
 
+@pytest.mark.django_db
 def test_disappearing_attachment(asset_edit_client, media_root):
     """Should still be able to respond if attachment goes missing."""
     resp = asset_edit_client.post(
@@ -281,3 +292,4 @@ def test_disappearing_attachment(asset_edit_client, media_root):
     assert resp.status_code == 200
     assert resp.data["count"] == 1
     assert resp.data["results"][0]["size_bytes"] is None
+
