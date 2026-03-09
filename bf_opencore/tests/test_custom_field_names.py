@@ -399,4 +399,3 @@ def test_reject_similar_to_other_custom_field(admin_client):
     kwargs["data"] = json.dumps({"field_name": "ShinyNess"})
     res = admin_client.post("/api/assetcustomfieldnames/", **kwargs)
     assert res.status_code == 400
-

@@ -314,4 +314,3 @@ def test_asset_big_network(nwk_authorized_client):
     assets = response_big.data["results"]
     assert len(assets) == 9
     assert {a["ip_address"] for a in assets} == set(asset_ips)
-

@@ -10,6 +10,7 @@ from bf_opencore.models import Asset, AssetCustomField, AssetCustomFieldName
 from .test_csv import TestCTX
 from bf_opencore.tests.utils import write_tempfile
 
+
 @pytest.mark.django_db
 def test_process_csv_with_custom_field(setup_db):
     """We can import from CSV into a custom field.
@@ -134,4 +135,3 @@ def test_process_csv_with_custom_field_spaces(setup_db):
     )
     asset_site_description = asset_site_description_field.value_text
     assert asset_site_description == "Very shiny"
-

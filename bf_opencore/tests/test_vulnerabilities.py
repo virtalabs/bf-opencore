@@ -92,6 +92,7 @@ def test_get_vulnerable_assets_hide_ignored(auth_client):
     assert len(assets) == 1
     assert {a["id"] for a in assets} == set([asset_1.id])
 
+
 @pytest.mark.django_db
 def test_get_vulnerable_assets_remediated(auth_client):
     """Get all assets (also remediated) unless explicitly filtered out."""
@@ -106,6 +107,7 @@ def test_get_vulnerable_assets_remediated(auth_client):
     assets = response.data["results"]
     assert len(assets) == 2
     assert {a["id"] for a in assets} == set([asset_1.id, asset_2.id])
+
 
 @pytest.mark.django_db
 def test_get_vulnerable_assets_hide_remediated(auth_client):
@@ -125,4 +127,3 @@ def test_get_vulnerable_assets_hide_remediated(auth_client):
     assets = response.data["results"]
     assert len(assets) == 1
     assert {a["id"] for a in assets} == set([asset_1.id])
-

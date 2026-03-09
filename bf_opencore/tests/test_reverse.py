@@ -63,4 +63,3 @@ def test_asset_groups_api(auth_client):
     asset_obj = models.Asset.objects.create()
     res = auth_client.get(f"/api/assets/{asset_obj.id}/groups/")
     assert res.status_code == 404
-

@@ -15,6 +15,7 @@ should be accssed via the asset or via its own API.
 import pytest
 from bf_opencore import models
 
+
 @pytest.mark.django_db
 def test_history_canonical_fields(asset_edit_client):
     """Check some rudimentary asset history."""
@@ -54,4 +55,3 @@ def test_history_canonical_one_field(asset_edit_client):
     a.save()
     res = asset_edit_client.get(f"/api/assets/{a.id}/history/?field=hostname")
     assert [h["hostname"] for h in res.data] == ["eggs", "spam", None]
-
