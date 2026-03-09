@@ -254,4 +254,3 @@ def test_delete_asset_group(biomed_client):
     response = biomed_client.get("/api/assetgroups/")
     agroups = response.data["results"]
     assert len(agroups) == 0
-

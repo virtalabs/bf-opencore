@@ -136,4 +136,3 @@ def test_get_asset_network_new_api(admin_client):
     networks = response.data["results"]
     assert len(networks) == 2
     assert {n["id"] for n in networks} == {network_blue.pk, network_red.pk}
-

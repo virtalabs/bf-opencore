@@ -38,6 +38,7 @@ def pulse_feed_auth_client(auth_client):
     """API client with user allowed to delete/close pulse feed items. Alias to auth_client in open-core."""
     return auth_client
 
+
 @pytest.fixture
 def tapirx_token_client(db, enable_core_switch):
     """API client authenticated via Token header, mirroring Tapirx's auth method."""
@@ -90,7 +91,9 @@ def cfield(cleandb):
     sparkly_field = models.AssetCustomFieldName.objects.create(field_name="sparkliness")
     shiny_field = models.AssetCustomFieldName.objects.create(field_name="shinyness")
     custom_field = models.AssetCustomField.objects.create(
-        field=shiny_field, asset=asset, value_text="rather dull",
+        field=shiny_field,
+        asset=asset,
+        value_text="rather dull",
     )
     cfield_tuple = namedtuple(
         "cfield_tuple",

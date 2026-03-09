@@ -33,11 +33,15 @@ def test_viper_webhook(auth_client, celery_app):
             ).to_dict()
         )
 
+
 def test_viper_webhook_bad_request(auth_client):
     """Ensures a bad request triggers the serializer"""
-    response = auth_client.post("/api/viper/webhook/", {}, content_type="application/json")
+    response = auth_client.post(
+        "/api/viper/webhook/", {}, content_type="application/json"
+    )
     assert response.status_code == 400, response.data
     error = response.data
     required = ["callback", "since", "max_pages", "page_size"]
-    assert required == list(error.keys()), f'{required}, are all required, but found {error.keys()}'
-
+    assert required == list(error.keys()), (
+        f"{required}, are all required, but found {error.keys()}"
+    )

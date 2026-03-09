@@ -34,4 +34,3 @@ class TestCTX:
             pass
 
     ct = TestConnectorTask()
-

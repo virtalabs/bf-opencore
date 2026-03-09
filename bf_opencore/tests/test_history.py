@@ -377,5 +377,3 @@ class TestAssetRiskHistory:
         api_risk_scores = [hi["risk_score"] for hi in res.data]
         # NOTE: the history data as seen on the API is newest-first
         assert api_risk_scores == list(reversed(self.risk_scores))
-
-

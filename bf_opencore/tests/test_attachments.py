@@ -55,7 +55,7 @@ def test_upload_variants(asset_edit_client, media_root, variant):
 
     resp = asset_edit_client.post("/api/attachments/", body)
     assert resp.status_code == 201
-    assert int(attachment['id']) > 0
+    assert int(attachment["id"]) > 0
 
     if variant == "file_only":
         assert attachment.asset is None
@@ -101,7 +101,7 @@ def test_get_attachment(asset_edit_client, media_root):
     resp = asset_edit_client.get(f"/api/attachments/{att_id}/")
     assert resp.status_code == 200
     attachment = resp.data
-    assert attachment['id'] == att_id
+    assert attachment["id"] == att_id
 
 
 MEDIA_URL_PREFIX = f"http://testserver{django_settings.MEDIA_URL}attachments/"
@@ -129,7 +129,7 @@ def test_get_attachment_file_url(asset_edit_client, media_root, endpoint_style):
     else:
         resp = asset_edit_client.get("/api/attachments/")
         attachment = resp.data["results"][0]
-    file = attachment['file']
+    file = attachment["file"]
     assert file[: len(MEDIA_URL_PREFIX)] == MEDIA_URL_PREFIX
 
 
@@ -190,7 +190,7 @@ def test_get_attachment_manuf_model(asset_edit_client, media_root):
     assert resp.status_code == 201
     resp = asset_edit_client.get(
         "/api/attachments/"
-         "?"
+        "?"
         + qparam(
             {
                 "manufacturer__iexact": "ACME, Inc.",
@@ -267,7 +267,7 @@ def test_disappearing_attachment(asset_edit_client, media_root):
     # file should be gettable
     resp = asset_edit_client.get(
         "/api/attachments/"
-         "?"
+        "?"
         + qparam(
             {
                 "manufacturer__iexact": "ACME, Inc.",
@@ -282,7 +282,7 @@ def test_disappearing_attachment(asset_edit_client, media_root):
     fs_path.unlink()
     resp = asset_edit_client.get(
         "/api/attachments/"
-         "?"
+        "?"
         + qparam(
             {
                 "manufacturer__iexact": "ACME, Inc.",
@@ -292,4 +292,3 @@ def test_disappearing_attachment(asset_edit_client, media_root):
     assert resp.status_code == 200
     assert resp.data["count"] == 1
     assert resp.data["results"][0]["size_bytes"] is None
-

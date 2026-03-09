@@ -3,6 +3,7 @@
 Uses built-in pytest-django text fixtures from
 http://pytest-django.readthedocs.io/en/latest/helpers.html
 """
+
 import pytest
 
 from datetime import timedelta
@@ -72,4 +73,3 @@ def test_count_expiration(auth_client):
     assert response.data["count"] == 4
     assert response.data["count_unread"] == 2
     assert response.data["count_read"] == 2
-
