@@ -38,6 +38,7 @@ def _post_upsert(client, payload):
 # ---------------------------------------------------------------------------
 
 
+@pytest.mark.django_db
 def test_tapirx_upsert_create(asset_edit_client):
     """POST full Tapirx payload, assert 201, verify ip_address, name, open_ports_tcp."""
     response = _post_upsert(asset_edit_client, TAPIRX_FULL_PAYLOAD)
@@ -48,6 +49,7 @@ def test_tapirx_upsert_create(asset_edit_client):
     assert models.Asset.objects.count() == 1
 
 
+@pytest.mark.django_db
 def test_tapirx_upsert_update(asset_edit_client):
     """POST twice same MAC, assert 200 on second, verify field update."""
     payload1 = {
@@ -70,6 +72,7 @@ def test_tapirx_upsert_update(asset_edit_client):
     assert models.Asset.objects.count() == 1
 
 
+@pytest.mark.django_db
 def test_tapirx_upsert_minimal(asset_edit_client):
     """POST only mac_address, assert 201."""
     response = _post_upsert(asset_edit_client, {"mac_address": "00:03:b1:b5:b6:48"})
@@ -78,6 +81,7 @@ def test_tapirx_upsert_minimal(asset_edit_client):
     assert models.Asset.objects.count() == 1
 
 
+@pytest.mark.django_db
 def test_tapirx_upsert_no_mac_412(asset_edit_client):
     """POST without mac_address, assert 412."""
     response = _post_upsert(
@@ -88,6 +92,7 @@ def test_tapirx_upsert_no_mac_412(asset_edit_client):
     assert models.Asset.objects.count() == 0
 
 
+@pytest.mark.django_db
 def test_tapirx_upsert_token_auth(tapirx_token_client):
     """POST with tapirx_token_client (Token header), assert 201."""
     response = _post_upsert(tapirx_token_client, TAPIRX_FULL_PAYLOAD)
@@ -96,6 +101,7 @@ def test_tapirx_upsert_token_auth(tapirx_token_client):
     assert models.Asset.objects.count() == 1
 
 
+@pytest.mark.django_db
 @pytest.mark.skip(reason="Open-core uses AllowAny; auth enforced by consuming product")
 def test_tapirx_upsert_unauth_403(db, enable_core_switch):
     """POST unauthenticated would assert 403 if IsAuthenticated were enforced."""
@@ -111,6 +117,7 @@ def test_tapirx_upsert_unauth_403(db, enable_core_switch):
     assert models.Asset.objects.count() == 0
 
 
+@pytest.mark.django_db
 def test_tapirx_upsert_ignored_fields(asset_edit_client):
     """connect_port_tcp and ipv6_address are silently dropped."""
     payload = {
@@ -126,6 +133,7 @@ def test_tapirx_upsert_ignored_fields(asset_edit_client):
     assert not hasattr(asset, "connect_port_tcp")
 
 
+@pytest.mark.django_db
 def test_tapirx_upsert_open_port_appends(asset_edit_client):
     """POST twice with different open_port_tcp, verify both in open_ports_tcp."""
     payload1 = {
@@ -152,6 +160,7 @@ def test_tapirx_upsert_open_port_appends(asset_edit_client):
 # ---------------------------------------------------------------------------
 
 
+@pytest.mark.django_db
 def test_get_asset_by_id_after_upsert(asset_edit_client):
     """POST upsert, extract id, GET /api/assets/{id}/, assert 200 and fields match."""
     response = _post_upsert(asset_edit_client, TAPIRX_FULL_PAYLOAD)
@@ -165,12 +174,14 @@ def test_get_asset_by_id_after_upsert(asset_edit_client):
     assert get_response.data["mac_address"] == "00:03:b1:b5:b6:48"
 
 
+@pytest.mark.django_db
 def test_get_asset_after_upsert_404(asset_edit_client):
     """GET /api/assets/99999/, assert 404."""
     response = asset_edit_client.get("/api/assets/99999/")
     assert response.status_code == 404
 
 
+@pytest.mark.django_db
 @pytest.mark.skip(reason="Open-core uses AllowAny; auth enforced by consuming product")
 def test_get_asset_after_upsert_unauth_403(db, enable_core_switch):
     """GET without auth would assert 403 if IsAuthenticated were enforced."""
@@ -187,6 +198,7 @@ def test_get_asset_after_upsert_unauth_403(db, enable_core_switch):
 # ---------------------------------------------------------------------------
 
 
+@pytest.mark.django_db
 def test_upsert_then_list(asset_edit_client):
     """POST upsert, GET /api/assets/, assert count=1 and asset in results."""
     response = _post_upsert(asset_edit_client, TAPIRX_FULL_PAYLOAD)
@@ -199,6 +211,7 @@ def test_upsert_then_list(asset_edit_client):
     assert results[0]["mac_address"] == "00:03:b1:b5:b6:48"
 
 
+@pytest.mark.django_db
 @pytest.mark.skip(
     reason="django-simple-history update_change_reason filter fails with netfields"
 )
@@ -216,6 +229,7 @@ def test_upsert_history_reason(asset_edit_client):
     assert "2019-01-02" in reason
 
 
+@pytest.mark.django_db
 def test_upsert_nic_vendor_from_mac(asset_edit_client):
     """POST with registered OUI MAC, assert nic_vendor auto-populated from netaddr."""
     response = _post_upsert(
