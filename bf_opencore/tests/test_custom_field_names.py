@@ -11,7 +11,6 @@ import pytest
 from bf_opencore import models
 
 
-@pytest.mark.django_db
 def test_custom_field_name(cleandb, auth_client):
     """Test get custom field names."""
     afn_object = models.AssetCustomFieldName.objects.create(field_name="red")
@@ -26,7 +25,6 @@ def test_custom_field_name(cleandb, auth_client):
 # Adding/deleting
 
 
-@pytest.mark.django_db
 def test_api_add_custom_field_name(cleandb, auth_client, admin_client):
     """Add custom field names via API."""
     afn = auth_client.get("/api/assetcustomfieldnames/").json()
@@ -47,7 +45,6 @@ def test_api_add_custom_field_name(cleandb, auth_client, admin_client):
     assert afn["results"][0]["field_name"] == "sparkliness"
 
 
-@pytest.mark.django_db
 def test_api_delete_custom_field_name(cleandb, auth_client, admin_client):
     """Delete custom field names via API is allowed."""
     kwargs = {
@@ -66,7 +63,6 @@ def test_api_delete_custom_field_name(cleandb, auth_client, admin_client):
     assert afn["count"] == 0
 
 
-@pytest.mark.django_db
 @pytest.mark.parametrize("num_fields", [0, 1, 20, 21, 100])
 def test_api_add_many_custom_field_names(
     num_fields, cleandb, auth_client, admin_client
@@ -92,7 +88,6 @@ def test_api_add_many_custom_field_names(
 # Disable field name
 
 
-@pytest.mark.django_db
 @pytest.mark.xfail(raises=AssertionError, reason="Not yet implemented")
 def test_api_disable_custom_field_name(cleandb, auth_client, admin_client):
     """Disabling custom field is allowed.  After, it shouldn't be visible.
@@ -129,7 +124,6 @@ def test_api_disable_custom_field_name(cleandb, auth_client, admin_client):
     # assert afn['enabled'] is False
 
 
-@pytest.mark.django_db
 def test_api_disable_custom_field_name_get_disabled(cleandb, auth_client, admin_client):
     """Disabling custom field is allowed.
 
@@ -155,7 +149,6 @@ def test_api_disable_custom_field_name_get_disabled(cleandb, auth_client, admin_
     assert afn["enabled"] is False
 
 
-@pytest.mark.django_db
 @pytest.mark.xfail(raises=AssertionError, reason="Not yet implemented")
 def test_api_disabled_custom_field(cleandb, auth_client, admin_client):
     """Disable custom field."""
@@ -180,7 +173,6 @@ def test_api_disabled_custom_field(cleandb, auth_client, admin_client):
     assert af["count"] == 0
 
 
-@pytest.mark.django_db
 @pytest.mark.xfail(raises=AssertionError, reason="Not yet implemented")
 def test_api_asset_disabled_custom_field(cleandb, auth_client, admin_client):
     """No custom field arriving with the asset when disabled."""
@@ -211,7 +203,6 @@ def test_api_asset_disabled_custom_field(cleandb, auth_client, admin_client):
 # Test post field name with different users
 
 
-@pytest.mark.django_db
 @pytest.mark.xfail(reason="Open-core has no role-based write permissions")
 def test_api_field_name_unauthorized_post(auth_client):
     kwargs = {
@@ -222,7 +213,6 @@ def test_api_field_name_unauthorized_post(auth_client):
     assert res.status_code == 403
 
 
-@pytest.mark.django_db
 def test_api_field_name_authorized_post(custom_field_edit_client):
     kwargs = {
         "data": json.dumps({"field_name": "sparkliness"}),
@@ -232,7 +222,6 @@ def test_api_field_name_authorized_post(custom_field_edit_client):
     assert res.status_code == 201
 
 
-@pytest.mark.django_db
 def test_api_field_name_admin_post(admin_client):
     kwargs = {
         "data": json.dumps({"field_name": "sparkliness"}),
@@ -246,7 +235,6 @@ def test_api_field_name_admin_post(admin_client):
 # Test patch field name with different users
 
 
-@pytest.mark.django_db
 @pytest.mark.xfail(reason="Open-core has no role-based write permissions")
 def test_api_field_name_unauthorized_patch(cfield, auth_client):
     fn_id = cfield.shiny_field.id
@@ -258,7 +246,6 @@ def test_api_field_name_unauthorized_patch(cfield, auth_client):
     assert res.status_code == 403
 
 
-@pytest.mark.django_db
 def test_api_field_name_authorized_patch(cfield, custom_field_edit_client):
     assert cfield.shiny_field.field_name == "shinyness"
     fn_id = cfield.shiny_field.id
@@ -274,7 +261,6 @@ def test_api_field_name_authorized_patch(cfield, custom_field_edit_client):
     assert cfield.shiny_field.field_name == "dullness"
 
 
-@pytest.mark.django_db
 def test_api_field_name_admin_patch(cfield, admin_client):
     fn_id = cfield.shiny_field.id
     kwargs = {
@@ -289,7 +275,6 @@ def test_api_field_name_admin_patch(cfield, admin_client):
 # Test delete field name with different users
 
 
-@pytest.mark.django_db
 @pytest.mark.xfail(reason="Open-core has no role-based write permissions")
 def test_api_field_name_unauthorized_delete(cfield, auth_client):
     """Simply Authenticated client should not be allowed to delete."""
@@ -298,7 +283,6 @@ def test_api_field_name_unauthorized_delete(cfield, auth_client):
     assert res.status_code == 403
 
 
-@pytest.mark.django_db
 def test_api_field_name_authorized_delete(cfield, custom_field_edit_client):
     """Authorized client should be allowed to delete."""
     cfield.custom_field.delete()
@@ -309,7 +293,6 @@ def test_api_field_name_authorized_delete(cfield, custom_field_edit_client):
     assert res.status_code == 204  # No content
 
 
-@pytest.mark.django_db
 def test_api_field_name_admin_delete(cfield, admin_client):
     """Admin client should be allowed to delete."""
     cfield.custom_field.delete()
@@ -320,7 +303,6 @@ def test_api_field_name_admin_delete(cfield, admin_client):
     assert res.status_code == 204  # No content
 
 
-@pytest.mark.django_db
 def test_api_field_name_admin_delete_not_with_fields(cfield, admin_client):
     """Admin client should also be allowed to delete when cust fields exist."""
     res = admin_client.get("/api/assetcustomfields/")
@@ -334,14 +316,12 @@ def test_api_field_name_admin_delete_not_with_fields(cfield, admin_client):
 # Test field order
 
 
-@pytest.mark.django_db
 def test_api_field_name_order_1(cfield, admin_client):
     """Field names are in alphabetical order."""
     afns = admin_client.get("/api/assetcustomfieldnames/").json()["results"]
     assert [a["field_name"] for a in afns] == ["shinyness", "sparkliness"]
 
 
-@pytest.mark.django_db
 def test_api_field_name_order_2(cfield, admin_client):
     """Patching a field name shouldn't change the order."""
     afns = admin_client.get("/api/assetcustomfieldnames/").json()["results"]
@@ -356,7 +336,6 @@ def test_api_field_name_order_2(cfield, admin_client):
     assert [a["field_name"] for a in afns] == fields_ordered
 
 
-@pytest.mark.django_db
 def test_api_field_name_order_3(cfield, admin_client):
     """Adding a field - list still alphabetical."""
     kwargs = {"content_type": "application/json"}
@@ -368,7 +347,6 @@ def test_api_field_name_order_3(cfield, admin_client):
     assert [a["field_name"] for a in afns] == ["a", "shinyness", "sparkliness"]
 
 
-@pytest.mark.django_db
 def test_reject_similar_to_asset_field(admin_client):
     """Adding a field simliar to an asset field is not OK."""
     kwargs = {"content_type": "application/json"}
@@ -386,7 +364,6 @@ def test_reject_similar_to_asset_field(admin_client):
     assert res.status_code == 400
 
 
-@pytest.mark.django_db
 def test_reject_similar_to_other_custom_field(admin_client):
     """Adding a field simliar to an existing custom field is not OK."""
     kwargs = {"content_type": "application/json"}

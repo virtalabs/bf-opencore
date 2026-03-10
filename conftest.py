@@ -94,3 +94,14 @@ def admin_client(db, enable_core_switch):
     api_client = APIClient()
     api_client.force_authenticate(user=admin_user)
     return api_client
+
+
+@pytest.fixture(autouse=True)
+def _auto_db(db):
+    '''Enables db for all tests
+    Should replace with module level enabalment when:
+        https://github.com/virtalabs/bf-opencore/issues/36
+    '''
+    pass
+
+

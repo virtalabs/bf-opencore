@@ -13,7 +13,6 @@ def get_asset_count():
     return Asset.objects.count()
 
 
-@pytest.mark.django_db
 def test_viper_webhook_output_no_assets(celery_app):
     """Captures the output from the celery task.
     Ensuring it's the same as the expected output.
@@ -41,7 +40,6 @@ def _assert_page_query(page_qstring: str, has: list[str], doesnt: list[str]) -> 
         assert arg not in page_qstring
 
 
-@pytest.mark.django_db
 def test_viper_webhook_output_with_all_assets(celery_app, setup_assets):
     """Captures the output from the celery task.
     Ensuring it's the same as the expected output.
@@ -94,7 +92,6 @@ def test_viper_webhook_output_with_all_assets(celery_app, setup_assets):
 
 
 # TODO
-@pytest.mark.django_db
 def _viper_webhook_output_with_some_assets(celery_app, setup_assets):
     """Captures the output from the celery task.
     Ensuring it's the same as the expected output.

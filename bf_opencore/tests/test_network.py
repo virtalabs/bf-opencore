@@ -9,7 +9,6 @@ from bf_opencore import models
 # models do have 'objects' member, but it's being lazy loaded
 
 
-@pytest.mark.django_db
 def test_create_empty_network(nwk_authorized_client):
     """Creating a network without a name is not allowed."""
     response = nwk_authorized_client.post(
@@ -20,7 +19,6 @@ def test_create_empty_network(nwk_authorized_client):
     assert response.status_code == 400
 
 
-@pytest.mark.django_db
 def test_create_named_network(nwk_authorized_client):
     """Create a network without CIDR via the API.
 
@@ -38,7 +36,6 @@ def test_create_named_network(nwk_authorized_client):
     assert network.cidr == []
 
 
-@pytest.mark.django_db
 @pytest.mark.xfail(reason="Open-core has no role-based write permissions")
 def test_create_named_network_unauth(auth_client):
     """Don't create a network with unauthorized client."""
@@ -67,7 +64,6 @@ CIDR_TEST_DATA = [
 ]
 
 
-@pytest.mark.django_db
 @pytest.mark.parametrize("supplied_cidr, resulting_cidr", CIDR_TEST_DATA)
 def test_create_network_then_cidr(supplied_cidr, resulting_cidr, nwk_authorized_client):
     """Create a network then add one or more CIDR."""
@@ -87,7 +83,6 @@ def test_create_network_then_cidr(supplied_cidr, resulting_cidr, nwk_authorized_
     assert network.cidr == resulting_cidr
 
 
-@pytest.mark.django_db
 @pytest.mark.parametrize("supplied_cidr, resulting_cidr", CIDR_TEST_DATA)
 def test_get_cidr(supplied_cidr, resulting_cidr, nwk_authorized_client):
     """Create a network + CIDR, then get CIDR."""
@@ -106,7 +101,6 @@ def test_get_cidr(supplied_cidr, resulting_cidr, nwk_authorized_client):
     assert response.status_code == 200
 
 
-@pytest.mark.django_db
 def test_delete_cidr(nwk_authorized_client):
     """Create a network, add CIDR, delete CIDR."""
     response = nwk_authorized_client.post(
@@ -132,7 +126,6 @@ def test_delete_cidr(nwk_authorized_client):
     assert network.cidr == []
 
 
-@pytest.mark.django_db
 def test_change_cidr_one(nwk_authorized_client):
     """Create a network, add CIDR, change CIDR."""
     response = nwk_authorized_client.post(
@@ -154,7 +147,6 @@ def test_change_cidr_one(nwk_authorized_client):
     assert network.cidr == ["10.0.1.3/32"]
 
 
-@pytest.mark.django_db
 @pytest.mark.parametrize("test_case", range(1, len(CIDR_TEST_DATA)))
 def test_change_cidr(nwk_authorized_client, test_case):
     """Create a network, add CIDR, change CIDR.
@@ -189,7 +181,6 @@ def test_change_cidr(nwk_authorized_client, test_case):
     assert network.cidr == CIDR_TEST_DATA[test_case][1]
 
 
-@pytest.mark.django_db
 @pytest.mark.xfail(
     raises=ValueError,
     reason="Create Nwk w/CIDR is not yet implemented, fails "
@@ -212,7 +203,6 @@ def test_create_cidr_network(nwk_authorized_client):
     # assert network.cidr == ['10.0.1.2']
 
 
-@pytest.mark.django_db
 @pytest.mark.xfail(
     raises=AssertionError,
     reason="There's a bug in CIDR validation code.  Documented in Github issue #1443.",
@@ -234,7 +224,6 @@ def test_patch_bad_cidr(nwk_authorized_client):
     assert response.status_code == 400  # This should fail
 
 
-@pytest.mark.django_db
 def test_cidr_bad_json(nwk_authorized_client):
     """Verify list of CIDRs is valid JSON."""
     # Create a network
@@ -258,7 +247,6 @@ def test_cidr_bad_json(nwk_authorized_client):
 # Test Asset - Network connections
 
 
-@pytest.mark.django_db
 def test_asset_in_network_old_api(nwk_authorized_client):
     """Ensure we can determine network membership."""
     dummy_asset = models.Asset.objects.create(ip_address="10.0.0.1")
@@ -268,7 +256,6 @@ def test_asset_in_network_old_api(nwk_authorized_client):
     assert response.status_code == 404
 
 
-@pytest.mark.django_db
 def test_asset_in_network_new_api(nwk_authorized_client):
     """Ensure we can determine network membership."""
     asset = models.Asset.objects.create(ip_address="10.0.0.1")
@@ -281,7 +268,6 @@ def test_asset_in_network_new_api(nwk_authorized_client):
     assert assets[0]["id"] == asset.id
 
 
-@pytest.mark.django_db
 def test_asset_big_network(nwk_authorized_client):
     """Ensure these things work also in other networks."""
     asset_ips = [

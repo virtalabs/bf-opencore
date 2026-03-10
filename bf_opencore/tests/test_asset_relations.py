@@ -21,7 +21,6 @@ from bf_opencore import models
 # Tags
 
 
-@pytest.mark.django_db
 def test_get_asset_tags_obsolete(auth_client):
     """Test old /api/assets/<n>/tags way to get tags associated with asset.
 
@@ -42,7 +41,6 @@ def test_get_asset_tags_obsolete(auth_client):
     assert {t["id"] for t in tags} == {tag_red.pk, tag_green.pk}
 
 
-@pytest.mark.django_db
 def test_get_asset_tags_new(auth_client):
     """Test new /api/tags/?asset=<n> way to get tags associated with asset."""
     asset = models.Asset.objects.create(hostname="foo.com")
@@ -57,7 +55,6 @@ def test_get_asset_tags_new(auth_client):
     assert {t["id"] for t in tags} == {tag_red.pk, tag_green.pk}
 
 
-@pytest.mark.django_db
 def test_get_asset_vulnerabilities_obsolete(auth_client, asset_vulnerabilities):
     """Test old /api/assets/<n>/vulnerabilities way to get vulns for asset."""
     asset = asset_vulnerabilities[0]
@@ -65,7 +62,6 @@ def test_get_asset_vulnerabilities_obsolete(auth_client, asset_vulnerabilities):
     assert response.status_code == 404
 
 
-@pytest.mark.django_db
 def test_get_asset_vulnerabilities_new(auth_client, asset_vulnerabilities):
     """Test new /api/vulnerabilities/?asset=<n> way to get vulns for asset."""
     (asset, vulnerability_red, vulnerability_green) = asset_vulnerabilities
@@ -78,7 +74,6 @@ def test_get_asset_vulnerabilities_new(auth_client, asset_vulnerabilities):
     }
 
 
-@pytest.mark.django_db
 def test_get_asset_asset_vulnerabilities_obsolete(auth_client, asset_vulnerabilities):
     """Test old /api/assets/<n>/assetvulnerabilities route for asset_vulns."""
     asset = asset_vulnerabilities[0]
@@ -86,7 +81,6 @@ def test_get_asset_asset_vulnerabilities_obsolete(auth_client, asset_vulnerabili
     assert response.status_code == 404
 
 
-@pytest.mark.django_db
 def test_get_asset_asset_vulnerabilities_new(auth_client, asset_vulnerabilities):
     """Test new /api/assetvulnerabilities/?asset=<n> route for asset_vulns."""
     (asset, vulnerability_red, vulnerability_green) = asset_vulnerabilities
@@ -104,7 +98,6 @@ def test_get_asset_asset_vulnerabilities_new(auth_client, asset_vulnerabilities)
 # Networks
 
 
-@pytest.mark.django_db
 def test_get_asset_network_old_api(admin_client):
     """Ensure we can determine which assets belong in network.
 
@@ -121,7 +114,6 @@ def test_get_asset_network_old_api(admin_client):
     assert networks[0]["id"] == network.pk
 
 
-@pytest.mark.django_db
 def test_get_asset_network_new_api(admin_client):
     """Ensure we can determine which assets belong in network."""
     asset = models.Asset.objects.create(ip_address="10.0.0.1")

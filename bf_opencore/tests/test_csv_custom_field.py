@@ -11,7 +11,6 @@ from .test_csv import TestCTX
 from bf_opencore.tests.utils import write_tempfile
 
 
-@pytest.mark.django_db
 def test_process_csv_with_custom_field(setup_db):
     """We can import from CSV into a custom field.
 
@@ -53,7 +52,6 @@ def test_process_csv_with_custom_field(setup_db):
     assert asset_shininess == "Very shiny"
 
 
-@pytest.mark.django_db
 def test_process_csv_with_custom_field_underscores(setup_db):
     """We can import from CSV into a custom field that contains underscores."""
     Asset.objects.create(
@@ -95,7 +93,6 @@ def test_process_csv_with_custom_field_underscores(setup_db):
     assert asset_site_description == "Very shiny"
 
 
-@pytest.mark.django_db
 def test_process_csv_with_custom_field_spaces(setup_db):
     """We can import from CSV into a custom field that contains spaces."""
     Asset.objects.create(
