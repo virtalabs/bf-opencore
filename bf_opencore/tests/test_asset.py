@@ -14,14 +14,12 @@ from freezegun import freeze_time
 from bf_opencore import models
 
 
-@pytest.mark.django_db
 def test_get_empty_assets(auth_client):
     """Test that asset list is empty unless we do something special."""
     assets = auth_client.get("/api/assets/")
     assert assets.data["count"] == 0
 
 
-@pytest.mark.django_db
 def test_create_asset(auth_client):
     """Creating an empty asset makes it available via the API."""
     _ = models.Asset.objects.create()
@@ -30,7 +28,6 @@ def test_create_asset(auth_client):
     assert assets.data["count"] == 1
 
 
-@pytest.mark.django_db
 def test_get_asset_csv(auth_client):
     """We can specify CSV format."""
     _ = models.Asset.objects.create()
@@ -41,7 +38,6 @@ def test_get_asset_csv(auth_client):
     assert len(response.content.splitlines()) == 2  # header row + 1 asset
 
 
-@pytest.mark.django_db
 def test_get_asset_csv_specify_fields(auth_client):
     """With CSV format we generally would specify which headers we want."""
     _ = models.Asset.objects.create(name="spam", ip_address="10.0.0.1")
@@ -57,7 +53,6 @@ def test_get_asset_csv_specify_fields(auth_client):
     assert asset == ["spam", "10.0.0.1", ""]
 
 
-@pytest.mark.django_db
 def test_export_assets_json(auth_client):
     """We can export assets to JSON."""
     _ = models.Asset.objects.create()
@@ -68,7 +63,6 @@ def test_export_assets_json(auth_client):
     assert json.loads(response.content)
 
 
-@pytest.mark.django_db
 def test_api_create_asset(asset_edit_client):
     """Create an asset with authorized client."""
     client = asset_edit_client
@@ -84,7 +78,6 @@ def test_api_create_asset(asset_edit_client):
     assert asset["hostname"] == "nospam"
 
 
-@pytest.mark.django_db
 def test_api_create_asset_maconly(asset_edit_client):
     """Create an asset with authorized client."""
     client = asset_edit_client
@@ -100,7 +93,6 @@ def test_api_create_asset_maconly(asset_edit_client):
     assert asset["mac_address"] == "00:00:00:00:00:01"
 
 
-@pytest.mark.django_db
 def test_api_create_asset_addinventory_maconly(asset_edit_client):
     """Create an asset, replicating 'add inventory.
 
@@ -121,7 +113,6 @@ def test_api_create_asset_addinventory_maconly(asset_edit_client):
     assert asset["ip_address"] is None
 
 
-@pytest.mark.django_db
 def test_api_create_asset_addinventory_empty_mac(asset_edit_client):
     """Create an asset, replicating 'add inventory.
 
@@ -142,7 +133,6 @@ def test_api_create_asset_addinventory_empty_mac(asset_edit_client):
     assert asset["ip_address"] is None
 
 
-@pytest.mark.django_db
 def test_api_create_asset_addinventory_empty_mac_times_two(asset_edit_client):
     """Create an asset, replicating 'add inventory'.
 
@@ -171,7 +161,6 @@ def test_api_create_asset_addinventory_empty_mac_times_two(asset_edit_client):
     assert assets.data["count"] == 2
 
 
-@pytest.mark.django_db
 def test_api_create_asset_unauthorized(auth_client):
     """Can't create an asset with an unauthorized client."""
     client = auth_client
@@ -186,7 +175,6 @@ def test_api_create_asset_unauthorized(auth_client):
     assert len(assets.data["results"]) == 0
 
 
-@pytest.mark.django_db
 def test_api_create_get_asset(auth_client, asset_edit_client):
     """Create an asset, read with less-authorized client."""
     response = asset_edit_client.post(
@@ -201,7 +189,6 @@ def test_api_create_get_asset(auth_client, asset_edit_client):
     assert asset["hostname"] == "nospam"
 
 
-@pytest.mark.django_db
 def test_api_create_asset_open_ports(asset_edit_client):
     """Create an asset with authorized client.
 
@@ -219,7 +206,6 @@ def test_api_create_asset_open_ports(asset_edit_client):
     assert asset["open_ports_tcp"] == [80, 443, 8000]
 
 
-@pytest.mark.django_db
 def test_api_create_patch_asset(auth_client, asset_edit_client):
     """Create an asset, then patch."""
     response = asset_edit_client.post(
@@ -243,7 +229,6 @@ def test_api_create_patch_asset(auth_client, asset_edit_client):
     assert asset["hostname"] == "spam"
 
 
-@pytest.mark.django_db
 def test_api_create_asset_displayname(asset_edit_client):
     """Create an asset with a display_name."""
     client = asset_edit_client
@@ -257,7 +242,6 @@ def test_api_create_asset_displayname(asset_edit_client):
     assert response.data["display_name"] == "foobar"
 
 
-@pytest.mark.django_db
 def test_api_create_asset_displayname_name(asset_edit_client):
     """Create an asset with a display_name *and* a name.
 
@@ -278,7 +262,6 @@ def test_api_create_asset_displayname_name(asset_edit_client):
     assert response.data["display_name"] == "foobar"
 
 
-@pytest.mark.django_db
 def test_api_create_asset_displayname_name_2(asset_edit_client):
     """Create an asset with a display_name *and* a name.
 
@@ -296,7 +279,6 @@ def test_api_create_asset_displayname_name_2(asset_edit_client):
     assert response.data["display_name"] == "foobar"
 
 
-@pytest.mark.django_db
 def test_api_update_asset_displayname(asset_edit_client):
     """Create an asset, update display_name later."""
     client = asset_edit_client
@@ -316,7 +298,6 @@ def test_api_update_asset_displayname(asset_edit_client):
     assert response.data["display_name"] == "spam"
 
 
-@pytest.mark.django_db
 @pytest.mark.xfail(
     raises=AssertionError,
     reason="Not sure why, but we *are* allowed to patch.  "
@@ -352,7 +333,6 @@ def test_api_create_unauth_patch_asset(auth_client, asset_edit_client):
     assert asset["hostname"] == "nospam"
 
 
-@pytest.mark.django_db
 def test_unauth_patch_asset(auth_client):
     """Create an asset, patch with less-authorized client.
 
@@ -377,7 +357,6 @@ def test_unauth_patch_asset(auth_client):
     assert asset["hostname"] is None  # Still None
 
 
-@pytest.mark.django_db
 def test_create_many_assets(auth_client):
     """Creating multiple assets makes them available via the API."""
     asset_names = ["foo", "bar", "baz", "xyzzy", "spam", "ham", "eggs"]
@@ -387,7 +366,6 @@ def test_create_many_assets(auth_client):
     assert assets.data["count"] == len(asset_names)
 
 
-@pytest.mark.django_db
 def test_retrieve_one_asset(auth_client):
     """Creating an asset makes it available via the API."""
     asset_names = ["foo", "bar", "baz", "xyzzy", "spam", "ham", "eggs"]
@@ -398,7 +376,6 @@ def test_retrieve_one_asset(auth_client):
     assert len(assets.data["results"]) == 1
 
 
-@pytest.mark.django_db
 def test_one_asset_details(auth_client):
     """Creating an asset makes its details available via the API."""
     asset_names = ["foo", "bar", "baz", "xyzzy", "spam", "ham", "eggs"]
@@ -410,7 +387,6 @@ def test_one_asset_details(auth_client):
     assert asset["hostname"] == "xyzzy"
 
 
-@pytest.mark.django_db
 def test_patch_asset(asset_edit_client):
     """Patching an asset field updates the asset in the database."""
     client = asset_edit_client
@@ -429,7 +405,6 @@ def test_patch_asset(asset_edit_client):
     assert spam_asset.hostname == "nospam"
 
 
-@pytest.mark.django_db
 def test_patch_asset_open_ports_tcp_string(asset_edit_client):
     """Patching ports with a string of integers.
 
@@ -457,7 +432,6 @@ def test_patch_asset_open_ports_tcp_string(asset_edit_client):
     assert spam_asset.open_ports_tcp == [80, 443, 8000]
 
 
-@pytest.mark.django_db
 def test_patch_asset_open_ports_tcp_list(asset_edit_client):
     """Patching ports with a string of integers.
 
@@ -484,7 +458,6 @@ def test_patch_asset_open_ports_tcp_list(asset_edit_client):
     assert spam_asset.open_ports_tcp == [80, 443, 8000]
 
 
-@pytest.mark.django_db
 def test_patch_asset_open_ports_tcp_list_bad(asset_edit_client):
     """Patching ports with a string of integers.
 
@@ -506,7 +479,6 @@ def test_patch_asset_open_ports_tcp_list_bad(asset_edit_client):
     assert response.status_code == 400
 
 
-@pytest.mark.django_db
 def test_patch_asset_open_ports_tcp_bad(asset_edit_client):
     """Patching ports with a string of integers... but they are bad."""
     client = asset_edit_client
@@ -529,7 +501,6 @@ def test_patch_asset_open_ports_tcp_bad(asset_edit_client):
     assert spam_asset.open_ports_tcp == []
 
 
-@pytest.mark.django_db
 def test_patch_asset_open_ports_tcp_null(asset_edit_client):
     """Patching ports with Null sets the port list to empty.
 
@@ -555,7 +526,6 @@ def test_patch_asset_open_ports_tcp_null(asset_edit_client):
     assert spam_asset.open_ports_tcp == []
 
 
-@pytest.mark.django_db
 def test_patch_asset_open_ports_tcp_empty(asset_edit_client):
     """Patching with empty string sets the port list to empty.
 
@@ -581,7 +551,6 @@ def test_patch_asset_open_ports_tcp_empty(asset_edit_client):
     assert spam_asset.open_ports_tcp == []
 
 
-@pytest.mark.django_db
 def test_set_name_empty(asset_edit_client):
     """PATCHing a hostname to an empty string works."""
     client = asset_edit_client
@@ -600,7 +569,6 @@ def test_set_name_empty(asset_edit_client):
     assert spam_asset.hostname == ""
 
 
-@pytest.mark.django_db
 def test_set_name_null(asset_edit_client):
     """PATCHing a hostname to `null` works."""
     client = asset_edit_client
@@ -620,7 +588,6 @@ def test_set_name_null(asset_edit_client):
     assert spam_asset.hostname is None
 
 
-@pytest.mark.django_db
 def test_field_histogram(auth_client):
     """Field histogram works with one field."""
     models.Asset.objects.create(manufacturer="Bar")
@@ -639,21 +606,18 @@ def test_field_histogram(auth_client):
     assert [x["count"] for x in qset] == [3, 2, 1]
 
 
-@pytest.mark.django_db
 def test_field_histogram_no_field(auth_client):
     """Fail to specify field=<Asset field name> specified: HTTP 400"""
     response = auth_client.get("/api/assets/histogram/")
     assert response.status_code == 400
 
 
-@pytest.mark.django_db
 def test_field_histogram_no_such_field(auth_client):
     """Specify field=<nonsense>: HTTP 400"""
     response = auth_client.get("/api/assets/histogram/", {"field": "asdf"})
     assert response.status_code == 400
 
 
-@pytest.mark.django_db
 def test_api_duplicate_ips(auth_client):
     """Check for duplicate IP addresses in the asset population."""
     response = auth_client.get("/api/assets/duplicate_ips/")
@@ -674,7 +638,6 @@ def test_api_duplicate_ips(auth_client):
     ]
 
 
-@pytest.mark.django_db
 def test_api_duplicate_ips_one(auth_client):
     """Check for duplicate IP addresses in the asset population."""
     response = auth_client.get("/api/assets/duplicate_ips/")
@@ -694,7 +657,6 @@ def test_api_duplicate_ips_one(auth_client):
     ]
 
 
-@pytest.mark.django_db
 @pytest.mark.xfail(
     raises=AssertionError,
     reason="not allowed to spell out 'exact' in URL for some reason.",
@@ -718,7 +680,6 @@ def test_api_duplicate_ips_one_spell_exact(auth_client):
     ]
 
 
-@pytest.mark.django_db
 def test_api_duplicate_ips_one_prefix_robust(auth_client):
     """Check for duplicate IP addresses in the asset population."""
     response = auth_client.get("/api/assets/duplicate_ips/")
@@ -740,7 +701,6 @@ def test_api_duplicate_ips_one_prefix_robust(auth_client):
     ]
 
 
-@pytest.mark.django_db
 def test_fetch_by_os(auth_client):
     """Assets can be fetched by OS field."""
     a1 = models.Asset.objects.create(os="Windows XP")
@@ -768,7 +728,6 @@ def test_fetch_by_os(auth_client):
     assert ids == set([a1.id, a2.id])
 
 
-@pytest.mark.django_db
 def test_app_sw_version_needs_update(auth_client):
     """Test whether assets need software updates."""
     oldest = models.Asset.objects.create(
@@ -797,7 +756,6 @@ def test_app_sw_version_needs_update(auth_client):
     assert response.json()["needs_update"] is False
 
 
-@pytest.mark.django_db
 def test_nonsense_app_sw_version_needs_update(auth_client):
     """Test whether a silly asset needs an update."""
     a = models.Asset.objects.create(
@@ -814,7 +772,6 @@ def test_nonsense_app_sw_version_needs_update(auth_client):
     assert resp.json()["needs_update"] is True
 
 
-@pytest.mark.django_db
 def test_app_sw_version_not_needs_update(auth_client):
     """Test whether two equal assets need updates."""
     a1 = models.Asset.objects.create(
@@ -833,7 +790,6 @@ def test_app_sw_version_not_needs_update(auth_client):
     assert response2.json()["needs_update"] is False
 
 
-@pytest.mark.django_db
 def test_app_sw_no_version_needs_update(auth_client):
     """Test whether assets without software versions need updates."""
     asset = models.Asset.objects.create(manufacturer="Foo", model="Bar")
@@ -844,7 +800,6 @@ def test_app_sw_no_version_needs_update(auth_client):
     assert response.json()["needs_update"] is False
 
 
-@pytest.mark.django_db
 def test_api_create_asset_mac_autofill_nic(asset_edit_client):
     """Create an asset with NIC vendor."""
     client = asset_edit_client
@@ -861,7 +816,6 @@ def test_api_create_asset_mac_autofill_nic(asset_edit_client):
     assert asset["nic_vendor"] == "Apple, Inc."
 
 
-@pytest.mark.django_db
 def test_api_create_asset_mac_reject_nic(asset_edit_client):
     """Provided NIC vendor will be silently ignored."""
     client = asset_edit_client
@@ -883,7 +837,6 @@ def test_api_create_asset_mac_reject_nic(asset_edit_client):
     assert asset["nic_vendor"] == "Apple, Inc."
 
 
-@pytest.mark.django_db
 def test_upsert_create(asset_edit_client):
     """Create a new asset via upsert endpoint."""
     macaddr = "00:03:b1:b5:b6:48"
@@ -904,7 +857,6 @@ def test_upsert_create(asset_edit_client):
     assert asset.mac_address == macaddr
 
 
-@pytest.mark.django_db
 def test_upsert_update(asset_edit_client):
     """Update an existing asset via upsert endpoint."""
     # Create existing asset in database
@@ -928,7 +880,6 @@ def test_upsert_update(asset_edit_client):
     assert str(asset.ip_address) == "10.0.0.1"
 
 
-@pytest.mark.django_db
 def test_upsert_no_mac_address(asset_edit_client):
     """Upsert endpoint ignores calls that lack a MAC address."""
     response = asset_edit_client.post(
@@ -944,7 +895,6 @@ def test_upsert_no_mac_address(asset_edit_client):
     assert models.Asset.objects.count() == 0
 
 
-@pytest.mark.django_db
 def test_upsert_no_mac_address_duplicate(asset_edit_client):
     """Call upsert endpoint twice, with the same IP address.
 
@@ -975,7 +925,6 @@ def test_upsert_no_mac_address_duplicate(asset_edit_client):
     assert models.Asset.objects.count() == 1
 
 
-@pytest.mark.django_db
 def test_upsert_ipv6(asset_edit_client):
     """Call upsert endpoint with an ipv6 address.
 
@@ -996,7 +945,6 @@ def test_upsert_ipv6(asset_edit_client):
     assert models.Asset.objects.count() == 1
 
 
-@pytest.mark.django_db
 def test_upsert_many_fields(asset_edit_client):
     """Call upsert endpoint with a fields typically provided by sniffer."""
     response = asset_edit_client.post(
@@ -1020,7 +968,6 @@ def test_upsert_many_fields(asset_edit_client):
     assert models.Asset.objects.count() == 1
 
 
-@pytest.mark.django_db
 def test_upsert_ipv4(asset_edit_client):
     """Call upsert endpoint with a "ipv4_address" field.
 
@@ -1043,7 +990,6 @@ def test_upsert_ipv4(asset_edit_client):
     assert str(asset.ip_address) == "10.0.0.1"
 
 
-@pytest.mark.django_db
 def test_upsert_bad_key(asset_edit_client):
     """Call upsert endpoint with a bad key in the JSON."""
     with pytest.raises(django.core.exceptions.FieldDoesNotExist):
@@ -1059,7 +1005,6 @@ def test_upsert_bad_key(asset_edit_client):
         )
 
 
-@pytest.mark.django_db
 def test_upsert_open_port_tcp(asset_edit_client):
     """Call upsert endpoint with a "open_port_tcp" field.
 
@@ -1082,7 +1027,6 @@ def test_upsert_open_port_tcp(asset_edit_client):
     assert asset.open_ports_tcp == [80]
 
 
-@pytest.mark.django_db
 def test_upsert_identifier(asset_edit_client):
     """Call upsert endpoint with a "identifier" field.
 
@@ -1104,7 +1048,6 @@ def test_upsert_identifier(asset_edit_client):
     assert asset.name == "Alaris 8100"
 
 
-@pytest.mark.django_db
 @pytest.mark.parametrize(
     "date_range, num_assets",
     [
@@ -1154,7 +1097,6 @@ def test_asset_date_range(date_range, num_assets, auth_client):
         assert res.data["count"] == num_assets
 
 
-@pytest.mark.django_db
 def test_external_key_non_connector(db, auth_client):
     """Test that external_links/ detail route doesn't barf on non-connector
     external key.

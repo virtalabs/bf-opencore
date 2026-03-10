@@ -7,7 +7,6 @@ import pytest
 from bf_opencore import models
 
 
-@pytest.mark.django_db
 def test_get_asset_groups_obsolete(auth_client, asset_groups):
     """Test old /api/assets/<n>/groups way to get groups with asset.
 
@@ -18,7 +17,6 @@ def test_get_asset_groups_obsolete(auth_client, asset_groups):
     assert response.status_code == 404
 
 
-@pytest.mark.django_db
 def test_get_groups_for_asset_new(auth_client, asset_groups):
     """Get groups that asset is member of."""
     response = auth_client.get(f"/api/groups/?asset={asset_groups.aa.id}")
@@ -27,7 +25,6 @@ def test_get_groups_for_asset_new(auth_client, asset_groups):
     assert {t["id"] for t in groups} == {asset_groups.gr.id, asset_groups.gg.id}
 
 
-@pytest.mark.django_db
 def test_get_group_assets(auth_client, asset_groups):
     """Get assets belonging to group."""
     response = auth_client.get(f"/api/assets/?group={asset_groups.gg.id}")
@@ -39,7 +36,6 @@ def test_get_group_assets(auth_client, asset_groups):
 # Get asset groups
 
 
-@pytest.mark.django_db
 def test_get_asset_groups(auth_client, asset_groups):
     """Get all asset groups."""
     # fixture asset_groups to set up data, but don't need to access.
@@ -48,7 +44,6 @@ def test_get_asset_groups(auth_client, asset_groups):
     assert len(agroups) == 3
 
 
-@pytest.mark.django_db
 def test_get_one_asset_group_by_id(admin_client, asset_groups):
     """Get one asset group."""
     response = admin_client.get(f"/api/assetgroups/{asset_groups.agra.id}/")
@@ -57,7 +52,6 @@ def test_get_one_asset_group_by_id(admin_client, asset_groups):
     assert agroup["id"] == asset_groups.agra.id
 
 
-@pytest.mark.django_db
 def test_get_asset_asset_groups(auth_client, asset_groups):
     """Get asset groups for one asset."""
     response = auth_client.get(f"/api/assetgroups/?asset={asset_groups.aa.id}")
@@ -66,7 +60,6 @@ def test_get_asset_asset_groups(auth_client, asset_groups):
     assert set(g["id"] for g in agroups) == {asset_groups.agra.id, asset_groups.agga.id}
 
 
-@pytest.mark.django_db
 def test_get_no_asset_asset_groups(auth_client, asset_groups):
     """Get no asset groups for nonexistent asset."""
     # fixture asset_groups to set up data, but don't need to access.
@@ -74,7 +67,6 @@ def test_get_no_asset_asset_groups(auth_client, asset_groups):
     assert response.status_code == 400
 
 
-@pytest.mark.django_db
 def test_get_group_asset_groups(auth_client, asset_groups):
     """Get asset groups for one group."""
     response = auth_client.get(f"/api/assetgroups/?group={asset_groups.gg.id}")
@@ -83,7 +75,6 @@ def test_get_group_asset_groups(auth_client, asset_groups):
     assert set(g["id"] for g in agroups) == {asset_groups.agga.id, asset_groups.aggb.id}
 
 
-@pytest.mark.django_db
 def test_get_no_group_asset_groups(auth_client, asset_groups):
     """Get no asset groups for nonexistent group."""
     # fixture asset_groups to set up data, but don't need to access.
@@ -91,7 +82,6 @@ def test_get_no_group_asset_groups(auth_client, asset_groups):
     assert response.status_code == 400
 
 
-@pytest.mark.django_db
 def test_get_asset_group_by_group_plus_asset(admin_client, asset_groups):
     """Get asset group for one asset/group combo."""
     response = admin_client.get(
@@ -105,7 +95,6 @@ def test_get_asset_group_by_group_plus_asset(admin_client, asset_groups):
 # Delete asset groups
 
 
-@pytest.mark.django_db
 def test_delete_all_asset_groups(admin_client, asset_groups):
     """Delete all asset groups."""
     # fixture asset_groups to set up data, but don't need to access.
@@ -116,7 +105,6 @@ def test_delete_all_asset_groups(admin_client, asset_groups):
     )
 
 
-@pytest.mark.django_db
 def test_delete_one_asset_group_by_id(admin_client, asset_groups):
     """Delete one asset group."""
     response = admin_client.delete(f"/api/assetgroups/{asset_groups.agga.id}/")
@@ -128,7 +116,6 @@ def test_delete_one_asset_group_by_id(admin_client, asset_groups):
     assert {ag["id"] for ag in agroups} == {asset_groups.agra.id, asset_groups.aggb.id}
 
 
-@pytest.mark.django_db
 def test_delete_asset_group_by_asset_only_fails(admin_client, asset_groups):
     """Delete one asset group by asset only should fail.
 
@@ -142,7 +129,6 @@ def test_delete_asset_group_by_asset_only_fails(admin_client, asset_groups):
     assert response.status_code == 405
 
 
-@pytest.mark.django_db
 def test_delete_asset_group_by_group_plus_asset(admin_client, asset_groups):
     """Delete one asset group by group + asset combo."""
     response = admin_client.delete(
@@ -164,7 +150,6 @@ def test_delete_asset_group_by_group_plus_asset(admin_client, asset_groups):
 # Create group
 
 
-@pytest.mark.django_db
 def test_create_group_admin(biomed_client, admin_client):
     """Create a group.
 
@@ -186,7 +171,6 @@ def test_create_group_admin(biomed_client, admin_client):
     assert groups[0]["name"] == "spam"
 
 
-@pytest.mark.django_db
 @pytest.mark.xfail(reason="Open-core has no role-based write permissions")
 def test_create_group_auth(auth_client):
     """Create a group with auth client should *not* work."""
@@ -196,7 +180,6 @@ def test_create_group_auth(auth_client):
     assert resp.status_code == 403  # forbidden
 
 
-@pytest.mark.django_db
 def test_create_group_biomed(biomed_client):
     """Create a group with a 'biomed_client'."""
     resp = biomed_client.post(
@@ -211,7 +194,6 @@ def test_create_group_biomed(biomed_client):
     assert groups[0]["name"] == "spam"
 
 
-@pytest.mark.django_db
 def test_delete_group_biomed(biomed_client):
     """Delete a group with a 'biomed_client'."""
     group_obj = models.Group.objects.create(name="spam")
@@ -219,7 +201,6 @@ def test_delete_group_biomed(biomed_client):
     assert resp.status_code == 204  # deleted
 
 
-@pytest.mark.django_db
 def test_create_asset_group(biomed_client):
     """Add asset(s) to a group AKA create assetgroup."""
     gid = models.Group.objects.create(name="spam").id
@@ -236,7 +217,6 @@ def test_create_asset_group(biomed_client):
     assert len(agroups) == 2
 
 
-@pytest.mark.django_db
 def test_delete_asset_group(biomed_client):
     """Remove asset from group AKA delete assetgroup.
 

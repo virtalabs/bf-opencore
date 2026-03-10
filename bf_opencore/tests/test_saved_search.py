@@ -10,14 +10,12 @@ import pytest
 from bf_opencore import models
 
 
-@pytest.mark.django_db
 def test_search(auth_client, acme_assets):
     """Verify that regular boring search works."""
     candidates = auth_client.get("/api/assets/?search=acme")
     assert candidates.data["count"] == 2
 
 
-@pytest.mark.django_db
 def test_save_search(asset_edit_client, acme_assets):
     """Verify that we can save a search."""
     assert models.SavedSearch.objects.count() == 0
@@ -34,7 +32,6 @@ def test_save_search(asset_edit_client, acme_assets):
     assert saved_search.search_query == save_search_data["search_query"]
 
 
-@pytest.mark.django_db
 def test_save_search_any_user(auth_client, acme_assets):
     """Verify that any client can save a search."""
     assert models.SavedSearch.objects.count() == 0
@@ -48,7 +45,6 @@ def test_save_search_any_user(auth_client, acme_assets):
     assert models.SavedSearch.objects.count() == 1
 
 
-@pytest.mark.django_db
 @pytest.mark.xfail(
     raises=AssertionError, reason="Want to prevent deletion but not doing it yet."
 )
@@ -60,7 +56,6 @@ def test_delete_saved_search(auth_client):
     assert resp.status_code == 403
 
 
-@pytest.mark.django_db
 @pytest.mark.xfail(
     raises=AssertionError, reason="Want to prevent editing but not doing it yet."
 )
@@ -79,7 +74,6 @@ def test_edit_saved_search(auth_client):
     assert saved_search.search_query[0][1] == "acme"
 
 
-@pytest.mark.django_db
 def test_get_saved_search_one(auth_client):
     """Ensure not otherwise authorized client can get a saved search."""
     save_search_data = {"name": "Search for Acme", "search_query": [["search", "acme"]]}
@@ -93,7 +87,6 @@ def test_get_saved_search_one(auth_client):
     assert saved_search["search_query"] == save_search_data["search_query"]
 
 
-@pytest.mark.django_db
 def test_get_saved_search_many(auth_client):
     """Ensure not otherwise authorized client can get list of saved search."""
     save_search_data = {"name": "Search for Acme", "search_query": [["search", "acme"]]}

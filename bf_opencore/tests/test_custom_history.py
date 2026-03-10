@@ -16,7 +16,6 @@ import pytest
 from bf_opencore import models
 
 
-@pytest.mark.django_db
 def test_history_canonical_fields(asset_edit_client):
     """Check some rudimentary asset history."""
     a = models.Asset.objects.create()
@@ -34,7 +33,6 @@ def test_history_canonical_fields(asset_edit_client):
     assert [h["hostname"] for h in res.data["results"]] == expected_hostname_hist
 
 
-@pytest.mark.django_db
 def test_history_canonical_field_unchanged(asset_edit_client):
     """Unchanged field should show up as 'empty-ish'."""
     a = models.Asset.objects.create()
@@ -43,7 +41,6 @@ def test_history_canonical_field_unchanged(asset_edit_client):
     assert [h["hostname"] for h in res.data] == [None]
 
 
-@pytest.mark.django_db
 def test_history_canonical_one_field(asset_edit_client):
     """Field history should contain only the changes."""
     a = models.Asset.objects.create()
