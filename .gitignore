@@ -23,3 +23,5 @@ build/
 
 # Proprietary code (must not be tracked in FOSS repo)
 blueflow/
+
+claude.md
