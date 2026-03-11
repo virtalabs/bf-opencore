@@ -22,11 +22,11 @@ class Task(BaseTask):
 
 
 @celery_app.task(base=Task)
-def viper_webhook(data: dict):
+def viper_webhook(data: dict, request_id: str = ""):
     """Process a viper webhook."""
     viper_data = ViperWebhookRequest(**data)
     logger.info(f"Processing viper webhook: {viper_data}")
-    response_list = ViperWebhookResponseList.from_request(viper_data)
+    response_list = ViperWebhookResponseList.from_request(viper_data, request_id=request_id)
     for response in response_list:
         as_dict = response.to_dict()
         requests.post(

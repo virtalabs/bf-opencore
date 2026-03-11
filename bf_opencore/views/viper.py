@@ -14,6 +14,7 @@ from rest_framework.request import Request
 from rest_framework.response import Response
 
 from bf_opencore.celery.tasks import viper_webhook
+from bf_opencore.models import ViperWebhookJob
 from bf_opencore.models.viper import ViperWebhookRequest
 
 
@@ -41,5 +42,11 @@ class ViperViewSet(viewsets.ViewSet):
         serializer = self.serializer_class(data=request.data)
         serializer.is_valid(raise_exception=True)
         viper_data = ViperWebhookRequest(**serializer.validated_data)
-        viper_webhook.delay(viper_data.to_dict())
-        return Response(status=status.HTTP_202_ACCEPTED)
+        job = ViperWebhookJob.objects.create(
+            callback=viper_data.callback,
+            since=viper_data.since,
+            before=viper_data.before,
+            request_body=request.data,
+        )
+        viper_webhook.delay(viper_data.to_dict(), str(job.id))
+        return Response({"request_id": str(job.id)}, status=status.HTTP_202_ACCEPTED)

@@ -10,6 +10,7 @@ from .network_endpoint import EndpointSuggestion, NetworkEndpoint
 from .pulse import PulseFeedItem
 from .scan import Scan
 from .tag import AssetTag, Tag
+from .viper import ViperWebhookJob
 from .vulnerability import AssetVulnerability, Vulnerability
 
 __all__ = [
@@ -30,5 +31,6 @@ __all__ = [
     "SavedSearch",
     "Scan",
     "Tag",
+    "ViperWebhookJob",
     "Vulnerability",
 ]

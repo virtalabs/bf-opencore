@@ -1,4 +1,5 @@
 import datetime
+import uuid
 from unittest.mock import patch
 
 from bf_opencore.models.viper import ViperWebhookRequest
@@ -21,7 +22,8 @@ def test_viper_webhook(auth_client, celery_app):
             content_type="application/json",
         )
         assert response.status_code == 202, response.data
-        assert response.data == None
+        assert "request_id" in response.data
+        assert uuid.UUID(response.data["request_id"])  # valid UUID
         assert mock_viper_webhook.call_count == 1
         mock_viper_webhook.assert_called_once_with(
             ViperWebhookRequest(
@@ -30,7 +32,8 @@ def test_viper_webhook(auth_client, celery_app):
                 before=datetime.datetime.fromisoformat("2026-01-02T00:00:00Z"),
                 max_pages=1,
                 page_size=10,
-            ).to_dict()
+            ).to_dict(),
+            response.data["request_id"],
         )
 
 
