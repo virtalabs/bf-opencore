@@ -54,3 +54,4 @@ def viper_webhook(data: dict, request_id: str = ""):
         raise
     if request_id:
         ViperWebhookJob.objects.filter(pk=request_id).update(status=ViperWebhookJob.Status.FINISHED)
+
