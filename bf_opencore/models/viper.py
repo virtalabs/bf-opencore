@@ -1,11 +1,27 @@
 import math
+import uuid
 from collections.abc import Generator
 from dataclasses import asdict, dataclass
 
 from django.apps import apps
 from django.conf import settings
+from django.db import models
 
 from bf_opencore.models import Asset
+
+
+class ViperWebhookJob(models.Model):
+    """Persisted record of an incoming Viper webhook request."""
+
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    created_at = models.DateTimeField(auto_now_add=True)
+    callback = models.URLField()
+    since = models.DateTimeField()
+    before = models.DateTimeField(null=True, blank=True)
+    request_body = models.JSONField()
+
+    class Meta:
+        ordering = ["-created_at"]
 
 
 @dataclass
@@ -75,6 +91,7 @@ class ViperWebhookResponse:
     total: int
     total_pages: int
     since: str
+    request_id: str = ""
     before: str | None = None
     # settings?
     webhook_path: str = "/api/viper/webhook/"
@@ -119,6 +136,7 @@ class ViperWebhookResponseList:
     @staticmethod
     def from_request(
         request: ViperWebhookRequest,
+        request_id: str = "",
     ) -> Generator[ViperWebhookResponse, None, None]:
         Asset = apps.get_model("bf_opencore", "Asset")
         assets = Asset.objects.filter(last_pinged__gte=request.since)
@@ -140,6 +158,7 @@ class ViperWebhookResponseList:
                 total_pages=total_pages,
                 since=request.since,
                 before=request.before,
+                request_id=request_id,
             )
             page += 1
             yield response

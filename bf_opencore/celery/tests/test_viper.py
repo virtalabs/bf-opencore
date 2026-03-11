@@ -1,4 +1,5 @@
 import math
+import uuid
 from unittest.mock import patch
 
 import pytest
@@ -17,6 +18,7 @@ def test_viper_webhook_output_no_assets(celery_app):
     """Captures the output from the celery task.
     Ensuring it's the same as the expected output.
     """
+    request_id = str(uuid.uuid4())
     with patch("bf_opencore.celery.tasks.requests.post") as mock_post:
         viper_webhook.apply(
             args=[
@@ -26,7 +28,8 @@ def test_viper_webhook_output_no_assets(celery_app):
                     before="2026-01-02T00:00:00Z",
                     max_pages=1,
                     page_size=10,
-                ).to_dict()
+                ).to_dict(),
+                request_id,
             ]
         )
         assert mock_post.call_count == 0
@@ -47,6 +50,7 @@ def test_viper_webhook_output_with_all_assets(celery_app, setup_assets):
     page_size = 10
     total_assets = get_asset_count()
     total_pages = math.ceil(total_assets / page_size)
+    request_id = str(uuid.uuid4())
     with patch("bf_opencore.celery.tasks.requests.post") as mock_post:
         viper_webhook.apply(
             args=[
@@ -56,7 +60,8 @@ def test_viper_webhook_output_with_all_assets(celery_app, setup_assets):
                     before=None,
                     max_pages=100,  # high enough to get all assets
                     page_size=page_size,
-                ).to_dict()
+                ).to_dict(),
+                request_id,
             ]
         )
         assert mock_post.call_count == total_pages
@@ -67,6 +72,7 @@ def test_viper_webhook_output_with_all_assets(celery_app, setup_assets):
             assert payload["page_size"] == page_size
             assert payload["total"] == total_assets
             assert payload["total_pages"] == total_pages
+            assert payload["request_id"] == request_id
 
             # urls should only be none at the first and last pages, respectively
             args = [
