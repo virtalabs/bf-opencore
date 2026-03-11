@@ -98,32 +98,54 @@ def test_viper_webhook_output_with_all_assets(celery_app, setup_assets):
                 assert _next is None
 
 
-def test_viper_webhook_status_transitions(celery_app):
-    """Job status advances from pending → started → finished."""
-    job = ViperWebhookJob.objects.create(
+def _make_job():
+    return ViperWebhookJob.objects.create(
         callback="https://example.com/viper/webhook/",
         since="2026-01-01T00:00:00Z",
         before="2026-01-02T00:00:00Z",
         request_body={},
     )
+
+
+def _webhook_args(job):
+    return [
+        ViperWebhookRequest(
+            callback="https://example.com/viper/webhook/",
+            since="2026-01-01T00:00:00Z",
+            before="2026-01-02T00:00:00Z",
+            max_pages=1,
+            page_size=10,
+        ).to_dict(),
+        str(job.id),
+    ]
+
+
+def test_viper_webhook_status_finished(celery_app):
+    """Job status advances from pending → finished on success."""
+    job = _make_job()
     assert job.status == ViperWebhookJob.Status.PENDING
 
     with patch("bf_opencore.celery.tasks.requests.post"):
-        viper_webhook.apply(
-            args=[
-                ViperWebhookRequest(
-                    callback="https://example.com/viper/webhook/",
-                    since="2026-01-01T00:00:00Z",
-                    before="2026-01-02T00:00:00Z",
-                    max_pages=1,
-                    page_size=10,
-                ).to_dict(),
-                str(job.id),
-            ]
-        )
+        viper_webhook.apply(args=_webhook_args(job))
 
     job.refresh_from_db()
     assert job.status == ViperWebhookJob.Status.FINISHED
+
+
+def test_viper_webhook_status_error(celery_app):
+    """Job status advances from pending → error when the task raises."""
+    job = _make_job()
+    assert job.status == ViperWebhookJob.Status.PENDING
+
+    with patch(
+        "bf_opencore.celery.tasks.ViperWebhookResponseList.from_request",
+        side_effect=RuntimeError("boom"),
+    ):
+        result = viper_webhook.apply(args=_webhook_args(job))
+
+    assert result.failed()
+    job.refresh_from_db()
+    assert job.status == ViperWebhookJob.Status.ERROR
 
 
 # TODO
