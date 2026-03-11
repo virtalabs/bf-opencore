@@ -6,6 +6,7 @@ import pytest
 from django.apps import apps
 
 from bf_opencore.celery.tasks import viper_webhook
+from bf_opencore.models import ViperWebhookJob
 from bf_opencore.models.viper import ViperWebhookRequest
 
 
@@ -95,6 +96,34 @@ def test_viper_webhook_output_with_all_assets(celery_app, setup_assets):
                 _assert_page_query(_next, args, not_args)
             else:
                 assert _next is None
+
+
+def test_viper_webhook_status_transitions(celery_app):
+    """Job status advances from pending → started → finished."""
+    job = ViperWebhookJob.objects.create(
+        callback="https://example.com/viper/webhook/",
+        since="2026-01-01T00:00:00Z",
+        before="2026-01-02T00:00:00Z",
+        request_body={},
+    )
+    assert job.status == ViperWebhookJob.Status.PENDING
+
+    with patch("bf_opencore.celery.tasks.requests.post"):
+        viper_webhook.apply(
+            args=[
+                ViperWebhookRequest(
+                    callback="https://example.com/viper/webhook/",
+                    since="2026-01-01T00:00:00Z",
+                    before="2026-01-02T00:00:00Z",
+                    max_pages=1,
+                    page_size=10,
+                ).to_dict(),
+                str(job.id),
+            ]
+        )
+
+    job.refresh_from_db()
+    assert job.status == ViperWebhookJob.Status.FINISHED
 
 
 # TODO

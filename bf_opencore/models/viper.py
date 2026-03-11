@@ -13,12 +13,22 @@ from bf_opencore.models import Asset
 class ViperWebhookJob(models.Model):
     """Persisted record of an incoming Viper webhook request."""
 
+    class Status(models.TextChoices):
+        PENDING = "pending"
+        STARTED = "started"
+        FINISHED = "finished"
+
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     created_at = models.DateTimeField(auto_now_add=True)
     callback = models.URLField()
     since = models.DateTimeField()
     before = models.DateTimeField(null=True, blank=True)
     request_body = models.JSONField()
+    status = models.CharField(
+        max_length=16,
+        choices=Status.choices,
+        default=Status.PENDING,
+    )
 
     class Meta:
         ordering = ["-created_at"]
