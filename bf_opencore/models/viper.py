@@ -13,6 +13,9 @@ from bf_opencore.models import Asset
 class ViperWebhookJob(models.Model):
     """Persisted record of an incoming Viper webhook request."""
 
+    class Meta:
+        ordering = ["-created_at"]
+
     class Status(models.TextChoices):
         PENDING = "pending"
         STARTED = "started"
@@ -30,9 +33,6 @@ class ViperWebhookJob(models.Model):
         choices=Status.choices,
         default=Status.PENDING,
     )
-
-    class Meta:
-        ordering = ["-created_at"]
 
 
 @dataclass
