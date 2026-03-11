@@ -99,37 +99,48 @@ def test_viper_webhook_output_with_all_assets(celery_app, setup_assets):
 
 
 @pytest.fixture
-def viper_job() -> ViperWebhookJob:
+def viper_request() -> ViperWebhookRequest:
+      return ViperWebhookRequest(
+            callback="https://example.com/viper/webhook/",
+            since="2026-01-01T00:00:00Z",
+            before="2026-01-02T00:00:00Z",
+            max_pages=1,
+            page_size=10,
+    )
+
+def _viper_job(request: ViperWebhookRequest) -> ViperWebhookJob:
     return ViperWebhookJob.objects.create(
-        callback="https://example.com/viper/webhook/",
-        since="2026-01-01T00:00:00Z",
-        before="2026-01-02T00:00:00Z",
-        request_body={},
+        callback=request.callback,
+        since=request.since,
+        before=request.before,
+        request_body=request.to_dict(),
     )
 
 
-def test_viper_webhook_status_finished(celery_app, setup_assets, viper_job):
+def test_viper_webhook_status_finished(celery_app, setup_assets, viper_request):
     """Job status advances from pending → finished on success."""
-    assert viper_job.status == ViperWebhookJob.Status.PENDING
+    job = _viper_job(viper_request)
+    assert job.status == ViperWebhookJob.Status.PENDING
 
     with patch("bf_opencore.celery.tasks.requests.post"):
-        viper_webhook.apply(args=[viper_job.to_dict(), viper_job.id])
+        viper_webhook.apply(args=[viper_request.to_dict(), job.id])
 
-    viper_job.refresh_from_db()
-    assert viper_job.status == ViperWebhookviper_job.Status.FINISHED
+    job.refresh_from_db()
+    assert job.status == ViperWebhookJob.Status.FINISHED
 
 
-def test_viper_webhook_status_error(celery_app, viper_job):
+def test_viper_webhook_status_error(celery_app, viper_request):
     """Job status advances from pending → error when the task raises."""
-    assert viper_job.status == ViperWebhookJob.Status.PENDING
+    job = _viper_job(viper_request)
+    assert job.status == ViperWebhookJob.Status.PENDING
 
     with patch(
         "bf_opencore.celery.tasks.ViperWebhookResponseList.from_request",
         side_effect=RuntimeError("boom"),
     ):
-        result = viper_webhook.apply(args=[viper_job.to_dict(), viper_job.id])
+        result = viper_webhook.apply(args=[viper_request.to_dict(), job.id])
 
     assert result.failed()
-    viper_job.refresh_from_db()
-    assert viper_job.status == ViperWebhookJob.Status.ERROR
+    job.refresh_from_db()
+    assert job.status == ViperWebhookJob.Status.ERROR
 
