@@ -29,13 +29,18 @@ def viper_webhook(data: dict, request_id: str = ""):
     logger.info(f"Processing viper webhook: {viper_data}")
     if request_id:
         ViperWebhookJob.objects.filter(pk=request_id).update(status=ViperWebhookJob.Status.STARTED)
-    response_list = ViperWebhookResponseList.from_request(viper_data, request_id=request_id)
-    for response in response_list:
-        as_dict = response.to_dict()
-        requests.post(
-            viper_data.callback,
-            json=as_dict,
-            headers={"Content-Type": "application/json"},
-        )
+    try:
+        response_list = ViperWebhookResponseList.from_request(viper_data, request_id=request_id)
+        for response in response_list:
+            as_dict = response.to_dict()
+            requests.post(
+                viper_data.callback,
+                json=as_dict,
+                headers={"Content-Type": "application/json"},
+            )
+    except Exception:
+        if request_id:
+            ViperWebhookJob.objects.filter(pk=request_id).update(status=ViperWebhookJob.Status.ERROR)
+        raise
     if request_id:
         ViperWebhookJob.objects.filter(pk=request_id).update(status=ViperWebhookJob.Status.FINISHED)
