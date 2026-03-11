@@ -98,6 +98,27 @@ def test_viper_webhook_output_with_all_assets(celery_app, setup_assets):
                 assert _next is None
 
 
+def test_viper_asset_optional_fields_default_empty(celery_app, setup_assets):
+    """cpe and role are not yet populated — assert they default to empty strings."""
+    with patch("bf_opencore.celery.tasks.requests.post") as mock_post:
+        viper_webhook.apply(
+            args=[
+                ViperWebhookRequest(
+                    callback="https://example.com/viper/webhook/",
+                    since="1800-01-01T00:00:00Z",
+                    before=None,
+                    max_pages=100,
+                    page_size=100,
+                ).to_dict(),
+                str(uuid.uuid4()),
+            ]
+        )
+    for call in mock_post.call_args_list:
+        for item in call.kwargs["json"]["items"]:
+            assert "cpe" not in item
+            assert "role" not in item
+
+
 @pytest.fixture
 def viper_request() -> ViperWebhookRequest:
       return ViperWebhookRequest(

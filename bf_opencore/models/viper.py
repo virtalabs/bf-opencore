@@ -89,7 +89,15 @@ class ViperAsset:
 
     def to_dict(self):
         """Return a JSON-serializable dict (for json.dumps or requests)."""
-        return asdict(self)
+        # there are differences between python's concept of Optional and
+        # a potentially optional key in a restful blob
+        # exclude optional keys when their values are falsey
+        base = asdict(self)
+        optional = ['cpe', 'role']
+        for key in optional:
+            if not base[key]:
+                del base[key]
+        return base
 
 
 @dataclass
@@ -110,6 +118,7 @@ class ViperWebhookResponse:
     def to_dict(self):
         """Return a JSON-serializable dict (for json.dumps or requests)."""
         base = asdict(self)
+        base["items"] = [item.to_dict() for item in self.items]
         base["next_page"] = self.next_page
         base["previous_page"] = self.previous_page
         return base
@@ -160,7 +169,7 @@ class ViperWebhookResponseList:
         for i in range(0, len(assets), request.page_size):
             if page > request.max_pages:
                 raise ValueError(f"Max pages exceeded: {request.max_pages}")
-            assets_chunk = assets[i : i + request.page_size]
+            assets_chunk = [ViperAsset(a) for a in assets[i : i + request.page_size]]
             response = ViperWebhookResponse(
                 items=assets_chunk,
                 page=page,
