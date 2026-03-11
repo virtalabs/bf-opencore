@@ -10,6 +10,8 @@ ALLOWED_HOSTS = os.environ.get("DJANGO_ALLOWED_HOSTS", "localhost,127.0.0.1").sp
 STATIC_ROOT = os.environ.get("STATIC_ROOT", "/app/staticfiles")
 STATIC_URL = os.environ.get("STATIC_URL", "/static/")
 
+CELERY_TASK_ALWAYS_EAGER = True
+
 # Database: prefer DATABASE_URL (e.g. dj-database-url), else DB_* env vars
 _database_url = os.environ.get("DATABASE_URL")
 if _database_url:
