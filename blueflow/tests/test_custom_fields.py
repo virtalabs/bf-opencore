@@ -234,7 +234,7 @@ def test_api_admin_post_existing(cfield, admin_client):
 # Test post with different users
 
 
-@pytest.mark.xfail(reason="Open-core has no role-based write permissions")
+@pytest.mark.xfail(reason="Blueflow has no role-based write permissions")
 def test_api_field_unauthorized_post(cfield, auth_client):
     kwargs = {
         "data": json.dumps(
@@ -284,7 +284,7 @@ def test_api_field_admin_post(cfield, admin_client):
 # Test patch with different users
 
 
-@pytest.mark.xfail(reason="Open-core has no role-based write permissions")
+@pytest.mark.xfail(reason="Blueflow has no role-based write permissions")
 def test_api_field_unauthorized_patch(cfield, auth_client):
     cfield_id = cfield.custom_field.id
     kwargs = {
@@ -319,7 +319,7 @@ def test_api_field_admin_patch(cfield, admin_client):
 # Test delete with different users
 
 
-@pytest.mark.xfail(reason="Open-core has no role-based write permissions")
+@pytest.mark.xfail(reason="Blueflow has no role-based write permissions")
 def test_api_field_unauthorized_delete(cfield, auth_client):
     cfield_id = cfield.custom_field.id
     kwargs = {

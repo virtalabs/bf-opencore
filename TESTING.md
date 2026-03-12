@@ -1,6 +1,6 @@
 # Testing Guide
 
-This document describes the testing infrastructure for bf-opencore: setup, fixtures, conventions, and coverage.
+This document describes the testing infrastructure for blueflow: setup, fixtures, conventions, and coverage.
 
 ## Setup Instructions
 
@@ -116,7 +116,7 @@ The project uses a three-tier conftest structure:
 
 ### App-level role-alias clients (`blueflow/tests/conftest.py`)
 
-In open-core, all role-scoped clients are aliases to `auth_client` (adds per-resource permissions):
+In blueflow, all role-scoped clients are aliases to `auth_client` (adds per-resource permissions):
 
 - `asset_edit_client` — User that can create/edit assets
 - `nwk_authorized_client` — User allowed to manage networks
@@ -169,7 +169,7 @@ The API uses `HugeLimitOffsetPagination`. Assert against:
 
 **`@pytest.mark.xfail`** — Tests that are expected to fail:
 
-- `reason="Open-core has no role-based write permissions"` — Regular user gets 403 in the product; currently in open-core, `auth_client` has full access (12 tests).
+- `reason="Blueflow has no role-based write permissions"` — Regular user gets 403 in the product; currently in blueflow, `auth_client` has full access (12 tests).
 - `raises=(SomeError,)` — Tests that exercise known bugs or unimplemented features.
 - `raises=(IntegrityError, TransactionManagementError)` — Tests that trigger database constraint violations.
 

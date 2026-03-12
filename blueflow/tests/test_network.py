@@ -36,7 +36,7 @@ def test_create_named_network(nwk_authorized_client):
     assert network.cidr == []
 
 
-@pytest.mark.xfail(reason="Open-core has no role-based write permissions")
+@pytest.mark.xfail(reason="Blueflow has no role-based write permissions")
 def test_create_named_network_unauth(auth_client):
     """Don't create a network with unauthorized client."""
     response = auth_client.post(

@@ -1,4 +1,4 @@
-# Minimal Django project for standalone bf-opencore run.
+# Minimal Django project for standalone blueflow run.
 
 FROM python:3.12-slim
 

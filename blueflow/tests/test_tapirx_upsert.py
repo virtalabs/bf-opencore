@@ -96,7 +96,7 @@ def test_tapirx_upsert_token_auth(tapirx_token_client):
     assert models.Asset.objects.count() == 1
 
 
-@pytest.mark.skip(reason="Open-core uses AllowAny; auth enforced by consuming product")
+@pytest.mark.skip(reason="Blueflow uses AllowAny; auth enforced by consuming product")
 def test_tapirx_upsert_unauth_403(db, enable_core_switch):
     """POST unauthenticated would assert 403 if IsAuthenticated were enforced."""
     from rest_framework.test import APIClient
@@ -171,7 +171,7 @@ def test_get_asset_after_upsert_404(asset_edit_client):
     assert response.status_code == 404
 
 
-@pytest.mark.skip(reason="Open-core uses AllowAny; auth enforced by consuming product")
+@pytest.mark.skip(reason="Blueflow uses AllowAny; auth enforced by consuming product")
 def test_get_asset_after_upsert_unauth_403(db, enable_core_switch):
     """GET without auth would assert 403 if IsAuthenticated were enforced."""
     from rest_framework.test import APIClient

@@ -1,1 +1,1 @@
-# Tests for bf-opencore (blueflow package).
+# Tests for blueflow (blueflow package).

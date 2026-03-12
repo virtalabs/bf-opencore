@@ -1,6 +1,6 @@
-# bf-opencore
+# blueflow
 
-BlueFlow open-core Django app. Installable package containing the **blueflow** Django application.
+Blueflow Django app. Installable package containing the **blueflow** Django application.
 
 ## Prerequisites
 
@@ -15,16 +15,16 @@ BlueFlow open-core Django app. Installable package containing the **blueflow** D
     ```python
     INSTALLED_APPS = [
         ...
-        'blueflow',  # or 'blueflow.apps.BfOpenCoreConfig'
+        'blueflow',  # or 'blueflow.apps.BlueflowConfig'
     ]
     ```
   - Wire up its URLs in your project's `urls.py`:
     ```python
     path('api/', include('blueflow.urls')),
     ```
-  - The main BlueFlow product (e.g. blueflow-saas) consumes bf-opencore as a dependency.
+  - The main BlueFlow product (e.g. blueflow-saas) consumes blueflow as a dependency.
 
-- **Standalone run:** The minimal Django project in `project/` lets you run open-core by itself with no other repo:
+- **Standalone run:** The minimal Django project in `project/` lets you run blueflow by itself with no other repo:
   - `docker-compose up`, or
   - `python project/manage.py runserver`
 
@@ -80,7 +80,7 @@ uv run pytest blueflow/tests/
 docker-compose run web uv run pytest
 ```
 
-## Running open-core standalone via Docker
+## Running blueflow standalone via Docker
 
 From the repo root:
 
@@ -96,7 +96,7 @@ To run migrations manually (e.g. in a one-off container):
 docker-compose run web python project/manage.py migrate --noinput
 ```
 
-## Running open-core standalone (local, no Docker)
+## Running blueflow standalone (local, no Docker)
 
 Ensure PostgreSQL is running, then:
 

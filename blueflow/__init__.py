@@ -1,1 +1,1 @@
-"""Blueflow Open-Core Django app."""
+"""Blueflow Django app."""

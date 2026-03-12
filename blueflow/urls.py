@@ -1,4 +1,4 @@
-"""BlueFlow open-core Django app URLs."""
+"""Blueflow Django app URLs."""
 
 app_name = "blueflow"
 

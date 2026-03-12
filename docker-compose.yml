@@ -1,4 +1,4 @@
-# Local dev: postgres + web (standalone bf-opencore).
+# Local dev: postgres + web (standalone blueflow).
 
 services:
   db:
