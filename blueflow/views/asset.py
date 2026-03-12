@@ -20,7 +20,7 @@ from rest_framework_csv import renderers as drf_csv_renderers
 from simple_history import utils as hist_utils
 from waffle.mixins import WaffleSwitchMixin
 
-from bf_opencore.models import (
+from blueflow.models import (
     Asset,
     AssetCustomField,
     AssetCustomFieldName,
@@ -62,7 +62,7 @@ class MiniAssetVulnerabilitySerializer(serializers.HyperlinkedModelSerializer):
     """
 
     url = serializers.HyperlinkedIdentityField(
-        view_name="bf_opencore:assetvulnerability-detail"
+        view_name="blueflow:assetvulnerability-detail"
     )
 
     class Meta:
@@ -84,13 +84,13 @@ class AssetSerializer(serializers.HyperlinkedModelSerializer):
     Teaches the rest_framework (the ViewSet) which fields to expect.
     """
 
-    url = serializers.HyperlinkedIdentityField(view_name="bf_opencore:asset-detail")
-    tags_url = serializers.HyperlinkedIdentityField(view_name="bf_opencore:asset-tags")
+    url = serializers.HyperlinkedIdentityField(view_name="blueflow:asset-detail")
+    tags_url = serializers.HyperlinkedIdentityField(view_name="blueflow:asset-tags")
     scans_url = serializers.HyperlinkedIdentityField(
-        view_name="bf_opencore:asset-scans"
+        view_name="blueflow:asset-scans"
     )
     external_links_url = serializers.HyperlinkedIdentityField(
-        view_name="bf_opencore:asset-external-links"
+        view_name="blueflow:asset-external-links"
     )
 
     asset_tags = AssetTagSerializer(read_only=True, many=True)
@@ -170,7 +170,7 @@ class HistoricalAssetSerializer(serializers.HyperlinkedModelSerializer):
     """Serializes asset history."""
 
     history_user = serializers.HyperlinkedRelatedField(
-        view_name="bf_opencore:user-detail",
+        view_name="blueflow:user-detail",
         read_only=True,
     )
 
@@ -231,7 +231,7 @@ class ChangeLogAssetSerializer(
     """
 
     history_user = serializers.HyperlinkedRelatedField(
-        view_name="bf_opencore:user-detail",
+        view_name="blueflow:user-detail",
         read_only=True,
     )
 
@@ -820,7 +820,7 @@ class AssetViewSet(
                     tag,
                     asset_tag,
                 )
-            views = importlib.import_module("bf_opencore.views")
+            views = importlib.import_module("blueflow.views")
             serializer = views.TagSerializer(tag, context={"request": request})
             return Response(serializer.data, status=response_status)
 

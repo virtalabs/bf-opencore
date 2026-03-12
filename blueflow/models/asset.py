@@ -21,7 +21,7 @@ from netfields import InetAddressField, MACAddressField
 from simple_history import utils as hist_utils
 from simple_history.models import HistoricalRecords
 
-from bf_opencore.utils import NullUnlessChanged
+from blueflow.utils import NullUnlessChanged
 
 from .asset_custom_field import AssetCustomField, AssetCustomFieldName
 from .asset_manager import AssetManager, AssetQuerySet, _unflatten_json_field
@@ -213,7 +213,7 @@ class Asset(models.Model):
         #
         # FWIW, this is what the query actually looks like:
         #
-        # In [*]: print(apps.get_model('bf_opencore', 'Network').objects.filter(
+        # In [*]: print(apps.get_model('blueflow', 'Network').objects.filter(
         #                     cidr__cidr__net_contains='192.168.8.0').query)
         #
         #     SELECT "blueflow_network"."id",
@@ -227,9 +227,9 @@ class Asset(models.Model):
 
         if self.ip_address is None:
             # objects.none() gives us an empty QuerySet.
-            return apps.get_model("bf_opencore", "Network").objects.none()
+            return apps.get_model("blueflow", "Network").objects.none()
 
-        Network = apps.get_model("bf_opencore", "Network")
+        Network = apps.get_model("blueflow", "Network")
         network_qset = Network.objects.filter(cidr__cidr__net_contains=self.ip_address)
         return network_qset
 
@@ -258,7 +258,7 @@ class Asset(models.Model):
 
         To get an actual list of the scans, do self.scan_qset().all()
         """
-        Scan = apps.get_model("bf_opencore", "Scan")
+        Scan = apps.get_model("blueflow", "Scan")
         scan_qset = Scan.objects.filter(asset__id=self.id)
         return scan_qset
 
@@ -295,7 +295,7 @@ class Asset(models.Model):
         if self.nic_vendor is not None:
             disjuncts.append(Q(nic_vendor=self.nic_vendor))
 
-        Asset = apps.get_model("bf_opencore", "Asset")
+        Asset = apps.get_model("blueflow", "Asset")
         if disjuncts:
             sim_qset = Asset.objects.filter(reduce(or_, disjuncts))
             if exclude_self:
@@ -690,7 +690,7 @@ class Asset(models.Model):
         """
         # TODO: Implement after we have a generalized algorithm for risk scoring
         raise NotImplementedError("Is valid field name is not implemented")
-        Asset = apps.get_model("bf_opencore", "Asset")
+        Asset = apps.get_model("blueflow", "Asset")
         valid_field_names = [x.name for x in Asset._meta.get_fields()]
         unflattened_field_name, _ = _unflatten_json_field(name, None)
         return bool(unflattened_field_name in valid_field_names)
@@ -730,7 +730,7 @@ class Asset(models.Model):
 
         # "Stupid" django ORM trick: see what type django would assign to this
         # value on Asset.save(), and validate value against that type.
-        Asset = apps.get_model("bf_opencore", "Asset")
+        Asset = apps.get_model("blueflow", "Asset")
         try:
             orm_field = Asset._meta.get_field(unflattened_field)
             _ = orm_field.get_prep_value(unflattened_val)

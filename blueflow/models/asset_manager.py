@@ -15,7 +15,7 @@ from django.db import models
 from django.db.models import Q
 from django.db.models.functions import Coalesce
 
-from bf_opencore.utils import Created
+from blueflow.utils import Created
 
 from .network import Network
 
@@ -29,7 +29,7 @@ class AssetManager(models.Manager):
         """Rescore all assets."""
         # TODO: Implement after we have a generalized algorithm for risk scoring
         raise NotImplementedError("Rescore all is not implemented")
-        RiskFactor = apps.get_model("bf_opencore", "RiskFactor")
+        RiskFactor = apps.get_model("blueflow", "RiskFactor")
         RiskFactor.objects.normalize_weights()  # Abundance of caution
         summaries = []
         remediable_risk_sum = defaultdict(int)
@@ -53,7 +53,7 @@ class AssetManager(models.Manager):
                     remediable_asset_count[rf_id] += 1
         # We now have the user_remediable information
         # Now, we just need to update it in risk factor
-        RiskFactor = apps.get_model("bf_opencore", "RiskFactor")
+        RiskFactor = apps.get_model("blueflow", "RiskFactor")
         for key in remediable_risk_sum:
             rf = RiskFactor.objects.get(id=key)
             rf.remediable_asset_count = remediable_asset_count[key]
@@ -120,7 +120,7 @@ class AssetManager(models.Manager):
             )
 
         # Perform lookup in priority order.
-        Asset = apps.get_model("bf_opencore", "Asset")
+        Asset = apps.get_model("blueflow", "Asset")
         if valid_val(ekey_kwarg):
             try:
                 asset = super().get(**{ekey_fn: ekey_kwarg})
@@ -189,7 +189,7 @@ class AssetManager(models.Manager):
         _validate_external_keys(defaults)
 
         # Either get or create an asset using kwargs
-        Asset = apps.get_model("bf_opencore", "Asset")
+        Asset = apps.get_model("blueflow", "Asset")
         try:
             asset = self.get_by_priority(**kwargs)
             created = Created.UPDATED
@@ -274,7 +274,7 @@ class AssetQuerySet(models.QuerySet):
             # This happens if cidr_disjucnts is empty.  In this case we
             # return a special queryset that never returns anything, but
             # otherwise behaves in a robust way.
-            Asset = apps.get_model("bf_opencore", "Asset")
+            Asset = apps.get_model("blueflow", "Asset")
             return Asset.objects.none()
         return qset
 
@@ -292,8 +292,8 @@ class AssetQuerySet(models.QuerySet):
         # First, remove all assets that don't have an IP address.
         nn_qset = self.filter(~Q(ip_address=None))
         # Then, for each CIDR we've registered, remove any asset that matches.
-        Asset = apps.get_model("bf_opencore", "Asset")
-        Cidr = apps.get_model("bf_opencore", "Cidr")
+        Asset = apps.get_model("blueflow", "Asset")
+        Cidr = apps.get_model("blueflow", "Cidr")
         for c in Cidr.objects.all():
             nn_qset &= Asset.objects.filter(
                 ~Q(ip_address__net_contained_or_equal=c.cidr)
@@ -455,7 +455,7 @@ class AssetQuerySet(models.QuerySet):
         raise NotImplementedError("Risk factor statistics is not implemented")
         rf_stats = []
 
-        RiskFactor = apps.get_model("bf_opencore", "RiskFactor")
+        RiskFactor = apps.get_model("blueflow", "RiskFactor")
         for fac_type in ["sec", "pri", "cli"]:
             rf_substats = []
             for rf in RiskFactor.objects.filter(factor_type=fac_type):
@@ -470,7 +470,7 @@ class AssetQuerySet(models.QuerySet):
 
     def _asset_vuln_query(self):
         """Queryset of asset_vulnerabilities attached to these assets."""
-        AssetVulnerability = apps.get_model("bf_opencore", "AssetVulnerability")
+        AssetVulnerability = apps.get_model("blueflow", "AssetVulnerability")
         return AssetVulnerability.objects.filter(asset__in=self)
 
     def vulnerability_statistics(self):
@@ -528,7 +528,7 @@ def _unflatten_json_params(params):
         return dict()
 
     output = {}
-    Asset = apps.get_model("bf_opencore", "Asset")
+    Asset = apps.get_model("blueflow", "Asset")
     for k, v in params.items():
         field, value = _unflatten_json_field(k, v)
         fieldtype = Asset._meta.get_field(field).get_internal_type()
@@ -580,7 +580,7 @@ def _partition_fk_params(params):
     def is_fk_field(name):
         """Return True if name refers to a foreign key relationship."""
         # Extract 'asset_risk_factors' from 'asset_risk_factors__tms'
-        Asset = apps.get_model("bf_opencore", "Asset")
+        Asset = apps.get_model("blueflow", "Asset")
         basename = name.split("__")[0]
         fieldtype = Asset._meta.get_field(basename).get_internal_type()
         return fieldtype == "ForeignKey"

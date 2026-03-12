@@ -26,13 +26,13 @@ class Group(models.Model):
     @property
     def num_assets(self):
         """Return number of assets in network."""
-        Asset = apps.get_model("bf_opencore", "Asset")
+        Asset = apps.get_model("blueflow", "Asset")
         return Asset.objects.filter(groups__id=self.id).count()
 
     @property
     def identified_statistics(self):
         """Percent identified assets."""
-        Asset = apps.get_model("bf_opencore", "Asset")
+        Asset = apps.get_model("blueflow", "Asset")
         return Asset.objects.filter(groups__id=self.id).identified_statistics()
 
 

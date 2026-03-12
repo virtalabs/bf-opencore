@@ -11,8 +11,8 @@ from rest_framework.response import Response
 from simple_history import utils as hist_utils
 from waffle.mixins import WaffleSwitchMixin
 
-from bf_opencore.models import Asset, AssetTag, Tag
-from bf_opencore.utils import iterable
+from blueflow.models import Asset, AssetTag, Tag
+from blueflow.utils import iterable
 
 from .utils import ChangeReasonMixin, HugeLimitOffsetPagination
 
@@ -25,9 +25,9 @@ class TagSerializer(serializers.HyperlinkedModelSerializer):
     Teaches the rest_framework (the ViewSet) which fields to expect.
     """
 
-    url = serializers.HyperlinkedIdentityField(view_name="bf_opencore:tag-detail")
+    url = serializers.HyperlinkedIdentityField(view_name="blueflow:tag-detail")
     add_assets_url = serializers.HyperlinkedIdentityField(
-        view_name="bf_opencore:tag-assets"
+        view_name="blueflow:tag-assets"
     )
 
     class Meta:

@@ -7,7 +7,7 @@ import json
 
 import pytest
 
-from bf_opencore import models
+from blueflow import models
 
 
 def test_get_pulse_feed_items(auth_client, pulse_feed_items):

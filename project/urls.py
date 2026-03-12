@@ -1,9 +1,9 @@
-"""Root URL configuration. Includes bf_opencore app URLs."""
+"""Root URL configuration. Includes blueflow app URLs."""
 
 from django.contrib import admin
 from django.urls import include, path
 
 urlpatterns = [
     path("admin/", admin.site.urls),
-    path("api/", include("bf_opencore.urls")),
+    path("api/", include("blueflow.urls")),
 ]

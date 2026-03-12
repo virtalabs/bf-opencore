@@ -5,13 +5,13 @@ from unittest.mock import patch
 import pytest
 from django.apps import apps
 
-from bf_opencore.celery.tasks import viper_webhook
-from bf_opencore.models import ViperWebhookJob
-from bf_opencore.models.viper import ViperWebhookRequest
+from blueflow.celery.tasks import viper_webhook
+from blueflow.models import ViperWebhookJob
+from blueflow.models.viper import ViperWebhookRequest
 
 
 def get_asset_count():
-    Asset = apps.get_model("bf_opencore", "Asset")
+    Asset = apps.get_model("blueflow", "Asset")
     return Asset.objects.count()
 
 
@@ -20,7 +20,7 @@ def test_viper_webhook_output_no_assets(celery_app):
     Ensuring it's the same as the expected output.
     """
     request_id = str(uuid.uuid4())
-    with patch("bf_opencore.celery.tasks.requests.post") as mock_post:
+    with patch("blueflow.celery.tasks.requests.post") as mock_post:
         viper_webhook.apply(
             args=[
                 ViperWebhookRequest(
@@ -52,7 +52,7 @@ def test_viper_webhook_output_with_all_assets(celery_app, setup_assets):
     total_assets = get_asset_count()
     total_pages = math.ceil(total_assets / page_size)
     request_id = str(uuid.uuid4())
-    with patch("bf_opencore.celery.tasks.requests.post") as mock_post:
+    with patch("blueflow.celery.tasks.requests.post") as mock_post:
         viper_webhook.apply(
             args=[
                 ViperWebhookRequest(
@@ -100,7 +100,7 @@ def test_viper_webhook_output_with_all_assets(celery_app, setup_assets):
 
 def test_viper_asset_optional_fields_default_empty(celery_app, setup_assets):
     """cpe and role are not yet populated — assert they default to empty strings."""
-    with patch("bf_opencore.celery.tasks.requests.post") as mock_post:
+    with patch("blueflow.celery.tasks.requests.post") as mock_post:
         viper_webhook.apply(
             args=[
                 ViperWebhookRequest(
@@ -143,7 +143,7 @@ def test_viper_webhook_status_finished(celery_app, setup_assets, viper_request):
     job = _viper_job(viper_request)
     assert job.status == ViperWebhookJob.Status.PENDING
 
-    with patch("bf_opencore.celery.tasks.requests.post"):
+    with patch("blueflow.celery.tasks.requests.post"):
         viper_webhook.apply(args=[viper_request.to_dict(), job.id])
 
     job.refresh_from_db()
@@ -156,7 +156,7 @@ def test_viper_webhook_status_error(celery_app, viper_request):
     assert job.status == ViperWebhookJob.Status.PENDING
 
     with patch(
-        "bf_opencore.celery.tasks.ViperWebhookResponseList.from_request",
+        "blueflow.celery.tasks.ViperWebhookResponseList.from_request",
         side_effect=RuntimeError("boom"),
     ):
         result = viper_webhook.apply(args=[viper_request.to_dict(), job.id])

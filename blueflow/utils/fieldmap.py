@@ -10,7 +10,7 @@ import ipaddress
 import netaddr
 from django.apps import apps
 
-from bf_opencore.exceptions import IntegrationTaskError
+from blueflow.exceptions import IntegrationTaskError
 
 
 class FieldMap:
@@ -83,7 +83,7 @@ class FieldMap:
 
         This method exists so that we can have fail-fast behavior.
         """
-        Asset = apps.get_model("bf_opencore", "Asset")
+        Asset = apps.get_model("blueflow", "Asset")
         for orm_key in keymap.keys():
             if not Asset.is_valid_field_name(orm_key):
                 raise IntegrationTaskError(
@@ -192,7 +192,7 @@ class FieldMap:
                     continue
 
             # Ignore anything that Django's ORM type system doesn't like
-            Asset = apps.get_model("bf_opencore", "Asset")
+            Asset = apps.get_model("blueflow", "Asset")
             if not Asset.is_valid_field_value(orm_key, value):
                 continue
 

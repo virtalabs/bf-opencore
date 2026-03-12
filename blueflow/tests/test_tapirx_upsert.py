@@ -8,7 +8,7 @@ import json
 
 import pytest
 
-from bf_opencore import models
+from blueflow import models
 
 # Full Tapirx payload per asset.go - used for contract tests
 TAPIRX_FULL_PAYLOAD = {

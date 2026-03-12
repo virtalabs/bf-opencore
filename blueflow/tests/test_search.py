@@ -4,7 +4,7 @@
 
 # These errors are endemic to pytest
 
-from bf_opencore import models
+from blueflow import models
 
 
 def test_free_text_search_manufacturer(auth_client, completables):

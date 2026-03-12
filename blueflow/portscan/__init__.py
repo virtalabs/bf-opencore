@@ -9,9 +9,9 @@ from django.apps import apps
 from django.utils import timezone
 from simple_history import utils as hist_utils
 
-from bf_opencore.celery import celery_app
-from bf_opencore.exceptions import IntegrationTaskError
-from bf_opencore.utils.hostname import hostname_ok, ip_address_ok
+from blueflow.celery import celery_app
+from blueflow.exceptions import IntegrationTaskError
+from blueflow.utils.hostname import hostname_ok, ip_address_ok
 
 # Configure logging.  Disable logging in sh module.
 logger = celery.utils.log.get_task_logger(__name__)
@@ -65,7 +65,7 @@ def main(ctx, hostname):
     last_scanned = timezone.now()
     scanned_assets = {}
     new_ports = 0
-    Asset = apps.get_model("bf_opencore", "Asset")
+    Asset = apps.get_model("blueflow", "Asset")
     for match in matches:
         (port, protocol, ip) = match
         if protocol != "tcp":
@@ -77,9 +77,9 @@ def main(ctx, hostname):
         scanned_assets.setdefault(asset, []).append(int(port))
 
     if scanned_assets:
-        ConnectorTask = apps.get_model("bf_opencore", "ConnectorTask")
+        ConnectorTask = apps.get_model("blueflow", "ConnectorTask")
         connector_task = ConnectorTask.objects.get(celery_task_id=ctx.request.id)
-    Scan = apps.get_model("bf_opencore", "Scan")
+    Scan = apps.get_model("blueflow", "Scan")
     for asset, ports in scanned_assets.items():
         asset.open_ports_tcp_add(ports)
         asset.last_scanned = last_scanned
@@ -97,7 +97,7 @@ def main(ctx, hostname):
         scan.save()
 
     if new_ports:
-        Alert = apps.get_model("bf_opencore", "Alert")
+        Alert = apps.get_model("blueflow", "Alert")
         Alert.objects.create(
             text=f"Found {new_ports} new open ports", connectortask=connector_task
         )

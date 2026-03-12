@@ -13,7 +13,7 @@ should be accssed via the asset or via its own API.
 """
 
 import pytest
-from bf_opencore import models
+from blueflow import models
 
 
 def test_history_canonical_fields(asset_edit_client):

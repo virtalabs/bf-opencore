@@ -6,7 +6,7 @@ http://pytest-django.readthedocs.io/en/latest/helpers.html
 
 import json
 
-import bf_opencore.models as bf_mod
+import blueflow.models as bf_mod
 import django.db.models.fields
 import pytest
 from simple_history import utils as hist_utils

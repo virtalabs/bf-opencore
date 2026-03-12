@@ -7,7 +7,7 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('bf_opencore', '0002_remove_alert_connector_and_more'),
+        ('blueflow', '0002_remove_alert_connector_and_more'),
     ]
 
     operations = [

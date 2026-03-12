@@ -12,7 +12,7 @@ from django.db import models
 from django.utils import timezone
 from netfields import CidrAddressField, NetManager
 
-from bf_opencore.utils import ipset_from_network
+from blueflow.utils import ipset_from_network
 
 logger = logging.getLogger(__name__)
 
@@ -93,13 +93,13 @@ class Network(models.Model):
     @property
     def num_assets(self):
         """Return number of assets in network."""
-        Asset = apps.get_model("bf_opencore", "Asset")
+        Asset = apps.get_model("blueflow", "Asset")
         return Asset.objects.in_network(self.id).count()
 
     @property
     def identified_statistics(self):
         """Percent identified assets."""
-        Asset = apps.get_model("bf_opencore", "Asset")
+        Asset = apps.get_model("blueflow", "Asset")
         return Asset.objects.in_network(self.id).identified_statistics()
 
     def __str__(self):

@@ -7,7 +7,7 @@ from django.db import models
 from django.db.models.signals import post_save
 from netfields import InetAddressField, MACAddressField
 
-from bf_opencore.utils import DisableSignals
+from blueflow.utils import DisableSignals
 
 
 class NetworkEndpointManager(models.Manager):
@@ -24,7 +24,7 @@ class NetworkEndpointManager(models.Manager):
         results = super().filter(f)
 
         if results.count() == 0:
-            NetworkEndpoint = apps.get_model("bf_opencore", "NetworkEndpoint")
+            NetworkEndpoint = apps.get_model("blueflow", "NetworkEndpoint")
             raise NetworkEndpoint.DoesNotExist()
         if results.count() == 1:
             return results.first()
@@ -50,7 +50,7 @@ class NetworkEndpointManager(models.Manager):
         """Return or create a NetworkEndpoint, prefering Mac address."""
         if not defaults:
             defaults = {}
-        NetworkEndpoint = apps.get_model("bf_opencore", "NetworkEndpoint")
+        NetworkEndpoint = apps.get_model("blueflow", "NetworkEndpoint")
         try:
             match = self.normalize_and_get(**kwargs)
             for key, value in defaults.items():
@@ -150,7 +150,7 @@ class NetworkEndpoint(models.Model):
         if self.ipv6_address:
             sieve |= models.Q(ip_address=self.ipv6_address)
 
-        Asset = apps.get_model("bf_opencore", "Asset")
+        Asset = apps.get_model("blueflow", "Asset")
         mac_matches = Asset.objects.filter(sieve)
 
         if mac_matches.count() == 1:
@@ -166,7 +166,7 @@ class NetworkEndpoint(models.Model):
         Will clear all suggestions.
         """
         self._user_asset_match = value
-        EndpointSuggestion = apps.get_model("bf_opencore", "EndpointSuggestion")
+        EndpointSuggestion = apps.get_model("blueflow", "EndpointSuggestion")
         EndpointSuggestion.objects.filter(network_endpoint=self).delete()
 
     @property
@@ -175,7 +175,7 @@ class NetworkEndpoint(models.Model):
 
         Return None if asset has been set, never return assets in blacklist.
         """
-        EndpointSuggestion = apps.get_model("bf_opencore", "EndpointSuggestion")
+        EndpointSuggestion = apps.get_model("blueflow", "EndpointSuggestion")
         return EndpointSuggestion.objects.filter(network_endpoint=self).order_by(
             "-confidence"
         )
@@ -193,7 +193,7 @@ class NetworkEndpoint(models.Model):
         Asset IDs.
         """
         self._asset_match_blacklist = value
-        EndpointSuggestion = apps.get_model("bf_opencore", "EndpointSuggestion")
+        EndpointSuggestion = apps.get_model("blueflow", "EndpointSuggestion")
         EndpointSuggestion.objects.filter(
             network_endpoint=self, asset__in=value
         ).delete()
@@ -307,13 +307,13 @@ class NetworkEndpoint(models.Model):
         # start at no confidence
         self.max_confidence = 0
 
-        Asset = apps.get_model("bf_opencore", "Asset")
+        Asset = apps.get_model("blueflow", "Asset")
         for asset in Asset.objects.exclude(id__in=self.blacklist):
             report = self.compare(asset)
             confidence = int(report["confidence"])
             if confidence:
                 # only record if confidence > 0
-                EndpointSuggestion = apps.get_model("bf_opencore", "EndpointSuggestion")
+                EndpointSuggestion = apps.get_model("blueflow", "EndpointSuggestion")
                 change, _ = EndpointSuggestion.objects.update_or_create(
                     asset=asset, network_endpoint=self
                 )

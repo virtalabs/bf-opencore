@@ -3,12 +3,12 @@
 import os
 import pytest
 
-import bf_opencore.celery
-from bf_opencore.csv import process_csv
-from bf_opencore.models import Asset, AssetCustomField, AssetCustomFieldName
+import blueflow.celery
+from blueflow.csv import process_csv
+from blueflow.models import Asset, AssetCustomField, AssetCustomFieldName
 
 from .test_csv import TestCTX
-from bf_opencore.tests.utils import write_tempfile
+from blueflow.tests.utils import write_tempfile
 
 
 def test_process_csv_with_custom_field(setup_db):

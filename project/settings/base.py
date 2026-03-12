@@ -5,7 +5,7 @@ import os
 BASE_URL = os.environ.get("BASE_URL", "http://localhost:8000")
 
 INSTALLED_APPS = [
-    "bf_opencore.apps.BfOpenCoreConfig",
+    "blueflow.apps.BfOpenCoreConfig",
     "django.contrib.admin",
     "django.contrib.auth",
     "django.contrib.contenttypes",
@@ -61,7 +61,7 @@ REST_FRAMEWORK = {
         "rest_framework.authentication.SessionAuthentication",
     ],
     "DEFAULT_SCHEMA_CLASS": "drf_spectacular.openapi.AutoSchema",
-    "DEFAULT_PAGINATION_CLASS": "bf_opencore.pagination.HugeLimitOffsetPagination",
+    "DEFAULT_PAGINATION_CLASS": "blueflow.pagination.HugeLimitOffsetPagination",
     "DEFAULT_FILTER_BACKENDS": [
         "django_filters.rest_framework.DjangoFilterBackend",
         "rest_framework.filters.SearchFilter",

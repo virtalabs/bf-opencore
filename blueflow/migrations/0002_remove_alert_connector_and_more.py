@@ -5,7 +5,7 @@ from django.db import migrations
 
 class Migration(migrations.Migration):
     dependencies = [
-        ("bf_opencore", "0001_initial"),
+        ("blueflow", "0001_initial"),
     ]
 
     operations = [

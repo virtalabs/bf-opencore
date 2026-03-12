@@ -5,9 +5,9 @@ import nmap
 from django.apps import apps
 from django.utils import timezone
 
-from bf_opencore.celery import celery_app
-from bf_opencore.exceptions import IntegrationTaskError
-from bf_opencore.utils.hostname import hostname_ok, ip_address_ok
+from blueflow.celery import celery_app
+from blueflow.exceptions import IntegrationTaskError
+from blueflow.utils.hostname import hostname_ok, ip_address_ok
 
 logger = celery.utils.log.get_task_logger(__name__)
 
@@ -59,11 +59,11 @@ def main(ctx, hostname):
     v_major, v_minor = nm.nmap_version()
     ctx.ct.print("Version %s.%s" % (v_major, v_minor))
 
-    ConnectorTask = apps.get_model("bf_opencore", "ConnectorTask")
+    ConnectorTask = apps.get_model("blueflow", "ConnectorTask")
     connector_task = ConnectorTask.objects.get(celery_task_id=ctx.request.id)
     # Update database
-    Asset = apps.get_model("bf_opencore", "Asset")
-    Scan = apps.get_model("bf_opencore", "Scan")
+    Asset = apps.get_model("blueflow", "Asset")
+    Scan = apps.get_model("blueflow", "Scan")
     last_pinged = timezone.now()
     for host in nm.all_hosts():
         asset, dummy = Asset.objects.get_or_create(ip_address=host)

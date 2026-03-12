@@ -5,9 +5,9 @@ import tempfile
 
 import pytest
 
-import bf_opencore
-import bf_opencore.celery
-from bf_opencore.models import Asset
+import blueflow
+import blueflow.celery
+from blueflow.models import Asset
 
 
 class TestCTX:

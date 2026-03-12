@@ -7,7 +7,7 @@ from django.apps import apps
 from django.conf import settings
 from django.db import models
 
-from bf_opencore.models import Asset
+from blueflow.models import Asset
 
 
 class ViperWebhookJob(models.Model):
@@ -158,7 +158,7 @@ class ViperWebhookResponseList:
         request: ViperWebhookRequest,
         request_id: str = "",
     ) -> Generator[ViperWebhookResponse, None, None]:
-        Asset = apps.get_model("bf_opencore", "Asset")
+        Asset = apps.get_model("blueflow", "Asset")
         assets = Asset.objects.filter(last_pinged__gte=request.since)
         if request.before:
             assets = assets.filter(last_pinged__lte=request.before)

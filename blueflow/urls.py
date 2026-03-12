@@ -1,6 +1,6 @@
 """BlueFlow open-core Django app URLs."""
 
-app_name = "bf_opencore"
+app_name = "blueflow"
 
 from django.conf.urls import include
 from django.urls import path
@@ -52,7 +52,7 @@ urlpatterns = [
     path("schema/", SpectacularAPIView.as_view(), name="schema"),
     path(
         "docs/",
-        SpectacularSwaggerView.as_view(url_name="bf_opencore:schema"),
+        SpectacularSwaggerView.as_view(url_name="blueflow:schema"),
         name="swagger-ui",
     ),
     path(r"api-token-auth/", authview.obtain_auth_token, name="auth-token"),

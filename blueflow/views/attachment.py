@@ -5,7 +5,7 @@ import logging
 from rest_framework import serializers, viewsets
 from waffle.mixins import WaffleSwitchMixin
 
-from bf_opencore.models import Attachment
+from blueflow.models import Attachment
 
 # For debugging
 from .utils import (
@@ -23,11 +23,11 @@ class AttachmentSerializer(serializers.HyperlinkedModelSerializer):
     """
 
     url = serializers.HyperlinkedIdentityField(
-        view_name="bf_opencore:attachment-detail"
+        view_name="blueflow:attachment-detail"
     )
     asset = serializers.HyperlinkedRelatedField(
         read_only=True,
-        view_name="bf_opencore:asset-detail",
+        view_name="blueflow:asset-detail",
     )
     asset_id = serializers.IntegerField(required=False)
     file_name = serializers.CharField(required=False)

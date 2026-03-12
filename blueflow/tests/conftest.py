@@ -1,4 +1,4 @@
-"""Pytest configuration for bf_opencore app-level tests. All tests require PostgreSQL (set DATABASE_URL in test settings)."""
+"""Pytest configuration for blueflow app-level tests. All tests require PostgreSQL (set DATABASE_URL in test settings)."""
 
 from collections import namedtuple
 
@@ -45,7 +45,7 @@ def tapirx_token_client(db, enable_core_switch):
     from rest_framework.authtoken.models import Token
     from rest_framework.test import APIClient
 
-    from bf_opencore.tests.factories import make_user
+    from blueflow.tests.factories import make_user
 
     user = make_user(username="tapirx")
     token, _ = Token.objects.get_or_create(user=user)
@@ -77,7 +77,7 @@ def cleandb(db):
     For example, the "location" custom field is added by a migration.  These
     tests assume starting without it.
     """
-    from bf_opencore import models
+    from blueflow import models
 
     models.AssetCustomFieldName.objects.all().delete()
 
@@ -85,7 +85,7 @@ def cleandb(db):
 @pytest.fixture
 def cfield(cleandb):
     """Prepare some things for reuse: an asset, custom field names, and a custom field value."""
-    from bf_opencore import models
+    from blueflow import models
 
     asset = models.Asset.objects.create(hostname="foo.com")
     sparkly_field = models.AssetCustomFieldName.objects.create(field_name="sparkliness")
@@ -105,7 +105,7 @@ def cfield(cleandb):
 @pytest.fixture
 def asset_vulnerabilities(db):
     """Set up some database objects to test asset-vulnerability relations."""
-    from bf_opencore import models
+    from blueflow import models
 
     asset = models.Asset.objects.create(hostname="foo.com")
     asset_2 = models.Asset.objects.create(hostname="bar.com")
@@ -128,7 +128,7 @@ def asset_vulnerabilities(db):
 @pytest.fixture
 def completables(db):
     """Sample assets and other items to be completed."""
-    from bf_opencore import models
+    from blueflow import models
 
     models.Asset.objects.create(mac_address="88:aa:bb:cc:dd:ee")
     models.Asset.objects.create(
@@ -152,7 +152,7 @@ def completables(db):
 @pytest.fixture
 def complete_us(db):
     """Sample assets for autocomplete field tests."""
-    from bf_opencore import models
+    from blueflow import models
 
     mfmods = {
         "Foo": ["One", "Two", "Three"],
@@ -170,7 +170,7 @@ def complete_us(db):
 @pytest.fixture
 def asset_groups(db):
     """Set up some assets and groups."""
-    from bf_opencore import models
+    from blueflow import models
 
     asset_a = models.Asset.objects.create(hostname="foo.com")
     asset_b = models.Asset.objects.create(hostname="bar.com")
@@ -198,7 +198,7 @@ def pulse_feed_items(db):
     """Set up some pulse feed items to play with."""
     from django.utils import timezone
 
-    from bf_opencore import models
+    from blueflow import models
 
     models.PulseFeedItem.objects.create(
         external_pulse_id=12, date_last_updated=timezone.now()

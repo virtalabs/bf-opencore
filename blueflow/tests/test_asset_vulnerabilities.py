@@ -2,7 +2,7 @@
 
 import json
 
-from bf_opencore import models
+from blueflow import models
 
 
 def test_get_asset_vulnerabilities(auth_client, asset_vulnerabilities):

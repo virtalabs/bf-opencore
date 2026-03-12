@@ -27,5 +27,5 @@ DATABASES = {
     ),
 }
 
-MEDIA_ROOT = tempfile.mkdtemp(prefix="bf_opencore_test_media_")
+MEDIA_ROOT = tempfile.mkdtemp(prefix="blueflow_test_media_")
 MEDIA_URL = "/media/"

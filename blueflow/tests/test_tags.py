@@ -8,7 +8,7 @@ import json
 
 import pytest
 
-from bf_opencore import models
+from blueflow import models
 
 # Many functions use Model classes which *do* have an 'objects' member
 

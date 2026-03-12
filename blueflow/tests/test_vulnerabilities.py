@@ -6,7 +6,7 @@ http://pytest-django.readthedocs.io/en/latest/helpers.html
 
 import pytest
 from django.utils import timezone
-from bf_opencore import models
+from blueflow import models
 
 
 def test_get_vulnerable_asset_obsolete(auth_client):

@@ -7,7 +7,7 @@ http://pytest-django.readthedocs.io/en/latest/helpers.html
 # import pytest
 import json
 
-import bf_opencore.models as bf_mod
+import blueflow.models as bf_mod
 
 
 def test_create_risk_factor_rem(admin_client):

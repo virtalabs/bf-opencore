@@ -10,7 +10,7 @@ from datetime import timedelta
 
 from django.utils import timezone
 
-from bf_opencore.models import Alert
+from blueflow.models import Alert
 
 # models do have 'objects' member, but it's being lazy loaded
 

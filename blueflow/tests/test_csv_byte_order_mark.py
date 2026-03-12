@@ -3,11 +3,11 @@
 import os
 from codecs import BOM_UTF8
 
-from bf_opencore.csv import process_csv
-from bf_opencore.models import Asset
+from blueflow.csv import process_csv
+from blueflow.models import Asset
 
 from .test_csv import TestCTX
-from bf_opencore.tests.utils import write_tempfile
+from blueflow.tests.utils import write_tempfile
 
 
 def test_tempfile_plain():

@@ -11,7 +11,7 @@ def pytest_configure(config):
 
 
 def pytest_ignore_collect(path, config):
-    """Ignore tests under tests/blueflow (reference-only; use bf_opencore tests)."""
+    """Ignore tests under tests/blueflow (reference-only; use blueflow tests)."""
     try:
         path_str = str(path).replace("\\", "/")
         if "tests" in path_str and "blueflow" in path_str:
@@ -72,10 +72,10 @@ def django_db_setup(
 
 @pytest.fixture
 def auth_client(db, enable_core_switch):
-    """API client authenticated with a regular user (uses bf_opencore.tests.factories.make_user)."""
+    """API client authenticated with a regular user (uses blueflow.tests.factories.make_user)."""
     from rest_framework.test import APIClient
 
-    from bf_opencore.tests.factories import make_user
+    from blueflow.tests.factories import make_user
 
     user = make_user()
     api_client = APIClient()
@@ -88,7 +88,7 @@ def admin_client(db, enable_core_switch):
     """API client authenticated with a superuser (for app-level admin-style tests; uses factories.make_superuser)."""
     from rest_framework.test import APIClient
 
-    from bf_opencore.tests.factories import make_superuser
+    from blueflow.tests.factories import make_superuser
 
     admin_user = make_superuser()
     api_client = APIClient()

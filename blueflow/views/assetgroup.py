@@ -7,7 +7,7 @@ from rest_framework.fields import IntegerField
 from rest_framework.generics import Http404, get_object_or_404
 from waffle.mixins import WaffleSwitchMixin
 
-from bf_opencore.models import AssetGroup
+from blueflow.models import AssetGroup
 
 from .group import GroupSerializer
 from .utils import HugeLimitOffsetPagination
@@ -19,7 +19,7 @@ class AssetGroupSerializer(serializers.HyperlinkedModelSerializer):
     # Few public methods; that's just how serializers work
 
     url = serializers.HyperlinkedIdentityField(
-        view_name="bf_opencore:assetgroup-detail"
+        view_name="blueflow:assetgroup-detail"
     )
     group = GroupSerializer(read_only=True)
     asset_id = IntegerField()

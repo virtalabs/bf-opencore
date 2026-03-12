@@ -1,4 +1,4 @@
-"""Tests for bf_opencore views/API (mirrors bf_opencore/views)."""
+"""Tests for blueflow views/API (mirrors blueflow/views)."""
 
 
 def test_api_assets_empty(auth_client):

@@ -3,7 +3,7 @@
 from rest_framework import serializers, viewsets
 from waffle.mixins import WaffleSwitchMixin
 
-from bf_opencore.models import Asset, EndpointSuggestion, NetworkEndpoint
+from blueflow.models import Asset, EndpointSuggestion, NetworkEndpoint
 
 from .asset import AssetSerializer
 from .utils import PaginateRelationsMixin

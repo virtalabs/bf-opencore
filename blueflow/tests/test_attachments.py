@@ -7,7 +7,7 @@ import urllib
 import pytest
 from django.conf import settings as django_settings
 
-from bf_opencore import models
+from blueflow import models
 
 
 def qparam(pardict):

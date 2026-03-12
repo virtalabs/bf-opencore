@@ -13,8 +13,8 @@ from django.core.exceptions import ValidationError
 from django.db.utils import IntegrityError
 from simple_history import utils as hist_utils
 
-from bf_opencore.celery import celery_app
-from bf_opencore.utils import FieldMap, FileWrapper
+from blueflow.celery import celery_app
+from blueflow.utils import FieldMap, FileWrapper
 
 logger = celery.utils.log.get_task_logger(__name__)
 
@@ -48,7 +48,7 @@ logger = celery.utils.log.get_task_logger(__name__)
 # When exporting data from Excel or a similar tool, choose `ASCII` or `UTF-8`
 # encoding.
 #
-# A sample CSV file is available [here](bf_opencore/csv/sample.csv).
+# A sample CSV file is available [here](blueflow/csv/sample.csv).
 # """.format(settings='/settings/csv/',
 #            fieldnames=', '.join(
 #                map(lambda x: '<tt>{}</tt>'.format(x),  # pylint: disable=unnecessary-lambda
@@ -94,7 +94,7 @@ def process_csv(ctx, filename, field_mapping, require_network_info, update_only)
     # Yea, there's a lot of branches
     # pylint: disable=too-many-branches
 
-    Asset = apps.get_model("bf_opencore", "Asset")
+    Asset = apps.get_model("blueflow", "Asset")
     logger.debug("Reading CSV file %s", filename)
     # The 'utf-8-sig' encoding makes us robust to Excel-exported CSV
     # files (they contain a 3-byte "byte order mark" at the beginning of
@@ -253,7 +253,7 @@ def main(
     # Read field mapping from the database if one is not provided
     if not field_mapping:
         raise NotImplementedError("Connectors have been removed")
-        Connector = apps.get_model("bf_opencore", "Connector")
+        Connector = apps.get_model("blueflow", "Connector")
         connector = Connector.objects.get(id="csv")
         logger.debug("Settings: %s", connector.settings)
         field_mapping = connector.settings["field_mapping"]

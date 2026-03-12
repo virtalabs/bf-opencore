@@ -10,8 +10,8 @@ from rest_framework.decorators import action
 from rest_framework.response import Response
 from waffle.mixins import WaffleSwitchMixin
 
-from bf_opencore.models import Asset, AssetGroup, Group
-from bf_opencore.utils import iterable
+from blueflow.models import Asset, AssetGroup, Group
+from blueflow.utils import iterable
 
 from .utils import HugeLimitOffsetPagination
 
@@ -24,14 +24,14 @@ class GroupSerializer(serializers.HyperlinkedModelSerializer):
     Teaches the rest_framework (the ViewSet) which fields to expect.
     """
 
-    url = serializers.HyperlinkedIdentityField(view_name="bf_opencore:group-detail")
+    url = serializers.HyperlinkedIdentityField(view_name="blueflow:group-detail")
     add_assets_url = serializers.HyperlinkedIdentityField(
-        view_name="bf_opencore:group-assets"
+        view_name="blueflow:group-assets"
     )
     # assets = serializers.HyperlinkedRelatedField(
     #     many=True,
     #     read_only=True,
-    #     view_name='bf_opencore:asset-detail'
+    #     view_name='blueflow:asset-detail'
     # )
 
     class Meta:

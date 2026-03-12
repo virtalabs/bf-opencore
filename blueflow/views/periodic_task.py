@@ -17,7 +17,7 @@ class CrontabScheduleSerializer(serializers.HyperlinkedModelSerializer):
     """
 
     url = serializers.HyperlinkedIdentityField(
-        view_name="bf_opencore:crontabschedule-detail"
+        view_name="blueflow:crontabschedule-detail"
     )
 
     # Human-readable name
@@ -58,7 +58,7 @@ class IntervalScheduleSerializer(serializers.HyperlinkedModelSerializer):
     """
 
     url = serializers.HyperlinkedIdentityField(
-        view_name="bf_opencore:intervalschedule-detail"
+        view_name="blueflow:intervalschedule-detail"
     )
 
     # Human-readable name
@@ -96,7 +96,7 @@ class PeriodicTaskSerializer(serializers.HyperlinkedModelSerializer):
     """
 
     url = serializers.HyperlinkedIdentityField(
-        view_name="bf_opencore:periodictask-detail"
+        view_name="blueflow:periodictask-detail"
     )
     display_name = serializers.SerializerMethodField("do_display_name")
     display_schedule = serializers.SerializerMethodField("do_display_schedule")
@@ -123,12 +123,12 @@ class PeriodicTaskSerializer(serializers.HyperlinkedModelSerializer):
     interval = serializers.HyperlinkedRelatedField(
         required=False,
         queryset=IntervalSchedule.objects.all(),
-        view_name="bf_opencore:intervalschedule-detail",
+        view_name="blueflow:intervalschedule-detail",
     )
     crontab = serializers.HyperlinkedRelatedField(
         required=False,
         queryset=CrontabSchedule.objects.all(),
-        view_name="bf_opencore:crontabschedule-detail",
+        view_name="blueflow:crontabschedule-detail",
     )
 
     def validate(self, attrs):

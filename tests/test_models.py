@@ -1,9 +1,9 @@
-"""Tests for bf_opencore models (mirrors bf_opencore/models)."""
+"""Tests for blueflow models (mirrors blueflow/models)."""
 
 
 def test_asset_model(db):
     """Smoke test: Asset can be created."""
-    from bf_opencore.models import Asset
+    from blueflow.models import Asset
 
     asset = Asset.objects.create()
     assert asset.pk is not None
@@ -12,13 +12,13 @@ def test_asset_model(db):
 
 def test_connector_model(db):
     """Smoke test: Connector model exists and has expected attributes."""
-    from bf_opencore.models import Connector
+    from blueflow.models import Connector
 
     assert hasattr(Connector, "objects")
 
 
 def test_tag_model(db):
     """Smoke test: Tag model exists and has expected attributes."""
-    from bf_opencore.models import Tag
+    from blueflow.models import Tag
 
     assert hasattr(Tag, "objects")

@@ -1,4 +1,4 @@
-"""Pagination classes for bf_opencore API."""
+"""Pagination classes for blueflow API."""
 
 from rest_framework.pagination import LimitOffsetPagination
 
