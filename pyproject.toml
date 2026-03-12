@@ -46,10 +46,10 @@ dev = [
 
 [tool.setuptools.packages.find]
 where = ["."]
-include = ["bf_opencore*", "project*"]
+include = ["blueflow*", "project*"]
 
 [tool.pytest.ini_options]
-testpaths = ["tests", "bf_opencore/tests"]
+testpaths = ["tests", "blueflow/tests"]
 addopts = "-ra"
 filterwarnings = ["ignore::DeprecationWarning"]
 
