@@ -6,7 +6,7 @@ from django.utils import timezone
 from rest_framework import serializers, viewsets
 from waffle.mixins import WaffleSwitchMixin
 
-from bf_opencore.models import Alert
+from blueflow.models import Alert
 
 logger = logging.getLogger(__name__)
 
@@ -19,27 +19,27 @@ class AlertSerializer(serializers.HyperlinkedModelSerializer):
 
     # Few public methods; that's just how serializers work
 
-    url = serializers.HyperlinkedIdentityField(view_name="bf_opencore:alert-detail")
+    url = serializers.HyperlinkedIdentityField(view_name="blueflow:alert-detail")
     asset = serializers.HyperlinkedRelatedField(
         read_only=True,
-        view_name="bf_opencore:asset-detail",
+        view_name="blueflow:asset-detail",
     )
     connector = serializers.HyperlinkedRelatedField(
         read_only=True,
-        view_name="bf_opencore:connector-detail",
+        view_name="blueflow:connector-detail",
     )
     connectortask = serializers.HyperlinkedRelatedField(
         read_only=True,
-        view_name="bf_opencore:connectortask-detail",
+        view_name="blueflow:connectortask-detail",
     )
     riskmetrics = serializers.HyperlinkedRelatedField(
         many=True,
         read_only=True,
-        view_name="bf_opencore:riskmetrics-detail",
+        view_name="blueflow:riskmetrics-detail",
     )
     vulnerability = serializers.HyperlinkedRelatedField(
         read_only=True,
-        view_name="bf_opencore:vulnerability-detail",
+        view_name="blueflow:vulnerability-detail",
     )
 
     class Meta:

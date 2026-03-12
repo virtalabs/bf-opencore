@@ -8,7 +8,7 @@ import json
 
 import pytest
 
-from bf_opencore import models
+from blueflow import models
 
 
 def test_custom_field_name(cleandb, auth_client):

@@ -6,7 +6,7 @@ import django_filters
 from rest_framework import serializers, viewsets
 from waffle.mixins import WaffleSwitchMixin
 
-from bf_opencore.models import Scan
+from blueflow.models import Scan
 
 logger = logging.getLogger(__name__)
 
@@ -17,16 +17,16 @@ class ScanSerializer(serializers.HyperlinkedModelSerializer):
     Teaches the rest_framework (the ViewSet) which fields to expect.
     """
 
-    url = serializers.HyperlinkedIdentityField(view_name="bf_opencore:scan-detail")
+    url = serializers.HyperlinkedIdentityField(view_name="blueflow:scan-detail")
     asset = serializers.HyperlinkedRelatedField(
         #     many=True,
         read_only=True,
-        view_name="bf_opencore:asset-detail",
+        view_name="blueflow:asset-detail",
     )
     connector_task = serializers.HyperlinkedRelatedField(
         #     many=True,
         read_only=True,
-        view_name="bf_opencore:connectortask-detail",
+        view_name="blueflow:connectortask-detail",
     )
 
     class Meta:

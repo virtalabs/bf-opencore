@@ -9,8 +9,8 @@ import sh
 from django.apps import apps
 from django.utils import timezone
 
-from bf_opencore.celery import celery_app
-from bf_opencore.exceptions import IntegrationTaskError
+from blueflow.celery import celery_app
+from blueflow.exceptions import IntegrationTaskError
 
 # Configure logging.  Disable logging in sh module.
 logger = celery.utils.log.get_task_logger(__name__)
@@ -86,7 +86,7 @@ def main(ctx, hostname):
         ctx.ct.print(stderr)
     ctx.ct.print("Host '%s' is online" % hostname)
 
-    Asset = apps.get_model("bf_opencore", "Asset")
+    Asset = apps.get_model("blueflow", "Asset")
     asset, _ = Asset.objects.all().get_or_create(ip_address=ipv4addr)
     asset.last_pinged = timezone.now()
     asset.save()

@@ -10,7 +10,7 @@ from django.db import models
 from django.utils import timezone
 from simple_history.models import HistoricalRecords
 
-from bf_opencore.utils import NullUnlessChanged, prev_quarter_start, quarter_start
+from blueflow.utils import NullUnlessChanged, prev_quarter_start, quarter_start
 
 logger = logging.getLogger(__name__)
 
@@ -233,7 +233,7 @@ class PulseFeedItem(models.Model):
             return self.asset_search_qset()
 
         # assemble a query for assets via this PulseFeedItem's vulnerabilities
-        Asset = apps.get_model("bf_opencore", "Asset")
+        Asset = apps.get_model("blueflow", "Asset")
         vulns = Asset.objects.none()
 
         for vuln in self.vulnerabilities.all():
@@ -246,7 +246,7 @@ class PulseFeedItem(models.Model):
 
     def asset_search_qset(self):
         """Get a set of assets by this PulseFeedItem's matching criteria."""
-        Asset = apps.get_model("bf_opencore", "Asset")
+        Asset = apps.get_model("blueflow", "Asset")
         return Asset.objects.filter(self._search_query())
 
     def reload_from_json(self):

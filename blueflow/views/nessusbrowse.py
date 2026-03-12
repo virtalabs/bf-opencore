@@ -6,7 +6,7 @@ from rest_framework import permissions, serializers, status, viewsets
 from rest_framework.response import Response
 from waffle.mixins import WaffleSwitchMixin
 
-from bf_opencore import exceptions
+from blueflow import exceptions
 
 try:
     from connectors.nessusimport.nessus_api import NessusConnection

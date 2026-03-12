@@ -19,7 +19,7 @@ class PaginateRelationsMixin:
         """Paginates, and serializes, the data from the queryset."""
         # Need to do the import at runtime in order to avoid problems
         # with cyclic import
-        views = importlib.import_module("bf_opencore.views")
+        views = importlib.import_module("blueflow.views")
         serializer = getattr(views, serializer_name)
 
         page = self.paginate_queryset(qset)

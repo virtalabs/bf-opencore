@@ -4,7 +4,7 @@ import json
 
 import pytest
 
-from bf_opencore import models
+from blueflow import models
 
 
 def test_get_asset_groups_obsolete(auth_client, asset_groups):

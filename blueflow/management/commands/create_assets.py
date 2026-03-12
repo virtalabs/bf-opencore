@@ -52,7 +52,7 @@ class Command(BaseCommand):
         )
 
     def handle(self, *args, **options) -> None:
-        Asset = apps.get_model("bf_opencore", "Asset")
+        Asset = apps.get_model("blueflow", "Asset")
         file_path = options.get("filepath")
         with open(file_path, encoding="utf-8") as file:
             data = json.loads(file.read())

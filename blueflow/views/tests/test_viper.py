@@ -2,14 +2,14 @@ import datetime
 import uuid
 from unittest.mock import patch
 
-from bf_opencore.models.viper import ViperWebhookRequest
+from blueflow.models.viper import ViperWebhookRequest
 
 CALLBACK = "https://example.com/viper/webhook/"
 
 
 def test_viper_webhook(auth_client, celery_app):
     """Asserts our 202 response and call to the celery task."""
-    with patch("bf_opencore.celery.tasks.viper_webhook.delay") as mock_viper_webhook:
+    with patch("blueflow.celery.tasks.viper_webhook.delay") as mock_viper_webhook:
         response = auth_client.post(
             "/api/viper/webhook/",
             {

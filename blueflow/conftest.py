@@ -2,7 +2,7 @@ import django.core.management
 import pytest
 from rest_framework.test import APIClient
 
-from bf_opencore.celery import celery_app as cp
+from blueflow.celery import celery_app as cp
 
 
 @pytest.fixture

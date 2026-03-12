@@ -1,4 +1,4 @@
-"""Factory helpers for bf_opencore tests (model_bakery). Use these instead of ad hoc Model.objects.create()."""
+"""Factory helpers for blueflow tests (model_bakery). Use these instead of ad hoc Model.objects.create()."""
 
 from model_bakery import baker
 
@@ -9,7 +9,7 @@ def make_tag(**kwargs):
         "name": kwargs.pop("name", "test-tag"),
         "color": kwargs.pop("color", "#cccccc"),
     }
-    return baker.make("bf_opencore.Tag", **{**defaults, **kwargs})
+    return baker.make("blueflow.Tag", **{**defaults, **kwargs})
 
 
 def make_user(**kwargs):

@@ -11,7 +11,7 @@ import pytest
 
 from freezegun import freeze_time
 
-from bf_opencore import models
+from blueflow import models
 
 
 def test_get_empty_assets(auth_client):

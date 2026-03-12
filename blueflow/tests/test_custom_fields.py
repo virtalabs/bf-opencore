@@ -10,7 +10,7 @@ import pytest
 from django.db import IntegrityError
 from django.db.transaction import TransactionManagementError
 
-from bf_opencore import models
+from blueflow import models
 
 
 def test_custom_field_api(cleandb, auth_client):

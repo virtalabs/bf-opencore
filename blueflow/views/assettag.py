@@ -4,7 +4,7 @@ from rest_framework import serializers, viewsets
 from rest_framework.fields import IntegerField
 from waffle.mixins import WaffleSwitchMixin
 
-from bf_opencore.models import AssetTag
+from blueflow.models import AssetTag
 
 from .tag import TagSerializer
 from .utils import ChangeReasonMixin, HugeLimitOffsetPagination
@@ -13,7 +13,7 @@ from .utils import ChangeReasonMixin, HugeLimitOffsetPagination
 class AssetTagSerializer(serializers.HyperlinkedModelSerializer):
     """Serializes AssetTag objects."""
 
-    url = serializers.HyperlinkedIdentityField(view_name="bf_opencore:assettag-detail")
+    url = serializers.HyperlinkedIdentityField(view_name="blueflow:assettag-detail")
     tag = TagSerializer(read_only=True)
     asset_id = IntegerField()
     tag_id = IntegerField()

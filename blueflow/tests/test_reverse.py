@@ -4,29 +4,29 @@ import django
 import pytest
 from rest_framework.reverse import reverse
 
-from bf_opencore import models
+from blueflow import models
 
 # models do have 'objects' member, but it's being lazy loaded
 
 
 def test_reverse_asset_tags():
-    """Reverse bf_opencore:asset-tags == /api/asset/<i>/tags."""
+    """Reverse blueflow:asset-tags == /api/asset/<i>/tags."""
     # import pdb ; pdb.set_trace()
-    url = reverse("bf_opencore:asset-tags", args=[1])
+    url = reverse("blueflow:asset-tags", args=[1])
     assert url == "/api/assets/1/tags/"
 
 
 def test_reverse_group_single():
-    """Reverse bf_opencore:asset-tags == /api/asset/<i>/tags."""
+    """Reverse blueflow:asset-tags == /api/asset/<i>/tags."""
     # import pdb ; pdb.set_trace()
-    url = reverse("bf_opencore:group-detail", args=[1])
+    url = reverse("blueflow:group-detail", args=[1])
     assert url == "/api/groups/1/"
 
 
 def test_reverse_group():
-    """Reverse bf_opencore:asset-tags == /api/asset/<i>/tags."""
+    """Reverse blueflow:asset-tags == /api/asset/<i>/tags."""
     # import pdb ; pdb.set_trace()
-    url = reverse("bf_opencore:group-list")
+    url = reverse("blueflow:group-list")
     assert url == "/api/groups/"
 
 
@@ -35,9 +35,9 @@ def test_reverse_group():
     reason="Route /api/assets/1/groups/ doesn't exist (and shouldn't)",
 )
 def test_reverse_asset_groups():
-    """Reverse bf_opencore:asset-groups == /api/asset/<i>/groups."""
+    """Reverse blueflow:asset-groups == /api/asset/<i>/groups."""
     # import pdb ; pdb.set_trace()
-    url = reverse("bf_opencore:asset-groups", args=[1])
+    url = reverse("blueflow:asset-groups", args=[1])
     assert url == "/api/assets/1/groups/"
 
 

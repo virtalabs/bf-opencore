@@ -1,1 +1,1 @@
-"""Connector tests (mirrors bf_opencore structure)."""
+"""Connector tests (mirrors blueflow structure)."""

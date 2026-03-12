@@ -7,7 +7,7 @@ from rest_framework import serializers, viewsets
 from rest_framework.fields import IntegerField
 from waffle.mixins import WaffleSwitchMixin
 
-from bf_opencore.models import Asset, AssetCustomField, AssetCustomFieldName
+from blueflow.models import Asset, AssetCustomField, AssetCustomFieldName
 
 from .utils import ChangeReasonMixin, HugeLimitOffsetPagination
 
@@ -21,7 +21,7 @@ class AssetCustomFieldNameSerializer(serializers.HyperlinkedModelSerializer):
     """
 
     url = serializers.HyperlinkedIdentityField(
-        view_name="bf_opencore:assetcustomfieldname-detail"
+        view_name="blueflow:assetcustomfieldname-detail"
     )
 
     re_non_alphanum = re.compile(r"[^A-Za-z0-9]+")
@@ -101,7 +101,7 @@ class AssetCustomFieldSerializer(serializers.HyperlinkedModelSerializer):
     """
 
     url = serializers.HyperlinkedIdentityField(
-        view_name="bf_opencore:assetcustomfield-detail"
+        view_name="blueflow:assetcustomfield-detail"
     )
     # asset = AssetSerializer()
     field = AssetCustomFieldNameSerializer(read_only=True)

@@ -8,7 +8,7 @@ from rest_framework.decorators import action
 from rest_framework.response import Response
 from waffle.mixins import WaffleSwitchMixin
 
-from bf_opencore.models import PulseFeedItem
+from blueflow.models import PulseFeedItem
 
 from .utils import PaginateRelationsMixin
 from .vulnerability import VulnerabilitySerializer
@@ -20,7 +20,7 @@ class PulseFeedItemSerializer(serializers.HyperlinkedModelSerializer):
     """Serialize Pulse feed items."""
 
     url = serializers.HyperlinkedIdentityField(
-        view_name="bf_opencore:pulsefeeditem-detail",
+        view_name="blueflow:pulsefeeditem-detail",
         lookup_field="external_pulse_id",
     )
 

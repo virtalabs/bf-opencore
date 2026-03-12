@@ -13,9 +13,9 @@ from rest_framework.permissions import AllowAny
 from rest_framework.request import Request
 from rest_framework.response import Response
 
-from bf_opencore.celery.tasks import viper_webhook
-from bf_opencore.models import ViperWebhookJob
-from bf_opencore.models.viper import ViperWebhookRequest
+from blueflow.celery.tasks import viper_webhook
+from blueflow.models import ViperWebhookJob
+from blueflow.models.viper import ViperWebhookRequest
 
 
 class ViperWebhookSerializer(serializers.Serializer):

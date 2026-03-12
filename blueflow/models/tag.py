@@ -30,7 +30,7 @@ class Tag(models.Model):
     @property
     def num_assets(self):
         """Calculate number of assets with this tag."""
-        Asset = apps.get_model("bf_opencore", "Asset")
+        Asset = apps.get_model("blueflow", "Asset")
         asset_qset = Asset.objects.filter(tags__id=self.id)
         return asset_qset.count
 

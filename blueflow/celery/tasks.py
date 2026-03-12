@@ -3,9 +3,9 @@ import logging
 import requests
 from celery import Task as BaseTask
 
-from bf_opencore.celery import celery_app
-from bf_opencore.models import ViperWebhookJob
-from bf_opencore.models.viper import ViperWebhookRequest, ViperWebhookResponseList
+from blueflow.celery import celery_app
+from blueflow.models import ViperWebhookJob
+from blueflow.models.viper import ViperWebhookRequest, ViperWebhookResponseList
 
 logger = logging.getLogger(__name__)
 

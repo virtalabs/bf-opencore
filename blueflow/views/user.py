@@ -14,7 +14,7 @@ class UserSerializer(serializers.HyperlinkedModelSerializer):
 
     # Few public methods; that's just how serializers work
 
-    url = serializers.HyperlinkedIdentityField(view_name="bf_opencore:user-detail")
+    url = serializers.HyperlinkedIdentityField(view_name="blueflow:user-detail")
 
     class Meta:
         """Wire serializer to the User model."""

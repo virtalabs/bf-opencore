@@ -9,8 +9,8 @@ from rest_framework.fields import IntegerField
 from rest_framework.response import Response
 from waffle.mixins import WaffleSwitchMixin
 
-from bf_opencore.models import Asset, Cidr, Network, SavedSearch
-from bf_opencore.utils import ipset_from_network
+from blueflow.models import Asset, Cidr, Network, SavedSearch
+from blueflow.utils import ipset_from_network
 
 from .utils import HugeLimitOffsetPagination
 
@@ -23,7 +23,7 @@ class NetworkSerializer(serializers.HyperlinkedModelSerializer):
     Teaches the rest_framework (the ViewSet) which fields to expect.
     """
 
-    url = serializers.HyperlinkedIdentityField(view_name="bf_opencore:network-detail")
+    url = serializers.HyperlinkedIdentityField(view_name="blueflow:network-detail")
     cidr = serializers.JSONField(required=False)
 
     class Meta:
@@ -129,7 +129,7 @@ class CidrSerializer(serializers.HyperlinkedModelSerializer):
     Teaches the rest_framework (the ViewSet) which fields to expect.
     """
 
-    url = serializers.HyperlinkedIdentityField(view_name="bf_opencore:cidr-detail")
+    url = serializers.HyperlinkedIdentityField(view_name="blueflow:cidr-detail")
     network_id = IntegerField()
 
     class Meta:
@@ -152,7 +152,7 @@ class SavedSearchSerializer(serializers.HyperlinkedModelSerializer):
     """
 
     url = serializers.HyperlinkedIdentityField(
-        view_name="bf_opencore:savedsearch-detail"
+        view_name="blueflow:savedsearch-detail"
     )
 
     class Meta:

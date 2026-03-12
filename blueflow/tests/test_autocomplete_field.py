@@ -1,6 +1,6 @@
 """Test autocomplete interface."""
 
-from bf_opencore import models
+from blueflow import models
 import pytest
 
 

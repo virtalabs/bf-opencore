@@ -320,14 +320,14 @@ class Migration(migrations.Migration):
                     models.ForeignKey(
                         on_delete=django.db.models.deletion.CASCADE,
                         related_name="asset_custom_fields",
-                        to="bf_opencore.asset",
+                        to="blueflow.asset",
                     ),
                 ),
                 (
                     "field",
                     models.ForeignKey(
                         on_delete=django.db.models.deletion.CASCADE,
-                        to="bf_opencore.assetcustomfieldname",
+                        to="blueflow.assetcustomfieldname",
                     ),
                 ),
             ],
@@ -339,8 +339,8 @@ class Migration(migrations.Migration):
             model_name="asset",
             name="custom_fields",
             field=models.ManyToManyField(
-                through="bf_opencore.AssetCustomField",
-                to="bf_opencore.assetcustomfieldname",
+                through="blueflow.AssetCustomField",
+                to="blueflow.assetcustomfieldname",
             ),
         ),
         migrations.CreateModel(
@@ -366,7 +366,7 @@ class Migration(migrations.Migration):
                     models.ForeignKey(
                         null=True,
                         on_delete=django.db.models.deletion.CASCADE,
-                        to="bf_opencore.asset",
+                        to="blueflow.asset",
                     ),
                 ),
             ],
@@ -415,7 +415,7 @@ class Migration(migrations.Migration):
                     models.ForeignKey(
                         null=True,
                         on_delete=django.db.models.deletion.SET_NULL,
-                        to="bf_opencore.connector",
+                        to="blueflow.connector",
                     ),
                 ),
             ],
@@ -446,14 +446,14 @@ class Migration(migrations.Migration):
                     models.ForeignKey(
                         on_delete=django.db.models.deletion.CASCADE,
                         related_name="asset_groups",
-                        to="bf_opencore.asset",
+                        to="blueflow.asset",
                     ),
                 ),
                 (
                     "group",
                     models.ForeignKey(
                         on_delete=django.db.models.deletion.CASCADE,
-                        to="bf_opencore.group",
+                        to="blueflow.group",
                     ),
                 ),
             ],
@@ -466,8 +466,8 @@ class Migration(migrations.Migration):
             model_name="asset",
             name="groups",
             field=models.ManyToManyField(
-                through="bf_opencore.AssetGroup",
-                to="bf_opencore.group",
+                through="blueflow.AssetGroup",
+                to="blueflow.group",
             ),
         ),
         migrations.CreateModel(
@@ -644,7 +644,7 @@ class Migration(migrations.Migration):
                         null=True,
                         on_delete=django.db.models.deletion.DO_NOTHING,
                         related_name="+",
-                        to="bf_opencore.asset",
+                        to="blueflow.asset",
                     ),
                 ),
                 (
@@ -655,7 +655,7 @@ class Migration(migrations.Migration):
                         null=True,
                         on_delete=django.db.models.deletion.DO_NOTHING,
                         related_name="+",
-                        to="bf_opencore.assetcustomfieldname",
+                        to="blueflow.assetcustomfieldname",
                     ),
                 ),
                 (
@@ -712,7 +712,7 @@ class Migration(migrations.Migration):
                         null=True,
                         on_delete=django.db.models.deletion.DO_NOTHING,
                         related_name="+",
-                        to="bf_opencore.asset",
+                        to="blueflow.asset",
                     ),
                 ),
                 (
@@ -871,7 +871,7 @@ class Migration(migrations.Migration):
                     "network",
                     models.ForeignKey(
                         on_delete=django.db.models.deletion.CASCADE,
-                        to="bf_opencore.network",
+                        to="blueflow.network",
                     ),
                 ),
             ],
@@ -951,7 +951,7 @@ class Migration(migrations.Migration):
                         null=True,
                         on_delete=django.db.models.deletion.SET_NULL,
                         related_name="network_endpoints",
-                        to="bf_opencore.asset",
+                        to="blueflow.asset",
                     ),
                 ),
             ],
@@ -981,14 +981,14 @@ class Migration(migrations.Migration):
                     "asset",
                     models.ForeignKey(
                         on_delete=django.db.models.deletion.CASCADE,
-                        to="bf_opencore.asset",
+                        to="blueflow.asset",
                     ),
                 ),
                 (
                     "network_endpoint",
                     models.ForeignKey(
                         on_delete=django.db.models.deletion.CASCADE,
-                        to="bf_opencore.networkendpoint",
+                        to="blueflow.networkendpoint",
                     ),
                 ),
             ],
@@ -1029,14 +1029,14 @@ class Migration(migrations.Migration):
                     "asset",
                     models.ForeignKey(
                         on_delete=django.db.models.deletion.CASCADE,
-                        to="bf_opencore.asset",
+                        to="blueflow.asset",
                     ),
                 ),
                 (
                     "connector_task",
                     models.ForeignKey(
                         on_delete=django.db.models.deletion.CASCADE,
-                        to="bf_opencore.connectortask",
+                        to="blueflow.connectortask",
                     ),
                 ),
             ],
@@ -1048,8 +1048,8 @@ class Migration(migrations.Migration):
             model_name="asset",
             name="scans",
             field=models.ManyToManyField(
-                through="bf_opencore.Scan",
-                to="bf_opencore.connectortask",
+                through="blueflow.Scan",
+                to="blueflow.connectortask",
             ),
         ),
         migrations.CreateModel(
@@ -1091,7 +1091,7 @@ class Migration(migrations.Migration):
                         null=True,
                         on_delete=django.db.models.deletion.DO_NOTHING,
                         related_name="+",
-                        to="bf_opencore.asset",
+                        to="blueflow.asset",
                     ),
                 ),
                 (
@@ -1111,7 +1111,7 @@ class Migration(migrations.Migration):
                         null=True,
                         on_delete=django.db.models.deletion.DO_NOTHING,
                         related_name="+",
-                        to="bf_opencore.tag",
+                        to="blueflow.tag",
                     ),
                 ),
             ],
@@ -1149,14 +1149,14 @@ class Migration(migrations.Migration):
                     models.ForeignKey(
                         on_delete=django.db.models.deletion.CASCADE,
                         related_name="asset_tags",
-                        to="bf_opencore.asset",
+                        to="blueflow.asset",
                     ),
                 ),
                 (
                     "tag",
                     models.ForeignKey(
                         on_delete=django.db.models.deletion.CASCADE,
-                        to="bf_opencore.tag",
+                        to="blueflow.tag",
                     ),
                 ),
             ],
@@ -1169,8 +1169,8 @@ class Migration(migrations.Migration):
             model_name="asset",
             name="tags",
             field=models.ManyToManyField(
-                through="bf_opencore.AssetTag",
-                to="bf_opencore.tag",
+                through="blueflow.AssetTag",
+                to="blueflow.tag",
             ),
         ),
         migrations.CreateModel(
@@ -1220,7 +1220,7 @@ class Migration(migrations.Migration):
                         null=True,
                         on_delete=django.db.models.deletion.CASCADE,
                         related_name="vulnerabilities",
-                        to="bf_opencore.pulsefeeditem",
+                        to="blueflow.pulsefeeditem",
                         to_field="external_pulse_id",
                     ),
                 ),
@@ -1254,14 +1254,14 @@ class Migration(migrations.Migration):
                     models.ForeignKey(
                         on_delete=django.db.models.deletion.CASCADE,
                         related_name="asset_vulnerabilities",
-                        to="bf_opencore.asset",
+                        to="blueflow.asset",
                     ),
                 ),
                 (
                     "vulnerability",
                     models.ForeignKey(
                         on_delete=django.db.models.deletion.CASCADE,
-                        to="bf_opencore.vulnerability",
+                        to="blueflow.vulnerability",
                     ),
                 ),
             ],
@@ -1274,8 +1274,8 @@ class Migration(migrations.Migration):
             model_name="asset",
             name="vulnerabilities",
             field=models.ManyToManyField(
-                through="bf_opencore.AssetVulnerability",
-                to="bf_opencore.vulnerability",
+                through="blueflow.AssetVulnerability",
+                to="blueflow.vulnerability",
             ),
         ),
         migrations.CreateModel(
@@ -1304,7 +1304,7 @@ class Migration(migrations.Migration):
                         null=True,
                         on_delete=django.db.models.deletion.SET_NULL,
                         related_name="alert_assets",
-                        to="bf_opencore.asset",
+                        to="blueflow.asset",
                     ),
                 ),
                 (
@@ -1313,7 +1313,7 @@ class Migration(migrations.Migration):
                         null=True,
                         on_delete=django.db.models.deletion.SET_NULL,
                         related_name="alert_connectors",
-                        to="bf_opencore.connector",
+                        to="blueflow.connector",
                     ),
                 ),
                 (
@@ -1322,7 +1322,7 @@ class Migration(migrations.Migration):
                         null=True,
                         on_delete=django.db.models.deletion.SET_NULL,
                         related_name="alert_connector_tasks",
-                        to="bf_opencore.connectortask",
+                        to="blueflow.connectortask",
                     ),
                 ),
                 (
@@ -1331,7 +1331,7 @@ class Migration(migrations.Migration):
                         null=True,
                         on_delete=django.db.models.deletion.SET_NULL,
                         related_name="alert_pulsefeeditems",
-                        to="bf_opencore.pulsefeeditem",
+                        to="blueflow.pulsefeeditem",
                     ),
                 ),
                 (
@@ -1340,7 +1340,7 @@ class Migration(migrations.Migration):
                         null=True,
                         on_delete=django.db.models.deletion.SET_NULL,
                         related_name="alert_vulnerabilities",
-                        to="bf_opencore.vulnerability",
+                        to="blueflow.vulnerability",
                     ),
                 ),
             ],

@@ -11,8 +11,8 @@ import unittest.mock
 import django.core.management
 import pytest
 
-import bf_opencore
-from bf_opencore.models import Asset
+import blueflow
+from blueflow.models import Asset
 
 sample_stdout = b"""
 Starting Nmap 7.70 ( https://nmap.org ) at 2019-06-11 08:56 PDT
@@ -58,7 +58,7 @@ def test_portscan_basic(mock_sudo, setup_db):
     mock_sudo.return_value.exit_code = 0
 
     kwargs = dict(hostname="localhost")
-    status = bf_opencore.portscan.main.apply(kwargs=kwargs)
+    status = blueflow.portscan.main.apply(kwargs=kwargs)
     assert status.result is not None
 
     ct = ConnectorTask.objects.get()
@@ -77,7 +77,7 @@ def test_portscan_scan_object(mock_sudo, setup_db):
     mock_sudo.return_value.exit_code = 0
 
     kwargs = dict(hostname="localhost")
-    status = bf_opencore.portscan.main.apply(kwargs=kwargs)
+    status = blueflow.portscan.main.apply(kwargs=kwargs)
     assert status.result is not None
 
     ct = ConnectorTask.objects.get()

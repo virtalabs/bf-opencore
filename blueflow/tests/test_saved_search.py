@@ -7,7 +7,7 @@ import json
 
 import pytest
 
-from bf_opencore import models
+from blueflow import models
 
 
 def test_search(auth_client, acme_assets):
