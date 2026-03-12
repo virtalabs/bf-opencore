@@ -51,16 +51,16 @@ For reliable collection, set `DATABASE_URL` and `DJANGO_SETTINGS_MODULE` before 
 uv run pytest tests/
 ```
 
-**Run app-level tests only** (bf_opencore integration and API tests):
+**Run app-level tests only** (blueflow integration and API tests):
 
 ```bash
-uv run pytest bf_opencore/tests/
+uv run pytest blueflow/tests/
 ```
 
 **Run all tests** (both project and app):
 
 ```bash
-uv run pytest tests/ bf_opencore/tests/
+uv run pytest tests/ blueflow/tests/
 ```
 
 Or rely on the default `testpaths`:
@@ -72,25 +72,25 @@ uv run pytest
 **Run a single file:**
 
 ```bash
-uv run pytest bf_opencore/tests/test_groups.py
+uv run pytest blueflow/tests/test_groups.py
 ```
 
 **Run a single test:**
 
 ```bash
-uv run pytest bf_opencore/tests/test_groups.py::test_get_groups_for_asset_new -v
+uv run pytest blueflow/tests/test_groups.py::test_get_groups_for_asset_new -v
 ```
 
 **Faster re-runs (keep database between runs):**
 
 ```bash
-uv run pytest --reuse-db tests/ bf_opencore/tests/
+uv run pytest --reuse-db tests/ blueflow/tests/
 ```
 
 **Using Docker:**
 
 ```bash
-docker-compose run web uv run pytest tests/ bf_opencore/tests/
+docker-compose run web uv run pytest tests/ blueflow/tests/
 ```
 
 ---
@@ -105,7 +105,7 @@ The project uses a three-tier conftest structure:
 | ------- | ------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | Root    | `conftest.py`                   | `pytest_configure`, `pytest_ignore_collect`, `django_db_setup` (session-scoped PostgreSQL), `enable_core_switch` (waffle), `auth_client`, `admin_client` |
 | Project | `tests/conftest.py`             | Empty; inherits root fixtures                                                                                                                            |
-| App     | `bf_opencore/tests/conftest.py` | Role-alias clients, data fixtures                                                                                                                        |
+| App     | `blueflow/tests/conftest.py` | Role-alias clients, data fixtures                                                                                                                        |
 
 ### Root fixtures (`conftest.py`)
 
@@ -114,7 +114,7 @@ The project uses a three-tier conftest structure:
 - **`auth_client`** — DRF `APIClient` authenticated with a regular user (via `make_user`).
 - **`admin_client`** — DRF `APIClient` authenticated with a superuser (via `make_superuser`).
 
-### App-level role-alias clients (`bf_opencore/tests/conftest.py`)
+### App-level role-alias clients (`blueflow/tests/conftest.py`)
 
 In open-core, all role-scoped clients are aliases to `auth_client` (adds per-resource permissions):
 
@@ -124,7 +124,7 @@ In open-core, all role-scoped clients are aliases to `auth_client` (adds per-res
 - `custom_field_edit_client` — User allowed to edit custom field names
 - `pulse_feed_auth_client` — User allowed to delete/close pulse feed items
 
-### App-level data fixtures (`bf_opencore/tests/conftest.py`)
+### App-level data fixtures (`blueflow/tests/conftest.py`)
 
 - **`media_root`** — Uses `tmp_path` for `MEDIA_ROOT` so attachment tests don't touch the project filesystem. Use for any test that uploads files.
 - **`cleandb`** — Removes migration-seeded custom field names so tests start with a clean slate.
@@ -136,7 +136,7 @@ In open-core, all role-scoped clients are aliases to `auth_client` (adds per-res
 - **`pulse_feed_items`** — Three `PulseFeedItem` objects.
 - **`complete_us`** — Six assets (manufacturer/model pairs) for autocomplete field tests.
 
-### Factory module (`bf_opencore/tests/factories.py`)
+### Factory module (`blueflow/tests/factories.py`)
 
 | Helper           | Implementation              | Use                                   |
 | ---------------- | --------------------------- | ------------------------------------- |
@@ -207,7 +207,7 @@ Run `uv sync --all-extras` (or `uv pip install -e ".[dev]"`) to install.
 
 ```toml
 [tool.coverage.run]
-source = ["bf_opencore"]
+source = ["blueflow"]
 omit = [
     "*/migrations/*",
     "*/__init__.py",
@@ -227,5 +227,5 @@ exclude_lines = [
 After completing steps 1–2 and reinstalling dependencies:
 
 ```bash
-uv run pytest --cov=bf_opencore --cov-report=markdown tests/ bf_opencore/tests/
+uv run pytest --cov=blueflow --cov-report=markdown tests/ blueflow/tests/
 ```
