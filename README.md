@@ -1,6 +1,6 @@
 # bf-opencore
 
-BlueFlow open-core Django app. Installable package containing the **bf_opencore** Django application.
+BlueFlow open-core Django app. Installable package containing the **blueflow** Django application.
 
 ## Prerequisites
 
@@ -10,17 +10,17 @@ BlueFlow open-core Django app. Installable package containing the **bf_opencore*
 
 ## App identity
 
-- **bf_opencore** is the installable Django app.
+- **blueflow** is the installable Django app.
   - Add it to any Django project via `INSTALLED_APPS`:
     ```python
     INSTALLED_APPS = [
         ...
-        'bf_opencore',  # or 'bf_opencore.apps.BfOpenCoreConfig'
+        'blueflow',  # or 'blueflow.apps.BfOpenCoreConfig'
     ]
     ```
   - Wire up its URLs in your project's `urls.py`:
     ```python
-    path('api/', include('bf_opencore.urls')),
+    path('api/', include('blueflow.urls')),
     ```
   - The main BlueFlow product (e.g. blueflow-saas) consumes bf-opencore as a dependency.
 
@@ -54,7 +54,7 @@ uv pip install -e ".[dev]"
 **Test layout**
 
 - **`tests/`** (project-level): Smoke and functional tests for the minimal project (schema, URL wiring, migrations). This is the default `pytest` collection target.
-- **`bf_opencore/tests/`** (app-level): Integration and functional tests for the bf_opencore app.
+- **`blueflow/tests/`** (app-level): Integration and functional tests for the blueflow app.
 
 **Run all tests**
 
@@ -71,7 +71,7 @@ uv run pytest tests/
 **Run only app-level tests**
 
 ```bash
-uv run pytest bf_opencore/tests/
+uv run pytest blueflow/tests/
 ```
 
 **Run via Docker**
