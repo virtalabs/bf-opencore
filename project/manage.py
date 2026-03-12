@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-"""Django's command-line utility for the minimal bf-opencore project."""
+"""Django's command-line utility for the minimal blueflow project."""
 
 import os
 import sys

@@ -1,4 +1,4 @@
-"""Pytest configuration for bf-opencore tests."""
+"""Pytest configuration for blueflow tests."""
 
 import os
 
@@ -100,7 +100,7 @@ def admin_client(db, enable_core_switch):
 def _auto_db(db):
     '''Enables db for all tests
     Should replace with module level enabalment when:
-        https://github.com/virtalabs/bf-opencore/issues/36
+        https://github.com/virtalabs/blueflow/issues/36
     '''
     pass
 

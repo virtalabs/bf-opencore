@@ -1,4 +1,4 @@
-"""Minimal Django settings for bf-opencore tests (pytest). Use DJANGO_SETTINGS_MODULE=project.settings.test."""
+"""Minimal Django settings for blueflow tests (pytest). Use DJANGO_SETTINGS_MODULE=project.settings.test."""
 
 import os
 import tempfile

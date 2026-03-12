@@ -5,7 +5,7 @@ import os
 BASE_URL = os.environ.get("BASE_URL", "http://localhost:8000")
 
 INSTALLED_APPS = [
-    "blueflow.apps.BfOpenCoreConfig",
+    "blueflow.apps.BlueflowConfig",
     "django.contrib.admin",
     "django.contrib.auth",
     "django.contrib.contenttypes",

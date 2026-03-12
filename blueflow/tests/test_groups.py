@@ -171,7 +171,7 @@ def test_create_group_admin(biomed_client, admin_client):
     assert groups[0]["name"] == "spam"
 
 
-@pytest.mark.xfail(reason="Open-core has no role-based write permissions")
+@pytest.mark.xfail(reason="Blueflow has no role-based write permissions")
 def test_create_group_auth(auth_client):
     """Create a group with auth client should *not* work."""
     resp = auth_client.post(

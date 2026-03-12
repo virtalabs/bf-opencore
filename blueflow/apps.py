@@ -3,7 +3,7 @@
 from django.apps import AppConfig
 
 
-class BfOpenCoreConfig(AppConfig):
+class BlueflowConfig(AppConfig):
     name = "blueflow"
 
     def ready(self):

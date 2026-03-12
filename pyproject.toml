@@ -3,9 +3,9 @@ requires = ["setuptools", "wheel"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "bf-opencore"
+name = "blueflow"
 version = "3.0.0"
-description = "BlueFlow open-core Django app"
+description = "Blueflow Django app"
 readme = "README.md"
 requires-python = ">=3.12"
 license = "MIT"

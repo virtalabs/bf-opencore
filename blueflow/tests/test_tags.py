@@ -126,7 +126,7 @@ def test_create_many_tags(num_tags, auth_client, biomed_client):
     assert len(resp.json()["results"]) == num_tags
 
 
-@pytest.mark.xfail(reason="Open-core has no role-based write permissions")
+@pytest.mark.xfail(reason="Blueflow has no role-based write permissions")
 def test_tag_asset_via_api_reg_user(auth_client):
     """Non-admin, non-biomed client cannot tag assets."""
     asset_obj = models.Asset.objects.create(hostname="foo.com")
@@ -139,7 +139,7 @@ def test_tag_asset_via_api_reg_user(auth_client):
     assert resp.status_code == 403  # forbidden
 
 
-@pytest.mark.xfail(reason="Open-core has no role-based write permissions")
+@pytest.mark.xfail(reason="Blueflow has no role-based write permissions")
 def test_untag_asset_via_api_reg_user(auth_client):
     """Non-admin, non-biomed client cannot untag assets."""
     asset_obj = models.Asset.objects.create(hostname="foo.com")
@@ -149,7 +149,7 @@ def test_untag_asset_via_api_reg_user(auth_client):
     assert resp.status_code == 403  # forbidden
 
 
-@pytest.mark.xfail(reason="Open-core has no role-based write permissions")
+@pytest.mark.xfail(reason="Blueflow has no role-based write permissions")
 def test_create_tag_reg_user(auth_client):
     """Non-admin, non-biomed client cannot create tags via API."""
     # invalid hexadecimal color code
