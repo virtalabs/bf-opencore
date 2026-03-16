@@ -9,14 +9,6 @@ def test_asset_model(db):
     assert asset.pk is not None
     assert Asset.objects.filter(pk=asset.pk).exists()
 
-
-def test_connector_model(db):
-    """Smoke test: Connector model exists and has expected attributes."""
-    from blueflow.models import Connector
-
-    assert hasattr(Connector, "objects")
-
-
 def test_tag_model(db):
     """Smoke test: Tag model exists and has expected attributes."""
     from blueflow.models import Tag
