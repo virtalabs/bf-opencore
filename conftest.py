@@ -14,7 +14,7 @@ def pytest_ignore_collect(path, config):
     """Ignore tests under tests/blueflow (reference-only; use blueflow tests)."""
     try:
         path_str = str(path).replace("\\", "/")
-        if "tests" in path_str and "blueflow" in path_str:
+        if "tests/blueflow" in path_str:
             return True
     except Exception:
         pass
