@@ -1,8 +1,14 @@
 """Base Django settings (build-time config). Do not set DATABASES, SECRET_KEY, DEBUG, ALLOWED_HOSTS here."""
 
+import logging
 import os
 
 _log_format = os.environ.get("LOG_FORMAT", "").lower()
+
+_raw_log_level = os.environ.get("LOG_LEVEL", "INFO").upper()
+if _raw_log_level not in logging._nameToLevel:
+    logging.warning("Invalid LOG_LEVEL %r — falling back to INFO", _raw_log_level)
+    _raw_log_level = "INFO"
 
 LOGGING = {
     "version": 1,
@@ -22,7 +28,7 @@ LOGGING = {
     },
     "root": {
         "handlers": ["console"],
-        "level": os.environ.get("LOG_LEVEL", "INFO"),
+        "level": _raw_log_level,
     },
 }
 
