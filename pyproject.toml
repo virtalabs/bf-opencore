@@ -34,6 +34,9 @@ dependencies = [
 ]
 
 [project.optional-dependencies]
+prod = [
+    "gunicorn>=23.0",
+]
 dev = [
     "pytest",
     "pytest-django",

@@ -78,6 +78,9 @@ dev = [
     { name = "pytest-xdist" },
     { name = "ruff" },
 ]
+prod = [
+    { name = "gunicorn" },
+]
 
 [package.metadata]
 requires-dist = [
@@ -97,6 +100,7 @@ requires-dist = [
     { name = "djangorestframework-csv", specifier = ">=3.0" },
     { name = "drf-spectacular", specifier = "<=0.29" },
     { name = "freezegun", marker = "extra == 'dev'", specifier = ">=1.0,<3" },
+    { name = "gunicorn", marker = "extra == 'prod'", specifier = ">=23.0" },
     { name = "model-bakery", marker = "extra == 'dev'" },
     { name = "netaddr", specifier = ">=0.10.0" },
     { name = "psycopg", extras = ["binary"], specifier = ">=3" },
@@ -109,7 +113,7 @@ requires-dist = [
     { name = "ruff", marker = "extra == 'dev'" },
     { name = "sh", specifier = ">=2.2.2" },
 ]
-provides-extras = ["dev"]
+provides-extras = ["prod", "dev"]
 
 [[package]]
 name = "celery"
@@ -480,6 +484,18 @@ dependencies = [
 sdist = { url = "https://files.pythonhosted.org/packages/95/dd/23e2f4e357f8fd3bdff613c1fe4466d21bfb00a6177f238079b17f7b1c84/freezegun-1.5.5.tar.gz", hash = "sha256:ac7742a6cc6c25a2c35e9292dfd554b897b517d2dec26891a2e8debf205cb94a", size = 35914 }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/5e/2e/b41d8a1a917d6581fc27a35d05561037b048e47df50f27f8ac9c7e27a710/freezegun-1.5.5-py3-none-any.whl", hash = "sha256:cd557f4a75cf074e84bc374249b9dd491eaeacd61376b9eb3c423282211619d2", size = 19266 },
+]
+
+[[package]]
+name = "gunicorn"
+version = "25.1.0"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "packaging" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/66/13/ef67f59f6a7896fdc2c1d62b5665c5219d6b0a9a1784938eb9a28e55e128/gunicorn-25.1.0.tar.gz", hash = "sha256:1426611d959fa77e7de89f8c0f32eed6aa03ee735f98c01efba3e281b1c47616", size = 594377 }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/da/73/4ad5b1f6a2e21cf1e85afdaad2b7b1a933985e2f5d679147a1953aaa192c/gunicorn-25.1.0-py3-none-any.whl", hash = "sha256:d0b1236ccf27f72cfe14bce7caadf467186f19e865094ca84221424e839b8b8b", size = 197067 },
 ]
 
 [[package]]
