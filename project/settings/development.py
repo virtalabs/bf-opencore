@@ -7,8 +7,6 @@ from .base import *
 DEBUG = os.environ.get("DJANGO_DEBUG", "true").lower() in ("1", "true", "yes")
 SECRET_KEY = os.environ.get("DJANGO_SECRET_KEY", "dev-secret-key-not-for-production")
 ALLOWED_HOSTS = os.environ.get("DJANGO_ALLOWED_HOSTS", "localhost,127.0.0.1").split(",")
-STATIC_ROOT = os.environ.get("STATIC_ROOT", "/app/staticfiles")
-STATIC_URL = os.environ.get("STATIC_URL", "/static/")
 
 CELERY_TASK_ALWAYS_EAGER = True
 

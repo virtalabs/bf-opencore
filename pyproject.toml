@@ -36,6 +36,7 @@ dependencies = [
 [project.optional-dependencies]
 prod = [
     "gunicorn>=23.0",
+    "whitenoise>=6.0",
 ]
 dev = [
     "pytest",

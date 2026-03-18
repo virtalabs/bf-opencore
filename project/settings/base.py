@@ -27,6 +27,8 @@ LOGGING = {
 }
 
 BASE_URL = os.environ.get("BASE_URL", "http://localhost:8000")
+STATIC_ROOT = os.environ.get("STATIC_ROOT", "/app/staticfiles")
+STATIC_URL = os.environ.get("STATIC_URL", "/static/")
 
 INSTALLED_APPS = [
     "blueflow.apps.BlueflowConfig",
