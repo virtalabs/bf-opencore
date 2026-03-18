@@ -21,6 +21,24 @@ def test_log_level_env_var_is_respected(monkeypatch):
     assert base.LOGGING["root"]["level"] == "DEBUG"
 
 
+def test_log_level_lowercase_is_normalized(monkeypatch):
+    """LOG_LEVEL is uppercased before use."""
+    monkeypatch.setenv("LOG_LEVEL", "debug")
+    import project.settings.base as base
+
+    importlib.reload(base)
+    assert base.LOGGING["root"]["level"] == "DEBUG"
+
+
+def test_invalid_log_level_falls_back_to_info(monkeypatch):
+    """Invalid LOG_LEVEL falls back to INFO."""
+    monkeypatch.setenv("LOG_LEVEL", "NOTVALID")
+    import project.settings.base as base
+
+    importlib.reload(base)
+    assert base.LOGGING["root"]["level"] == "INFO"
+
+
 def test_plain_text_output_by_default(monkeypatch):
     """Console handler has no formatter when LOG_FORMAT is not set."""
     monkeypatch.delenv("LOG_FORMAT", raising=False)
