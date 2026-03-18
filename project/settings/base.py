@@ -2,13 +2,22 @@
 
 import os
 
+_log_format = os.environ.get("LOG_FORMAT", "").lower()
+
 LOGGING = {
     "version": 1,
     "disable_existing_loggers": False,
+    "formatters": {
+        "json": {
+            "()": "pythonjsonlogger.json.JsonFormatter",
+            "fmt": "%(asctime)s %(name)s %(levelname)s %(message)s",
+        },
+    },
     "handlers": {
         "console": {
             "class": "logging.StreamHandler",
             "stream": "ext://sys.stdout",
+            **({"formatter": "json"} if _log_format == "json" else {}),
         },
     },
     "root": {
