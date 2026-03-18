@@ -2,6 +2,21 @@
 
 import os
 
+LOGGING = {
+    "version": 1,
+    "disable_existing_loggers": False,
+    "handlers": {
+        "console": {
+            "class": "logging.StreamHandler",
+            "stream": "ext://sys.stdout",
+        },
+    },
+    "root": {
+        "handlers": ["console"],
+        "level": os.environ.get("LOG_LEVEL", "INFO"),
+    },
+}
+
 BASE_URL = os.environ.get("BASE_URL", "http://localhost:8000")
 
 INSTALLED_APPS = [
