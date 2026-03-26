@@ -1,23 +1,29 @@
-"""Minimal Django settings for blueflow tests (pytest). Use DJANGO_SETTINGS_MODULE=project.settings.test."""
+"""Minimal Django settings for blueflow tests (pytest).
+
+Use DJANGO_SETTINGS_MODULE=project.settings.test.
+"""
 
 import os
 import tempfile
 
-from .base import *
+import dj_database_url
 
-SECRET_KEY = "test-secret-key-not-for-production"
+from .base import *  # noqa: F403
+
+SECRET_KEY = "test-secret-key-not-for-production"  # noqa: S105
 DEBUG = True
 ALLOWED_HOSTS = ["*"]
 WSGI_APPLICATION = "project.wsgi.application"
 
-# Tests require PostgreSQL. Set DATABASE_URL (e.g. postgresql://blueflow:blueflow@localhost:5432/blueflow).
+# Tests require PostgreSQL. Set DATABASE_URL (e.g.
+# postgresql://blueflow:blueflow@localhost:5432/blueflow).
 _database_url = os.environ.get("DATABASE_URL")
 if not _database_url:
-    raise RuntimeError(
-        "Tests require PostgreSQL; set DATABASE_URL (e.g. postgresql://blueflow:blueflow@localhost:5432/blueflow)"
+    _msg = (
+        "Tests require PostgreSQL; set DATABASE_URL"
+        " (e.g. postgresql://blueflow:blueflow@localhost:5432/blueflow)"
     )
-
-import dj_database_url
+    raise RuntimeError(_msg)
 
 DATABASES = {
     "default": dj_database_url.parse(
@@ -29,3 +35,5 @@ DATABASES = {
 
 MEDIA_ROOT = tempfile.mkdtemp(prefix="blueflow_test_media_")
 MEDIA_URL = "/media/"
+
+WAFFLE_SWITCH_DEFAULT = True
