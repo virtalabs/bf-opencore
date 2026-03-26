@@ -3,17 +3,19 @@
 import importlib
 import logging
 import re
+from typing import ClassVar
 
 import django_filters
 import django_filters.rest_framework.filters as drf_filters
 import netfields
 from django.core import exceptions as d_ex
-from django.db.models import Case, Count, Exists, OuterRef, Sum, When
+from django.db.models import Case, Count, QuerySet, When
 from django.db.models.aggregates import Func
 from django.db.utils import IntegrityError
 from django.utils import timezone
 from rest_framework import serializers, status, viewsets
 from rest_framework.decorators import action
+from rest_framework.request import Request
 from rest_framework.response import Response
 from rest_framework.settings import api_settings
 from rest_framework_csv import renderers as drf_csv_renderers
@@ -49,7 +51,7 @@ class JSONChild(Func):
     template = "%(expressions)s%(function)s'{%(path)s}'"
     arity = 1
 
-    def __init__(self, expression, path):
+    def __init__(self, expression: str, path: str) -> None:
         """Form an expression and plug the path argument into the template."""
         super().__init__(expression, path=path)
 
@@ -66,6 +68,8 @@ class MiniAssetVulnerabilitySerializer(serializers.HyperlinkedModelSerializer):
     )
 
     class Meta:
+        """Wire this serializer to a model."""
+
         model = AssetVulnerability
         fields = (
             "id",
@@ -107,7 +111,7 @@ class AssetSerializer(serializers.HyperlinkedModelSerializer):
         model = Asset
 
         # Fields defined in the schema
-        asset_fields = tuple(f.name for f in model._meta.fields)
+        asset_fields = tuple(f.name for f in model._meta.fields)  # noqa: SLF001
 
         # Fields that are computed (not stored directly in schema)
         computed_fields = (
@@ -124,9 +128,9 @@ class AssetSerializer(serializers.HyperlinkedModelSerializer):
 
         fields = asset_fields + computed_fields
 
-        read_only_fields = ["nic_vendor"]
+        read_only_fields: ClassVar = ["nic_vendor"]
 
-    def validate_ip_address(self, ip_string):
+    def validate_ip_address(self, ip_string: str) -> str | None:
         """If the IP address is empty, we coerce it to None.
 
         This happens anyway, when it gets stored in the database --
@@ -137,7 +141,7 @@ class AssetSerializer(serializers.HyperlinkedModelSerializer):
             return None
         return ip_string
 
-    def validate_mac_address(self, mac_string):
+    def validate_mac_address(self, mac_string: str) -> str | None:
         """If the MAC address is empty, we coerce it to None.
 
         This happens anyway, when it gets stored in the database --
@@ -151,7 +155,7 @@ class AssetSerializer(serializers.HyperlinkedModelSerializer):
             return None
         return mac_string
 
-    def validate_open_ports_tcp(self, ports_list):
+    def validate_open_ports_tcp(self, ports_list: list) -> list:
         """Ensure that TCP ports are in the correct range.
 
         NOTE: For UDP, '0' is in fact an acceptable port... but not for TCP.
@@ -161,8 +165,10 @@ class AssetSerializer(serializers.HyperlinkedModelSerializer):
         # Ideally, this should have been solved with a CHECK CONSTRAINT
         # at the database level, then we wouldn't have needed a
         # validator here.
-        if not all(1 <= port <= 65535 for port in ports_list):
-            raise serializers.ValidationError("TCP Ports must be in range 1--65535")
+        max_port = 65535
+        if not all(1 <= port <= max_port for port in ports_list):
+            _msg = "TCP Ports must be in range 1--65535"
+            raise serializers.ValidationError(_msg)
         return sorted(set(ports_list))
 
 
@@ -201,7 +207,8 @@ class ChangeLogMetaclass(type(AssetSerializer)):
     type(AssetSerializer) ("what is the metaclass for AssetSerializer").
     """
 
-    def __new__(mcs, name, parents, dct):
+    def __new__(mcs, name: str, parents: tuple, dct: dict) -> "ChangeLogMetaclass":
+        """Create the ChangeLogAssetSerializer class."""
         if "Meta" in dct:
             # NOTE: the changed fields are supposed to be the same as in
             #   AssetSerializer.Meta.asset_fields -- except for 'id'
@@ -236,6 +243,8 @@ class ChangeLogAssetSerializer(
     )
 
     class Meta:
+        """Wire this serializer to a model."""
+
         model = Asset.history.model
         changed_fields = AssetSerializer.Meta.asset_fields
         fields = changed_fields + HistoricalAssetSerializer.Meta.historical_fields
@@ -259,15 +268,19 @@ class AssetFilter(django_filters.rest_framework.FilterSet):
     pulse = django_filters.NumberFilter(method="filter_pulse")
 
     @staticmethod
-    def filter_network(queryset, name, value):
+    def filter_network(queryset: QuerySet, name: str, value: int) -> QuerySet:
         """Get assets that belong to a certain network."""
-        assert name == "network"
+        if name != "network":
+            _msg = f"Unexpected filter name: {name!r}"
+            raise ValueError(_msg)
         return queryset.in_network(network_id=value)
 
     @staticmethod
-    def filter_no_network(queryset, name, value):
+    def filter_no_network(queryset: QuerySet, name: str, value: bool) -> QuerySet:  # noqa: FBT001
         """Get assets that belong to no network."""
-        assert name == "no_network"
+        if name != "no_network":
+            _msg = f"Unexpected filter name: {name!r}"
+            raise ValueError(_msg)
         if value is not True:
             # This is sliiightly iffy.  The user might expect to see the
             # assets that *do* belong to a network.  Oh well.
@@ -275,7 +288,7 @@ class AssetFilter(django_filters.rest_framework.FilterSet):
         return queryset.no_network()
 
     @staticmethod
-    def filter_pulse(queryset, name, value):
+    def filter_pulse(_queryset: QuerySet, _name: str, value: int) -> QuerySet:
         """Get assets pertinent to a specific Pulse feed item."""
         try:
             pulse = PulseFeedItem.objects.get(external_pulse_id=value)
@@ -285,9 +298,13 @@ class AssetFilter(django_filters.rest_framework.FilterSet):
         return pulse.asset_qset()
 
     @staticmethod
-    def filter_active_vulnerability(queryset, name, value):
+    def filter_active_vulnerability(
+        queryset: QuerySet, name: str, value: int
+    ) -> QuerySet:
         """Get assets with a vulnerability open."""
-        assert name == "active_vulnerability"
+        if name != "active_vulnerability":
+            _msg = f"Unexpected filter name: {name!r}"
+            raise ValueError(_msg)
         return queryset.filter(
             asset_vulnerabilities__vulnerability=value,
             asset_vulnerabilities__date_remediated__isnull=True,
@@ -295,17 +312,17 @@ class AssetFilter(django_filters.rest_framework.FilterSet):
         )
 
     @staticmethod
-    def filter_unassessed(queryset, name, value):
+    def filter_unassessed(queryset: QuerySet, _name: str, _value: bool) -> QuerySet:  # noqa: FBT001
         """Get assets that lack AssetRiskFactors.
 
         Calling with value False is a silly double negative ("not unassessed").
         """
-        # TODO: Implement unassessed after we have a generalized algorithm for risk scoring
-        raise NotImplementedError("Unassessed is not implemented")
-        return queryset.filter(asset_risk_factors__isnull=value).distinct()
+        # TODO: Implement unassessed  # noqa: TD002,TD003,FIX002
+        _msg = "Unassessed is not implemented"
+        raise NotImplementedError(_msg)
 
     @staticmethod
-    def filter_assessed_factor(queryset, name, value):
+    def filter_assessed_factor(queryset: QuerySet, _name: str, value: int) -> QuerySet:
         """Get assets that have or lack a *particular* RiskFactor.
 
         To find assets that *have* a particular RiskFactor n, query with
@@ -314,32 +331,13 @@ class AssetFilter(django_filters.rest_framework.FilterSet):
         To find assets that *lack* a particular RiskFactor n, query with
         assessed_factor=-n.
         """
-        # TODO: Implement assessed_factor after we have a generalized algorithm for risk scoring
-        raise NotImplementedError("Assessed factor is not implemented")
-
-        invert = False
-        if value < 0:
-            invert = True
-            value = abs(value)
-
-        try:
-            rf = RiskFactor.objects.get(pk=value)
-        except RiskFactor.DoesNotExist:
-            return Asset.objects.none()
-
-        # subquery: for each asset, whether or not it has this RiskFactor
-        has_this_rf = AssetRiskFactor.objects.filter(
-            asset_id=OuterRef("pk"),
-            risk_factor=rf,
-        )
-
-        # filter the queryset: 'not invert' means filter for *has this RF*,
-        # 'invert' means filter for *does not have this RF*
-        return queryset.annotate(
-            has_rf=Exists(has_this_rf),
-        ).filter(has_rf=not invert)
+        # TODO: Implement assessed_factor  # noqa: TD002,TD003,FIX002
+        _msg = "Assessed factor is not implemented"
+        raise NotImplementedError(_msg)
 
     class Meta:
+        """Wire this filter to a model."""
+
         model = Asset
 
         # The first lookup in each field will be used as the default by
@@ -347,17 +345,11 @@ class AssetFilter(django_filters.rest_framework.FilterSet):
         #
         # Documentation about lookups is here:
         # https://docs.djangoproject.com/en/1.11/ref/models/querysets/#field-lookups
-        fields = {
+        fields = {  # noqa: RUF012
             "hostname": ["icontains"],
             "nic_vendor": ["icontains"],
             "category": ["icontains", "exact"],
-            # TODO: Add risk score filters back in once we have a generalized algorithm
-            # 'risk_score': ['gte', 'gt', 'lt', 'lte'],
-            # 'risk_score_cli': ['gte', 'gt', 'lt', 'lte'],
-            # 'risk_score_sec': ['gte', 'gt', 'lt', 'lte'],
-            # 'risk_score_pri': ['gte', 'gt', 'lt', 'lte'],
-            # 'risk_score_impact': ['gte', 'gt', 'lt', 'lte'],
-            # 'risk_score_likelihood': ['gte', 'gt', 'lt', 'lte'],
+            # TODO: Add risk score filters  # noqa: TD002,TD003,FIX002
             "id": ["in"],
             "ip_address": [
                 "istartswith",
@@ -394,10 +386,9 @@ class AssetFilter(django_filters.rest_framework.FilterSet):
             "asset_custom_fields__value_text": ["istartswith"],
             "asset_vulnerabilities__date_remediated": ["isnull"],
             "asset_vulnerabilities__date_ignored": ["isnull"],
-            # TODO: Add asset_risk_factors filters back in once we have a generalized algorithm
-            # 'asset_risk_factors': ['isnull'],
+            # TODO: Add asset_risk_factors filters  # noqa: TD002,TD003,FIX002
         }
-        filter_overrides = {
+        filter_overrides = {  # noqa: RUF012
             netfields.InetAddressField: {
                 "filter_class": django_filters.Filter,
             },
@@ -428,12 +419,13 @@ class AssetViewSet(
     list: Return a list of assets.
 
     Additional methods:
+    `/bulk_update` — PATCH a list of assets by id (partial updates)
     `/duplicate_ips`
     `/histogram`
     `/risk_per_manufacturer`
     `/riskiest`
     `/summary`
-    `/upsert`
+    `/upsert` — DEPRECATED: use PATCH /api/assets/<id>/ or /bulk_update/
 
     In addition, there are several filtering and search terms available.
 
@@ -445,7 +437,8 @@ class AssetViewSet(
 
     waffle_switch = "core"
 
-    renderer_classes = tuple(api_settings.DEFAULT_RENDERER_CLASSES) + (
+    renderer_classes = (
+        *api_settings.DEFAULT_RENDERER_CLASSES,
         drf_csv_renderers.PaginatedCSVRenderer,
     )
 
@@ -487,7 +480,7 @@ class AssetViewSet(
     )
     filterset_class = AssetFilter
 
-    def get_renderer_context(self):
+    def get_renderer_context(self) -> dict:
         """If caller specifies fields, then set the CSV header accordingly.
 
         If not, use a default set.
@@ -509,11 +502,7 @@ class AssetViewSet(
             "tag_number",
             "category",
             "date_added",
-            # TODO: Add risk score filters back in once we have a generalized algorithm
-            # 'risk_score',
-            # 'risk_score_sec',
-            # 'risk_score_pri',
-            # 'risk_score_cli',
+            # TODO: Add risk score filters  # noqa: TD002,TD003,FIX002
             "udi",
         ]
         context = super().get_renderer_context()
@@ -524,7 +513,7 @@ class AssetViewSet(
         return context
 
     @staticmethod
-    def _ports_string_to_list(ports_string):
+    def _ports_string_to_list(ports_string: str | None) -> list:
         """Convert string of integers to a sorted list of unique integers.
 
         Separator(s) can be one of: space, comma, semicolon, pipe, or newline,
@@ -544,7 +533,7 @@ class AssetViewSet(
 
         return ports_list
 
-    def _validate_open_ports(self, request):
+    def _validate_open_ports(self, request: Request) -> None:
         """Convert TCP port string to list.
 
         Modifies the 'request' in-place.
@@ -555,7 +544,7 @@ class AssetViewSet(
             )
 
     @staticmethod
-    def _validate_mac_address(request):
+    def _validate_mac_address(request: Request) -> None:
         """Convert an empty string MAC address to None.
 
         This would happen at a later point, but doing it explicitly here
@@ -568,34 +557,30 @@ class AssetViewSet(
             logger.debug("Coercing empty string MAC to None")
             request.data["mac_address"] = None
 
-    def update(self, request, *args, **kwargs):
+    def update(self, request: Request, *args: int, **kwargs: str) -> Response:
         """Override update in order to convert TCP port string to list.
 
         NOTE: We can't use a "serializer validator" for this, since the
         validator would kick a string out (it really wants a list.)
         """
-        # import pdb; pdb.set_trace()
         self._validate_open_ports(request)
         self._validate_mac_address(request)
-        r = super().update(request, *args, **kwargs)
-        return r
+        return super().update(request, *args, **kwargs)
 
-    def create(self, request, *args, **kwargs):
+    def create(self, request: Request, *args: int, **kwargs: str) -> Response:
         """Override create in order to convert TCP port string to list.
 
         NOTE: (see 'update' method)
         """
-        # import pdb; pdb.set_trace()
         self._validate_open_ports(request)
         self._validate_mac_address(request)
-        r = super().create(request, *args, **kwargs)
-        return r
+        return super().create(request, *args, **kwargs)
 
     ################################
     # Detail methods/actions
 
     @action(detail=True)
-    def changelog(self, request, pk):
+    def changelog(self, request: Request, _pk: int) -> Response:
         """Like full history but fields are null except the one that changed.
 
         NOTE: not paginated, while the history is.
@@ -613,27 +598,13 @@ class AssetViewSet(
         return Response(serializer.data)
 
     @action(detail=True)
-    def external_links(self, request, pk):
+    def external_links(self, _request: Request, _pk: int) -> Response:
         """Return a dictionary of (systemname, url) external links."""
-        raise NotImplementedError("Connectors have been removed")
-        external_keys = self.get_object().external_keys
-        if not external_keys:
-            return Response({})
-
-        response = {}
-
-        # process connector-related external keys
-        for ek, key in external_keys.items():
-            try:
-                connector = Connector.objects.get(id=ek)
-                response[connector.display_name] = connector.url_for_asset(key)
-            except Connector.DoesNotExist:
-                response[ek] = key
-
-        return Response(response)
+        _msg = "Connectors have been removed"
+        raise NotImplementedError(_msg)
 
     @action(detail=True)
-    def fields(self, request, pk):
+    def fields(self, request: Request, pk: int) -> Response:
         """List fields for an Asset.
 
         Technically all assets will have the same fields.  But there's
@@ -652,7 +623,7 @@ class AssetViewSet(
         include_relations = relations.lower()[:1] in ["", "1", "t"]
 
         fields = []
-        for f in Asset._meta.get_fields():
+        for f in Asset._meta.get_fields():  # noqa: SLF001
             if f.is_relation and not include_relations:
                 continue
             if hasattr(f, "deconstruct"):
@@ -698,7 +669,7 @@ class AssetViewSet(
         )
 
     @action(detail=True)
-    def history(self, request, pk):
+    def history(self, request: Request, _pk: int) -> Response:
         """Full history of asset (paginated).
 
         Or, if a `field=<field_name>` query argument is given, returns
@@ -714,23 +685,25 @@ class AssetViewSet(
         if field_name is None:
             raise serializers.ValidationError(
                 {
-                    "field": f"User supplied query parameters '{request.query_params}' that did "
-                    "not include a field value"
+                    "field": (
+                        f"User supplied query parameters '{request.query_params}'"
+                        " that did not include a field value"
+                    )
                 }
             )
         try:
             rqset = self.get_object().field_history_rqset(field_name, newest_first=True)
-        except d_ex.FieldDoesNotExist:
+        except d_ex.FieldDoesNotExist as err:
             raise serializers.ValidationError(
                 {"field": f"User tried to query for nonexistent field '{field_name}'"}
-            )
+            ) from err
         serializer = HistoricalAssetSerializer(
             rqset, many=True, context={"request": request}
         )
         return Response(serializer.data)
 
     @action(detail=True)
-    def needs_sw_update(self, request, pk):
+    def needs_sw_update(self, _request: Request, _pk: int) -> Response:
         """Return whether this asset needs a software update.
 
         @returns:
@@ -748,7 +721,7 @@ class AssetViewSet(
         return Response(resp)
 
     @action(detail=True)
-    def networks(self, request, pk):
+    def networks(self, request: Request, _pk: int) -> Response:
         """Networks that this asset belongs to."""
         # FUTURE: Replace with /api/networks/?asset=<pk>
 
@@ -756,7 +729,7 @@ class AssetViewSet(
         return self.paginate_relations(request, qset, "NetworkSerializer")
 
     @action(detail=True)
-    def scans(self, request, pk):
+    def scans(self, request: Request, _pk: int) -> Response:
         """Return scans of the asset."""
         # FUTURE: Replace with /api/scans/?asset=<pk>
 
@@ -764,7 +737,7 @@ class AssetViewSet(
         return self.paginate_relations(request, scan_qset, "ScanSerializer")
 
     @action(detail=True)
-    def similar(self, request, pk):
+    def similar(self, request: Request, _pk: int) -> Response:
         """Similar assets."""
         exclude_self = True
         if request.query_params.get("exclude_self") in ("false", "0"):
@@ -773,12 +746,11 @@ class AssetViewSet(
         # This stuff might not be necessary.  The DRF pagination system
         # might take care of it (since it's the same serializer etc.
         qset = self.get_object().similar_qset(exclude_self=exclude_self)
-        # TODO: Add risk score ordering back in once we have a generalized algorithm
-        # .order_by('-risk_score'))
+        # TODO: Add risk score ordering  # noqa: TD002,TD003,FIX002
         return self.paginate_relations(request, qset, "AssetSerializer")
 
     @action(detail=True, methods=["GET", "POST"])
-    def tags(self, request, pk):
+    def tags(self, request: Request, _pk: int) -> Response | None:
         """Tags attached to the asset."""
         asset = self.get_object()
         if request.method == "GET":
@@ -795,12 +767,12 @@ class AssetViewSet(
                 )
             try:
                 tag = Tag.objects.get(pk=tag_id)
-            except d_ex.ObjectDoesNotExist:
+            except d_ex.ObjectDoesNotExist as err:
                 raise serializers.ValidationError(
                     {
                         "tag_id": [f"Tag does not exist: id={tag_id}"],
                     }
-                )
+                ) from err
             asset_tag = AssetTag(asset=asset, tag=tag, provenance="API")
             try:
                 asset_tag.save()
@@ -830,7 +802,7 @@ class AssetViewSet(
     # List methods/actions
 
     @action(detail=False)
-    def duplicate_ips(self, request):
+    def duplicate_ips(self, _request: Request) -> Response:
         """Return set of duplicate IP addresses and their counts."""
         assets = self.filter_queryset(self.get_queryset())
         qset = (
@@ -843,7 +815,7 @@ class AssetViewSet(
         return Response(resp)
 
     @action(detail=False)
-    def histogram(self, request):
+    def histogram(self, request: Request) -> Response:
         """Return an optionally filtered histogram over an asset field.
 
         Returns a list of {field_name: xxx, count: N} objects.
@@ -854,8 +826,8 @@ class AssetViewSet(
 
         try:
             limit = int(request.query_params.get("limit", 0))
-        except ValueError:
-            raise serializers.ValidationError({"limit": "Invalid limit"})
+        except ValueError as err:
+            raise serializers.ValidationError({"limit": "Invalid limit"}) from err
 
         include_null = request.query_params.get("nulls", "").lower() in (
             "true",
@@ -880,17 +852,17 @@ class AssetViewSet(
                 assets = assets.exclude(**params)
                 results = assets.values(field_name).annotate(count=Count(field_name))
 
-        except d_ex.FieldError:
+        except d_ex.FieldError as err:
             raise serializers.ValidationError(
                 {"field": f"Invalid field name '{field_name}'"}
-            )
+            ) from err
         results = results.order_by("-count")
         if limit > 0:
             results = results[:limit]
         return Response(results)
 
     @action(detail=False)
-    def risk_per_manufacturer(self, request):
+    def risk_per_manufacturer(self, request: Request) -> Response:
         """Calculate risk per manufacturer.
 
         Sort into one bin per manufacturer, sum the risks in each bin,
@@ -915,83 +887,80 @@ class AssetViewSet(
              GROUP BY "blueflow_asset"."manufacturer"
              ORDER BY "risk_score" DESC
         """
-        # TODO: Implement risk per manufacturer after we have a generalized algorithm
-        raise NotImplementedError("Risk per manufacturer is not implemented")
-
-        limit = int(request.query_params.get("limit", 0))
-
-        assets = self.filter_queryset(self.get_queryset())
-        qset = (
-            assets.exclude(manufacturer__isnull=True)
-            .exclude(risk_score__isnull=True)
-            .values("manufacturer")
-            .annotate(count=Count("manufacturer"), risk_score=Sum("risk_score") * 10.0)
-            .order_by("-risk_score")
-        )
-
-        risk_per_manufacturer = []
-        others = {"manufacturer": "others", "risk_score": 0, "count": 0}
-        for i, result in enumerate(qset):
-            if not limit or i < limit:
-                risk_per_manufacturer.append(result)
-            else:
-                others["count"] += result["count"]
-                try:
-                    others["risk_score"] += result["risk_score"]
-                except TypeError as err:
-                    assert result["risk_score"] is None, f"Unexpected error: '{err}'"
-                    logger.debug(
-                        "Manufacturer '%s' (count: %d) has no risk",
-                        result["manufacturer"],
-                        result["count"],
-                    )
-        response = Response(
-            {"risk_per_manufacturer": risk_per_manufacturer, "others": others}
-        )
-
-        return response
+        # TODO: Implement risk per manufacturer  # noqa: TD002,TD003,FIX002
+        _msg = "Risk per manufacturer is not implemented"
+        raise NotImplementedError(_msg)
 
     @action(detail=False)
-    def riskiest(self, request):
+    def riskiest(self, request: Request) -> Response:
         """Produce a paginated list of the "riskiest" assets."""
-        # TODO: Implement riskiest after we have a generalized algorithm for risk scoring
-        raise NotImplementedError("Riskiest is not implemented")
-        ordering = request.query_params.get("ordering")
-        if not ordering:
-            # None or empty string
-            ordering = "-risk_score"
-        qset = Asset.objects.filter(risk_score__isnull=False)
-
-        # add non-null constraints to other ordering fields provided
-        for fld in ordering.split(","):
-            o_fld = fld.lstrip("-")
-            if o_fld in ("risk_score_sec", "risk_score_pri", "risk_score_cli"):
-                qset = qset.filter(**{f"{o_fld}__isnull": False})
-
-        qset = qset.order_by(ordering)
-        return self.paginate_relations(request, qset, "AssetSerializer")
+        # TODO: Implement riskiest  # noqa: TD002,TD003,FIX002
+        _msg = "Riskiest is not implemented"
+        raise NotImplementedError(_msg)
 
     @action(detail=False)
-    def summary(self, request):
+    def summary(self, _request: Request) -> Response:
         """Return summary about an asset queryset."""
-        # TODO: Implement summary after we have a generalized algorithm for risk scoring
-        raise NotImplementedError("Summary is not implemented")
+        # TODO: Implement summary  # noqa: TD002,TD003,FIX002
+        _msg = "Summary is not implemented"
+        raise NotImplementedError(_msg)
 
-        assets = self.filter_queryset(self.get_queryset())
+    @action(detail=False, methods=["PATCH"])
+    def bulk_update(self, request: Request) -> Response:
+        """Perform partial updates on multiple assets in a single request.
 
-        return Response(
-            dict(
-                count=assets.count(),
-                identified_statistics=assets.identified_statistics(),
-                risk_statistics=assets.risk_statistics(),
-                risk_factor_statistics=assets.risk_factor_statistics(),
-                risk_histogram=assets.risk_histogram(),
+        Accepts a list of partial asset payloads. Each item must include an
+        ``id`` field identifying the asset to update. Only the fields provided
+        are modified; all other fields are left unchanged.
+
+        Returns a list of updated asset objects. If any ``id`` is not found a
+        404 response is returned immediately.
+
+        Example request body::
+
+            [
+                {"id": 1, "hostname": "device-a.local"},
+                {"id": 2, "ip_address": "10.0.0.5", "os": "Linux"}
+            ]
+        """
+        if not isinstance(request.data, list):
+            return Response(
+                {"detail": "Expected a list of objects."},
+                status=status.HTTP_400_BAD_REQUEST,
             )
-        )
+
+        results = []
+        for item in request.data:
+            asset_id = item.get("id")
+            if asset_id is None:
+                return Response(
+                    {"detail": "Each item must include an 'id' field."},
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
+            try:
+                asset = Asset.objects.get(pk=asset_id)
+            except Asset.DoesNotExist:
+                return Response(
+                    {"detail": f"Asset with id={asset_id} not found."},
+                    status=status.HTTP_404_NOT_FOUND,
+                )
+            serializer = AssetSerializer(
+                asset, data=item, partial=True, context={"request": request}
+            )
+            serializer.is_valid(raise_exception=True)
+            serializer.save()
+            results.append(serializer.data)
+
+        return Response(results, status=status.HTTP_200_OK)
 
     @action(detail=False, methods=["POST"])
-    def upsert(self, request):
-        """Update or create an Asset.
+    def upsert(self, request: Request) -> Response:
+        """Update or create an Asset (DEPRECATED).
+
+        .. deprecated::
+            Use ``PATCH /api/assets/`` for single updates or
+            ``PATCH /api/assets/bulk_update/`` for batch updates.
+            This endpoint will be removed in a future release.
 
         The input is a JSON blob containing any Asset field.  The output is a
         copy of the updated or created asset.  The status code is 201 upon
@@ -1000,6 +969,11 @@ class AssetViewSet(
         The name "upsert" is a portmanteau of "UPDATE" and "INSERT" and is
         borrowed from database management.
         """
+        logger.warning(
+            "POST /api/assets/upsert/ is deprecated and will be removed in a future "
+            "release. Use PATCH /api/assets/<id>/ for single updates or "
+            "PATCH /api/assets/bulk_update/ for batch updates."
+        )
         # Ignore API calls that lack a MAC address.  Otherwise, we'd create
         # duplicate assets with each call!  The reason is because MAC is the
         # only way we can uniquely identify an asset for *update*.
@@ -1061,7 +1035,12 @@ class AssetViewSet(
         # Serialize the created or updated asset object and return it in the
         # response.
         serializer = AssetSerializer(asset, context={"request": request})
-        return Response(
+        response = Response(
             serializer.data,
             status=status.HTTP_201_CREATED if created else status.HTTP_200_OK,
         )
+        response["Deprecation"] = "true"
+        response["Link"] = (
+            '</api/assets/bulk_update/>; rel="successor-version"'
+        )
+        return response
