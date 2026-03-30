@@ -1022,9 +1022,22 @@ class AssetViewSet(
             **request.data,
             defaults=request.data,
         )
-        hist_utils.update_change_reason(
-            asset, f"{provenance} seen by {client_id} at {last_seen}"
-        )
+        # Ported from experimental/testbed-build:bf_opencore/views/asset.py.
+        # update_change_reason can fail when its filter returns None (e.g.
+        # with netfields/ArrayField); fall back to updating the latest record.
+        reason = f"{provenance} seen by {client_id} at {last_seen}"
+        try:
+            hist_utils.update_change_reason(asset, reason)
+        except AttributeError:
+            record = asset.history.order_by("-history_date").first()
+            if record is not None:
+                record.__class__.objects.filter(pk=record.pk).update(
+                    history_change_reason=reason
+                )
+            else:
+                logger.debug(
+                    "Could not set history_change_reason for asset pk=%s", asset.pk
+                )
 
         # Add port to list of open ports
         if open_port_tcp:
