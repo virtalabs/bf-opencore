@@ -742,17 +742,11 @@ class Asset(models.Model):
         return f"{self.id}:{self.display_name}:{self.ip_address}"
 
     def todict(self):
-        """Return all fields as a dictionary of field name -> field value."""
-        # TODO: Implement after we have a generalized algorithm for risk scoring
-        raise NotImplementedError("To dict is not implemented")
-        output = {f.name: getattr(self, f.name, None) for f in Asset._meta.get_fields()}
-        output["asset_risk_factors"] = {
-            x.risk_factor.name: x.value for x in self.asset_risk_factors.all()
-        }
-        output["asset_custom_fields"] = {
-            x.field.field_name: x.value_text for x in self.asset_custom_fields.all()
-        }
-        return output
+        """Return concrete fields as a dictionary for diffing in update_or_create.
+
+        Ported from experimental/testbed-build:bf_opencore/models/asset.py.
+        """
+        return {f.name: getattr(self, f.attname, None) for f in self._meta.fields}  # noqa: SLF001
 
     def needs_sw_update(self):
         """Return whether this asset needs a software update.
