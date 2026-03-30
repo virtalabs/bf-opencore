@@ -107,9 +107,7 @@ def test_tapirx_upsert_token_auth(tapirx_token_client: APIClient) -> None:
 @pytest.mark.skip(reason="Blueflow uses AllowAny; auth enforced by consuming product")
 def test_tapirx_upsert_unauth_403(db: None, enable_core_switch: None) -> None:  # noqa: ARG001
     """POST unauthenticated would assert 403 if IsAuthenticated were enforced."""
-    from rest_framework.test import APIClient as _APIClient  # noqa: PLC0415
-
-    client = _APIClient()
+    client = APIClient()
     response = client.post(
         "/api/assets/upsert/",
         json.dumps(TAPIRX_FULL_PAYLOAD),
@@ -182,10 +180,8 @@ def test_get_asset_after_upsert_404(asset_edit_client: APIClient) -> None:
 @pytest.mark.skip(reason="Blueflow uses AllowAny; auth enforced by consuming product")
 def test_get_asset_after_upsert_unauth_403(db: None, enable_core_switch: None) -> None:  # noqa: ARG001
     """GET without auth would assert 403 if IsAuthenticated were enforced."""
-    from rest_framework.test import APIClient as _APIClient  # noqa: PLC0415
-
     asset = models.Asset.objects.create(mac_address="aa:bb:cc:dd:ee:ff")
-    client = _APIClient()
+    client = APIClient()
     response = client.get(f"/api/assets/{asset.id}/")
     assert response.status_code == status.HTTP_403_FORBIDDEN
 
