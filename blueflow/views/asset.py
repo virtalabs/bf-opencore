@@ -974,8 +974,10 @@ class AssetViewSet(
         """Update or create an Asset (DEPRECATED).
 
         .. deprecated::
-            Use ``PATCH /api/assets/`` for single updates or
-            ``PATCH /api/assets/bulk_update/`` for batch updates.
+            Use ``PATCH /api/assets/<id>/`` for single updates.
+            ``PATCH /api/assets/bulk_update/`` supports batch partial-updates
+            only — it does not provide create-or-update-by-identity semantics
+            and is not a drop-in replacement for this endpoint.
             This endpoint will be removed in a future release.
 
         The input is a JSON blob containing any Asset field.  The output is a
@@ -987,8 +989,9 @@ class AssetViewSet(
         """
         logger.warning(
             "POST /api/assets/upsert/ is deprecated and will be removed in a future "
-            "release. Use PATCH /api/assets/<id>/ for single updates or "
-            "PATCH /api/assets/bulk_update/ for batch updates."
+            "release. Use PATCH /api/assets/<id>/ for single updates. "
+            "Note: PATCH /api/assets/bulk_update/ is for batch partial-updates only "
+            "and is not a drop-in replacement."
         )
         # Ignore API calls that lack a MAC address.  Otherwise, we'd create
         # duplicate assets with each call!  The reason is because MAC is the
@@ -1069,7 +1072,5 @@ class AssetViewSet(
             status=status.HTTP_201_CREATED if created else status.HTTP_200_OK,
         )
         response["Deprecation"] = "true"
-        response["Link"] = (
-            '</api/assets/bulk_update/>; rel="successor-version"'
-        )
+        response["Link"] = '</api/assets/{id}/>; rel="successor-version"'
         return response
