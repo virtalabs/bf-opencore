@@ -932,6 +932,7 @@ class AssetViewSet(
 
         # Phase 1: normalise and validate every item before touching the DB.
         validated: list[tuple[Asset, AssetSerializer]] = []
+        seen_ids: set[int] = set()
         for item in request.data:
             asset_id = item.get("id")
             if asset_id is None:
@@ -939,6 +940,12 @@ class AssetViewSet(
                     {"detail": "Each item must include an 'id' field."},
                     status=status.HTTP_400_BAD_REQUEST,
                 )
+            if asset_id in seen_ids:
+                return Response(
+                    {"detail": f"Duplicate id in request: {asset_id}."},
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
+            seen_ids.add(asset_id)
 
             # Apply the same field normalisations as create/update.
             if "open_ports_tcp" in item:

@@ -1186,6 +1186,20 @@ def test_bulk_update_non_list_returns_400(asset_edit_client: APIClient) -> None:
     assert response.status_code == status.HTTP_400_BAD_REQUEST
 
 
+def test_bulk_update_duplicate_id_returns_400(asset_edit_client: APIClient) -> None:
+    """PATCH /api/assets/bulk_update/ returns 400 if the same id appears twice."""
+    asset = models.Asset.objects.create(hostname="device-a")
+    response = asset_edit_client.patch(
+        "/api/assets/bulk_update/",
+        json.dumps([
+            {"id": asset.id, "hostname": "first"},
+            {"id": asset.id, "hostname": "second"},
+        ]),
+        content_type="application/json",
+    )
+    assert response.status_code == status.HTTP_400_BAD_REQUEST
+
+
 def test_bulk_update_idempotent(asset_edit_client: APIClient) -> None:
     """Sending the same PATCH twice produces the same result."""
     asset = models.Asset.objects.create(hostname="original")
