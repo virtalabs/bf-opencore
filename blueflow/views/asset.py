@@ -9,6 +9,7 @@ import django_filters
 import django_filters.rest_framework.filters as drf_filters
 import netfields
 from django.core import exceptions as d_ex
+from django.db import transaction
 from django.db.models import Case, Count, QuerySet, When
 from django.db.models.aggregates import Func
 from django.db.utils import IntegrityError
@@ -929,7 +930,8 @@ class AssetViewSet(
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
-        results = []
+        # Phase 1: normalise and validate every item before touching the DB.
+        validated: list[tuple[Asset, AssetSerializer]] = []
         for item in request.data:
             asset_id = item.get("id")
             if asset_id is None:
@@ -937,6 +939,14 @@ class AssetViewSet(
                     {"detail": "Each item must include an 'id' field."},
                     status=status.HTTP_400_BAD_REQUEST,
                 )
+
+            # Apply the same field normalisations as create/update.
+            if "open_ports_tcp" in item:
+                item["open_ports_tcp"] = self._ports_string_to_list(item["open_ports_tcp"])
+            if item.get("mac_address") == "":
+                logger.debug("Coercing empty string MAC to None")
+                item["mac_address"] = None
+
             try:
                 asset = Asset.objects.get(pk=asset_id)
             except Asset.DoesNotExist:
@@ -948,10 +958,16 @@ class AssetViewSet(
                 asset, data=item, partial=True, context={"request": request}
             )
             serializer.is_valid(raise_exception=True)
-            serializer.save()
-            results.append(serializer.data)
+            validated.append((asset, serializer))
 
-        return Response(results, status=status.HTTP_200_OK)
+        # Phase 2: commit all updates atomically — all succeed or none do.
+        with transaction.atomic():
+            results = [serializer.save() for _asset, serializer in validated]
+
+        return Response(
+            AssetSerializer(results, many=True, context={"request": request}).data,
+            status=status.HTTP_200_OK,
+        )
 
     @action(detail=False, methods=["POST"])
     def upsert(self, request: Request) -> Response:
