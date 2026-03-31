@@ -35,5 +35,3 @@ DATABASES = {
 
 MEDIA_ROOT = tempfile.mkdtemp(prefix="blueflow_test_media_")
 MEDIA_URL = "/media/"
-
-WAFFLE_SWITCH_DEFAULT = True

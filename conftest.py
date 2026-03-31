@@ -22,7 +22,7 @@ def pytest_ignore_collect(path, config):
 
 
 @pytest.fixture
-def enable_core_switch():
+def enable_core_switch(db):
     """Enable the 'core' waffle switch so API views (e.g. /assets/) are allowed in tests."""
     from waffle.testutils import override_switch
 
