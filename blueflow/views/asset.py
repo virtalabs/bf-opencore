@@ -3,7 +3,7 @@
 import importlib
 import logging
 import re
-from typing import ClassVar
+from typing import ClassVar, Any
 
 import django_filters
 import django_filters.rest_framework.filters as drf_filters
@@ -513,50 +513,33 @@ class AssetViewSet(
             context["header"] = default_headers
         return context
 
-    @staticmethod
-    def _ports_string_to_list(ports_string: str | None) -> list:
-        """Convert string of integers to a sorted list of unique integers.
+    def _validate_open_ports(self, ports: Any) -> list[str]:
+        """Convert TCP port string to list.
+        Convert string of integers to a sorted list of unique integers.
 
         Separator(s) can be one of: space, comma, semicolon, pipe, or newline,
         including repetitions of these.
 
-        Added bonus: if None, return empty list.
+        Added bonus: if falsey, return empty list.
         """
-        if ports_string is None or ports_string == "":
+        if not ports:
             return []
+        if not isinstance(ports, str):
+            return ports
 
         sep_re = re.compile(r"[ ,;|\n]+")
-        try:
-            ports_list = re.split(sep_re, ports_string)
-        except TypeError:
-            # Apparently ports_string wasn't a string.
-            return ports_string
-
+        ports_list = re.split(sep_re, ports)
         return ports_list
 
-    def _validate_open_ports(self, request: Request) -> None:
-        """Convert TCP port string to list.
-
-        Modifies the 'request' in-place.
-        """
-        if "open_ports_tcp" in request.data:
-            request.data["open_ports_tcp"] = self._ports_string_to_list(
-                request.data["open_ports_tcp"]
-            )
-
     @staticmethod
-    def _validate_mac_address(request: Request) -> None:
+    def _validate_mac_address(mac: str | None) -> str | None:
         """Convert an empty string MAC address to None.
 
         This would happen at a later point, but doing it explicitly here
         avoids a database error due to "non-unique" MAC when there's an
         existing empty MAC address.
-
-        Modifies the 'request' in-place.
         """
-        if request.data.get("mac_address") == "":
-            logger.debug("Coercing empty string MAC to None")
-            request.data["mac_address"] = None
+        return mac if mac else None
 
     def update(self, request: Request, *args: int, **kwargs: str) -> Response:
         """Override update in order to convert TCP port string to list.
@@ -564,8 +547,10 @@ class AssetViewSet(
         NOTE: We can't use a "serializer validator" for this, since the
         validator would kick a string out (it really wants a list.)
         """
-        self._validate_open_ports(request)
-        self._validate_mac_address(request)
+        if "open_ports_tcp" in request.data:
+            request.data['open_ports_tcp'] = self._validate_open_ports(request.data['open_ports_tcp'])
+        if "mac_address" in request.data:
+            request.data['mac_address'] = self._validate_mac_address(request.data['mac_address'])
         return super().update(request, *args, **kwargs)
 
     def create(self, request: Request, *args: int, **kwargs: str) -> Response:
@@ -573,8 +558,10 @@ class AssetViewSet(
 
         NOTE: (see 'update' method)
         """
-        self._validate_open_ports(request)
-        self._validate_mac_address(request)
+        if "open_ports_tcp" in request.data:
+            request.data['open_ports_tcp'] = self._validate_open_ports(request.data['open_ports_tcp'])
+        if "mac_address" in request.data:
+            request.data['mac_address'] = self._validate_mac_address(request.data['mac_address'])
         return super().create(request, *args, **kwargs)
 
     ################################
@@ -949,11 +936,9 @@ class AssetViewSet(
 
             # Apply the same field normalisations as create/update.
             if "open_ports_tcp" in item:
-                item["open_ports_tcp"] = self._ports_string_to_list(item["open_ports_tcp"])
-            if item.get("mac_address") == "":
-                logger.debug("Coercing empty string MAC to None")
-                item["mac_address"] = None
-
+                item["open_ports_tcp"] = self._validate_open_ports(item["open_ports_tcp"])
+            if "mac_address" in item:
+                item["mac_address"] = self._validate_mac_address(item["mac_address"])
             try:
                 asset = Asset.objects.get(pk=asset_id)
             except Asset.DoesNotExist:
