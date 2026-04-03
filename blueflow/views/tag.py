@@ -18,6 +18,8 @@ from .utils import ChangeReasonMixin, HugeLimitOffsetPagination
 
 logger = logging.getLogger(__name__)
 
+HEX_COLOR_LENGTH = 7
+
 
 class TagSerializer(serializers.HyperlinkedModelSerializer):
     """Serializes tags.
@@ -56,7 +58,7 @@ class TagSerializer(serializers.HyperlinkedModelSerializer):
         - Ensure valid hex
         """
         # logger.debug("Validating color '%s'", color)
-        if len(color) < 7 and color[0] != "#":
+        if len(color) < HEX_COLOR_LENGTH and color[0] != "#":
             color = "#" + color
         if not color[0] == "#":
             raise serializers.ValidationError(

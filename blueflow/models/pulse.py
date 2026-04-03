@@ -14,6 +14,9 @@ from blueflow.utils import NullUnlessChanged, prev_quarter_start, quarter_start
 
 logger = logging.getLogger(__name__)
 
+MAX_QUARTERS = 1000
+MIN_APP_SW_VERSION_CONDITION_LENGTH = 2
+
 
 class PulseFeedItemManager(models.Manager):
     """Custom manager to query for PulseFeedItem history."""
@@ -41,9 +44,9 @@ class PulseFeedItemManager(models.Manager):
         if quarters < 1:
             logger.warning("Not returning data for < 1 quarters")
             return []
-        if quarters > 1000:
+        if quarters > MAX_QUARTERS:
             logger.warning("Refuse to get more than 250 years worth of data")
-            quarters = 1000
+            quarters = MAX_QUARTERS
         quarterly_list = []
 
         today = timezone.now()
@@ -186,7 +189,7 @@ class PulseFeedItem(models.Model):
                 for ver in cond_sw_versions:
                     if isinstance(ver, str):
                         conds.append(models.Q(app_sw_version=ver))
-                    elif isinstance(ver, list) and len(ver) == 2:
+                    elif isinstance(ver, list) and len(ver) == MIN_APP_SW_VERSION_CONDITION_LENGTH:
                         cmp, val = ver
                         if cmp in ("lte", "lt", "gte", "gt"):
                             conds.append(

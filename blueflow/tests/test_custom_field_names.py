@@ -7,6 +7,7 @@ http://pytest-django.readthedocs.io/en/latest/helpers.html
 import json
 
 import pytest
+from rest_framework import status
 
 from blueflow import models
 
@@ -36,9 +37,9 @@ def test_api_add_custom_field_name(cleandb, auth_client, admin_client):
     }
     # NOTE: need admin client to add fields
     res = admin_client.post("/api/assetcustomfieldnames/", **kwargs)
-    assert res.status_code == 201
+    assert res.status_code == status.HTTP_201_CREATED
     res = admin_client.post("/api/assetcustomfieldnames/", **kwargs)
-    assert res.status_code == 400  # Cannot add duplicate field name
+    assert res.status_code == status.HTTP_400_BAD_REQUEST  # Cannot add duplicate field name
     afn = auth_client.get("/api/assetcustomfieldnames/").json()
     assert afn["count"] == 1
     assert len(afn["results"]) == 1
@@ -53,12 +54,12 @@ def test_api_delete_custom_field_name(cleandb, auth_client, admin_client):
     }
     # NOTE: need admin client to add fields
     res = admin_client.post("/api/assetcustomfieldnames/", **kwargs)
-    assert res.status_code == 201
+    assert res.status_code == status.HTTP_201_CREATED
     new_cfn_id = res.json()["id"]
     afn = auth_client.get("/api/assetcustomfieldnames/").json()
     assert afn["count"] == 1
     res = admin_client.delete(f"/api/assetcustomfieldnames/{new_cfn_id}/")
-    assert res.status_code == 204
+    assert res.status_code == status.HTTP_204_NO_CONTENT
     afn = auth_client.get("/api/assetcustomfieldnames/").json()
     assert afn["count"] == 0
 
@@ -77,9 +78,9 @@ def test_api_add_many_custom_field_names(
         kwargs["data"] = json.dumps({"field_name": f"afield_{n}"})
         # NOTE: need admin client to add fields
         res = admin_client.post("/api/assetcustomfieldnames/", **kwargs)
-        assert res.status_code == 201
+        assert res.status_code == status.HTTP_201_CREATED
     res = auth_client.get("/api/assetcustomfieldnames/")
-    assert res.status_code == 200
+    assert res.status_code == status.HTTP_200_OK
     assert res.json()["count"] == num_fields
     assert len(res.json()["results"]) == num_fields
 
@@ -105,13 +106,13 @@ def test_api_disable_custom_field_name(cleandb, auth_client, admin_client):
     }
     # NOTE: need admin client to add fields
     res = admin_client.post("/api/assetcustomfieldnames/", **kwargs)
-    assert res.status_code == 201
+    assert res.status_code == status.HTTP_201_CREATED
     afn = auth_client.get("/api/assetcustomfieldnames/").json()["results"][0]
     assert afn["enabled"] is True
 
     kwargs["data"] = json.dumps({"enabled": False})
     res = admin_client.patch(afn["url"], **kwargs)
-    assert res.status_code == 200
+    assert res.status_code == status.HTTP_200_OK
     res = auth_client.get("/api/assetcustomfieldnames/").json()["results"]
     assert len(res) == 0  # Fails since filtering on 'enabled==True' not impl
     # Should not be able to get a field name that's been disabled.
@@ -142,7 +143,7 @@ def test_api_disable_custom_field_name_get_disabled(cleandb, auth_client, admin_
 
     kwargs["data"] = json.dumps({"enabled": False})
     res = admin_client.patch(afn["url"], **kwargs)
-    assert res.status_code == 200
+    assert res.status_code == status.HTTP_200_OK
     res = auth_client.get("/api/assetcustomfieldnames/?disabled=True").json()
     assert len(res["results"]) == 1
     afn = res["results"][0]
@@ -167,7 +168,7 @@ def test_api_disabled_custom_field(cleandb, auth_client, admin_client):
     assert af["results"][0]["field"]["field_name"] == "sparkliness"
     kwargs["data"] = json.dumps({"enabled": False})
     res = admin_client.patch(afn["url"], **kwargs)
-    assert res.status_code == 200
+    assert res.status_code == status.HTTP_200_OK
     af = auth_client.get("/api/assetcustomfields/").json()
     assert len(af["results"]) == 0
     assert af["count"] == 0
@@ -210,7 +211,7 @@ def test_api_field_name_unauthorized_post(auth_client):
         "content_type": "application/json",
     }
     res = auth_client.post("/api/assetcustomfieldnames/", **kwargs)
-    assert res.status_code == 403
+    assert res.status_code == status.HTTP_403_FORBIDDEN
 
 
 def test_api_field_name_authorized_post(custom_field_edit_client):
@@ -219,7 +220,7 @@ def test_api_field_name_authorized_post(custom_field_edit_client):
         "content_type": "application/json",
     }
     res = custom_field_edit_client.post("/api/assetcustomfieldnames/", **kwargs)
-    assert res.status_code == 201
+    assert res.status_code == status.HTTP_201_CREATED
 
 
 def test_api_field_name_admin_post(admin_client):
@@ -228,7 +229,7 @@ def test_api_field_name_admin_post(admin_client):
         "content_type": "application/json",
     }
     res = admin_client.post("/api/assetcustomfieldnames/", **kwargs)
-    assert res.status_code == 201
+    assert res.status_code == status.HTTP_201_CREATED
 
 
 ################################################################
@@ -243,7 +244,7 @@ def test_api_field_name_unauthorized_patch(cfield, auth_client):
         "content_type": "application/json",
     }
     res = auth_client.patch(f"/api/assetcustomfieldnames/{fn_id}/", **kwargs)
-    assert res.status_code == 403
+    assert res.status_code == status.HTTP_403_FORBIDDEN
 
 
 def test_api_field_name_authorized_patch(cfield, custom_field_edit_client):
@@ -256,7 +257,7 @@ def test_api_field_name_authorized_patch(cfield, custom_field_edit_client):
     res = custom_field_edit_client.patch(
         f"/api/assetcustomfieldnames/{fn_id}/", **kwargs
     )
-    assert res.status_code == 200
+    assert res.status_code == status.HTTP_200_OK
     cfield.shiny_field.refresh_from_db()
     assert cfield.shiny_field.field_name == "dullness"
 
@@ -268,7 +269,7 @@ def test_api_field_name_admin_patch(cfield, admin_client):
         "content_type": "application/json",
     }
     res = admin_client.patch(f"/api/assetcustomfieldnames/{fn_id}/", **kwargs)
-    assert res.status_code == 200
+    assert res.status_code == status.HTTP_200_OK
 
 
 ################################################################
@@ -280,7 +281,7 @@ def test_api_field_name_unauthorized_delete(cfield, auth_client):
     """Simply Authenticated client should not be allowed to delete."""
     fn_id = cfield.shiny_field.id
     res = auth_client.delete(f"/api/assetcustomfieldnames/{fn_id}/")
-    assert res.status_code == 403
+    assert res.status_code == status.HTTP_403_FORBIDDEN
 
 
 def test_api_field_name_authorized_delete(cfield, custom_field_edit_client):
@@ -290,7 +291,7 @@ def test_api_field_name_authorized_delete(cfield, custom_field_edit_client):
     assert res.json()["results"] == []
     fn_id = cfield.shiny_field.id
     res = custom_field_edit_client.delete(f"/api/assetcustomfieldnames/{fn_id}/")
-    assert res.status_code == 204  # No content
+    assert res.status_code == status.HTTP_204_NO_CONTENT  # No content
 
 
 def test_api_field_name_admin_delete(cfield, admin_client):
@@ -300,7 +301,7 @@ def test_api_field_name_admin_delete(cfield, admin_client):
     assert res.json()["results"] == []
     fn_id = cfield.shiny_field.id
     res = admin_client.delete(f"/api/assetcustomfieldnames/{fn_id}/")
-    assert res.status_code == 204  # No content
+    assert res.status_code == status.HTTP_204_NO_CONTENT  # No content
 
 
 def test_api_field_name_admin_delete_not_with_fields(cfield, admin_client):
@@ -309,7 +310,7 @@ def test_api_field_name_admin_delete_not_with_fields(cfield, admin_client):
     assert res.json()["results"][0]["value_text"] == "rather dull"
     fn_id = cfield.shiny_field.id
     res = admin_client.delete(f"/api/assetcustomfieldnames/{fn_id}/")
-    assert res.status_code == 204  # No content
+    assert res.status_code == status.HTTP_204_NO_CONTENT  # No content
 
 
 ################################################################
@@ -330,7 +331,7 @@ def test_api_field_name_order_2(cfield, admin_client):
     kwargs = {"content_type": "application/json"}
     kwargs["data"] = json.dumps({"enabled": False})
     res = admin_client.patch(afns[0]["url"], **kwargs)
-    assert res.status_code == 200
+    assert res.status_code == status.HTTP_200_OK
 
     afns = admin_client.get("/api/assetcustomfieldnames/").json()["results"]
     assert [a["field_name"] for a in afns] == fields_ordered
@@ -341,7 +342,7 @@ def test_api_field_name_order_3(cfield, admin_client):
     kwargs = {"content_type": "application/json"}
     kwargs["data"] = json.dumps({"field_name": "a"})
     res = admin_client.post("/api/assetcustomfieldnames/", **kwargs)
-    assert res.status_code == 201
+    assert res.status_code == status.HTTP_201_CREATED
 
     afns = admin_client.get("/api/assetcustomfieldnames/").json()["results"]
     assert [a["field_name"] for a in afns] == ["a", "shinyness", "sparkliness"]
@@ -353,15 +354,15 @@ def test_reject_similar_to_asset_field(admin_client):
 
     kwargs["data"] = json.dumps({"field_name": "rIsK sCoRe"})
     res = admin_client.post("/api/assetcustomfieldnames/", **kwargs)
-    assert res.status_code == 400
+    assert res.status_code == status.HTTP_400_BAD_REQUEST
 
     kwargs["data"] = json.dumps({"field_name": "os"})
     res = admin_client.post("/api/assetcustomfieldnames/", **kwargs)
-    assert res.status_code == 400
+    assert res.status_code == status.HTTP_400_BAD_REQUEST
 
     kwargs["data"] = json.dumps({"field_name": "operating   ____ system"})
     res = admin_client.post("/api/assetcustomfieldnames/", **kwargs)
-    assert res.status_code == 400
+    assert res.status_code == status.HTTP_400_BAD_REQUEST
 
 
 def test_reject_similar_to_other_custom_field(admin_client):
@@ -369,10 +370,10 @@ def test_reject_similar_to_other_custom_field(admin_client):
     kwargs = {"content_type": "application/json"}
     kwargs["data"] = json.dumps({"field_name": "shinyness"})
     res = admin_client.post("/api/assetcustomfieldnames/", **kwargs)
-    assert res.status_code == 201
+    assert res.status_code == status.HTTP_201_CREATED
     kwargs["data"] = json.dumps({"field_name": "shiny_ness"})
     res = admin_client.post("/api/assetcustomfieldnames/", **kwargs)
-    assert res.status_code == 400
+    assert res.status_code == status.HTTP_400_BAD_REQUEST
     kwargs["data"] = json.dumps({"field_name": "ShinyNess"})
     res = admin_client.post("/api/assetcustomfieldnames/", **kwargs)
-    assert res.status_code == 400
+    assert res.status_code == status.HTTP_400_BAD_REQUEST

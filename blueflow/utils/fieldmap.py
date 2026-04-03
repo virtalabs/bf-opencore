@@ -12,6 +12,10 @@ from django.apps import apps
 
 from blueflow.exceptions import IntegrationTaskError
 
+EUI48_VERSION = 48
+IPV4_VERSION = 4
+BROADCAST_OCTET = 255
+
 
 class FieldMap:
     """Dictionary with a layer of indirection for the keys.
@@ -255,7 +259,7 @@ def valid_mac_address(mac_address):
         return None
 
     # Only accept EUI 48 MACs
-    if mac.version != 48:
+    if mac.version != EUI48_VERSION:
         return None
 
     # All checks pass.  Format as "00:01:02:03:04:0f"
@@ -297,7 +301,7 @@ def valid_ip_address(ip_address):
         return None
 
     # Don't accept ipv6 addresses
-    if iface.ip.version != 4:
+    if iface.ip.version != IPV4_VERSION:
         return None
 
     # When setting addresses on a network, remember there can be no host
@@ -308,7 +312,7 @@ def valid_ip_address(ip_address):
         return None
 
     # Don't accept broadcast addresses
-    if 255 in iface.ip.packed:
+    if BROADCAST_OCTET in iface.ip.packed:
         return None
 
     # Don't accept multicast addresses

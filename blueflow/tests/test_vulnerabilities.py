@@ -6,6 +6,8 @@ http://pytest-django.readthedocs.io/en/latest/helpers.html
 
 from django.utils import timezone
 
+from rest_framework import status
+
 from blueflow import models
 
 
@@ -21,7 +23,7 @@ def test_get_vulnerable_asset_obsolete(auth_client):
         vulnerability=vulnerability, asset=asset_obj
     )
     response = auth_client.get(f"/api/vulnerabilities/{vulnerability.id}/assets/")
-    assert response.status_code == 404
+    assert response.status_code == status.HTTP_404_NOT_FOUND
 
 
 def test_get_vulnerable_asset_new(auth_client):
@@ -50,7 +52,7 @@ def test_get_vulnerable_assets(auth_client):
 
     response = auth_client.get(f"/api/assets/?vulnerability={vuln.id}")
     assets = response.data["results"]
-    assert len(assets) == 2
+    assert len(assets) == 2  # noqa: PLR2004
     assert {a["id"] for a in assets} == {asset_1.id, asset_2.id}
 
 
@@ -65,7 +67,7 @@ def test_get_vulnerable_assets_ignored(auth_client):
     )
     response = auth_client.get(f"/api/assets/?vulnerability={vuln.id}")
     assets = response.data["results"]
-    assert len(assets) == 2
+    assert len(assets) == 2  # noqa: PLR2004
     assert {a["id"] for a in assets} == {asset_1.id, asset_2.id}
 
 
@@ -99,7 +101,7 @@ def test_get_vulnerable_assets_remediated(auth_client):
     )
     response = auth_client.get(f"/api/assets/?vulnerability={vuln.id}")
     assets = response.data["results"]
-    assert len(assets) == 2
+    assert len(assets) == 2  # noqa: PLR2004
     assert {a["id"] for a in assets} == {asset_1.id, asset_2.id}
 
 

@@ -7,6 +7,7 @@ http://pytest-django.readthedocs.io/en/latest/helpers.html
 import json
 
 import pytest
+from rest_framework import status
 
 from blueflow import models
 
@@ -39,7 +40,7 @@ def test_tag_asset_via_api(biomed_client):
         json.dumps({"tag_id": tag.id}),
         content_type="application/json",
     )
-    assert resp.status_code == 201  # created
+    assert resp.status_code == status.HTTP_201_CREATED  # created
     assert list(asset_obj.tags.all()) == [tag]
 
 
@@ -57,7 +58,7 @@ def test_tag_asset_via_api_failing(biomed_client):
         json.dumps({"tag_id": tag.id, "asset_id": asset_obj.id}),
         content_type="application/json",
     )
-    assert resp.status_code == 201  # created
+    assert resp.status_code == status.HTTP_201_CREATED  # created
     assert list(asset_obj.tags.all()) == [tag]
 
 
@@ -79,7 +80,7 @@ def test_untag_asset_via_api(biomed_client):
     tag = models.Tag.objects.create(name="red", color="red")
     asset_tag = models.AssetTag.objects.create(tag=tag, asset=asset_obj)
     resp = biomed_client.delete(f"/api/assettags/{asset_tag.id}/")
-    assert resp.status_code == 204  # no content
+    assert resp.status_code == status.HTTP_204_NO_CONTENT  # no content
     assert list(asset_obj.tags.all()) == []
 
 
@@ -91,16 +92,16 @@ def test_create_tag(auth_client, biomed_client):
         json.dumps({"name": "red", "color": "red"}),
         content_type="application/json",
     )
-    assert resp.status_code == 400  # bad request
+    assert resp.status_code == status.HTTP_400_BAD_REQUEST  # bad request
 
     resp2 = biomed_client.post(
         "/api/tags/",
         json.dumps({"name": "grn", "color": "00ff00"}),
         content_type="application/json",
     )
-    assert resp2.status_code == 201  # created
+    assert resp2.status_code == status.HTTP_201_CREATED  # created
     resp = auth_client.get("/api/tags/")
-    assert resp.status_code == 200
+    assert resp.status_code == status.HTTP_200_OK
     assert resp.json()["count"] == 1
     tags = resp.json()["results"]
     assert len(tags) == 1
@@ -112,16 +113,16 @@ def test_create_tag(auth_client, biomed_client):
 def test_create_many_tags(num_tags, auth_client, biomed_client):
     """Biomed can create tags via API."""
     resp = auth_client.get("/api/tags/")
-    assert resp.status_code == 200
+    assert resp.status_code == status.HTTP_200_OK
     assert resp.json()["count"] == 0
     assert len(resp.json()["results"]) == 0
     kwargs = {"content_type": "application/json"}
     for n in range(num_tags):
         kwargs["data"] = json.dumps({"name": f"tag_{n}", "color": "00ff00"})
         resp = biomed_client.post("/api/tags/", **kwargs)
-        assert resp.status_code == 201  # created
+        assert resp.status_code == status.HTTP_201_CREATED  # created
     resp = auth_client.get("/api/tags/")
-    assert resp.status_code == 200
+    assert resp.status_code == status.HTTP_200_OK
     assert resp.json()["count"] == num_tags
     assert len(resp.json()["results"]) == num_tags
 
@@ -136,7 +137,7 @@ def test_tag_asset_via_api_reg_user(auth_client):
         json.dumps({"tag_id": tag.id}),
         content_type="application/json",
     )
-    assert resp.status_code == 403  # forbidden
+    assert resp.status_code == status.HTTP_403_FORBIDDEN  # forbidden
 
 
 @pytest.mark.xfail(reason="Blueflow has no role-based write permissions")
@@ -146,7 +147,7 @@ def test_untag_asset_via_api_reg_user(auth_client):
     tag = models.Tag.objects.create(name="red", color="red")
     asset_tag = models.AssetTag.objects.create(tag=tag, asset=asset_obj)
     resp = auth_client.delete(f"/api/assettags/{asset_tag.id}/")
-    assert resp.status_code == 403  # forbidden
+    assert resp.status_code == status.HTTP_403_FORBIDDEN  # forbidden
 
 
 @pytest.mark.xfail(reason="Blueflow has no role-based write permissions")
@@ -158,7 +159,7 @@ def test_create_tag_reg_user(auth_client):
         json.dumps({"name": "red", "color": "ff0000"}),
         content_type="application/json",
     )
-    assert resp.status_code == 403  # bad request
+    assert resp.status_code == status.HTTP_403_FORBIDDEN  # bad request
 
 
 def test_create_tag_biomed_user(biomed_client):
@@ -169,7 +170,7 @@ def test_create_tag_biomed_user(biomed_client):
         json.dumps({"name": "red", "color": "ff0000"}),
         content_type="application/json",
     )
-    assert resp.status_code == 201  # created
+    assert resp.status_code == status.HTTP_201_CREATED  # created
 
 
 def test_get_tagged_asset_obsolete(auth_client):
@@ -179,7 +180,7 @@ def test_get_tagged_asset_obsolete(auth_client):
     tag = models.Tag.objects.create(name="red", color="red")
     models.AssetTag.objects.create(tag=tag, asset=asset_obj)
     response = auth_client.get(f"/api/tags/{tag.id}/assets/")
-    assert response.status_code == 405
+    assert response.status_code == status.HTTP_405_METHOD_NOT_ALLOWED
     assert response.status_text == "Method Not Allowed"
 
 

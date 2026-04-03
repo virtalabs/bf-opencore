@@ -13,6 +13,7 @@ should be accssed via the asset or via its own API.
 """
 
 from blueflow import models
+from rest_framework import status
 
 
 def test_history_canonical_fields(asset_edit_client):
@@ -36,7 +37,7 @@ def test_history_canonical_field_unchanged(asset_edit_client):
     """Unchanged field should show up as 'empty-ish'."""
     a = models.Asset.objects.create()
     res = asset_edit_client.get(f"/api/assets/{a.id}/history/?field=hostname")
-    assert res.status_code == 200
+    assert res.status_code == status.HTTP_200_OK
     assert [h["hostname"] for h in res.data] == [None]
 
 

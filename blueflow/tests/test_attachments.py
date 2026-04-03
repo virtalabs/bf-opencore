@@ -7,6 +7,8 @@ import urllib
 import pytest
 from django.conf import settings as django_settings
 
+from rest_framework import status
+
 from blueflow import models
 
 
@@ -23,7 +25,7 @@ def test_upload_bad(asset_edit_client, media_root):
     resp = asset_edit_client.post(
         "/api/attachments/", json.dumps({"foo": "bar"}), content_type="application/json"
     )
-    assert resp.status_code == 400
+    assert resp.status_code == status.HTTP_400_BAD_REQUEST
     assert str(resp.data["file"][0]) == "No file was submitted."
 
 
@@ -52,7 +54,7 @@ def test_upload_variants(asset_edit_client, media_root, variant):
         body["name"] = "Descriptive"
 
     resp = asset_edit_client.post("/api/attachments/", body)
-    assert resp.status_code == 201
+    assert resp.status_code == status.HTTP_201_CREATED
     assert int(attachment["id"]) > 0
 
     if variant == "file_only":
@@ -82,9 +84,9 @@ def test_upload_variants(asset_edit_client, media_root, variant):
 def test_get_attachments(asset_edit_client, media_root):
     """Get the attachment object(s) we just uploaded (list)."""
     resp = asset_edit_client.post("/api/attachments/", {"file": io.BytesIO(b"bar")})
-    assert resp.status_code == 201
+    assert resp.status_code == status.HTTP_201_CREATED
     resp = asset_edit_client.get("/api/attachments/")
-    assert resp.status_code == 200
+    assert resp.status_code == status.HTTP_200_OK
     assert resp.data["count"] == 1
     assert len(resp.data["results"]) == 1
 
@@ -92,10 +94,10 @@ def test_get_attachments(asset_edit_client, media_root):
 def test_get_attachment(asset_edit_client, media_root):
     """Get the attachment object we just uploaded (detail)."""
     resp = asset_edit_client.post("/api/attachments/", {"file": io.BytesIO(b"bar")})
-    assert resp.status_code == 201
+    assert resp.status_code == status.HTTP_201_CREATED
     att_id = resp.data["id"]
     resp = asset_edit_client.get(f"/api/attachments/{att_id}/")
-    assert resp.status_code == 200
+    assert resp.status_code == status.HTTP_200_OK
     attachment = resp.data
     assert attachment["id"] == att_id
 
@@ -133,9 +135,9 @@ def test_delete_attachment(asset_edit_client, media_root):
     resp = asset_edit_client.post("/api/attachments/", {"file": io.BytesIO(b"bar")})
     att_id = resp.data["id"]
     resp = asset_edit_client.delete(f"/api/attachments/{att_id}/")
-    assert resp.status_code == 204
+    assert resp.status_code == status.HTTP_204_NO_CONTENT
     resp = asset_edit_client.get("/api/attachments/")
-    assert resp.status_code == 200
+    assert resp.status_code == status.HTTP_200_OK
     assert resp.data["count"] == 0
 
 
@@ -149,7 +151,7 @@ def test_upload_attachment_no_manuf_no_mod(asset_edit_client, media_root):
       current loophole.)
     """
     resp = asset_edit_client.post("/api/attachments/", {"file": io.BytesIO(b"bar")})
-    assert resp.status_code == 403
+    assert resp.status_code == status.HTTP_403_FORBIDDEN
 
 
 @pytest.mark.xfail(raises=AssertionError)
@@ -165,7 +167,7 @@ def test_upload_attachment_no_manuf_yes_mod(asset_edit_client, media_root):
             "model": "Instant Tunnel",
         },
     )
-    assert resp.status_code == 403
+    assert resp.status_code == status.HTTP_403_FORBIDDEN
 
 
 def test_get_attachment_manuf_model(asset_edit_client, media_root):
@@ -178,7 +180,7 @@ def test_get_attachment_manuf_model(asset_edit_client, media_root):
             "model": "Instant Tunnel",
         },
     )
-    assert resp.status_code == 201
+    assert resp.status_code == status.HTTP_201_CREATED
     resp = asset_edit_client.get(
         "/api/attachments/"
         "?"
@@ -189,7 +191,7 @@ def test_get_attachment_manuf_model(asset_edit_client, media_root):
             }
         )
     )
-    assert resp.status_code == 200
+    assert resp.status_code == status.HTTP_200_OK
     assert resp.data["count"] == 1
 
 
@@ -232,9 +234,9 @@ def test_get_attachment_manuf_model_filters(
     if upload_model is not None:
         body["model"] = upload_model
     resp = asset_edit_client.post("/api/attachments/", body)
-    assert resp.status_code == 201
+    assert resp.status_code == status.HTTP_201_CREATED
     resp = asset_edit_client.get("/api/attachments/" + "?" + qparam(filter_params))
-    assert resp.status_code == 200
+    assert resp.status_code == status.HTTP_200_OK
     assert resp.data["count"] == expected_count
 
 
@@ -247,7 +249,7 @@ def test_disappearing_attachment(asset_edit_client, media_root):
             "manufacturer": "ACME, Inc.",
         },
     )
-    assert resp.status_code == 201
+    assert resp.status_code == status.HTTP_201_CREATED
     att_url = resp.data["file"]
     filename = urllib.parse.urlparse(att_url).path.split("/")[-1]
     fs_path = media_root / "attachments" / filename
@@ -263,9 +265,9 @@ def test_disappearing_attachment(asset_edit_client, media_root):
             }
         )
     )
-    assert resp.status_code == 200
+    assert resp.status_code == status.HTTP_200_OK
     assert resp.data["count"] == 1
-    assert resp.data["results"][0]["size_bytes"] == 3
+    assert resp.data["results"][0]["size_bytes"] == 3  # noqa: PLR2004
 
     # now delete the file; should still be gettable w/ HTTP 200
     fs_path.unlink()
@@ -278,6 +280,6 @@ def test_disappearing_attachment(asset_edit_client, media_root):
             }
         )
     )
-    assert resp.status_code == 200
+    assert resp.status_code == status.HTTP_200_OK
     assert resp.data["count"] == 1
     assert resp.data["results"][0]["size_bytes"] is None

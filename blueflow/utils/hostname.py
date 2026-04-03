@@ -5,6 +5,9 @@ import re
 
 import netaddr
 
+MAX_HOSTNAME_LENGTH = 253
+IPV4_VERSION = 4
+
 
 def hostname_ok(hostname):
     """Check whether a string is a valid hostname or IP address.
@@ -15,7 +18,7 @@ def hostname_ok(hostname):
     # adapted from SO:
     # https://stackoverflow.com/questions/2532053/validate-a-hostname-string
     hostname = hostname.removesuffix(".")
-    if len(hostname) > 253:
+    if len(hostname) > MAX_HOSTNAME_LENGTH:
         return False
 
     chunks = hostname.split(".")
@@ -40,7 +43,7 @@ def ip_address_ok(ipaddr):
         ipa = ipaddress.ip_address(ipaddr)
     except ValueError:
         return False
-    if ipa.version != 4:
+    if ipa.version != IPV4_VERSION:
         return False
     return str(ipa) == ipaddr
 

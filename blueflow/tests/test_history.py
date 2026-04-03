@@ -8,6 +8,7 @@ import json
 
 import django.db.models.fields
 import pytest
+from rest_framework import status
 from simple_history import utils as hist_utils
 
 import blueflow.models as bf_mod
@@ -51,13 +52,13 @@ class TestAssetHistory:
 
     def test_spam_id_2(self, auth_client):
         res = auth_client.get(f"/api/assets/{self.spam_id}/")
-        assert res.status_code == 200
+        assert res.status_code == status.HTTP_200_OK
         assert res.data["id"] == self.spam_id
 
     def test_spam_simple_history(self, auth_client):
         res = auth_client.get(f"/api/assets/{self.spam_id}/history/")
-        assert res.status_code == 200
-        assert res.data["count"] == 2  # Creation + initial rescore
+        assert res.status_code == status.HTTP_200_OK
+        assert res.data["count"] == 2  # noqa: PLR2004  # Creation + initial rescore
 
     def test_history_simple_change(self, asset_edit_client):
         """History should change after a PATCH request."""
@@ -66,9 +67,9 @@ class TestAssetHistory:
             json.dumps({"hostname": "nospam"}),
             content_type="application/json",
         )
-        assert res.status_code == 200
+        assert res.status_code == status.HTTP_200_OK
         res = asset_edit_client.get(f"/api/assets/{self.spam_id}/history/")
-        assert res.data["count"] == 3  # Creation + initial rescore + patch
+        assert res.data["count"] == 3  # noqa: PLR2004  # Creation + initial rescore + patch
 
     def test_history_change_order(self, asset_edit_client):
         """History should be newest-first."""
@@ -83,7 +84,7 @@ class TestAssetHistory:
             content_type="application/json",
         )
         res = asset_edit_client.get(f"/api/assets/{self.spam_id}/history/")
-        assert res.data["count"] == 4  # C + R + (2 x patch)
+        assert res.data["count"] == 4  # noqa: PLR2004  # C + R + (2 x patch)
         hostname_history = [
             (hi["hostname"], hi["risk_score"]) for hi in res.data["results"]
         ]
@@ -110,7 +111,7 @@ class TestAssetHistory:
         res = asset_edit_client.get(f"/api/assets/{self.spam_id}/changelog/")
         # Remember: changelog is not paginated and thus we access it
         # directly as a list.
-        assert len(res.data) == 4  # C + R + (2 x patch)
+        assert len(res.data) == 4  # noqa: PLR2004  # C + R + (2 x patch)
         hostname_changelog = [(hi["hostname"], hi["risk_score"]) for hi in res.data]
         # changelog[-2] is because of initial rescore on asset creation.
         # Notice that unchanged values are None (compare with the
@@ -125,8 +126,8 @@ class TestAssetHistory:
     def test_spam_simple_changelog(self, auth_client):
         """Changelog isn't paginated, like the history."""
         res = auth_client.get(f"/api/assets/{self.spam_id}/changelog/")
-        assert res.status_code == 200
-        assert len(res.data) == 2  # Creation + initial rescore
+        assert res.status_code == status.HTTP_200_OK
+        assert len(res.data) == 2  # noqa: PLR2004  # Creation + initial rescore
 
     def test_changelog_simple_change(self, asset_edit_client):
         """Changelog is modified by PATCH request."""
@@ -135,9 +136,9 @@ class TestAssetHistory:
             json.dumps({"hostname": "nospam"}),
             content_type="application/json",
         )
-        assert res.status_code == 200
+        assert res.status_code == status.HTTP_200_OK
         res = asset_edit_client.get(f"/api/assets/{self.spam_id}/changelog/")
-        assert len(res.data) == 3  # Creation + initial rescore + patch
+        assert len(res.data) == 3  # noqa: PLR2004  # Creation + initial rescore + patch
 
 
 class TestOneFieldHistory:
@@ -196,12 +197,12 @@ class TestOneFieldHistory:
         """Basic checks."""
         assert len(self.change_sequence) == len(self.history_data)
         assert len(self.change_sequence) == len(self.changelog_data)
-        assert len(self.hostname_history) == 2
+        assert len(self.hostname_history) == 2  # noqa: PLR2004
 
     def test_history_length(self, asset_edit_client):
         """Verify history length."""
         res = asset_edit_client.get(f"/api/assets/{self.asset_id}/history/")
-        assert res.status_code == 200
+        assert res.status_code == status.HTTP_200_OK
         assert res.data["count"] == len(self.change_sequence)
 
     def test_history_newestfirst(self, asset_edit_client):
@@ -259,7 +260,7 @@ class TestOneFieldHistory:
         res = asset_edit_client.get(
             f"/api/assets/{self.asset_id}/history/?field={default_null_field}"
         )
-        assert res.status_code == 200
+        assert res.status_code == status.HTTP_200_OK
         # HHolm maintains that in this case the `len()` comparison conveys the
         # intention far better than a boolean check.
         #
@@ -279,9 +280,9 @@ class TestOneFieldHistory:
         res = asset_edit_client.get(
             f"/api/assets/{self.asset_id}/history/?field={non_null_field}"
         )
-        assert res.status_code == 200
+        assert res.status_code == status.HTTP_200_OK
         rj = res.data
-        assert len(rj) == 2
+        assert len(rj) == 2  # noqa: PLR2004
         assert rj[-1]["history_type"] == "+"
 
 
@@ -373,7 +374,7 @@ class TestAssetRiskHistory:
 
     def test_risk_history(self, auth_client):
         res = auth_client.get(f"/api/assets/{self.asset_id}/history/?field=risk_score")
-        assert res.status_code == 200
+        assert res.status_code == status.HTTP_200_OK
         assert len(res.data) == len(self.risk_scores)
         api_risk_scores = [hi["risk_score"] for hi in res.data]
         # NOTE: the history data as seen on the API is newest-first
