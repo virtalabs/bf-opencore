@@ -1,4 +1,4 @@
-"""CSV import"""
+"""CSV import."""
 
 import csv as pycsv
 import json

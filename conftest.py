@@ -75,7 +75,7 @@ def django_db_setup(
 
 @pytest.fixture
 def auth_client(db, enable_core_switch):
-    """API client authenticated with a regular user.
+    """Return API client authenticated with a regular user.
 
     Uses blueflow.tests.factories.make_user.
     """
@@ -91,7 +91,7 @@ def auth_client(db, enable_core_switch):
 
 @pytest.fixture
 def admin_client(db, enable_core_switch):
-    """API client authenticated with a superuser.
+    """Return API client authenticated with a superuser.
 
     For app-level admin-style tests; uses factories.make_superuser.
     """
@@ -107,8 +107,9 @@ def admin_client(db, enable_core_switch):
 
 @pytest.fixture(autouse=True)
 def _auto_db(db):
-    """Enables db for all tests
-    Should replace with module level enabalment when:
+    """Enable db for all tests.
+
+    Should replace with module level enablement when:
         https://github.com/virtalabs/blueflow/issues/36
     """
 

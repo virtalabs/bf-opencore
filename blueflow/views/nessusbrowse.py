@@ -23,11 +23,11 @@ class NessusBrowseSerializer(serializers.Serializer):
     nessus_response = serializers.JSONField(read_only=True)
 
     def create(self, validated_data):
-        """Dummy."""
+        """Raise validation error."""
         raise serializers.ValidationError("Cannot create.")
 
     def update(self, instance, validated_data):
-        """Dummy."""
+        """Raise validation error."""
         raise serializers.ValidationError("Cannot update.")
 
 

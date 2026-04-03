@@ -5,7 +5,7 @@
 
 
 class TestCTX:
-    """Dummy class for testing
+    """Dummy class for testing.
 
     Sometimes we want to test 'process_csv' directly, and it needs a
     context with some methods.

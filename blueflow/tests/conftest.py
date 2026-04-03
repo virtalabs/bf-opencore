@@ -14,7 +14,7 @@ import pytest
 
 @pytest.fixture
 def asset_edit_client(auth_client):
-    """API client with user that can create/edit assets.
+    """Return API client with user that can create/edit assets.
 
     Alias to auth_client in blueflow.
     """
@@ -23,7 +23,7 @@ def asset_edit_client(auth_client):
 
 @pytest.fixture
 def nwk_authorized_client(auth_client):
-    """API client with user allowed to manage networks.
+    """Return API client with user allowed to manage networks.
 
     Alias to auth_client in blueflow.
     """
@@ -32,13 +32,13 @@ def nwk_authorized_client(auth_client):
 
 @pytest.fixture
 def biomed_client(auth_client):
-    """API client with biomed role. Alias to auth_client in blueflow."""
+    """Return API client with biomed role. Alias to auth_client in blueflow."""
     return auth_client
 
 
 @pytest.fixture
 def custom_field_edit_client(auth_client):
-    """API client with user allowed to edit custom field names.
+    """Return API client with user allowed to edit custom field names.
 
     Alias to auth_client in blueflow.
     """
@@ -47,7 +47,7 @@ def custom_field_edit_client(auth_client):
 
 @pytest.fixture
 def pulse_feed_auth_client(auth_client):
-    """API client with user allowed to delete/close pulse feed items.
+    """Return API client with user allowed to delete/close pulse feed items.
 
     Alias to auth_client in blueflow.
     """
@@ -56,7 +56,7 @@ def pulse_feed_auth_client(auth_client):
 
 @pytest.fixture
 def tapirx_token_client(db, enable_core_switch):
-    """API client authenticated via Token header, mirroring Tapirx's auth method."""
+    """Return API client authenticated via Token header, mirroring Tapirx's auth method."""
     from rest_framework.authtoken.models import Token
     from rest_framework.test import APIClient
 

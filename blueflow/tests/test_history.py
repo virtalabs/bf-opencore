@@ -268,7 +268,7 @@ class TestOneFieldHistory:
         assert len(res.data) > 0
 
     def test_history_default_blank(self, asset_edit_client):
-        """Field history for default-empty field should show creation"""
+        """Field history for default-empty field should show creation."""
         # We need access to the _meta field
 
         # get a field that is default blank (empty string)

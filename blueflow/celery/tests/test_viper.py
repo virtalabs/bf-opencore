@@ -16,8 +16,9 @@ def get_asset_count():
 
 
 def test_viper_webhook_output_no_assets(celery_app):
-    """Captures the output from the celery task.
-    Ensuring it's the same as the expected output.
+    """Capture the output from the celery task.
+
+    Ensure it's the same as the expected output.
     """
     request_id = str(uuid.uuid4())
     with patch("blueflow.celery.tasks.requests.post") as mock_post:
@@ -45,8 +46,9 @@ def _assert_page_query(page_qstring: str, has: list[str], doesnt: list[str]) -> 
 
 
 def test_viper_webhook_output_with_all_assets(celery_app, setup_assets):
-    """Captures the output from the celery task.
-    Ensuring it's the same as the expected output.
+    """Capture the output from the celery task.
+
+    Ensure it's the same as the expected output.
     """
     page_size = 10
     total_assets = get_asset_count()

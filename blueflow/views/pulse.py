@@ -81,8 +81,11 @@ class PulseFeedItemViewSet(
 
         Parameters
         ----------
-         - `quarters`: number of quarters, including the current quarter, for
-           which to fetch data.
+        request
+            The HTTP request.
+        quarters : int
+            Number of quarters, including the current quarter, for
+            which to fetch data.
 
         """
         quarters = request.GET.get("quarters")

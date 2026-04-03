@@ -38,7 +38,7 @@ class ViperViewSet(viewsets.ViewSet):
 
     @action(detail=False, methods=["post"])
     def webhook(self, request: Request) -> Response:
-        """Registers a viper webhook."""
+        """Register a viper webhook."""
         serializer = self.serializer_class(data=request.data)
         serializer.is_valid(raise_exception=True)
         viper_data = ViperWebhookRequest(**serializer.validated_data)

@@ -1,4 +1,4 @@
-"""Portscan integration"""
+"""Portscan integration."""
 
 import logging
 import re
