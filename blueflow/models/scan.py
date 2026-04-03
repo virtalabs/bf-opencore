@@ -1,4 +1,4 @@
-"""BlueFlow scan"""
+"""BlueFlow scan."""
 
 import logging
 

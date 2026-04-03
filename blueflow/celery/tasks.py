@@ -22,10 +22,11 @@ class Task(BaseTask):
         logger.error("[!!] %s failed: %s", task_id, exc)
 
 def _send_viper_payload(viper_data: ViperWebhookJob, request_id: str) -> None:
-    """We may want to consider logging partial errors and attempting to
-    send the remaining data anyway
-    Wrapping each post in it's own celery task would be simple enough
-    ;- tcochran.dev@gmail.com
+    """Send viper payload, logging partial errors.
+
+    We may want to consider logging partial errors and attempting to
+    send the remaining data anyway.
+    Wrapping each post in its own celery task would be simple enough.
     """
     response_list = ViperWebhookResponseList.from_request(
         viper_data, request_id=request_id

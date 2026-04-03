@@ -40,7 +40,7 @@ def test_viper_webhook(auth_client, celery_app):
 
 
 def test_viper_webhook_bad_request(auth_client):
-    """Ensures a bad request triggers the serializer"""
+    """Ensure a bad request triggers the serializer."""
     response = auth_client.post(
         "/api/viper/webhook/", {}, content_type="application/json"
     )

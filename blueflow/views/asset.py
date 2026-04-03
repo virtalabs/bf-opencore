@@ -515,6 +515,7 @@ class AssetViewSet(
 
     def _validate_open_ports(self, ports: Any) -> list[str]:
         """Convert TCP port string to list.
+
         Convert string of integers to a sorted list of unique integers.
 
         Separator(s) can be one of: space, comma, semicolon, pipe, or newline,

@@ -1,4 +1,4 @@
-"""Ping integration"""
+"""Ping integration."""
 
 import logging
 import re

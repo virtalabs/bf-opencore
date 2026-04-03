@@ -8,8 +8,8 @@ import json
 
 import pytest
 from django.db import IntegrityError
-from rest_framework import status
 from django.db.transaction import TransactionManagementError
+from rest_framework import status
 
 from blueflow import models
 
@@ -216,7 +216,7 @@ def test_custom_field(cfield, auth_client):
     ),
 )
 def test_api_admin_post_existing(cfield, admin_client):
-    """Posting a field value that already exists should fail with 405
+    """Post a field value that already exists should fail with 405.
 
     Instead it fails with IntegrityError (for now.)
     """

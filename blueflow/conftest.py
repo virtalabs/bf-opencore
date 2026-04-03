@@ -18,6 +18,6 @@ def celery_app():
 
 @pytest.fixture
 def setup_assets(django_db_setup, django_db_blocker):
-    """Setup the assets in the database."""
+    """Set up the assets in the database."""
     with django_db_blocker.unblock():
         django.core.management.call_command("loaddata", "data/assets.json")
