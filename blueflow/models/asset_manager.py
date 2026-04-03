@@ -27,7 +27,7 @@ class AssetManager(models.Manager):
 
     def rescore_all(self):
         """Rescore all assets."""
-        # TODO: Implement after we have a generalized algorithm for risk scoring
+        # TODO(taylorcochran): Implement after we have a generalized algorithm for risk scoring
         raise NotImplementedError("Rescore all is not implemented")
         RiskFactor = apps.get_model("blueflow", "RiskFactor")
         RiskFactor.objects.normalize_weights()  # Abundance of caution
@@ -345,7 +345,7 @@ class AssetQuerySet(models.QuerySet):
         The first 2 are awkwardly named; this is due to poor naming of
         the fields in the model RiskMetrics.
         """
-        # TODO: Implement after we have a generalized algorithm for risk scoring
+        # TODO(taylorcochran): Implement after we have a generalized algorithm for risk scoring
         raise NotImplementedError("Risk histogram is not implemented")
         h = {
             "critical": self.filter(risk_score__gte=CRITICAL_RISK_LIMIT).count(),
@@ -396,7 +396,7 @@ class AssetQuerySet(models.QuerySet):
         #   it's not obvious what to do when there's no unique mode
         #   (statistics.mode will raise a StatisticsError).
         #   (Also because, who other than statistics nerds would even care.)
-        # TODO: Implement after we have a generalized algorithm for risk scoring
+        # TODO(taylorcochran): Implement after we have a generalized algorithm for risk scoring
         raise NotImplementedError("Risk statistics is not implemented")
         notnull = self.filter(risk_score__isnull=False)
         if notnull.count() == 0:
@@ -449,7 +449,7 @@ class AssetQuerySet(models.QuerySet):
         element in the list represents a risk factor, and the data in
         each list indicates how many assets have a certain risk factor.
         """
-        # TODO: Implement after we have a generalized algorithm for risk scoring
+        # TODO(taylorcochran): Implement after we have a generalized algorithm for risk scoring
         raise NotImplementedError("Risk factor statistics is not implemented")
         rf_stats = []
 

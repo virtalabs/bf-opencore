@@ -371,9 +371,9 @@ class Asset(models.Model):
         Returns None if there is no such risk factor or this asset does not
         have the given risk factor associated with it (via AssetRiskFactor).
         """
-        # TODO: Implement after we have a generalized algorithm for risk scoring
+        # TODO(taylorcochran): Implement after we have a generalized algorithm for risk scoring
         raise NotImplementedError("Get risk factor is not implemented")
-        # TODO: this function is only used in tests and in
+        # TODO(legacy): #65 — this function is only used in tests and in
         #   `remove_risk_factor`.  Consider removing it altogether...?
         #   TBH, even remove_risk_factor could/should be removed, it's
         #   only used in this file to remove cvss_max and cvss_sum.
@@ -385,7 +385,7 @@ class Asset(models.Model):
 
     def add_risk_factor(self, shortname, value, reason=None):
         """Add or replace a risk score factor for this Asset."""
-        # TODO: Implement after we have a generalized algorithm for risk scoring
+        # TODO(taylorcochran): Implement after we have a generalized algorithm for risk scoring
         raise NotImplementedError("Add risk factor is not implemented")
         # Get RiskFactor object using either 'asset_risk_factor__*' notation
         # or the human-readable name.
@@ -410,7 +410,7 @@ class Asset(models.Model):
 
     def remove_risk_factor(self, shortname, reason=None):
         """Remove a risk score factor from this Asset."""
-        # TODO: Implement after we have a generalized algorithm for risk scoring
+        # TODO(taylorcochran): Implement after we have a generalized algorithm for risk scoring
         raise NotImplementedError("Remove risk factor is not implemented")
         arf = self.get_risk_factor(shortname)
         if arf is not None:
@@ -432,7 +432,7 @@ class Asset(models.Model):
         )
 
         """
-        # TODO: Implement after we have a generalized algorithm for risk scoring
+        # TODO(taylorcochran): Implement after we have a generalized algorithm for risk scoring
         raise NotImplementedError("Update or create fk field is not implemented")
         # Parse name
         assert "__" in name, f"Expected '__' in fk field {name}"
@@ -524,7 +524,7 @@ class Asset(models.Model):
 
     def _update_cvss_risk(self):
         """Update the cvss risk factors from associated vulnerabilities."""
-        # TODO: Implement after we have a generalized algorithm for risk scoring
+        # TODO(taylorcochran): Implement after we have a generalized algorithm for risk scoring
         raise NotImplementedError("Update cvss risk is not implemented")
         # cvss scores from vulnerabilities hanging off this (may be empty)
         vuln_scores = [
@@ -542,7 +542,7 @@ class Asset(models.Model):
 
     def _update_patch_risk(self):
         """Update the patch risk AssetRiskFactor using needs_sw_update()."""
-        # TODO: Implement after we have a generalized algorithm for risk scoring
+        # TODO(taylorcochran): Implement after we have a generalized algorithm for risk scoring
         raise NotImplementedError("Update patch risk is not implemented")
         needs_update, _dummy, _dummy2 = self.needs_sw_update()
         if needs_update:
@@ -560,7 +560,7 @@ class Asset(models.Model):
         for things like inverted risky tags.  If a tag is *not present*,
         that contributes a non-zero value to the risk score.
         """
-        # TODO: Implement after we have a generalized algorithm for risk scoring
+        # TODO(taylorcochran): Implement after we have a generalized algorithm for risk scoring
         raise NotImplementedError("Asset risk factors with zeros is not implemented")
         factors = []
         for risk_factor in RiskFactor.enabled.all():
@@ -580,19 +580,19 @@ class Asset(models.Model):
     @transaction.atomic
     def _calculate_risk(self):
         """Calculate aggregate risk score for an asset."""
-        # TODO: Implement after we have a generalized algorithm for risk scoring
+        # TODO(taylorcochran): Implement after we have a generalized algorithm for risk scoring
         raise NotImplementedError("Calculate risk is not implemented")
 
     def risk_score_summary(self):
         """Return summary only (to avoid 'protected access')."""
-        # TODO: Implement after we have a generalized algorithm for risk scoring
+        # TODO(taylorcochran): Implement after we have a generalized algorithm for risk scoring
         raise NotImplementedError("Risk score summary is not implemented")
         _dummy_rft_scores, summary = self._calculate_risk()
         return summary
 
     def rescore(self, reason="Rescore", save_reason=True):
         """Update the risk_score field with a newly calculated score."""
-        # TODO: Implement after we have a generalized algorithm for risk scoring
+        # TODO(taylorcochran): Implement after we have a generalized algorithm for risk scoring
         raise NotImplementedError("Rescore is not implemented")
         self._update_cvss_risk()
         self._update_patch_risk()
@@ -639,7 +639,7 @@ class Asset(models.Model):
         cls, sender, instance, created, raw, using, update_fields, *args, **kwargs
     ):
         """Rescore an asset via a Django signal."""
-        # TODO: Implement after we have a generalized algorithm for risk scoring
+        # TODO(taylorcochran): Implement after we have a generalized algorithm for risk scoring
         raise NotImplementedError("Rescore asset on save is not implemented")
         # Don't rescore if we're loading a fixture (i.e., we're in "raw" mode)
         if raw:
@@ -673,7 +673,7 @@ class Asset(models.Model):
     @staticmethod
     def rescore_asset_on_delete(sender, instance, using, *args, **kwargs):
         """Rescore an asset via a Django signal."""
-        # TODO: Implement after we have a generalized algorithm for risk scoring
+        # TODO(taylorcochran): Implement after we have a generalized algorithm for risk scoring
         raise NotImplementedError("Rescore asset on delete is not implemented")
         # Rescore similar assets if the deleted asset had a sw version
         if instance.app_sw_version:
@@ -688,7 +688,7 @@ class Asset(models.Model):
         Django documentation:
         https://docs.djangoproject.com/en/2.0/ref/models/meta/#retrieving-all-field-instances-of-a-model
         """
-        # TODO: Implement after we have a generalized algorithm for risk scoring
+        # TODO(taylorcochran): Implement after we have a generalized algorithm for risk scoring
         raise NotImplementedError("Is valid field name is not implemented")
         Asset = apps.get_model("blueflow", "Asset")
         valid_field_names = [x.name for x in Asset._meta.get_fields()]
@@ -698,7 +698,7 @@ class Asset(models.Model):
     @staticmethod
     def is_valid_field_value(field, value):
         """Return True if value is valid for field."""
-        # TODO: Implement after we have a generalized algorithm for risk scoring
+        # TODO(taylorcochran): Implement after we have a generalized algorithm for risk scoring
         raise NotImplementedError("Is valid field value is not implemented")
         unflattened_field, unflattened_val = _unflatten_json_field(field, value)
         # Special case for asset_risk_factors__<RiskFactor shortname>

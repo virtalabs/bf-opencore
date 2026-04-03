@@ -318,7 +318,7 @@ class AssetFilter(django_filters.rest_framework.FilterSet):
 
         Calling with value False is a silly double negative ("not unassessed").
         """
-        # TODO: Implement unassessed  # noqa: TD002,TD003,FIX002
+        # TODO(taylorcochran): Implement unassessed
         _msg = "Unassessed is not implemented"
         raise NotImplementedError(_msg)
 
@@ -332,7 +332,7 @@ class AssetFilter(django_filters.rest_framework.FilterSet):
         To find assets that *lack* a particular RiskFactor n, query with
         assessed_factor=-n.
         """
-        # TODO: Implement assessed_factor  # noqa: TD002,TD003,FIX002
+        # TODO(taylorcochran): Implement assessed_factor
         _msg = "Assessed factor is not implemented"
         raise NotImplementedError(_msg)
 
@@ -350,7 +350,7 @@ class AssetFilter(django_filters.rest_framework.FilterSet):
             "hostname": ["icontains"],
             "nic_vendor": ["icontains"],
             "category": ["icontains", "exact"],
-            # TODO: Add risk score filters  # noqa: TD002,TD003,FIX002
+            # TODO(taylorcochran): Add risk score filters
             "id": ["in"],
             "ip_address": [
                 "istartswith",
@@ -387,7 +387,7 @@ class AssetFilter(django_filters.rest_framework.FilterSet):
             "asset_custom_fields__value_text": ["istartswith"],
             "asset_vulnerabilities__date_remediated": ["isnull"],
             "asset_vulnerabilities__date_ignored": ["isnull"],
-            # TODO: Add asset_risk_factors filters  # noqa: TD002,TD003,FIX002
+            # TODO(taylorcochran): Add asset_risk_factors filters
         }
         filter_overrides = {  # noqa: RUF012
             netfields.InetAddressField: {
@@ -503,7 +503,7 @@ class AssetViewSet(
             "tag_number",
             "category",
             "date_added",
-            # TODO: Add risk score filters  # noqa: TD002,TD003,FIX002
+            # TODO(taylorcochran): Add risk score filters
             "udi",
         ]
         context = super().get_renderer_context()
@@ -743,7 +743,7 @@ class AssetViewSet(
         # This stuff might not be necessary.  The DRF pagination system
         # might take care of it (since it's the same serializer etc.
         qset = self.get_object().similar_qset(exclude_self=exclude_self)
-        # TODO: Add risk score ordering  # noqa: TD002,TD003,FIX002
+        # TODO(taylorcochran): Add risk score ordering
         return self.paginate_relations(request, qset, "AssetSerializer")
 
     @action(detail=True, methods=["GET", "POST"])
@@ -884,21 +884,21 @@ class AssetViewSet(
              GROUP BY "blueflow_asset"."manufacturer"
              ORDER BY "risk_score" DESC
         """
-        # TODO: Implement risk per manufacturer  # noqa: TD002,TD003,FIX002
+        # TODO(taylorcochran): Implement risk per manufacturer
         _msg = "Risk per manufacturer is not implemented"
         raise NotImplementedError(_msg)
 
     @action(detail=False)
     def riskiest(self, request: Request) -> Response:
         """Produce a paginated list of the "riskiest" assets."""
-        # TODO: Implement riskiest  # noqa: TD002,TD003,FIX002
+        # TODO(taylorcochran): Implement riskiest
         _msg = "Riskiest is not implemented"
         raise NotImplementedError(_msg)
 
     @action(detail=False)
     def summary(self, _request: Request) -> Response:
         """Return summary about an asset queryset."""
-        # TODO: Implement summary  # noqa: TD002,TD003,FIX002
+        # TODO(taylorcochran): Implement summary
         _msg = "Summary is not implemented"
         raise NotImplementedError(_msg)
 

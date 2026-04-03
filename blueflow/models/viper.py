@@ -75,8 +75,8 @@ class ViperAsset:
         self.model = asset.model
         self.serial_number = asset.serial_number
         self.udi = asset.udi
-        self.network_segment = ""  # TODO: get network segment from asset.network_qset()
-        self.cpe = ""  # TODO: get cpe from asset.cpe_qset()
+        self.network_segment = ""  # TODO(taylorcochran): get network segment from asset.network_qset()
+        self.cpe = ""  # TODO(taylorcochran): get cpe from asset.cpe_qset()
         self.role = ""
         self.upstream_api = ""
         self.hostname = asset.hostname or ""
@@ -84,8 +84,8 @@ class ViperAsset:
         # (Asset uses netaddr.EUI / InetAddress)
         self.mac_address = str(asset.mac_address) if asset.mac_address else ""
         self.serial_number = asset.serial_number or ""
-        self.location = {}  # TODO: custom fields?
-        self.status = "active"  # TODO: how do we want to determine this?
+        self.location = {}  # TODO(taylorcochran): custom fields?
+        self.status = "active"  # TODO(taylorcochran): how do we want to determine this?
         self.vendorID = str(asset.nic_vendor)
 
     def to_dict(self):
