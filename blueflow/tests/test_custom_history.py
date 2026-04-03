@@ -12,8 +12,9 @@ work going on, and some decisions being made, on whether custom fields
 should be accssed via the asset or via its own API.
 """
 
-from blueflow import models
 from rest_framework import status
+
+from blueflow import models
 
 
 def test_history_canonical_fields(asset_edit_client):

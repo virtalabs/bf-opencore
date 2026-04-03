@@ -5,8 +5,9 @@ http://pytest-django.readthedocs.io/en/latest/helpers.html
 """
 
 
-from blueflow import models
 from rest_framework import status
+
+from blueflow import models
 
 ################################################################
 #  Test routes for associated tables, e.g.,
