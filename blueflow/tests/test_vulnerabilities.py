@@ -5,7 +5,6 @@ http://pytest-django.readthedocs.io/en/latest/helpers.html
 """
 
 from django.utils import timezone
-
 from rest_framework import status
 
 from blueflow import models
