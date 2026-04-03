@@ -4,6 +4,8 @@ import json
 
 import pytest
 
+from rest_framework import status
+
 from blueflow import models
 
 # models do have 'objects' member, but it's being lazy loaded
@@ -16,7 +18,7 @@ def test_create_empty_network(nwk_authorized_client):
         # json.dumps({'name': None}),
         content_type="application/json",
     )
-    assert response.status_code == 400
+    assert response.status_code == status.HTTP_400_BAD_REQUEST
 
 
 def test_create_named_network(nwk_authorized_client):
@@ -28,7 +30,7 @@ def test_create_named_network(nwk_authorized_client):
     response = nwk_authorized_client.post(
         "/api/networks/", json.dumps({"name": "spam"}), content_type="application/json"
     )
-    assert response.status_code == 201
+    assert response.status_code == status.HTTP_201_CREATED
     networks = models.Network.objects.all()
     assert len(networks) == 1
     network = networks.first()
@@ -42,7 +44,7 @@ def test_create_named_network_unauth(auth_client):
     response = auth_client.post(
         "/api/networks/", json.dumps({"name": "spam"}), content_type="application/json"
     )
-    assert response.status_code == 403
+    assert response.status_code == status.HTTP_403_FORBIDDEN
     assert models.Network.objects.count() == 0
 
 
@@ -70,14 +72,14 @@ def test_create_network_then_cidr(supplied_cidr, resulting_cidr, nwk_authorized_
     response = nwk_authorized_client.post(
         "/api/networks/", json.dumps({"name": "spam"}), content_type="application/json"
     )
-    assert response.status_code == 201
+    assert response.status_code == status.HTTP_201_CREATED
     response = nwk_authorized_client.patch(
         response.data["url"],
         json.dumps({"cidr": supplied_cidr}),
         content_type="application/json",
     )
     # assert response.content == '{}'
-    assert response.status_code == 200
+    assert response.status_code == status.HTTP_200_OK
     network = models.Network.objects.first()
     assert network.name == "spam"
     assert network.cidr == resulting_cidr
@@ -90,15 +92,15 @@ def test_get_cidr(supplied_cidr, resulting_cidr, nwk_authorized_client):
     response = nwk_authorized_client.post(
         "/api/networks/", json.dumps({"name": "spam"}), content_type="application/json"
     )
-    assert response.status_code == 201
+    assert response.status_code == status.HTTP_201_CREATED
     response = nwk_authorized_client.patch(
         response.data["url"],
         json.dumps({"cidr": supplied_cidr}),
         content_type="application/json",
     )
-    assert response.status_code == 200
+    assert response.status_code == status.HTTP_200_OK
     response = nwk_authorized_client.get("/api/cidrs/", content_type="application/json")
-    assert response.status_code == 200
+    assert response.status_code == status.HTTP_200_OK
 
 
 def test_delete_cidr(nwk_authorized_client):
@@ -106,7 +108,7 @@ def test_delete_cidr(nwk_authorized_client):
     response = nwk_authorized_client.post(
         "/api/networks/", json.dumps({"name": "spam"}), content_type="application/json"
     )
-    assert response.status_code == 201
+    assert response.status_code == status.HTTP_201_CREATED
     network = models.Network.objects.first()
     assert network.cidr == []
 
@@ -114,14 +116,14 @@ def test_delete_cidr(nwk_authorized_client):
     response = nwk_authorized_client.patch(
         nwk_url, json.dumps({"cidr": "10.0.1.2"}), content_type="application/json"
     )
-    assert response.status_code == 200
+    assert response.status_code == status.HTTP_200_OK
     network = models.Network.objects.first()
     assert network.cidr == ["10.0.1.2/32"]
 
     response = nwk_authorized_client.patch(
         nwk_url, json.dumps({"cidr": ""}), content_type="application/json"
     )
-    assert response.status_code == 200
+    assert response.status_code == status.HTTP_200_OK
     network = models.Network.objects.first()
     assert network.cidr == []
 
@@ -131,18 +133,18 @@ def test_change_cidr_one(nwk_authorized_client):
     response = nwk_authorized_client.post(
         "/api/networks/", json.dumps({"name": "spam"}), content_type="application/json"
     )
-    assert response.status_code == 201
+    assert response.status_code == status.HTTP_201_CREATED
     nwk_url = response.data["url"]
     response = nwk_authorized_client.patch(
         nwk_url, json.dumps({"cidr": "10.0.1.2"}), content_type="application/json"
     )
-    assert response.status_code == 200
+    assert response.status_code == status.HTTP_200_OK
     network = models.Network.objects.first()
     assert network.cidr == ["10.0.1.2/32"]
     response = nwk_authorized_client.patch(
         nwk_url, json.dumps({"cidr": "10.0.1.3"}), content_type="application/json"
     )
-    assert response.status_code == 200
+    assert response.status_code == status.HTTP_200_OK
     network = models.Network.objects.first()
     assert network.cidr == ["10.0.1.3/32"]
 
@@ -157,7 +159,7 @@ def test_change_cidr(nwk_authorized_client, test_case):
     response = nwk_authorized_client.post(
         "/api/networks/", json.dumps({"name": "spam"}), content_type="application/json"
     )
-    assert response.status_code == 201
+    assert response.status_code == status.HTTP_201_CREATED
     network = models.Network.objects.first()
     assert network.cidr == []
 
@@ -167,7 +169,7 @@ def test_change_cidr(nwk_authorized_client, test_case):
         json.dumps({"cidr": CIDR_TEST_DATA[test_case - 1][0]}),
         content_type="application/json",
     )
-    assert response.status_code == 200
+    assert response.status_code == status.HTTP_200_OK
     network = models.Network.objects.first()
     assert network.cidr == CIDR_TEST_DATA[test_case - 1][1]
 
@@ -176,7 +178,7 @@ def test_change_cidr(nwk_authorized_client, test_case):
         json.dumps({"cidr": CIDR_TEST_DATA[test_case][0]}),
         content_type="application/json",
     )
-    assert response.status_code == 200
+    assert response.status_code == status.HTTP_200_OK
     network = models.Network.objects.first()
     assert network.cidr == CIDR_TEST_DATA[test_case][1]
 
@@ -197,7 +199,7 @@ def test_create_cidr_network(nwk_authorized_client):
         content_type="application/json",
     )
     # Don't expect this create to work
-    assert response.status_code == 201
+    assert response.status_code == status.HTTP_201_CREATED
     # network = models.Network.objects.first()
     # assert network.name == 'spam'
     # assert network.cidr == ['10.0.1.2']
@@ -213,7 +215,7 @@ def test_patch_bad_cidr(nwk_authorized_client):
     response = nwk_authorized_client.post(
         "/api/networks/", json.dumps({"name": "spam"}), content_type="application/json"
     )
-    assert response.status_code == 201
+    assert response.status_code == status.HTTP_201_CREATED
 
     # Update the CIDR with a bad value
     response = nwk_authorized_client.patch(
@@ -221,7 +223,7 @@ def test_patch_bad_cidr(nwk_authorized_client):
         json.dumps({"cidr": "spam"}),
         content_type="application/json",
     )
-    assert response.status_code == 400  # This should fail
+    assert response.status_code == status.HTTP_400_BAD_REQUEST  # This should fail
 
 
 def test_cidr_bad_json(nwk_authorized_client):
@@ -230,14 +232,14 @@ def test_cidr_bad_json(nwk_authorized_client):
     response = nwk_authorized_client.post(
         "/api/networks/", json.dumps({"name": "spam"}), content_type="application/json"
     )
-    assert response.status_code == 201
+    assert response.status_code == status.HTTP_201_CREATED
     # Add CIDR
     response = nwk_authorized_client.patch(
         response.data["url"],
         json.dumps({"cidr": "192.168.0.0/16"}),
         content_type="application/json",
     )
-    assert response.status_code == 200
+    assert response.status_code == status.HTTP_200_OK
     # Parse list of CIDRs, should work without throwing an exception
     cidr_list = response.data["cidr"]
     assert cidr_list[0] == "192.168.0.0/16"
@@ -253,7 +255,7 @@ def test_asset_in_network_old_api(nwk_authorized_client):
     network = models.Network.objects.create()
     network.cidr = ["10.0.0.0/24"]
     response = nwk_authorized_client.get(f"/api/networks/{network.id}/assets/")
-    assert response.status_code == 404
+    assert response.status_code == status.HTTP_404_NOT_FOUND
 
 
 def test_asset_in_network_new_api(nwk_authorized_client):
@@ -292,9 +294,9 @@ def test_asset_big_network(nwk_authorized_client):
         f"/api/assets/?network={network_small.id}"
     )
     assets = response_small.data["results"]
-    assert len(assets) == 2
+    assert len(assets) == 2  # noqa: PLR2004
     assert {a["ip_address"] for a in assets} == {"192.168.218.101", "192.168.218.102"}
     response_big = nwk_authorized_client.get(f"/api/assets/?network={network_big.id}")
     assets = response_big.data["results"]
-    assert len(assets) == 9
+    assert len(assets) == 9  # noqa: PLR2004
     assert {a["ip_address"] for a in assets} == set(asset_ips)

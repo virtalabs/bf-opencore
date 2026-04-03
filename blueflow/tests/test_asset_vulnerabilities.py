@@ -2,6 +2,8 @@
 
 import json
 
+from rest_framework import status
+
 from blueflow import models
 
 
@@ -14,7 +16,7 @@ def test_get_asset_vulnerabilities(auth_client, asset_vulnerabilities):
     (asset, vulnerability_red, _vulnerability_green) = asset_vulnerabilities
     response = auth_client.get(f"/api/assetvulnerabilities/?asset={asset.id}")
     asset_vulnerabilities = response.data["results"]
-    assert len(asset_vulnerabilities) == 2
+    assert len(asset_vulnerabilities) == 2  # noqa: PLR2004
     assert {av["vulnerability"]["id"] for av in asset_vulnerabilities} == {
         vulnerability_red.id,
         vulnerability_green.id,
@@ -42,7 +44,7 @@ def test_get_asset_vulnerabilities_model(auth_client, asset_vulnerabilities):
         "/api/assetvulnerabilities/?asset__model__iexact={}".format("best-model")
     )
     asset_vulnerabilities = response.data["results"]
-    assert len(asset_vulnerabilities) == 2
+    assert len(asset_vulnerabilities) == 2  # noqa: PLR2004
     assert {av["vulnerability"]["id"] for av in asset_vulnerabilities} == {
         vulnerability_red.id,
         vulnerability_green.id,
@@ -60,7 +62,7 @@ def test_delete_asset_vulnerability(asset_edit_client, asset_vulnerabilities):
         asset=asset, vulnerability=vulnerability_red
     )
     response = asset_edit_client.delete(f"/api/assetvulnerabilities/{av.id}/")
-    assert response.status_code == 204  # deleted
+    assert response.status_code == status.HTTP_204_NO_CONTENT  # deleted
 
 
 def test_update_asset_vulnerability(asset_edit_client, asset_vulnerabilities):
@@ -79,7 +81,7 @@ def test_update_asset_vulnerability(asset_edit_client, asset_vulnerabilities):
         json.dumps({"ignore": "true"}),
         content_type="application/json",
     )
-    assert response.status_code == 200  # deleted
+    assert response.status_code == status.HTTP_200_OK  # deleted
     av = models.AssetVulnerability.objects.get(
         asset=asset, vulnerability=vulnerability_red
     )

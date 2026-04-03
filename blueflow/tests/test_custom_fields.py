@@ -8,6 +8,7 @@ import json
 
 import pytest
 from django.db import IntegrityError
+from rest_framework import status
 from django.db.transaction import TransactionManagementError
 
 from blueflow import models
@@ -67,7 +68,7 @@ def test_api_add_custom_field_via_asset(cleandb, auth_client, admin_client):
     }
     # NOTE: need admin client to add fields
     res = admin_client.post(f"/api/assets/{asset_id}/customfields/", **kwargs)
-    assert res.status_code == 201
+    assert res.status_code == status.HTTP_201_CREATED
     # Assert above FAILS with 404 (no such route)
     af = auth_client.get("/api/assetcustomfields/").json()
     assert af["count"] == 1
@@ -94,7 +95,7 @@ def test_api_add_custom_field(cleandb, auth_client, admin_client):
     }
     # NOTE: need admin client to add fields
     res = admin_client.post("/api/assetcustomfields/", **kwargs)
-    assert res.status_code == 201
+    assert res.status_code == status.HTTP_201_CREATED
     # Assert above FAILS (API wants 'field', not 'field_id')
     af = auth_client.get("/api/assetcustomfields/").json()
     assert af["count"] == 1
@@ -121,7 +122,7 @@ def test_api_change_custom_field(cleandb, auth_client, admin_client):
     }
     # NOTE: need admin client to add fields
     res = admin_client.post("/api/assetcustomfields/", **kwargs)
-    assert res.status_code == 201
+    assert res.status_code == status.HTTP_201_CREATED
     res = auth_client.get("/api/assetcustomfields/").json()
     assert len(res["results"]) == 1
     custom_field = res["results"][0]
@@ -132,7 +133,7 @@ def test_api_change_custom_field(cleandb, auth_client, admin_client):
     res = admin_client.patch(
         "/api/assetcustomfields/{}/".format(custom_field["id"]), **kwargs
     )
-    assert res.status_code == 200
+    assert res.status_code == status.HTTP_200_OK
     res = auth_client.get("/api/assetcustomfields/").json()
     assert res["results"][0]["value_text"] == "not sparkly at all"
 
@@ -155,7 +156,7 @@ def test_api_delete_custom_field(cleandb, auth_client, admin_client):
     }
     # NOTE: need admin client to add fields
     res = admin_client.post("/api/assetcustomfields/", **kwargs)
-    assert res.status_code == 201
+    assert res.status_code == status.HTTP_201_CREATED
     res = auth_client.get("/api/assetcustomfields/").json()
     assert len(res["results"]) == 1
     custom_field = res["results"][0]
@@ -164,7 +165,7 @@ def test_api_delete_custom_field(cleandb, auth_client, admin_client):
     # In order to "null" a value we need to know the ID and submit delete.
     kwargs["data"] = json.dumps({"value_text": None})
     res = admin_client.delete("/api/assetcustomfields/{}/".format(custom_field["id"]))
-    assert res.status_code == 204
+    assert res.status_code == status.HTTP_204_NO_CONTENT
     res = auth_client.get("/api/assetcustomfields/").json()
     assert len(res["results"]) == 0
 
@@ -230,7 +231,7 @@ def test_api_admin_post_existing(cfield, admin_client):
         "content_type": "application/json",
     }
     res = admin_client.post("/api/assetcustomfields/", **kwargs)
-    assert res.status_code == 405
+    assert res.status_code == status.HTTP_405_METHOD_NOT_ALLOWED
 
 
 ################################################################
@@ -250,7 +251,7 @@ def test_api_field_unauthorized_post(cfield, auth_client):
         "content_type": "application/json",
     }
     res = auth_client.post("/api/assetcustomfields/", **kwargs)
-    assert res.status_code == 403
+    assert res.status_code == status.HTTP_403_FORBIDDEN
 
 
 def test_api_field_authorized_post(cfield, asset_edit_client):
@@ -265,7 +266,7 @@ def test_api_field_authorized_post(cfield, asset_edit_client):
         "content_type": "application/json",
     }
     res = asset_edit_client.post("/api/assetcustomfields/", **kwargs)
-    assert res.status_code == 201
+    assert res.status_code == status.HTTP_201_CREATED
 
 
 def test_api_field_admin_post(cfield, admin_client):
@@ -280,7 +281,7 @@ def test_api_field_admin_post(cfield, admin_client):
         "content_type": "application/json",
     }
     res = admin_client.post("/api/assetcustomfields/", **kwargs)
-    assert res.status_code == 201
+    assert res.status_code == status.HTTP_201_CREATED
 
 
 ################################################################
@@ -295,7 +296,7 @@ def test_api_field_unauthorized_patch(cfield, auth_client):
         "content_type": "application/json",
     }
     res = auth_client.patch(f"/api/assetcustomfields/{cfield_id}/", **kwargs)
-    assert res.status_code == 403
+    assert res.status_code == status.HTTP_403_FORBIDDEN
 
 
 def test_api_field_authorized_patch(cfield, asset_edit_client):
@@ -305,7 +306,7 @@ def test_api_field_authorized_patch(cfield, asset_edit_client):
         "content_type": "application/json",
     }
     res = asset_edit_client.patch(f"/api/assetcustomfields/{cfield_id}/", **kwargs)
-    assert res.status_code == 200
+    assert res.status_code == status.HTTP_200_OK
 
 
 def test_api_field_admin_patch(cfield, admin_client):
@@ -315,7 +316,7 @@ def test_api_field_admin_patch(cfield, admin_client):
         "content_type": "application/json",
     }
     res = admin_client.patch(f"/api/assetcustomfields/{cfield_id}/", **kwargs)
-    assert res.status_code == 200
+    assert res.status_code == status.HTTP_200_OK
 
 
 ################################################################
@@ -330,7 +331,7 @@ def test_api_field_unauthorized_delete(cfield, auth_client):
         "content_type": "application/json",
     }
     res = auth_client.delete(f"/api/assetcustomfields/{cfield_id}/", **kwargs)
-    assert res.status_code == 403
+    assert res.status_code == status.HTTP_403_FORBIDDEN
 
 
 def test_api_field_authorized_delete(cfield, asset_edit_client):
@@ -340,7 +341,7 @@ def test_api_field_authorized_delete(cfield, asset_edit_client):
         "content_type": "application/json",
     }
     res = asset_edit_client.delete(f"/api/assetcustomfields/{cfield_id}/", **kwargs)
-    assert res.status_code == 204
+    assert res.status_code == status.HTTP_204_NO_CONTENT
 
 
 def test_api_field_admin_delete(cfield, admin_client):
@@ -350,4 +351,4 @@ def test_api_field_admin_delete(cfield, admin_client):
         "content_type": "application/json",
     }
     res = admin_client.delete(f"/api/assetcustomfields/{cfield_id}/", **kwargs)
-    assert res.status_code == 204
+    assert res.status_code == status.HTTP_204_NO_CONTENT

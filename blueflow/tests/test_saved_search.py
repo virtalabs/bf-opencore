@@ -7,13 +7,15 @@ import json
 
 import pytest
 
+from rest_framework import status
+
 from blueflow import models
 
 
 def test_search(auth_client, acme_assets):
     """Verify that regular boring search works."""
     candidates = auth_client.get("/api/assets/?search=acme")
-    assert candidates.data["count"] == 2
+    assert candidates.data["count"] == 2  # noqa: PLR2004
 
 
 def test_save_search(asset_edit_client, acme_assets):
@@ -25,7 +27,7 @@ def test_save_search(asset_edit_client, acme_assets):
         json.dumps(save_search_data),
         content_type="application/json",
     )
-    assert resp.status_code == 201
+    assert resp.status_code == status.HTTP_201_CREATED
     assert models.SavedSearch.objects.count() == 1
     saved_search = models.SavedSearch.objects.first()
     assert saved_search.name == save_search_data["name"]
@@ -41,7 +43,7 @@ def test_save_search_any_user(auth_client, acme_assets):
         json.dumps(save_search_data),
         content_type="application/json",
     )
-    assert resp.status_code == 201
+    assert resp.status_code == status.HTTP_201_CREATED
     assert models.SavedSearch.objects.count() == 1
 
 
@@ -53,7 +55,7 @@ def test_delete_saved_search(auth_client):
     save_search_data = {"name": "Search for Acme", "search_query": [["search", "acme"]]}
     ss = models.SavedSearch.objects.create(**save_search_data)
     resp = auth_client.delete(f"/api/savedsearches/{ss.id}/")
-    assert resp.status_code == 403
+    assert resp.status_code == status.HTTP_403_FORBIDDEN
 
 
 @pytest.mark.xfail(
@@ -68,7 +70,7 @@ def test_edit_saved_search(auth_client):
         json.dumps({"search_query": [["search", "akm"]]}),
         content_type="application/json",
     )
-    assert resp.status_code == 403
+    assert resp.status_code == status.HTTP_403_FORBIDDEN
     saved_search = models.SavedSearch.objects.first()
     assert saved_search.name == save_search_data["name"]
     assert saved_search.search_query[0][1] == "acme"
@@ -79,7 +81,7 @@ def test_get_saved_search_one(auth_client):
     save_search_data = {"name": "Search for Acme", "search_query": [["search", "acme"]]}
     models.SavedSearch.objects.create(**save_search_data)
     resp = auth_client.get("/api/savedsearches/")
-    assert resp.status_code == 200
+    assert resp.status_code == status.HTTP_200_OK
     results = resp.data["results"]
     assert len(results) == 1
     saved_search = results[0]
@@ -96,5 +98,5 @@ def test_get_saved_search_many(auth_client):
     save_search_data = {"name": "Search for Eggs", "search_query": [["search", "eggs"]]}
     models.SavedSearch.objects.create(**save_search_data)
     resp = auth_client.get("/api/savedsearches/")
-    assert resp.status_code == 200
-    assert len(resp.data["results"]) == 3
+    assert resp.status_code == status.HTTP_200_OK
+    assert len(resp.data["results"]) == 3  # noqa: PLR2004

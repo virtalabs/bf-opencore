@@ -3,6 +3,7 @@
 import django
 import pytest
 from rest_framework.reverse import reverse
+from rest_framework import status
 
 from blueflow import models
 
@@ -45,7 +46,7 @@ def test_asset_tags_api(auth_client):
     """API for tags associated with asset works."""
     asset_obj = models.Asset.objects.create()
     res = auth_client.get(f"/api/assets/{asset_obj.id}/tags/")
-    assert res.status_code == 200
+    assert res.status_code == status.HTTP_200_OK
     assert res.json()["count"] == 0
 
 
@@ -56,4 +57,4 @@ def test_asset_groups_api(auth_client):
     """
     asset_obj = models.Asset.objects.create()
     res = auth_client.get(f"/api/assets/{asset_obj.id}/groups/")
-    assert res.status_code == 404
+    assert res.status_code == status.HTTP_404_NOT_FOUND

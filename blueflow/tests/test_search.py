@@ -10,13 +10,13 @@ from blueflow import models
 def test_free_text_search_manufacturer(auth_client, completables):
     """We can get an asset via its manufacturer with free-text search."""
     candidates = auth_client.get("/api/assets/?search=acme")
-    assert candidates.data["count"] == 2
+    assert candidates.data["count"] == 2  # noqa: PLR2004
 
 
 def test_free_text_search_model(auth_client, completables):
     """We can get an asset via its model with free-text search."""
     candidates = auth_client.get("/api/assets/?search=Instant+Tunnel")
-    assert candidates.data["count"] == 2
+    assert candidates.data["count"] == 2  # noqa: PLR2004
 
 
 def test_free_text_search_os(auth_client, completables):

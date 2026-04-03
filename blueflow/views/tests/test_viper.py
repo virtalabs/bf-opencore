@@ -2,6 +2,8 @@ import datetime
 import uuid
 from unittest.mock import patch
 
+from rest_framework import status
+
 from blueflow.models.viper import ViperWebhookRequest
 
 CALLBACK = "https://example.com/viper/webhook/"
@@ -21,7 +23,7 @@ def test_viper_webhook(auth_client, celery_app):
             },
             content_type="application/json",
         )
-        assert response.status_code == 202, response.data
+        assert response.status_code == status.HTTP_202_ACCEPTED, response.data
         assert "request_id" in response.data
         assert uuid.UUID(response.data["request_id"])  # valid UUID
         assert mock_viper_webhook.call_count == 1
@@ -42,7 +44,7 @@ def test_viper_webhook_bad_request(auth_client):
     response = auth_client.post(
         "/api/viper/webhook/", {}, content_type="application/json"
     )
-    assert response.status_code == 400, response.data
+    assert response.status_code == status.HTTP_400_BAD_REQUEST, response.data
     error = response.data
     required = ["callback", "since", "max_pages", "page_size"]
     assert required == list(error.keys()), (

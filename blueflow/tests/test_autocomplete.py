@@ -1,12 +1,14 @@
 """Test autocomplete interface."""
 
+from rest_framework import status
+
 from blueflow import models
 
 
 def test_autocomplete_no_error(auth_client):
     """Simply test that we don't get a 500 error when attempting complete."""
     candidates = auth_client.get("/api/autocomplete/?autocomplete=spam")
-    assert candidates.status_code == 200
+    assert candidates.status_code == status.HTTP_200_OK
 
 
 def test_autocomplete_no_error_order(auth_client):
@@ -14,14 +16,14 @@ def test_autocomplete_no_error_order(auth_client):
     candidates = auth_client.get(
         "/api/autocomplete/?autocomplete=spam&ordering=suggestion",
     )
-    assert candidates.status_code == 200
+    assert candidates.status_code == status.HTTP_200_OK
 
 
 def test_autocomplete_numeric(auth_client, completables):
     """Autocompleting a string that is just a number finds IPs."""
     candidates = auth_client.get("/api/autocomplete/?autocomplete=1")
-    assert candidates.status_code == 200
-    assert candidates.data["count"] == 3  # Base + IP matches (10.2.3.5, etc.)
+    assert candidates.status_code == status.HTTP_200_OK
+    assert candidates.data["count"] == 3  # noqa: PLR2004  # Base + IP matches
 
 
 def test_autocomplete_simple(auth_client, completables):
@@ -36,7 +38,7 @@ def test_autocomplete_simple(auth_client, completables):
      - A manufacturer page for 'ACME Inc.'
     """
     candidates = auth_client.get("/api/autocomplete/?autocomplete=acm")
-    assert candidates.data["count"] == 5  # Base search, Tag, 3 manufacturer
+    assert candidates.data["count"] == 5  # noqa: PLR2004  # Base search, Tag, 3 manufacturer
 
 
 def test_autocomplete_fields(auth_client, completables):
@@ -114,7 +116,7 @@ def test_autocomplete_manufs_0(auth_client, completables):
     manuf_cands = [
         c for c in candidates.data["results"] if c["suggestion_type"] == "Manufacturer"
     ]
-    assert len(manuf_cands) == 3
+    assert len(manuf_cands) == 3  # noqa: PLR2004
     assert manuf_cands[0]["url"] == "/api/assets/?manufacturer__istartswith=acm"
     assert manuf_cands[0]["query"] == {"manufacturer__istartswith": "acm"}
 
@@ -148,11 +150,11 @@ def test_autocomplete_limit_manufs(auth_client, completables):
     it would now be subsumed into the Manufacturer page suggestion.
     """
     candidates = auth_client.get("/api/autocomplete/?autocomplete=ACME")
-    assert candidates.data["count"] == 4  # Base search, Tag, 2 manufacturer
+    assert candidates.data["count"] == 4  # noqa: PLR2004  # Base search, Tag, 2 manufacturer
     manuf_cands = [
         c for c in candidates.data["results"] if c["suggestion_type"] == "Manufacturer"
     ]
-    assert len(manuf_cands) == 2
+    assert len(manuf_cands) == 2  # noqa: PLR2004
     assert manuf_cands[0]["url"] == "/api/assets/?manufacturer=ACME"
     assert manuf_cands[1]["url"] == "/api/assets/?manufacturer=ACME+Inc."
     assert manuf_cands[0]["query"] == {"manufacturer": "ACME"}
@@ -166,11 +168,11 @@ def test_autocomplete_limit_manufs_lowercase(auth_client, completables):
     difference.
     """
     candidates = auth_client.get("/api/autocomplete/?autocomplete=acme")
-    assert candidates.data["count"] == 4  # Base search, Tag, 2 manufacturer
+    assert candidates.data["count"] == 4  # noqa: PLR2004  # Base search, Tag, 2 manufacturer
     manuf_cands = [
         c for c in candidates.data["results"] if c["suggestion_type"] == "Manufacturer"
     ]
-    assert len(manuf_cands) == 2
+    assert len(manuf_cands) == 2  # noqa: PLR2004
     assert manuf_cands[0]["url"] == "/api/assets/?manufacturer=ACME"
     assert manuf_cands[1]["url"] == "/api/assets/?manufacturer=ACME+Inc."
     assert manuf_cands[0]["query"] == {"manufacturer": "ACME"}
@@ -186,11 +188,11 @@ def test_autocomplete_manufs_space(auth_client, completables):
     it would now be subsumed into the Manufacturer page suggestion.
     """
     candidates = auth_client.get("/api/autocomplete/?autocomplete=ACME%20In")
-    assert candidates.data["count"] == 3  # Base search, 2 manufacturer
+    assert candidates.data["count"] == 3  # noqa: PLR2004  # Base search, 2 manufacturer
     manuf_cands = [
         c for c in candidates.data["results"] if c["suggestion_type"] == "Manufacturer"
     ]
-    assert len(manuf_cands) == 2
+    assert len(manuf_cands) == 2  # noqa: PLR2004
     assert manuf_cands[0]["url"] == ("/api/assets/?manufacturer__istartswith=ACME+In")
     assert manuf_cands[1]["url"] == "/api/assets/?manufacturer=ACME+Inc."
     assert manuf_cands[0]["query"] == {"manufacturer__istartswith": "ACME In"}
@@ -203,7 +205,7 @@ def test_autocomplete_mac_address(auth_client, completables):
     mac_cands = [
         c for c in candidates.data["results"] if c["suggestion_type"] == "Mac Address"
     ]
-    assert len(mac_cands) == 2
+    assert len(mac_cands) == 2  # noqa: PLR2004
     assert mac_cands[0]["url"] == "/api/assets/?mac_address__istartswith=8"
     assert (
         mac_cands[1]["url"]
@@ -217,7 +219,7 @@ def test_autocomplete_os(auth_client, completables):
     """Test that autocompleter matches operating system."""
     candidates = auth_client.get("/api/autocomplete/?autocomplete=win")
     os_cands = [c for c in candidates.data["results"] if c["suggestion_type"] == "OS"]
-    assert len(os_cands) == 2
+    assert len(os_cands) == 2  # noqa: PLR2004
     assert os_cands[0]["url"] == ("/api/assets/?os__istartswith=win")
     assert os_cands[1]["url"] == ("/api/assets/?os__istartswith=Windows+95")
     assert os_cands[0]["query"] == {"os__istartswith": "win"}
@@ -229,7 +231,7 @@ def test_autocomplete_serial_number(auth_client, completables):
     sn_cands = [
         c for c in candidates.data["results"] if c["suggestion_type"] == "Serial Number"
     ]
-    assert len(sn_cands) == 2
+    assert len(sn_cands) == 2  # noqa: PLR2004
     assert sn_cands[0]["url"] == "/api/assets/?serial_number__istartswith=wile"
     assert sn_cands[1]["url"] == "/api/assets/?serial_number__istartswith=WILE-E-1234"
     assert sn_cands[0]["query"] == {"serial_number__istartswith": "wile"}
@@ -282,7 +284,7 @@ def test_autocomplete_custom_value(auth_client, cfield):
     cv_cands = [
         c for c in candidates.data["results"] if c["suggestion_type"] == "Custom Field"
     ]
-    assert len(cv_cands) == 2
+    assert len(cv_cands) == 2  # noqa: PLR2004
     assert (
         cv_cands[0]["url"]
         == "/api/assets/?asset_custom_fields__value_text__istartswith=rath"
@@ -329,13 +331,13 @@ def test_autocomplete_custom_value_duplicate_1(auth_client, cfield):
         asset=asset,
         value_text="rather dull",
     )
-    assert models.AssetCustomField.objects.count() == 2
+    assert models.AssetCustomField.objects.count() == 2  # noqa: PLR2004
 
     candidates = auth_client.get("/api/autocomplete/?autocomplete=rath")
     cv_cands = [
         c for c in candidates.data["results"] if c["suggestion_type"] == "Custom Field"
     ]
-    assert len(cv_cands) == 2
+    assert len(cv_cands) == 2  # noqa: PLR2004
     assert (
         cv_cands[0]["url"]
         == "/api/assets/?asset_custom_fields__value_text__istartswith=rath"
@@ -368,13 +370,13 @@ def test_autocomplete_custom_value_duplicate_2(auth_client, cfield):
         asset=asset,
         value_text="rather dull",
     )
-    assert models.AssetCustomField.objects.count() == 2
+    assert models.AssetCustomField.objects.count() == 2  # noqa: PLR2004
 
     candidates = auth_client.get("/api/autocomplete/?autocomplete=rath")
     cv_cands = [
         c for c in candidates.data["results"] if c["suggestion_type"] == "Custom Field"
     ]
-    assert len(cv_cands) == 2
+    assert len(cv_cands) == 2  # noqa: PLR2004
     assert (
         cv_cands[0]["url"]
         == "/api/assets/?asset_custom_fields__value_text__istartswith=rath"
@@ -407,13 +409,13 @@ def test_autocomplete_custom_value_duplicate_3(auth_client, cfield):
         asset=asset,
         value_text="rather dull",
     )
-    assert models.AssetCustomField.objects.count() == 2
+    assert models.AssetCustomField.objects.count() == 2  # noqa: PLR2004
 
     candidates = auth_client.get("/api/autocomplete/?autocomplete=rath")
     cv_cands = [
         c for c in candidates.data["results"] if c["suggestion_type"] == "Custom Field"
     ]
-    assert len(cv_cands) == 2
+    assert len(cv_cands) == 2  # noqa: PLR2004
     assert (
         cv_cands[0]["url"]
         == "/api/assets/?asset_custom_fields__value_text__istartswith=rath"
