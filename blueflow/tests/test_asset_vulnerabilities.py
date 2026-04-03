@@ -11,7 +11,7 @@ def test_get_asset_vulnerabilities(auth_client, asset_vulnerabilities):
     This route should return the AssetVulnerabilities that are
     associated with the asset with the specified ID.
     """
-    (asset, vulnerability_red, vulnerability_green) = asset_vulnerabilities
+    (asset, vulnerability_red, _vulnerability_green) = asset_vulnerabilities
     response = auth_client.get(f"/api/assetvulnerabilities/?asset={asset.id}")
     asset_vulnerabilities = response.data["results"]
     assert len(asset_vulnerabilities) == 2
@@ -32,7 +32,7 @@ def test_get_asset_vulnerabilities_model(auth_client, asset_vulnerabilities):
     This route should return the AssetVulnerabilities that are
     associated with assets that have a model that start with <string>.
     """
-    (asset, vulnerability_red, vulnerability_green) = asset_vulnerabilities
+    (asset, vulnerability_red, _vulnerability_green) = asset_vulnerabilities
     asset.model = "best-model"
     asset.save()
     a = models.Asset.objects.get(id=asset.id)
@@ -55,7 +55,7 @@ def test_delete_asset_vulnerability(asset_edit_client, asset_vulnerabilities):
 
     AKA delete an assetvulnerability.
     """
-    (asset, vulnerability_red, vulnerability_green) = asset_vulnerabilities
+    (asset, vulnerability_red, _vulnerability_green) = asset_vulnerabilities
     av = models.AssetVulnerability.objects.get(
         asset=asset, vulnerability=vulnerability_red
     )
@@ -68,7 +68,7 @@ def test_update_asset_vulnerability(asset_edit_client, asset_vulnerabilities):
 
     AKA update/patch an assetvulnerability.
     """
-    (asset, vulnerability_red, vulnerability_green) = asset_vulnerabilities
+    (asset, vulnerability_red, _vulnerability_green) = asset_vulnerabilities
     av = models.AssetVulnerability.objects.get(
         asset=asset, vulnerability=vulnerability_red
     )

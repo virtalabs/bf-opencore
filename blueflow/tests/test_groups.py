@@ -57,7 +57,7 @@ def test_get_asset_asset_groups(auth_client, asset_groups):
     response = auth_client.get(f"/api/assetgroups/?asset={asset_groups.aa.id}")
     agroups = response.data["results"]
     assert len(agroups) == 2
-    assert set(g["id"] for g in agroups) == {asset_groups.agra.id, asset_groups.agga.id}
+    assert {g["id"] for g in agroups} == {asset_groups.agra.id, asset_groups.agga.id}
 
 
 def test_get_no_asset_asset_groups(auth_client, asset_groups):
@@ -72,7 +72,7 @@ def test_get_group_asset_groups(auth_client, asset_groups):
     response = auth_client.get(f"/api/assetgroups/?group={asset_groups.gg.id}")
     agroups = response.data["results"]
     assert len(agroups) == 2
-    assert set(g["id"] for g in agroups) == {asset_groups.agga.id, asset_groups.aggb.id}
+    assert {g["id"] for g in agroups} == {asset_groups.agga.id, asset_groups.aggb.id}
 
 
 def test_get_no_group_asset_groups(auth_client, asset_groups):

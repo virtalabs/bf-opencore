@@ -544,7 +544,7 @@ class Asset(models.Model):
         """Update the patch risk AssetRiskFactor using needs_sw_update()."""
         # TODO: Implement after we have a generalized algorithm for risk scoring
         raise NotImplementedError("Update patch risk is not implemented")
-        needs_update, dummy, dummy = self.needs_sw_update()
+        needs_update, _dummy, _dummy2 = self.needs_sw_update()
         if needs_update:
             self.add_risk_factor("needs_patch", 1.0)
         else:
@@ -587,7 +587,7 @@ class Asset(models.Model):
         """Return summary only (to avoid 'protected access')."""
         # TODO: Implement after we have a generalized algorithm for risk scoring
         raise NotImplementedError("Risk score summary is not implemented")
-        dummy_rft_scores, summary = self._calculate_risk()
+        _dummy_rft_scores, summary = self._calculate_risk()
         return summary
 
     def rescore(self, reason="Rescore", save_reason=True):
@@ -704,7 +704,7 @@ class Asset(models.Model):
         # Special case for asset_risk_factors__<RiskFactor shortname>
         if unflattened_field == "asset_risk_factors":
             assert len(unflattened_val.items()) == 1
-            shortname = list(unflattened_val.items())[0][0]
+            shortname = next(iter(unflattened_val.items()))[0]
             try:
                 _ = RiskFactor.objects.get(shortname=shortname)
             except RiskFactor.DoesNotExist:
@@ -718,7 +718,7 @@ class Asset(models.Model):
         # Special case for asset_custom_fields__<custom field name>
         if unflattened_field == "asset_custom_fields":
             assert len(unflattened_val.items()) == 1
-            shortname = list(unflattened_val.items())[0][0]
+            shortname = next(iter(unflattened_val.items()))[0]
             # Custom fields names may contain spaces.  Support names with
             # spaces replaced by underscore
             fk_name_regex = shortname.replace("_", "[ _]")
@@ -772,7 +772,7 @@ class Asset(models.Model):
             .annotate(count=Count("app_sw_version"))
         )
 
-        vcounts = Counter(dict((v["app_sw_version"], v["count"]) for v in vs))
+        vcounts = Counter({v["app_sw_version"]: v["count"] for v in vs})
 
         # don't forget to count this asset's app_sw_version
         if self.app_sw_version:
@@ -788,7 +788,7 @@ class Asset(models.Model):
 
         # is any of these version numbers greater than ours?
         if asset_ver_ok:
-            for ver, _ in vcounts.items():
+            for ver in vcounts.keys():
                 if packaging.version.parse(ver) > packaging.version.parse(
                     self.app_sw_version
                 ):

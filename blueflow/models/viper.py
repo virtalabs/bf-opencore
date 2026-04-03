@@ -64,7 +64,7 @@ class ViperAsset:
     serial_number: str
     location: dict[str, str]
     status: str
-    vendorID: str
+    vendorID: str  # noqa: N815
 
     def __init__(self, asset: Asset):
         self.id = asset.id

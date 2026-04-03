@@ -10,7 +10,7 @@ from .ipset import ipset_from_network
 from .quarters import prev_quarter_start, quarter_start
 
 
-class password(str):  # pylint: disable=invalid-name
+class password(str):  # pylint: disable=invalid-name  # noqa: N801
     """Class/type for passwords.
 
     Works exactly like a regular Python 'str'; is used in the frontend

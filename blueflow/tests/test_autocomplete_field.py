@@ -10,7 +10,7 @@ def test_autocomplete_field(auth_client, complete_us):
 
     manufs = auth_client.get("/api/autocomplete_field/?field=manufacturer")
     assert manufs.status_code == 200
-    assert set(manufs.json()) == set(["Foo", "Bar"])
+    assert set(manufs.json()) == {"Foo", "Bar"}
 
 
 def test_autocomplete_field_with_constraints(auth_client, complete_us):
@@ -19,7 +19,7 @@ def test_autocomplete_field_with_constraints(auth_client, complete_us):
 
     manufs = auth_client.get("/api/autocomplete_field/?field=model&manufacturer=Foo")
     assert manufs.status_code == 200
-    assert set(manufs.json()) == set(["One", "Two", "Three"])
+    assert set(manufs.json()) == {"One", "Two", "Three"}
 
 
 def test_autocomplete_field_empty(auth_client):

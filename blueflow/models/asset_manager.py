@@ -31,11 +31,9 @@ class AssetManager(models.Manager):
         raise NotImplementedError("Rescore all is not implemented")
         RiskFactor = apps.get_model("blueflow", "RiskFactor")
         RiskFactor.objects.normalize_weights()  # Abundance of caution
-        summaries = []
         remediable_risk_sum = defaultdict(int)
         remediable_asset_count = defaultdict(int)
-        for asset in self.get_queryset().all():
-            summaries.append(asset.rescore())
+        summaries = [asset.rescore() for asset in self.get_queryset().all()]
         # Iterate over all the summaries
         # Eng desc of why and what do
         for summary in summaries:
@@ -209,7 +207,7 @@ class AssetManager(models.Manager):
         for key, value in _unflatten_json_params(defaults).items():
             if isinstance(value, dict):
                 if getattr(asset, key) is None:
-                    setattr(asset, key, dict())
+                    setattr(asset, key, {})
                 getattr(asset, key).update(value)
             else:
                 setattr(asset, key, value)
@@ -349,18 +347,18 @@ class AssetQuerySet(models.QuerySet):
         """
         # TODO: Implement after we have a generalized algorithm for risk scoring
         raise NotImplementedError("Risk histogram is not implemented")
-        h = dict(
-            critical=self.filter(risk_score__gte=CRITICAL_RISK_LIMIT).count(),
-            high=self.filter(
+        h = {
+            "critical": self.filter(risk_score__gte=CRITICAL_RISK_LIMIT).count(),
+            "high": self.filter(
                 risk_score__lt=CRITICAL_RISK_LIMIT, risk_score__gte=HIGH_RISK_LIMIT
             ).count(),
-            med=self.filter(
+            "med": self.filter(
                 risk_score__lt=HIGH_RISK_LIMIT, risk_score__gte=MED_RISK_LIMIT
             ).count(),
-            low=self.filter(risk_score__lt=MED_RISK_LIMIT, risk_score__gt=0.0).count(),
-            no=self.filter(risk_score=0.0).count(),
+            "low": self.filter(risk_score__lt=MED_RISK_LIMIT, risk_score__gt=0.0).count(),
+            "no": self.filter(risk_score=0.0).count(),
             # null=self.filter(risk_score__isnull=True).count(),
-        )
+        }
         total_count = sum(h.values())
         if total_count != self.filter(risk_score__isnull=False).count():
             logger.error(
@@ -405,43 +403,43 @@ class AssetQuerySet(models.QuerySet):
             median = None
         else:
             median = statistics.median(a.risk_score for a in notnull)
-        s = dict(
-            sum=self.aggregate(models.Sum("risk_score"))["risk_score__sum"],
-            mean=self.aggregate(models.Avg("risk_score"))["risk_score__avg"],
-            max=self.aggregate(models.Max("risk_score"))["risk_score__max"],
-            min=self.aggregate(models.Min("risk_score"))["risk_score__min"],
-            median=median,
-            sec_sum=self.aggregate(val=Coalesce(models.Sum("risk_score_sec"), 0))[
+        s = {
+            "sum": self.aggregate(models.Sum("risk_score"))["risk_score__sum"],
+            "mean": self.aggregate(models.Avg("risk_score"))["risk_score__avg"],
+            "max": self.aggregate(models.Max("risk_score"))["risk_score__max"],
+            "min": self.aggregate(models.Min("risk_score"))["risk_score__min"],
+            "median": median,
+            "sec_sum": self.aggregate(val=Coalesce(models.Sum("risk_score_sec"), 0))[
                 "val"
             ],
-            sec_mean=self.aggregate(val=Coalesce(models.Avg("risk_score_sec"), 0))[
+            "sec_mean": self.aggregate(val=Coalesce(models.Avg("risk_score_sec"), 0))[
                 "val"
             ],
-            pri_sum=self.aggregate(val=Coalesce(models.Sum("risk_score_pri"), 0))[
+            "pri_sum": self.aggregate(val=Coalesce(models.Sum("risk_score_pri"), 0))[
                 "val"
             ],
-            pri_mean=self.aggregate(val=Coalesce(models.Avg("risk_score_pri"), 0))[
+            "pri_mean": self.aggregate(val=Coalesce(models.Avg("risk_score_pri"), 0))[
                 "val"
             ],
-            cli_sum=self.aggregate(val=Coalesce(models.Sum("risk_score_cli"), 0))[
+            "cli_sum": self.aggregate(val=Coalesce(models.Sum("risk_score_cli"), 0))[
                 "val"
             ],
-            cli_mean=self.aggregate(val=Coalesce(models.Avg("risk_score_cli"), 0))[
+            "cli_mean": self.aggregate(val=Coalesce(models.Avg("risk_score_cli"), 0))[
                 "val"
             ],
-            likelihood_sum=self.aggregate(
+            "likelihood_sum": self.aggregate(
                 val=Coalesce(models.Sum("risk_score_likelihood"), 0)
             )["val"],
-            likelihood_mean=self.aggregate(
+            "likelihood_mean": self.aggregate(
                 val=Coalesce(models.Avg("risk_score_likelihood"), 0)
             )["val"],
-            impact_sum=self.aggregate(val=Coalesce(models.Sum("risk_score_impact"), 0))[
-                "val"
-            ],
-            impact_mean=self.aggregate(
+            "impact_sum": self.aggregate(
+                val=Coalesce(models.Sum("risk_score_impact"), 0)
+            )["val"],
+            "impact_mean": self.aggregate(
                 val=Coalesce(models.Avg("risk_score_impact"), 0)
             )["val"],
-        )
+        }
         return s
 
     def risk_factor_statistics(self):
@@ -508,7 +506,7 @@ def _unflatten_json_field(field, value):
     """Return key and value of an JSON field unflattened into a dict."""
     field_dict = _unflatten_json_field_helper(field, value)
     assert len(field_dict.items()) == 1
-    key, value = list(field_dict.items())[0]
+    key, value = next(iter(field_dict.items()))
     return key, value
 
 
@@ -525,7 +523,7 @@ def _unflatten_json_params(params):
 
     """
     if params is None:
-        return dict()
+        return {}
 
     output = {}
     Asset = apps.get_model("blueflow", "Asset")

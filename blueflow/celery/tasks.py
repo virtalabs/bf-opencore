@@ -19,7 +19,7 @@ class Task(BaseTask):
     dont_auto_retry_for = (TypeError,)
 
     def on_failure(self, exc, task_id, args, kwargs, einfo):
-        logger.error(f"[!!] {task_id} failed: {exc}")
+        logger.error("[!!] %s failed: %s", task_id, exc)
 
 def _send_viper_payload(viper_data: ViperWebhookJob, request_id: str) -> None:
     """We may want to consider logging partial errors and attempting to
@@ -43,7 +43,7 @@ def _send_viper_payload(viper_data: ViperWebhookJob, request_id: str) -> None:
 def viper_webhook(data: dict, request_id: str = ""):
     """Process a viper webhook."""
     viper_data = ViperWebhookRequest(**data)
-    logger.info(f"Processing viper webhook: {viper_data}")
+    logger.info("Processing viper webhook: %s", viper_data)
     if request_id:
         ViperWebhookJob.objects.filter(pk=request_id).update(status=ViperWebhookJob.Status.STARTED)
     try:
