@@ -18,7 +18,7 @@ logger = celery.utils.log.get_task_logger(__name__)
 logging.getLogger("sh").setLevel(logging.WARNING)
 
 
-# TODO: review this when we are ready to setup the portscan integration
+# TODO(legacy): review this when we are ready to setup the portscan integration
 # CONNECTOR_SPEC = {
 #     "display_name": "Port Scan",
 #     "description": """

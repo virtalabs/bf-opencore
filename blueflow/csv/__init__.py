@@ -19,7 +19,7 @@ from blueflow.utils import FieldMap, FileWrapper
 logger = celery.utils.log.get_task_logger(__name__)
 
 
-# TODO: review this when we are ready to setup the csv integration
+# TODO(legacy): review this when we are ready to setup the csv integration
 # Simple field mappings
 # DEFAULT_FIELD_MAPPING = {
 #     'serial_number': 'Serial',

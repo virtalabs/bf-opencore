@@ -12,7 +12,7 @@ from blueflow.utils.hostname import hostname_ok, ip_address_ok
 logger = celery.utils.log.get_task_logger(__name__)
 
 
-# TODO: review this when we are ready to setup the fingerprint integration
+# TODO(legacy): review this when we are ready to setup the fingerprint integration
 # CONNECTOR_SPEC = {
 #     "display_name": "Fingerprint",
 #     "description": """

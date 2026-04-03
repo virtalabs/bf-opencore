@@ -17,7 +17,7 @@ logger = celery.utils.log.get_task_logger(__name__)
 logging.getLogger("sh").setLevel(logging.WARNING)
 
 
-# TODO: review this when we are ready to setup the ping integration
+# TODO(legacy): review this when we are ready to setup the ping integration
 # CONNECTOR_SPEC = {
 #     "display_name": "Ping",
 #     "description": "Ping an asset via ICMP ping.",

@@ -31,7 +31,7 @@ class ViperWebhookSerializer(serializers.Serializer):
 class ViperViewSet(viewsets.ViewSet):
     """ViewSet for the Viper integration."""
 
-    # TODO review authentication
+    # TODO(taylorcochran): review authentication
     permission_classes = [AllowAny]
     parser_classes = [JSONParser]
     serializer_class = ViperWebhookSerializer

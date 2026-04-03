@@ -8,7 +8,7 @@ from django.utils import timezone
 logger = logging.getLogger(__name__)
 
 
-# TODO: do we still need this model now that Connectors have been removed?
+# TODO(taylorcochran): do we still need this model now that Connectors have been removed?
 class Scan(models.Model):
     """Indicates a scan.
 
