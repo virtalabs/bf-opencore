@@ -64,7 +64,7 @@ CIDR_TEST_DATA = [
 ]
 
 
-@pytest.mark.parametrize("supplied_cidr, resulting_cidr", CIDR_TEST_DATA)
+@pytest.mark.parametrize(("supplied_cidr", "resulting_cidr"), CIDR_TEST_DATA)
 def test_create_network_then_cidr(supplied_cidr, resulting_cidr, nwk_authorized_client):
     """Create a network then add one or more CIDR."""
     response = nwk_authorized_client.post(
@@ -83,7 +83,7 @@ def test_create_network_then_cidr(supplied_cidr, resulting_cidr, nwk_authorized_
     assert network.cidr == resulting_cidr
 
 
-@pytest.mark.parametrize("supplied_cidr, resulting_cidr", CIDR_TEST_DATA)
+@pytest.mark.parametrize(("supplied_cidr", "resulting_cidr"), CIDR_TEST_DATA)
 def test_get_cidr(supplied_cidr, resulting_cidr, nwk_authorized_client):
     """Create a network + CIDR, then get CIDR."""
     # using same test data, ignoring result
@@ -293,9 +293,7 @@ def test_asset_big_network(nwk_authorized_client):
     )
     assets = response_small.data["results"]
     assert len(assets) == 2
-    assert {a["ip_address"] for a in assets} == set(
-        ["192.168.218.101", "192.168.218.102"]
-    )
+    assert {a["ip_address"] for a in assets} == {"192.168.218.101", "192.168.218.102"}
     response_big = nwk_authorized_client.get(f"/api/assets/?network={network_big.id}")
     assets = response_big.data["results"]
     assert len(assets) == 9

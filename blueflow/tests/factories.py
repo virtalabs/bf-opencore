@@ -23,7 +23,7 @@ def make_user(**kwargs):
     """
     from django.contrib.auth import get_user_model
 
-    User = get_user_model()
+    User = get_user_model()  # noqa: N806
     username = kwargs.pop("username", "testuser")
     password = kwargs.pop("password", "testpass")
     return User.objects.create_user(username=username, password=password, **kwargs)
@@ -37,7 +37,7 @@ def make_superuser(**kwargs):
     """
     from django.contrib.auth import get_user_model
 
-    User = get_user_model()
+    User = get_user_model()  # noqa: N806
     username = kwargs.pop("username", "admin")
     email = kwargs.pop("email", "admin@test.example")
     password = kwargs.pop("password", "adminpass")

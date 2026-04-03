@@ -43,9 +43,7 @@ def test_autocomplete_fields(auth_client, completables):
     """Test that the fields are what we expect."""
     candidates = auth_client.get("/api/autocomplete/?autocomplete=acm")
     first_c = candidates.data["results"][0]
-    assert set(first_c.keys()) == set(
-        ["term", "suggestion", "suggestion_type", "url", "query"],
-    )
+    assert set(first_c.keys()) == {"term", "suggestion", "suggestion_type", "url", "query"}
 
 
 def test_autocomplete_tag(auth_client, completables):

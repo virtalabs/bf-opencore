@@ -66,7 +66,7 @@ def main(ctx, hostname):
     Scan = apps.get_model("blueflow", "Scan")
     last_pinged = timezone.now()
     for host in nm.all_hosts():
-        asset, dummy = Asset.objects.get_or_create(ip_address=host)
+        asset, _dummy = Asset.objects.get_or_create(ip_address=host)
         if "tcp" in nm[host]:
             open_tcp_ports = list(nm[host]["tcp"].keys())
             ctx.ct.print("%s: %s TCP ports open" % (host, open_tcp_ports))

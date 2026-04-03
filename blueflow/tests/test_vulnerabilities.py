@@ -51,7 +51,7 @@ def test_get_vulnerable_assets(auth_client):
     response = auth_client.get(f"/api/assets/?vulnerability={vuln.id}")
     assets = response.data["results"]
     assert len(assets) == 2
-    assert {a["id"] for a in assets} == set([asset_1.id, asset_2.id])
+    assert {a["id"] for a in assets} == {asset_1.id, asset_2.id}
 
 
 def test_get_vulnerable_assets_ignored(auth_client):
@@ -66,7 +66,7 @@ def test_get_vulnerable_assets_ignored(auth_client):
     response = auth_client.get(f"/api/assets/?vulnerability={vuln.id}")
     assets = response.data["results"]
     assert len(assets) == 2
-    assert {a["id"] for a in assets} == set([asset_1.id, asset_2.id])
+    assert {a["id"] for a in assets} == {asset_1.id, asset_2.id}
 
 
 def test_get_vulnerable_assets_hide_ignored(auth_client):
@@ -85,7 +85,7 @@ def test_get_vulnerable_assets_hide_ignored(auth_client):
     )
     assets = response.data["results"]
     assert len(assets) == 1
-    assert {a["id"] for a in assets} == set([asset_1.id])
+    assert {a["id"] for a in assets} == {asset_1.id}
 
 
 def test_get_vulnerable_assets_remediated(auth_client):
@@ -100,7 +100,7 @@ def test_get_vulnerable_assets_remediated(auth_client):
     response = auth_client.get(f"/api/assets/?vulnerability={vuln.id}")
     assets = response.data["results"]
     assert len(assets) == 2
-    assert {a["id"] for a in assets} == set([asset_1.id, asset_2.id])
+    assert {a["id"] for a in assets} == {asset_1.id, asset_2.id}
 
 
 def test_get_vulnerable_assets_hide_remediated(auth_client):
@@ -119,4 +119,4 @@ def test_get_vulnerable_assets_hide_remediated(auth_client):
     )
     assets = response.data["results"]
     assert len(assets) == 1
-    assert {a["id"] for a in assets} == set([asset_1.id])
+    assert {a["id"] for a in assets} == {asset_1.id}

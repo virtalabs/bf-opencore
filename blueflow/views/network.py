@@ -59,7 +59,7 @@ class NetworkSerializer(serializers.HyperlinkedModelSerializer):
 
     def validate_cidr(self, cidr_string):
         """Take a CIDR or comma-separated list of CIDRs and make it a list."""
-        return [cidr for cidr in ipset_from_network(cidr_string).iter_cidrs()]
+        return list(ipset_from_network(cidr_string).iter_cidrs())
 
 
 class NetworkFilter(django_filters.rest_framework.FilterSet):

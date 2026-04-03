@@ -33,9 +33,13 @@ class NetworkEndpointSerializer(serializers.HyperlinkedModelSerializer):
         """Wire this serializer to a model."""
 
         model = NetworkEndpoint
-        fields = tuple(
-            f.name for f in model._meta.fields if not f.name.startswith("_")
-        ) + ("asset_id", "asset", "suggestions", "blacklist")
+        fields = (
+            *(f.name for f in model._meta.fields if not f.name.startswith("_")),
+            "asset_id",
+            "asset",
+            "suggestions",
+            "blacklist",
+        )
 
     def validate_asset_id(self, value):
         """Check asset ID is valid."""

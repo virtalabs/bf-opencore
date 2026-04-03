@@ -175,10 +175,10 @@ def complete_us(db):
     }
     assets = []
     for manuf, model_list in mfmods.items():
-        for model_name in model_list:
-            assets.append(
-                models.Asset(manufacturer=manuf, model=model_name),
-            )
+        assets.extend(
+            models.Asset(manufacturer=manuf, model=model_name)
+            for model_name in model_list
+        )
     models.Asset.objects.bulk_create(assets)
 
 

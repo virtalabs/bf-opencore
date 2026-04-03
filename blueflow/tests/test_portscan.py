@@ -57,7 +57,7 @@ def test_portscan_basic(mock_sudo, setup_db):
     mock_sudo.return_value.stderr = b""
     mock_sudo.return_value.exit_code = 0
 
-    kwargs = dict(hostname="localhost")
+    kwargs = {"hostname": "localhost"}
     status = blueflow.portscan.main.apply(kwargs=kwargs)
     assert status.result is not None
 
@@ -76,7 +76,7 @@ def test_portscan_scan_object(mock_sudo, setup_db):
     mock_sudo.return_value.stderr = b""
     mock_sudo.return_value.exit_code = 0
 
-    kwargs = dict(hostname="localhost")
+    kwargs = {"hostname": "localhost"}
     status = blueflow.portscan.main.apply(kwargs=kwargs)
     assert status.result is not None
 

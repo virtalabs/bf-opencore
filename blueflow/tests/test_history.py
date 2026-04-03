@@ -286,7 +286,7 @@ class TestOneFieldHistory:
 
 
 @pytest.mark.parametrize(
-    "field_name, change_sequence",
+    ("field_name", "change_sequence"),
     [
         ("category", ["foo"]),
         ("category", [""]),

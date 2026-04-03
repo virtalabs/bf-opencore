@@ -194,7 +194,7 @@ def test_get_attachment_manuf_model(asset_edit_client, media_root):
 
 
 @pytest.mark.parametrize(
-    "upload_manuf,upload_model,filter_params,expected_count",
+    ("upload_manuf", "upload_model", "filter_params", "expected_count"),
     [
         pytest.param(
             "ACME, Inc.",
