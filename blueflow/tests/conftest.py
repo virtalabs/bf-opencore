@@ -1,4 +1,7 @@
-"""Pytest configuration for blueflow app-level tests. All tests require PostgreSQL (set DATABASE_URL in test settings)."""
+"""Pytest configuration for blueflow app-level tests.
+
+All tests require PostgreSQL (set DATABASE_URL in test settings).
+"""
 
 from collections import namedtuple
 
@@ -11,13 +14,19 @@ import pytest
 
 @pytest.fixture
 def asset_edit_client(auth_client):
-    """API client with user that can create/edit assets. Alias to auth_client in blueflow."""
+    """API client with user that can create/edit assets.
+
+    Alias to auth_client in blueflow.
+    """
     return auth_client
 
 
 @pytest.fixture
 def nwk_authorized_client(auth_client):
-    """API client with user allowed to manage networks. Alias to auth_client in blueflow."""
+    """API client with user allowed to manage networks.
+
+    Alias to auth_client in blueflow.
+    """
     return auth_client
 
 
@@ -29,13 +38,19 @@ def biomed_client(auth_client):
 
 @pytest.fixture
 def custom_field_edit_client(auth_client):
-    """API client with user allowed to edit custom field names. Alias to auth_client in blueflow."""
+    """API client with user allowed to edit custom field names.
+
+    Alias to auth_client in blueflow.
+    """
     return auth_client
 
 
 @pytest.fixture
 def pulse_feed_auth_client(auth_client):
-    """API client with user allowed to delete/close pulse feed items. Alias to auth_client in blueflow."""
+    """API client with user allowed to delete/close pulse feed items.
+
+    Alias to auth_client in blueflow.
+    """
     return auth_client
 
 
@@ -84,7 +99,7 @@ def cleandb(db):
 
 @pytest.fixture
 def cfield(cleandb):
-    """Prepare some things for reuse: an asset, custom field names, and a custom field value."""
+    """Prepare fixtures: an asset, custom field names, and a custom field value."""
     from blueflow import models
 
     asset = models.Asset.objects.create(hostname="foo.com")

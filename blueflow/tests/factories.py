@@ -1,4 +1,7 @@
-"""Factory helpers for blueflow tests (model_bakery). Use these instead of ad hoc Model.objects.create()."""
+"""Factory helpers for blueflow tests (model_bakery).
+
+Use these instead of ad hoc Model.objects.create().
+"""
 
 from model_bakery import baker
 
@@ -13,7 +16,11 @@ def make_tag(**kwargs):
 
 
 def make_user(**kwargs):
-    """Create a regular user via Django's create_user (correct password hashing). For APIClient auth, use auth_client fixture or force_authenticate(user=make_user(...))."""
+    """Create a regular user via Django's create_user (correct password hashing).
+
+    For APIClient auth, use auth_client fixture or
+    force_authenticate(user=make_user(...)).
+    """
     from django.contrib.auth import get_user_model
 
     User = get_user_model()
@@ -23,7 +30,11 @@ def make_user(**kwargs):
 
 
 def make_superuser(**kwargs):
-    """Create a superuser via Django's create_superuser (correct password hashing). For admin-style tests, use admin_client fixture or force_authenticate(user=make_superuser(...))."""
+    """Create a superuser via Django's create_superuser (correct password hashing).
+
+    For admin-style tests, use admin_client fixture or
+    force_authenticate(user=make_superuser(...)).
+    """
     from django.contrib.auth import get_user_model
 
     User = get_user_model()

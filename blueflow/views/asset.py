@@ -3,7 +3,7 @@
 import importlib
 import logging
 import re
-from typing import ClassVar, Any
+from typing import Any, ClassVar
 
 import django_filters
 import django_filters.rest_framework.filters as drf_filters
@@ -539,7 +539,7 @@ class AssetViewSet(
         avoids a database error due to "non-unique" MAC when there's an
         existing empty MAC address.
         """
-        return mac if mac else None
+        return mac or None
 
     def update(self, request: Request, *args: int, **kwargs: str) -> Response:
         """Override update in order to convert TCP port string to list.
@@ -548,9 +548,13 @@ class AssetViewSet(
         validator would kick a string out (it really wants a list.)
         """
         if "open_ports_tcp" in request.data:
-            request.data['open_ports_tcp'] = self._validate_open_ports(request.data['open_ports_tcp'])
+            request.data["open_ports_tcp"] = self._validate_open_ports(
+                request.data["open_ports_tcp"]
+            )
         if "mac_address" in request.data:
-            request.data['mac_address'] = self._validate_mac_address(request.data['mac_address'])
+            request.data["mac_address"] = self._validate_mac_address(
+                request.data["mac_address"]
+            )
         return super().update(request, *args, **kwargs)
 
     def create(self, request: Request, *args: int, **kwargs: str) -> Response:
@@ -559,9 +563,13 @@ class AssetViewSet(
         NOTE: (see 'update' method)
         """
         if "open_ports_tcp" in request.data:
-            request.data['open_ports_tcp'] = self._validate_open_ports(request.data['open_ports_tcp'])
+            request.data["open_ports_tcp"] = self._validate_open_ports(
+                request.data["open_ports_tcp"]
+            )
         if "mac_address" in request.data:
-            request.data['mac_address'] = self._validate_mac_address(request.data['mac_address'])
+            request.data["mac_address"] = self._validate_mac_address(
+                request.data["mac_address"]
+            )
         return super().create(request, *args, **kwargs)
 
     ################################
@@ -936,7 +944,9 @@ class AssetViewSet(
 
             # Apply the same field normalisations as create/update.
             if "open_ports_tcp" in item:
-                item["open_ports_tcp"] = self._validate_open_ports(item["open_ports_tcp"])
+                item["open_ports_tcp"] = self._validate_open_ports(
+                    item["open_ports_tcp"]
+                )
             if "mac_address" in item:
                 item["mac_address"] = self._validate_mac_address(item["mac_address"])
             try:

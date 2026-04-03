@@ -4,8 +4,8 @@ Uses built-in pytest-django text fixtures from
 http://pytest-django.readthedocs.io/en/latest/helpers.html
 """
 
-import pytest
 from django.utils import timezone
+
 from blueflow import models
 
 

@@ -375,4 +375,7 @@ class NetworkEndpoint(models.Model):
         return isinstance(other, self.__class__) and self.pk == other.pk
 
     def __str__(self):
-        return f"Netflow endpoint with MAC {self.mac_address} and IP {(self.ipv4_address, self.ipv6_address)}"
+        return (
+            f"Netflow endpoint with MAC {self.mac_address} "
+            f"and IP {(self.ipv4_address, self.ipv6_address)}"
+        )

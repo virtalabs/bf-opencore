@@ -119,7 +119,7 @@ class AutocompleteViewSet(viewsets.ReadOnlyModelViewSet):
     """Lists search suggestions based on user entry."""
 
     serializer_class = AutocompleteSerializer
-    filter_backends = []  # Custom get_queryset returns non-ORM objects; disable default filters
+    filter_backends = []  # Non-ORM get_queryset; disable default filter backends
     # NOTE: Since this ViewSet doesn't have a proper queryset/associated
     #   model, it's not possible to check for permissions the
     #   automatic/Django way -- even checking the permissions causes an

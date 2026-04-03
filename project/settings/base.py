@@ -1,4 +1,7 @@
-"""Base Django settings (build-time config). Do not set DATABASES, SECRET_KEY, DEBUG, ALLOWED_HOSTS here."""
+"""Base Django settings (build-time config).
+
+Do not set DATABASES, SECRET_KEY, DEBUG, ALLOWED_HOSTS here.
+"""
 
 import logging
 import os

@@ -28,7 +28,8 @@ class Alert(models.Model):
         related_name="alert_pulsefeeditems",
         null=True,
     )
-    # TODO: Implement risk metrics after we have a generalized algorithm for risk scoring
+    # TODO: Implement risk metrics after we have a generalized algorithm
+    # for risk scoring
     # riskmetrics = models.ForeignKey(
     #     'RiskMetrics',
     #     on_delete=models.SET_NULL,

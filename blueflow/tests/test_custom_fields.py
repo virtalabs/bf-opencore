@@ -209,7 +209,10 @@ def test_custom_field(cfield, auth_client):
 
 @pytest.mark.xfail(
     raises=(IntegrityError, TransactionManagementError),
-    reason="Posting duplicate field value raises IntegrityError; may cause TransactionManagementError",
+    reason=(
+        "Posting duplicate field value raises IntegrityError;"
+        " may cause TransactionManagementError"
+    ),
 )
 def test_api_admin_post_existing(cfield, admin_client):
     """Posting a field value that already exists should fail with 405

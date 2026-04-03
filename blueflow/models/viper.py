@@ -80,7 +80,8 @@ class ViperAsset:
         self.role = ""
         self.upstream_api = ""
         self.hostname = asset.hostname or ""
-        # Coerce to str so payload is JSON-serializable (Asset uses netaddr.EUI / InetAddress)
+        # Coerce to str so payload is JSON-serializable
+        # (Asset uses netaddr.EUI / InetAddress)
         self.mac_address = str(asset.mac_address) if asset.mac_address else ""
         self.serial_number = asset.serial_number or ""
         self.location = {}  # TODO: custom fields?
@@ -93,7 +94,7 @@ class ViperAsset:
         # a potentially optional key in a restful blob
         # exclude optional keys when their values are falsey
         base = asdict(self)
-        optional = ['cpe', 'role']
+        optional = ["cpe", "role"]
         for key in optional:
             if not base[key]:
                 del base[key]
@@ -124,7 +125,8 @@ class ViperWebhookResponse:
         return base
 
     def _gen_page(self, page: int) -> str:
-        """Generate a page URL based on the page number, page size, and last sync time."""
+        """Generate a page URL based on the page number, page size, and last sync time.
+        """  # noqa: D200
         params = f"page={page}&page_size={self.page_size}&since={self.since}"
         if self.before:
             params += f"&before={self.before}"

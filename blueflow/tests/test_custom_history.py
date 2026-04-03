@@ -12,7 +12,6 @@ work going on, and some decisions being made, on whether custom fields
 should be accssed via the asset or via its own API.
 """
 
-import pytest
 from blueflow import models
 
 
