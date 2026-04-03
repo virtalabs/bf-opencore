@@ -23,7 +23,10 @@ def pytest_ignore_collect(path, config):
 
 @pytest.fixture
 def enable_core_switch(db):
-    """Enable the 'core' waffle switch so API views (e.g. /assets/) are allowed in tests."""
+    """Enable the 'core' waffle switch so API views are allowed in tests.
+
+    Required for all API endpoint tests (e.g. /assets/).
+    """
     from waffle.testutils import override_switch
 
     with override_switch("core", active=True):
@@ -72,7 +75,10 @@ def django_db_setup(
 
 @pytest.fixture
 def auth_client(db, enable_core_switch):
-    """API client authenticated with a regular user (uses blueflow.tests.factories.make_user)."""
+    """API client authenticated with a regular user.
+
+    Uses blueflow.tests.factories.make_user.
+    """
     from rest_framework.test import APIClient
 
     from blueflow.tests.factories import make_user
@@ -85,7 +91,10 @@ def auth_client(db, enable_core_switch):
 
 @pytest.fixture
 def admin_client(db, enable_core_switch):
-    """API client authenticated with a superuser (for app-level admin-style tests; uses factories.make_superuser)."""
+    """API client authenticated with a superuser.
+
+    For app-level admin-style tests; uses factories.make_superuser.
+    """
     from rest_framework.test import APIClient
 
     from blueflow.tests.factories import make_superuser
@@ -98,10 +107,9 @@ def admin_client(db, enable_core_switch):
 
 @pytest.fixture(autouse=True)
 def _auto_db(db):
-    '''Enables db for all tests
+    """Enables db for all tests
     Should replace with module level enabalment when:
         https://github.com/virtalabs/blueflow/issues/36
-    '''
-    pass
+    """
 
 

@@ -6,10 +6,11 @@ http://pytest-django.readthedocs.io/en/latest/helpers.html
 
 import json
 
-import blueflow.models as bf_mod
 import django.db.models.fields
 import pytest
 from simple_history import utils as hist_utils
+
+import blueflow.models as bf_mod
 
 # bf_mod models do have 'objects' member, but it's being lazy loaded
 

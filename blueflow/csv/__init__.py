@@ -51,7 +51,9 @@ logger = celery.utils.log.get_task_logger(__name__)
 # A sample CSV file is available [here](blueflow/csv/sample.csv).
 # """.format(settings='/settings/csv/',
 #            fieldnames=', '.join(
-#                map(lambda x: '<tt>{}</tt>'.format(x),  # pylint: disable=unnecessary-lambda
+#                map(
+#                    lambda x: '<tt>{}</tt>'.format(x),
+#                    # pylint: disable=unnecessary-lambda
 #                    _DEFAULT_FIELD_NAMES))),
 #     "kwargs": OrderedDict([
 #         ("filename", {

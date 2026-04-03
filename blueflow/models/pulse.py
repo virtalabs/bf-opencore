@@ -116,7 +116,10 @@ class PulseFeedItem(models.Model):
     objects = PulseFeedItemManager()
 
     def __str__(self):
-        return f"<PFI {self.id}:{self.external_pulse_id} {self.date_last_updated} '{self.title}'>"
+        return (
+            f"<PFI {self.id}:{self.external_pulse_id} "
+            f"{self.date_last_updated} '{self.title}'>"
+        )
 
     def _search_query(self):
         """Return an asset search query as a Django query (Q) object.

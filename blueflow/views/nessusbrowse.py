@@ -90,7 +90,8 @@ class NessusBrowseViewSet(WaffleSwitchMixin, viewsets.ViewSet):
             action = request.query_params["action"]
         except KeyError:
             raise serializers.ValidationError(
-                f"No 'action' in query params '{request.query_params}', don't know what to do"
+                f"No 'action' in query params '{request.query_params}',"
+                " don't know what to do"
             )
         try:
             nc = NessusConnection()
@@ -110,7 +111,8 @@ class NessusBrowseViewSet(WaffleSwitchMixin, viewsets.ViewSet):
                 scan_id = request.query_params["scan_id"]
             except KeyError:
                 raise serializers.ValidationError(
-                    f"No 'scan_id' in query params '{request.query_params}', cannot get history"
+                    f"No 'scan_id' in query params '{request.query_params}',"
+                    " cannot get history"
                 )
             try:
                 scan_id = int(scan_id)

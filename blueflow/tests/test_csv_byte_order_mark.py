@@ -5,9 +5,9 @@ from codecs import BOM_UTF8
 
 from blueflow.csv import process_csv
 from blueflow.models import Asset
+from blueflow.tests.utils import write_tempfile
 
 from .test_csv import TestCTX
-from blueflow.tests.utils import write_tempfile
 
 
 def test_tempfile_plain():

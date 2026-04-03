@@ -22,13 +22,14 @@ class Task(BaseTask):
         logger.error(f"[!!] {task_id} failed: {exc}")
 
 def _send_viper_payload(viper_data: ViperWebhookJob, request_id: str) -> None:
-    '''
-    We may want to consider logging partial errors and attempting to
+    """We may want to consider logging partial errors and attempting to
     send the remaining data anyway
     Wrapping each post in it's own celery task would be simple enough
     ;- tcochran.dev@gmail.com
-    '''
-    response_list = ViperWebhookResponseList.from_request(viper_data, request_id=request_id)
+    """
+    response_list = ViperWebhookResponseList.from_request(
+        viper_data, request_id=request_id
+    )
     for response in response_list:
         as_dict = response.to_dict()
         response = requests.post(
@@ -41,7 +42,6 @@ def _send_viper_payload(viper_data: ViperWebhookJob, request_id: str) -> None:
 @celery_app.task(base=Task)
 def viper_webhook(data: dict, request_id: str = ""):
     """Process a viper webhook."""
-
     viper_data = ViperWebhookRequest(**data)
     logger.info(f"Processing viper webhook: {viper_data}")
     if request_id:

@@ -1,14 +1,12 @@
 """Test CSV integration."""
 
 import os
-import pytest
 
-import blueflow.celery
 from blueflow.csv import process_csv
 from blueflow.models import Asset, AssetCustomField, AssetCustomFieldName
+from blueflow.tests.utils import write_tempfile
 
 from .test_csv import TestCTX
-from blueflow.tests.utils import write_tempfile
 
 
 def test_process_csv_with_custom_field(setup_db):

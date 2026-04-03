@@ -1,4 +1,7 @@
-"""Project-level migration tests (PostgreSQL required via DATABASE_URL in test settings)."""
+"""Project-level migration tests.
+
+PostgreSQL required via DATABASE_URL in test settings.
+"""
 
 import pytest
 

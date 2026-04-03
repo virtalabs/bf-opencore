@@ -1,7 +1,7 @@
 """Test autocomplete interface."""
 
+
 from blueflow import models
-import pytest
 
 
 def test_autocomplete_field(auth_client, complete_us):

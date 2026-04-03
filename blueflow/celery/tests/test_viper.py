@@ -57,7 +57,7 @@ def test_viper_webhook_output_with_all_assets(celery_app, setup_assets):
             args=[
                 ViperWebhookRequest(
                     callback="https://example.com/viper/webhook/",
-                    since="1800-01-01T00:00:00Z",  # some arbitrary date in the past to get all assets
+                    since="1800-01-01T00:00:00Z",  # past date; gets all assets
                     before=None,
                     max_pages=100,  # high enough to get all assets
                     page_size=page_size,
@@ -99,7 +99,7 @@ def test_viper_webhook_output_with_all_assets(celery_app, setup_assets):
 
 
 def test_viper_asset_optional_fields_default_empty(celery_app, setup_assets):
-    """cpe and role are not yet populated — assert they default to empty strings."""
+    """Cpe and role are not yet populated — assert they default to empty strings."""
     with patch("blueflow.celery.tasks.requests.post") as mock_post:
         viper_webhook.apply(
             args=[

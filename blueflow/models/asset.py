@@ -746,7 +746,7 @@ class Asset(models.Model):
 
         Ported from experimental/testbed-build:bf_opencore/models/asset.py.
         """
-        return {f.name: getattr(self, f.attname, None) for f in self._meta.fields}  # noqa: SLF001
+        return {f.name: getattr(self, f.attname, None) for f in self._meta.fields}
 
     def needs_sw_update(self):
         """Return whether this asset needs a software update.
