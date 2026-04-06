@@ -972,77 +972,60 @@ class AssetViewSet(
             status=status.HTTP_200_OK,
         )
 
-    @action(detail=False, methods=["POST"])
+    @action(detail=False, methods=["PUT"])
     def upsert(self, request: Request) -> Response:
-        """Update or create an Asset (DEPRECATED).
+        """Create or update an Asset by MAC address.
 
-        .. deprecated::
-            Use ``PATCH /api/assets/<id>/`` for single updates.
-            ``PATCH /api/assets/bulk_update/`` supports batch partial-updates
-            only — it does not provide create-or-update-by-identity semantics
-            and is not a drop-in replacement for this endpoint.
-            This endpoint will be removed in a future release.
+        Intended for passive scanners (e.g. Tapirx) that discover assets from
+        network traffic and identify them by MAC address rather than server ID.
 
-        The input is a JSON blob containing any Asset field.  The output is a
-        copy of the updated or created asset.  The status code is 201 upon
-        creation, 200 on update.
+        The input is a JSON blob containing any Asset field; ``mac_address`` is
+        required.  Returns 201 on creation, 200 on update.
 
-        The name "upsert" is a portmanteau of "UPDATE" and "INSERT" and is
-        borrowed from database management.
+        For batch partial-updates of assets with known IDs, use
+        ``PATCH /api/assets/bulk_update/`` instead.
         """
-        logger.warning(
-            "POST /api/assets/upsert/ is deprecated and will be removed in a future "
-            "release. Use PATCH /api/assets/<id>/ for single updates. "
-            "Note: PATCH /api/assets/bulk_update/ is for batch partial-updates only "
-            "and is not a drop-in replacement."
-        )
-        # Ignore API calls that lack a MAC address.  Otherwise, we'd create
-        # duplicate assets with each call!  The reason is because MAC is the
-        # only way we can uniquely identify an asset for *update*.
         if "mac_address" not in request.data:
             return Response(
-                {"detail": "Ignoring request without mac_address field."},
+                {"detail": "mac_address is required."},
                 status.HTTP_412_PRECONDITION_FAILED,
             )
 
-        # Ignore ipv6_address and connect_port_tcp fields
-        request.data.pop("ipv6_address", None)
-        request.data.pop("connect_port_tcp", None)
+        data = request.data.copy()
+        data.pop("ipv6_address", None)
+        data.pop("connect_port_tcp", None)
 
-        # Coerce ipv4_address to ip_address, override if appropriate
-        ipv4_address = request.data.pop("ipv4_address", None)
+        # Legacy field coercion (deprecated — see #77)
+        ipv4_address = data.pop("ipv4_address", None)
         if ipv4_address is not None:
-            request.data["ip_address"] = ipv4_address
+            logger.warning(
+                "Deprecated field 'ipv4_address' in upsert payload; "
+                "use 'ip_address' instead"
+            )
+            data["ip_address"] = ipv4_address
 
-        # Coerce identifier to name, override if appropriate
-        identifier = request.data.pop("identifier", None)
+        identifier = data.pop("identifier", None)
         if identifier is not None:
-            request.data["name"] = identifier
+            logger.warning(
+                "Deprecated field 'identifier' in upsert payload; "
+                "use 'name' instead"
+            )
+            data["name"] = identifier
 
-        # Grab last_seen, client_id, and provenance for
-        # history_change_reason, with reasonable defaults
-        last_seen = request.data.pop("last_seen", None)
-        if not last_seen:
-            last_seen = timezone.now()
-        client_id = request.data.pop("client_id", None)
-        if not client_id:
-            client_id = "observer"
-        provenance = request.data.pop("provenance", None)
-        if not provenance:
-            provenance = "Data"
+        # Extract metadata for history_change_reason
+        last_seen = data.pop("last_seen", None) or timezone.now()
+        client_id = data.pop("client_id", None) or "observer"
+        provenance = data.pop("provenance", None) or "Data"
 
-        # Add "open_port_tcp" field to list of open tcp ports.  We'll save it,
-        # then append it after the Asset is created or updated.  This avoids
-        # clobbering an existing list of open ports in the case of updating an
-        # existing asset.
-        open_port_tcp = request.data.pop("open_port_tcp", None)
+        # Extract open_port_tcp before update_or_create so it doesn't get
+        # passed as a model field. Ports are appended after save to avoid
+        # clobbering an existing list.
+        open_port_tcp = data.pop("open_port_tcp", None)
 
-        # Update or create asset using custom logic for matching against
-        # existing assets.  In this context, only mac_address will be used
-        # for the match.
-        asset, created = Asset.objects.update_or_create_by_priority(
-            **request.data,
-            defaults=request.data,
+        mac_address = data.pop("mac_address")
+        asset, created = Asset.objects.update_or_create(
+            mac_address=mac_address,
+            defaults=data,
         )
         # Ported from experimental/testbed-build:bf_opencore/views/asset.py.
         # update_change_reason can fail when its filter returns None (e.g.
@@ -1074,6 +1057,4 @@ class AssetViewSet(
             serializer.data,
             status=status.HTTP_201_CREATED if created else status.HTTP_200_OK,
         )
-        response["Deprecation"] = "true"
-        response["Link"] = '</api/assets/{id}/>; rel="successor-version"'
         return response
