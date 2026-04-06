@@ -18,7 +18,7 @@ from blueflow import models
 TAPIRX_FULL_PAYLOAD = {
     "ipv4_address": "10.0.0.155",
     "ipv6_address": "",
-    "open_port_tcp": "2575",
+    "open_ports_tcp": [2575],
     "connect_port_tcp": "2575",
     "mac_address": "00:03:b1:b5:b6:48",
     "identifier": "Infuse-O-Matic Peach B+",
@@ -82,13 +82,13 @@ def test_tapirx_upsert_minimal(asset_edit_client: APIClient) -> None:
     assert models.Asset.objects.count() == 1
 
 
-def test_tapirx_upsert_no_mac_412(asset_edit_client: APIClient) -> None:
-    """PUT without mac_address, assert 412."""
+def test_tapirx_upsert_no_mac_400(asset_edit_client: APIClient) -> None:
+    """PUT without mac_address, assert 400."""
     response = _put_upsert(
         asset_edit_client,
         {"ipv4_address": "10.0.0.1", "identifier": "No MAC"},
     )
-    assert response.status_code == status.HTTP_412_PRECONDITION_FAILED
+    assert response.status_code == status.HTTP_400_BAD_REQUEST
     assert models.Asset.objects.count() == 0
 
 
@@ -128,25 +128,24 @@ def test_tapirx_upsert_ignored_fields(asset_edit_client: APIClient) -> None:
     assert not hasattr(asset, "connect_port_tcp")
 
 
-def test_tapirx_upsert_open_port_appends(asset_edit_client: APIClient) -> None:
-    """PUT twice with different open_port_tcp, verify both in open_ports_tcp."""
+def test_tapirx_upsert_open_ports_merge(asset_edit_client: APIClient) -> None:
+    """PUT with open_ports_tcp merges with existing ports."""
     payload1 = {
         "mac_address": "11:22:33:44:55:66",
-        "open_port_tcp": "80",
+        "open_ports_tcp": [80, 443],
     }
     response1 = _put_upsert(asset_edit_client, payload1)
     assert response1.status_code == status.HTTP_201_CREATED
-    assert response1.data["open_ports_tcp"] == [80]
+    assert set(response1.data["open_ports_tcp"]) == {80, 443}
 
+    # Second PUT adds new ports, keeps existing
     payload2 = {
         "mac_address": "11:22:33:44:55:66",
-        "open_port_tcp": "443",
+        "open_ports_tcp": [443, 8080],
     }
     response2 = _put_upsert(asset_edit_client, payload2)
     assert response2.status_code == status.HTTP_200_OK
-    assert set(response2.data["open_ports_tcp"]) == {80, 443}
-    asset = models.Asset.objects.get()
-    assert set(asset.open_ports_tcp) == {80, 443}
+    assert set(response2.data["open_ports_tcp"]) == {80, 443, 8080}
 
 
 # ---------------------------------------------------------------------------
@@ -298,3 +297,35 @@ def test_upsert_post_method_not_allowed(asset_edit_client: APIClient) -> None:
         content_type="application/json",
     )
     assert response.status_code == status.HTTP_405_METHOD_NOT_ALLOWED
+
+
+def test_upsert_empty_mac_400(asset_edit_client: APIClient) -> None:
+    """PUT with empty string mac_address returns 400."""
+    response = _put_upsert(asset_edit_client, {"mac_address": ""})
+    assert response.status_code == status.HTTP_400_BAD_REQUEST
+    assert models.Asset.objects.count() == 0
+
+
+def test_upsert_null_mac_400(asset_edit_client: APIClient) -> None:
+    """PUT with null mac_address returns 400."""
+    response = _put_upsert(asset_edit_client, {"mac_address": None})
+    assert response.status_code == status.HTTP_400_BAD_REQUEST
+    assert models.Asset.objects.count() == 0
+
+
+def test_upsert_invalid_port_400(asset_edit_client: APIClient) -> None:
+    """PUT with out-of-range port in open_ports_tcp returns 400."""
+    response = _put_upsert(
+        asset_edit_client,
+        {"mac_address": "11:22:33:44:55:66", "open_ports_tcp": [70000]},
+    )
+    assert response.status_code == status.HTTP_400_BAD_REQUEST
+
+
+def test_upsert_non_numeric_port_400(asset_edit_client: APIClient) -> None:
+    """PUT with non-integer in open_ports_tcp returns 400."""
+    response = _put_upsert(
+        asset_edit_client,
+        {"mac_address": "11:22:33:44:55:66", "open_ports_tcp": ["abc"]},
+    )
+    assert response.status_code == status.HTTP_400_BAD_REQUEST
