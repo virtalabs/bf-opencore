@@ -83,6 +83,46 @@ class MiniAssetVulnerabilitySerializer(serializers.HyperlinkedModelSerializer):
         )
 
 
+class AssetUpsertSerializer(serializers.Serializer):
+    """Input serializer for PUT /api/assets/upsert/.
+
+    Validates and coerces scanner payloads before create-or-update.
+    Only includes fields that passive scanners are expected to send.
+    """
+
+    mac_address = serializers.CharField(required=True, allow_blank=False)
+    ip_address = serializers.IPAddressField(required=False, allow_blank=True)
+    name = serializers.CharField(required=False, allow_blank=True, allow_null=True)
+    hostname = serializers.CharField(required=False, allow_blank=True, allow_null=True)
+    manufacturer = serializers.CharField(
+        required=False, allow_blank=True, allow_null=True
+    )
+    model = serializers.CharField(required=False, allow_blank=True, allow_null=True)
+    serial_number = serializers.CharField(
+        required=False, allow_blank=True, allow_null=True
+    )
+    os = serializers.CharField(required=False, allow_blank=True, allow_null=True)
+    category = serializers.CharField(required=False, allow_blank=True, allow_null=True)
+    external_keys = serializers.JSONField(required=False, allow_null=True)
+    open_ports_tcp = serializers.ListField(
+        child=serializers.IntegerField(min_value=1, max_value=65535),
+        required=False,
+    )
+
+    def validate_mac_address(self, value):
+        """Reject empty/whitespace-only MAC addresses."""
+        if not value or not value.strip():
+            msg = "mac_address must not be empty."
+            raise serializers.ValidationError(msg)
+        return value
+
+    def validate_ip_address(self, value):
+        """Coerce empty string to None."""
+        if value == "":
+            return None
+        return value
+
+
 class AssetSerializer(serializers.HyperlinkedModelSerializer):
     """Serializes assets.
 
@@ -985,17 +1025,9 @@ class AssetViewSet(
         For batch partial-updates of assets with known IDs, use
         ``PATCH /api/assets/bulk_update/`` instead.
         """
-        if "mac_address" not in request.data:
-            return Response(
-                {"detail": "mac_address is required."},
-                status.HTTP_412_PRECONDITION_FAILED,
-            )
-
         data = request.data.copy()
-        data.pop("ipv6_address", None)
-        data.pop("connect_port_tcp", None)
 
-        # Legacy field coercion (deprecated — see #77)
+        # Legacy field coercion (deprecated)
         ipv4_address = data.pop("ipv4_address", None)
         if ipv4_address is not None:
             logger.warning(
@@ -1012,24 +1044,30 @@ class AssetViewSet(
             )
             data["name"] = identifier
 
-        # Extract metadata for history_change_reason
-        last_seen = data.pop("last_seen", None) or timezone.now()
-        client_id = data.pop("client_id", None) or "observer"
-        provenance = data.pop("provenance", None) or "Data"
+        serializer = AssetUpsertSerializer(data=data)
+        if not serializer.is_valid():
+            return Response(serializer.errors, status.HTTP_400_BAD_REQUEST)
 
-        # Extract open_port_tcp before update_or_create so it doesn't get
-        # passed as a model field. Ports are appended after save to avoid
-        # clobbering an existing list.
-        open_port_tcp = data.pop("open_port_tcp", None)
+        validated = serializer.validated_data
+        mac_address = validated.pop("mac_address")
+        new_ports = validated.pop("open_ports_tcp", None)
 
-        mac_address = data.pop("mac_address")
         asset, created = Asset.objects.update_or_create(
             mac_address=mac_address,
-            defaults=data,
+            defaults=validated,
         )
-        # Ported from experimental/testbed-build:bf_opencore/views/asset.py.
-        # update_change_reason can fail when its filter returns None (e.g.
-        # with netfields/ArrayField); fall back to updating the latest record.
+
+        # Merge new ports into existing list (scanners discover incrementally)
+        if new_ports:
+            merged = sorted(set(asset.open_ports_tcp or []) | set(new_ports))
+            if merged != asset.open_ports_tcp:
+                asset.open_ports_tcp = merged
+                asset.save()
+
+        # Record history change reason from scanner metadata
+        last_seen = data.get("last_seen") or timezone.now()
+        client_id = data.get("client_id") or "observer"
+        provenance = data.get("provenance") or "Data"
         reason = f"{provenance} seen by {client_id} at {last_seen}"
         try:
             hist_utils.update_change_reason(asset, reason)
@@ -1043,12 +1081,6 @@ class AssetViewSet(
                 logger.debug(
                     "Could not set history_change_reason for asset pk=%s", asset.pk
                 )
-
-        # Add port to list of open ports
-        if open_port_tcp:
-            updated = asset.open_ports_tcp_add(open_port_tcp)
-            if updated:
-                asset.save()
 
         # Serialize the created or updated asset object and return it in the
         # response.
