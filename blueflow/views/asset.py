@@ -1049,20 +1049,21 @@ class AssetViewSet(
             return Response(serializer.errors, status.HTTP_400_BAD_REQUEST)
 
         validated = serializer.validated_data
-        mac_address = validated.pop("mac_address")
-        new_ports = validated.pop("open_ports_tcp", None)
-
-        asset, created = Asset.objects.update_or_create(
-            mac_address=mac_address,
-            defaults=validated,
-        )
-
-        # Merge new ports into existing list (scanners discover incrementally)
-        if new_ports:
-            merged = sorted(set(asset.open_ports_tcp or []) | set(new_ports))
-            if merged != asset.open_ports_tcp:
-                asset.open_ports_tcp = merged
-                asset.save()
+        created = False
+        try:
+            mac_address = validated.pop("mac_address")
+            new_ports = validated.pop("open_ports_tcp", [])
+            asset = Asset.objects.get(mac_address=mac_address)
+            if new_ports:
+                merged = sorted(set(asset.open_ports_tcp) | set(new_ports))
+                if merged != asset.open_ports_tcp:
+                    validated['open_ports_tcp'] = merged
+            for k, v in validated.items():
+                setattr(asset, k, v)
+            asset.save()
+        except Asset.DoesNotExist:
+            created = True
+            asset = Asset.objects.create(mac_address=mac_address, open_ports_tcp=new_ports, **validated)
 
         # Record history change reason from scanner metadata
         last_seen = data.get("last_seen") or timezone.now()
@@ -1081,9 +1082,6 @@ class AssetViewSet(
                 logger.debug(
                     "Could not set history_change_reason for asset pk=%s", asset.pk
                 )
-
-        # Serialize the created or updated asset object and return it in the
-        # response.
         serializer = AssetSerializer(asset, context={"request": request})
         response = Response(
             serializer.data,
