@@ -466,7 +466,7 @@ class AssetViewSet(
     `/risk_per_manufacturer`
     `/riskiest`
     `/summary`
-    `/upsert` — DEPRECATED: use PATCH /api/assets/<id>/ or /bulk_update/
+    `/upsert`
 
     In addition, there are several filtering and search terms available.
 
