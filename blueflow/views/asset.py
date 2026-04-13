@@ -2,8 +2,7 @@
 
 import importlib
 import logging
-import re
-from typing import Any, ClassVar
+from typing import ClassVar
 
 import django_filters
 import django_filters.rest_framework.filters as drf_filters
@@ -170,29 +169,18 @@ class AssetSerializer(serializers.HyperlinkedModelSerializer):
 
         read_only_fields: ClassVar = ["nic_vendor"]
 
-    def validate_ip_address(self, ip_string: str) -> str | None:
-        """If the IP address is empty, we coerce it to None.
-
-        This happens anyway, when it gets stored in the database --
-        doing it early avoids some problems with finding the asset in
-        history.
-        """
+    def validate_ip_address(self, ip_string: str) -> str:
+        """Reject empty IP address strings."""
         if ip_string == "":
-            return None
+            msg = "ip_address must not be empty."
+            raise serializers.ValidationError(msg)
         return ip_string
 
-    def validate_mac_address(self, mac_string: str) -> str | None:
-        """If the MAC address is empty, we coerce it to None.
-
-        This happens anyway, when it gets stored in the database --
-        doing it early avoids some problems with finding the asset in
-        history.
-
-        This may not be necessary anymore
-        """
+    def validate_mac_address(self, mac_string: str) -> str:
+        """Reject empty MAC address strings."""
         if mac_string == "":
-            logger.debug("Coercing empty string MAC to None (was %r)", mac_string)
-            return None
+            msg = "mac_address must not be empty."
+            raise serializers.ValidationError(msg)
         return mac_string
 
     def validate_open_ports_tcp(self, ports_list: list) -> list:
@@ -539,66 +527,6 @@ class AssetViewSet(
         else:
             context["header"] = default_headers
         return context
-
-    def _validate_open_ports(self, ports: Any) -> list[str]:
-        """Convert TCP port string to list.
-
-        Convert string of integers to a sorted list of unique integers.
-
-        Separator(s) can be one of: space, comma, semicolon, pipe, or newline,
-        including repetitions of these.
-
-        Added bonus: if falsey, return empty list.
-        """
-        if not ports:
-            return []
-        if not isinstance(ports, str):
-            return ports
-
-        sep_re = re.compile(r"[ ,;|\n]+")
-        ports_list = re.split(sep_re, ports)
-        return ports_list
-
-    @staticmethod
-    def _validate_mac_address(mac: str | None) -> str | None:
-        """Convert an empty string MAC address to None.
-
-        This would happen at a later point, but doing it explicitly here
-        avoids a database error due to "non-unique" MAC when there's an
-        existing empty MAC address.
-        """
-        return mac or None
-
-    def update(self, request: Request, *args: int, **kwargs: str) -> Response:
-        """Override update in order to convert TCP port string to list.
-
-        NOTE: We can't use a "serializer validator" for this, since the
-        validator would kick a string out (it really wants a list.)
-        """
-        if "open_ports_tcp" in request.data:
-            request.data["open_ports_tcp"] = self._validate_open_ports(
-                request.data["open_ports_tcp"]
-            )
-        if "mac_address" in request.data:
-            request.data["mac_address"] = self._validate_mac_address(
-                request.data["mac_address"]
-            )
-        return super().update(request, *args, **kwargs)
-
-    def create(self, request: Request, *args: int, **kwargs: str) -> Response:
-        """Override create in order to convert TCP port string to list.
-
-        NOTE: (see 'update' method)
-        """
-        if "open_ports_tcp" in request.data:
-            request.data["open_ports_tcp"] = self._validate_open_ports(
-                request.data["open_ports_tcp"]
-            )
-        if "mac_address" in request.data:
-            request.data["mac_address"] = self._validate_mac_address(
-                request.data["mac_address"]
-            )
-        return super().create(request, *args, **kwargs)
 
     ################################
     # Detail methods/actions
@@ -1012,26 +940,7 @@ class AssetViewSet(
         For batch partial-updates of assets with known IDs, use
         ``PATCH /api/assets/bulk_update/`` instead.
         """
-        data = request.data.copy()
-
-        # Legacy field coercion (deprecated)
-        ipv4_address = data.pop("ipv4_address", None)
-        if ipv4_address is not None:
-            logger.warning(
-                "Deprecated field 'ipv4_address' in upsert payload; "
-                "use 'ip_address' instead"
-            )
-            data["ip_address"] = ipv4_address
-
-        identifier = data.pop("identifier", None)
-        if identifier is not None:
-            logger.warning(
-                "Deprecated field 'identifier' in upsert payload; "
-                "use 'name' instead"
-            )
-            data["name"] = identifier
-
-        serializer = AssetUpsertSerializer(data=data)
+        serializer = AssetUpsertSerializer(data=request.data)
         if not serializer.is_valid():
             return Response(serializer.errors, status.HTTP_400_BAD_REQUEST)
 
@@ -1050,12 +959,16 @@ class AssetViewSet(
             asset.save()
         except Asset.DoesNotExist:
             created = True
-            asset = Asset.objects.create(mac_address=mac_address, open_ports_tcp=new_ports, **validated)
+            asset = Asset.objects.create(
+                mac_address=mac_address,
+                open_ports_tcp=new_ports,
+                **validated,
+            )
 
         # Record history change reason from scanner metadata
-        last_seen = data.get("last_seen") or timezone.now()
-        client_id = data.get("client_id") or "observer"
-        provenance = data.get("provenance") or "Data"
+        last_seen = request.data.get("last_seen") or timezone.now()
+        client_id = request.data.get("client_id") or "observer"
+        provenance = request.data.get("provenance") or "Data"
         reason = f"{provenance} seen by {client_id} at {last_seen}"
         try:
             hist_utils.update_change_reason(asset, reason)

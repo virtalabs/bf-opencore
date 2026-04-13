@@ -6,7 +6,6 @@ assets by MAC address, and that assets are retrievable via GET
 """
 
 import json
-import logging
 
 import pytest
 from rest_framework import status
@@ -16,12 +15,10 @@ from blueflow import models
 
 # Full Tapirx payload per asset.go - used for contract tests
 TAPIRX_FULL_PAYLOAD = {
-    "ipv4_address": "10.0.0.155",
-    "ipv6_address": "",
+    "ip_address": "10.0.0.155",
     "open_ports_tcp": [2575],
-    "connect_port_tcp": "2575",
     "mac_address": "00:03:b1:b5:b6:48",
-    "identifier": "Infuse-O-Matic Peach B+",
+    "name": "Infuse-O-Matic Peach B+",
     "provenance": "HL7 PRT-16",
     "last_seen": "2019-01-02T12:37:22.938687-08:00",
     "client_id": "mymachine.example.com",
@@ -56,16 +53,16 @@ def test_tapirx_upsert_update(asset_edit_client: APIClient) -> None:
     """PUT twice same MAC, assert 200 on second, verify field update."""
     payload1 = {
         "mac_address": "11:22:33:44:55:66",
-        "ipv4_address": "10.0.0.1",
-        "identifier": "Original Name",
+        "ip_address": "10.0.0.1",
+        "name": "Original Name",
     }
     response1 = _put_upsert(asset_edit_client, payload1)
     assert response1.status_code == status.HTTP_201_CREATED
 
     payload2 = {
         "mac_address": "11:22:33:44:55:66",
-        "ipv4_address": "10.0.0.2",
-        "identifier": "Updated Name",
+        "ip_address": "10.0.0.2",
+        "name": "Updated Name",
     }
     response2 = _put_upsert(asset_edit_client, payload2)
     assert response2.status_code == status.HTTP_200_OK
@@ -86,7 +83,7 @@ def test_tapirx_upsert_no_mac_400(asset_edit_client: APIClient) -> None:
     """PUT without mac_address, assert 400."""
     response = _put_upsert(
         asset_edit_client,
-        {"ipv4_address": "10.0.0.1", "identifier": "No MAC"},
+        {"ip_address": "10.0.0.1", "name": "No MAC"},
     )
     assert response.status_code == status.HTTP_400_BAD_REQUEST
     assert models.Asset.objects.count() == 0
@@ -219,7 +216,7 @@ def test_upsert_nic_vendor_from_mac(asset_edit_client: APIClient) -> None:
     """PUT with registered OUI MAC, assert nic_vendor auto-populated from netaddr."""
     response = _put_upsert(
         asset_edit_client,
-        {"mac_address": "00:03:b1:b5:b6:48", "identifier": "Medical device"},
+        {"mac_address": "00:03:b1:b5:b6:48", "name": "Medical device"},
     )
     assert response.status_code == status.HTTP_201_CREATED
     # OUI 00:03:b1 is registered; vendor may be Hospira, ICU Medical, etc.
@@ -249,21 +246,21 @@ def test_upsert_put_idempotency(asset_edit_client: APIClient) -> None:
     assert models.Asset.objects.count() == 1
 
 
-def test_upsert_legacy_field_deprecation_warning(
-    asset_edit_client: APIClient, caplog: pytest.LogCaptureFixture
+def test_upsert_legacy_field_names_ignored(
+    asset_edit_client: APIClient,
 ) -> None:
-    """PUT with legacy field names logs deprecation warnings."""
+    """PUT with legacy field names — they are ignored, not coerced."""
     payload = {
         "mac_address": "11:22:33:44:55:66",
         "ipv4_address": "10.0.0.1",
         "identifier": "Legacy Device",
     }
-    with caplog.at_level(logging.WARNING):
-        response = _put_upsert(asset_edit_client, payload)
-
+    response = _put_upsert(asset_edit_client, payload)
+    # Legacy fields are unknown to the serializer and silently dropped.
+    # The asset is created with only mac_address.
     assert response.status_code == status.HTTP_201_CREATED
-    assert "Deprecated field 'ipv4_address'" in caplog.text
-    assert "Deprecated field 'identifier'" in caplog.text
+    assert response.data["ip_address"] is None
+    assert response.data["name"] is None
 
 
 def test_upsert_modern_field_names(asset_edit_client: APIClient) -> None:
