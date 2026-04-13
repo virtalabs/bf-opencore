@@ -29,7 +29,6 @@ from blueflow.models import (
     AssetCustomFieldName,
     AssetTag,
     AssetVulnerability,
-    PulseFeedItem,
     Tag,
 )
 
@@ -306,8 +305,6 @@ class AssetFilter(django_filters.rest_framework.FilterSet):
     active_vulnerability = django_filters.NumberFilter(
         method="filter_active_vulnerability"
     )
-    pulse = django_filters.NumberFilter(method="filter_pulse")
-
     @staticmethod
     def filter_network(queryset: QuerySet, name: str, value: int) -> QuerySet:
         """Get assets that belong to a certain network."""
@@ -327,16 +324,6 @@ class AssetFilter(django_filters.rest_framework.FilterSet):
             # assets that *do* belong to a network.  Oh well.
             return queryset
         return queryset.no_network()
-
-    @staticmethod
-    def filter_pulse(_queryset: QuerySet, _name: str, value: int) -> QuerySet:
-        """Get assets pertinent to a specific Pulse feed item."""
-        try:
-            pulse = PulseFeedItem.objects.get(external_pulse_id=value)
-        except PulseFeedItem.DoesNotExist:
-            return Asset.objects.none()
-
-        return pulse.asset_qset()
 
     @staticmethod
     def filter_active_vulnerability(
@@ -1057,7 +1044,7 @@ class AssetViewSet(
             if new_ports:
                 merged = sorted(set(asset.open_ports_tcp) | set(new_ports))
                 if merged != asset.open_ports_tcp:
-                    validated['open_ports_tcp'] = merged
+                    validated["open_ports_tcp"] = merged
             for k, v in validated.items():
                 setattr(asset, k, v)
             asset.save()

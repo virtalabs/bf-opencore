@@ -46,15 +46,6 @@ def custom_field_edit_client(auth_client):
 
 
 @pytest.fixture
-def pulse_feed_auth_client(auth_client):
-    """Return API client with user allowed to delete/close pulse feed items.
-
-    Alias to auth_client in blueflow.
-    """
-    return auth_client
-
-
-@pytest.fixture
 def tapirx_token_client(db, enable_core_switch):
     """Return API client authenticated via Token header, mirroring Tapirx's auth method."""
     from rest_framework.authtoken.models import Token
@@ -205,24 +196,6 @@ def asset_groups(db):
         agra=agra,
         agga=agga,
         aggb=aggb,
-    )
-
-
-@pytest.fixture
-def pulse_feed_items(db):
-    """Set up some pulse feed items to play with."""
-    from django.utils import timezone
-
-    from blueflow import models
-
-    models.PulseFeedItem.objects.create(
-        external_pulse_id=12, date_last_updated=timezone.now()
-    )
-    models.PulseFeedItem.objects.create(
-        external_pulse_id=23, date_last_updated=timezone.now()
-    )
-    models.PulseFeedItem.objects.create(
-        external_pulse_id=34, date_last_updated=timezone.now()
     )
 
 
