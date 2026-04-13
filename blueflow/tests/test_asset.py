@@ -112,7 +112,7 @@ def test_api_create_asset_empty_mac_rejected(asset_edit_client: APIClient) -> No
     client = asset_edit_client
     response = client.post(
         "/api/assets/",
-        json.dumps({"mac_address": "", "ip_address": ""}),
+        json.dumps({"mac_address": "", "ip_address": None}),
         content_type="application/json",
     )
     assert response.status_code == status.HTTP_400_BAD_REQUEST
@@ -125,13 +125,13 @@ def test_api_create_asset_empty_mac_rejected_twice(
     client = asset_edit_client
     response = client.post(
         "/api/assets/",
-        json.dumps({"mac_address": "", "ip_address": ""}),
+        json.dumps({"mac_address": "", "ip_address": None}),
         content_type="application/json",
     )
     assert response.status_code == status.HTTP_400_BAD_REQUEST
     response = client.post(
         "/api/assets/",
-        json.dumps({"mac_address": "", "ip_address": ""}),
+        json.dumps({"mac_address": "", "ip_address": None}),
         content_type="application/json",
     )
     assert response.status_code == status.HTTP_400_BAD_REQUEST
