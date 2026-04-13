@@ -89,9 +89,9 @@ def test_upsert_missing_mac_400(asset_edit_client: APIClient) -> None:
     assert models.Asset.objects.count() == 0
 
 
-def test_upsert_token_auth(tapirx_token_client: APIClient) -> None:
+def test_upsert_token_auth(token_auth_client: APIClient) -> None:
     """PUT with Token auth header, assert 201."""
-    response = _put_upsert(tapirx_token_client, SCANNER_FULL_PAYLOAD)
+    response = _put_upsert(token_auth_client, SCANNER_FULL_PAYLOAD)
     assert response.status_code == status.HTTP_201_CREATED
     assert response.data["mac_address"] == "00:03:b1:b5:b6:48"
     assert models.Asset.objects.count() == 1

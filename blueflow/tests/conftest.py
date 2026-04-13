@@ -46,14 +46,14 @@ def custom_field_edit_client(auth_client):
 
 
 @pytest.fixture
-def tapirx_token_client(db, enable_core_switch):
-    """Return API client authenticated via Token header, mirroring Tapirx's auth method."""
+def token_auth_client(db, enable_core_switch):
+    """Return API client authenticated via Token header, for testing Token-based authentication."""
     from rest_framework.authtoken.models import Token
     from rest_framework.test import APIClient
 
     from blueflow.tests.factories import make_user
 
-    user = make_user(username="tapirx")
+    user = make_user(username="scanner")
     token, _ = Token.objects.get_or_create(user=user)
     client = APIClient()
     client.credentials(HTTP_AUTHORIZATION=f"Token {token.key}")
