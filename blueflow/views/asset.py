@@ -887,13 +887,6 @@ class AssetViewSet(
                 )
             seen_ids.add(asset_id)
 
-            # Apply the same field normalisations as create/update.
-            if "open_ports_tcp" in item:
-                item["open_ports_tcp"] = self._validate_open_ports(
-                    item["open_ports_tcp"]
-                )
-            if "mac_address" in item:
-                item["mac_address"] = self._validate_mac_address(item["mac_address"])
             try:
                 asset = Asset.objects.get(pk=asset_id)
             except Asset.DoesNotExist:

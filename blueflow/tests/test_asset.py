@@ -92,15 +92,11 @@ def test_api_create_asset_maconly(asset_edit_client: APIClient) -> None:
 
 
 def test_api_create_asset_addinventory_maconly(asset_edit_client: APIClient) -> None:
-    """Create an asset, replicating 'add inventory.
-
-    This replicates 'add inventory' where the IP address is empty -- it
-    gets sent as '' rather than as 'null'.
-    """
+    """Create an asset with MAC only, ip_address sent as null."""
     client = asset_edit_client
     response = client.post(
         "/api/assets/",
-        json.dumps({"mac_address": "1", "ip_address": ""}),
+        json.dumps({"mac_address": "1", "ip_address": None}),
         content_type="application/json",
     )
     assert response.status_code == status.HTTP_201_CREATED
@@ -111,54 +107,35 @@ def test_api_create_asset_addinventory_maconly(asset_edit_client: APIClient) -> 
     assert asset["ip_address"] is None
 
 
-def test_api_create_asset_addinventory_empty_mac(asset_edit_client: APIClient) -> None:
-    """Create an asset, replicating 'add inventory.
-
-    This replicates 'add inventory' where the MAC address is empty -- it
-    gets sent as '' rather than as 'null'.
-    """
+def test_api_create_asset_empty_mac_rejected(asset_edit_client: APIClient) -> None:
+    """Empty string MAC address is rejected with 400."""
     client = asset_edit_client
     response = client.post(
         "/api/assets/",
         json.dumps({"mac_address": "", "ip_address": ""}),
         content_type="application/json",
     )
-    assert response.status_code == status.HTTP_201_CREATED
-    assets = client.get("/api/assets/")
-    assert assets.data["count"] == 1
-    asset = assets.data["results"].pop()
-    assert asset["mac_address"] is None
-    assert asset["ip_address"] is None
+    assert response.status_code == status.HTTP_400_BAD_REQUEST
 
 
-def test_api_create_asset_addinventory_empty_mac_times_two(
+def test_api_create_asset_empty_mac_rejected_twice(
     asset_edit_client: APIClient,
 ) -> None:
-    """Create an asset, replicating 'add inventory'.
-
-    This replicates 'add inventory' where the MAC address is empty, and
-    where there was already an asset with an empty MAC address (Github
-    issue https://github.com/virtalabs/blueflow/issues/2266)
-    """
+    """Empty string MAC address is rejected both times with 400."""
     client = asset_edit_client
-    # Create the first asset
     response = client.post(
         "/api/assets/",
         json.dumps({"mac_address": "", "ip_address": ""}),
         content_type="application/json",
     )
-    assert response.status_code == status.HTTP_201_CREATED
-    assets = client.get("/api/assets/")
-    assert assets.data["count"] == 1
-    # Create the second asset
+    assert response.status_code == status.HTTP_400_BAD_REQUEST
     response = client.post(
         "/api/assets/",
         json.dumps({"mac_address": "", "ip_address": ""}),
         content_type="application/json",
     )
-    assert response.status_code == status.HTTP_201_CREATED
-    assets = client.get("/api/assets/")
-    assert assets.data["count"] == 2  # noqa: PLR2004
+    assert response.status_code == status.HTTP_400_BAD_REQUEST
+    assert models.Asset.objects.count() == 0
 
 
 def test_api_create_asset_unauthorized(auth_client: APIClient) -> None:
