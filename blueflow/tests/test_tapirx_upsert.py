@@ -326,3 +326,13 @@ def test_upsert_non_numeric_port_400(asset_edit_client: APIClient) -> None:
         {"mac_address": "11:22:33:44:55:66", "open_ports_tcp": ["abc"]},
     )
     assert response.status_code == status.HTTP_400_BAD_REQUEST
+
+
+def test_upsert_open_ports_normalized(asset_edit_client: APIClient) -> None:
+    """PUT with duplicate/unsorted ports stores them deduplicated and sorted."""
+    response = _put_upsert(
+        asset_edit_client,
+        {"mac_address": "11:22:33:44:55:66", "open_ports_tcp": [443, 80, 443, 8080, 80]},
+    )
+    assert response.status_code == status.HTTP_201_CREATED
+    assert response.data["open_ports_tcp"] == [80, 443, 8080]

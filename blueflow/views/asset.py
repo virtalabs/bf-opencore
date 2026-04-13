@@ -109,6 +109,10 @@ class AssetUpsertSerializer(serializers.Serializer):
         required=False,
     )
 
+    def validate_open_ports_tcp(self, ports_list: list[int]) -> list[int]:
+        """Deduplicate and sort ports."""
+        return sorted(set(ports_list))
+
 
 class AssetSerializer(serializers.HyperlinkedModelSerializer):
     """Serializes assets.
