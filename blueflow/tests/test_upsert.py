@@ -1,8 +1,8 @@
-"""Tapirx upsert contract tests.
+"""Upsert endpoint contract tests.
 
-Validates that Tapirx can PUT to /api/assets/upsert/ to create or update
-assets by MAC address, and that assets are retrievable via GET
-/api/assets/{id}/.
+Validates that passive scanners can PUT to /api/assets/upsert/ to create
+or update assets by MAC address, and that assets are retrievable via
+GET /api/assets/{id}/.
 """
 
 import json
@@ -13,8 +13,8 @@ from rest_framework.test import APIClient
 
 from blueflow import models
 
-# Full Tapirx payload per asset.go - used for contract tests
-TAPIRX_FULL_PAYLOAD = {
+# Full scanner payload — used for contract tests
+SCANNER_FULL_PAYLOAD = {
     "ip_address": "10.0.0.155",
     "open_ports_tcp": [2575],
     "mac_address": "00:03:b1:b5:b6:48",
@@ -39,9 +39,9 @@ def _put_upsert(client: APIClient, payload: dict) -> object:
 # ---------------------------------------------------------------------------
 
 
-def test_tapirx_upsert_create(asset_edit_client: APIClient) -> None:
-    """PUT full Tapirx payload, assert 201, verify ip_address, name, open_ports_tcp."""
-    response = _put_upsert(asset_edit_client, TAPIRX_FULL_PAYLOAD)
+def test_upsert_create_full_payload(asset_edit_client: APIClient) -> None:
+    """PUT full scanner payload, assert 201, verify ip_address, name, open_ports_tcp."""
+    response = _put_upsert(asset_edit_client, SCANNER_FULL_PAYLOAD)
     assert response.status_code == status.HTTP_201_CREATED
     assert response.data["ip_address"] == "10.0.0.155"
     assert response.data["name"] == "Infuse-O-Matic Peach B+"
@@ -49,7 +49,7 @@ def test_tapirx_upsert_create(asset_edit_client: APIClient) -> None:
     assert models.Asset.objects.count() == 1
 
 
-def test_tapirx_upsert_update(asset_edit_client: APIClient) -> None:
+def test_upsert_update_by_mac(asset_edit_client: APIClient) -> None:
     """PUT twice same MAC, assert 200 on second, verify field update."""
     payload1 = {
         "mac_address": "11:22:33:44:55:66",
@@ -71,7 +71,7 @@ def test_tapirx_upsert_update(asset_edit_client: APIClient) -> None:
     assert models.Asset.objects.count() == 1
 
 
-def test_tapirx_upsert_minimal(asset_edit_client: APIClient) -> None:
+def test_upsert_minimal(asset_edit_client: APIClient) -> None:
     """PUT only mac_address, assert 201."""
     response = _put_upsert(asset_edit_client, {"mac_address": "00:03:b1:b5:b6:48"})
     assert response.status_code == status.HTTP_201_CREATED
@@ -79,7 +79,7 @@ def test_tapirx_upsert_minimal(asset_edit_client: APIClient) -> None:
     assert models.Asset.objects.count() == 1
 
 
-def test_tapirx_upsert_no_mac_400(asset_edit_client: APIClient) -> None:
+def test_upsert_missing_mac_400(asset_edit_client: APIClient) -> None:
     """PUT without mac_address, assert 400."""
     response = _put_upsert(
         asset_edit_client,
@@ -89,28 +89,28 @@ def test_tapirx_upsert_no_mac_400(asset_edit_client: APIClient) -> None:
     assert models.Asset.objects.count() == 0
 
 
-def test_tapirx_upsert_token_auth(tapirx_token_client: APIClient) -> None:
-    """PUT with tapirx_token_client (Token header), assert 201."""
-    response = _put_upsert(tapirx_token_client, TAPIRX_FULL_PAYLOAD)
+def test_upsert_token_auth(tapirx_token_client: APIClient) -> None:
+    """PUT with Token auth header, assert 201."""
+    response = _put_upsert(tapirx_token_client, SCANNER_FULL_PAYLOAD)
     assert response.status_code == status.HTTP_201_CREATED
     assert response.data["mac_address"] == "00:03:b1:b5:b6:48"
     assert models.Asset.objects.count() == 1
 
 
 @pytest.mark.skip(reason="Blueflow uses AllowAny; auth enforced by consuming product")
-def test_tapirx_upsert_unauth_403(db: None, enable_core_switch: None) -> None:  # noqa: ARG001
+def test_upsert_unauth_403(db: None, enable_core_switch: None) -> None:  # noqa: ARG001
     """PUT unauthenticated would assert 403 if IsAuthenticated were enforced."""
     client = APIClient()
     response = client.put(
         "/api/assets/upsert/",
-        json.dumps(TAPIRX_FULL_PAYLOAD),
+        json.dumps(SCANNER_FULL_PAYLOAD),
         content_type="application/json",
     )
     assert response.status_code == status.HTTP_403_FORBIDDEN
     assert models.Asset.objects.count() == 0
 
 
-def test_tapirx_upsert_ignored_fields(asset_edit_client: APIClient) -> None:
+def test_upsert_unknown_fields_dropped(asset_edit_client: APIClient) -> None:
     """connect_port_tcp and ipv6_address are silently dropped."""
     payload = {
         "mac_address": "11:22:33:44:55:66",
@@ -125,7 +125,7 @@ def test_tapirx_upsert_ignored_fields(asset_edit_client: APIClient) -> None:
     assert not hasattr(asset, "connect_port_tcp")
 
 
-def test_tapirx_upsert_open_ports_merge(asset_edit_client: APIClient) -> None:
+def test_upsert_open_ports_merge(asset_edit_client: APIClient) -> None:
     """PUT with open_ports_tcp merges with existing ports."""
     payload1 = {
         "mac_address": "11:22:33:44:55:66",
@@ -152,7 +152,7 @@ def test_tapirx_upsert_open_ports_merge(asset_edit_client: APIClient) -> None:
 
 def test_get_asset_by_id_after_upsert(asset_edit_client: APIClient) -> None:
     """PUT upsert, extract id, GET /api/assets/{id}/, assert 200 and fields match."""
-    response = _put_upsert(asset_edit_client, TAPIRX_FULL_PAYLOAD)
+    response = _put_upsert(asset_edit_client, SCANNER_FULL_PAYLOAD)
     assert response.status_code == status.HTTP_201_CREATED
     asset_id = response.data["id"]
     get_response = asset_edit_client.get(f"/api/assets/{asset_id}/")
@@ -185,7 +185,7 @@ def test_get_asset_after_upsert_unauth_403(db: None, enable_core_switch: None) -
 
 def test_upsert_then_list(asset_edit_client: APIClient) -> None:
     """PUT upsert, GET /api/assets/, assert count=1 and asset in results."""
-    response = _put_upsert(asset_edit_client, TAPIRX_FULL_PAYLOAD)
+    response = _put_upsert(asset_edit_client, SCANNER_FULL_PAYLOAD)
     assert response.status_code == status.HTTP_201_CREATED
     list_response = asset_edit_client.get("/api/assets/")
     assert list_response.status_code == status.HTTP_200_OK
@@ -200,7 +200,7 @@ def test_upsert_then_list(asset_edit_client: APIClient) -> None:
 )
 def test_upsert_history_reason(asset_edit_client: APIClient) -> None:
     """PUT upsert with provenance/client_id/last_seen, assert history_change_reason."""
-    response = _put_upsert(asset_edit_client, TAPIRX_FULL_PAYLOAD)
+    response = _put_upsert(asset_edit_client, SCANNER_FULL_PAYLOAD)
     assert response.status_code == status.HTTP_201_CREATED
     asset = models.Asset.objects.get()
     latest = asset.history.order_by("-history_date").first()
@@ -227,7 +227,7 @@ def test_upsert_nic_vendor_from_mac(asset_edit_client: APIClient) -> None:
 
 
 # ---------------------------------------------------------------------------
-# Section 4: PUT semantics and deprecation
+# Section 4: PUT semantics and validation
 # ---------------------------------------------------------------------------
 
 
