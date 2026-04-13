@@ -84,12 +84,14 @@ class MiniAssetVulnerabilitySerializer(serializers.HyperlinkedModelSerializer):
 class AssetUpsertSerializer(serializers.Serializer):
     """Input serializer for PUT /api/assets/upsert/.
 
-    Validates and coerces scanner payloads before create-or-update.
+    Validates scanner payloads before create-or-update.
     Only includes fields that passive scanners are expected to send.
     """
 
     mac_address = serializers.CharField(required=True, allow_blank=False)
-    ip_address = serializers.IPAddressField(required=False, allow_blank=True)
+    ip_address = serializers.IPAddressField(
+        required=False, allow_blank=False, allow_null=True
+    )
     name = serializers.CharField(required=False, allow_blank=True, allow_null=True)
     hostname = serializers.CharField(required=False, allow_blank=True, allow_null=True)
     manufacturer = serializers.CharField(
@@ -106,19 +108,6 @@ class AssetUpsertSerializer(serializers.Serializer):
         child=serializers.IntegerField(min_value=1, max_value=65535),
         required=False,
     )
-
-    def validate_mac_address(self, value):
-        """Reject empty/whitespace-only MAC addresses."""
-        if not value or not value.strip():
-            msg = "mac_address must not be empty."
-            raise serializers.ValidationError(msg)
-        return value
-
-    def validate_ip_address(self, value):
-        """Coerce empty string to None."""
-        if value == "":
-            return None
-        return value
 
 
 class AssetSerializer(serializers.HyperlinkedModelSerializer):
