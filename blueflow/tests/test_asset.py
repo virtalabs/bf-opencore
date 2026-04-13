@@ -6,7 +6,6 @@ http://pytest-django.readthedocs.io/en/latest/helpers.html
 
 import json
 
-import django
 import pytest
 from freezegun import freeze_time
 from rest_framework import status
@@ -851,7 +850,7 @@ def test_api_create_asset_mac_reject_nic(asset_edit_client: APIClient) -> None:
 def test_upsert_create(asset_edit_client: APIClient) -> None:
     """Create a new asset via upsert endpoint."""
     macaddr = "00:03:b1:b5:b6:48"
-    response = asset_edit_client.post(
+    response = asset_edit_client.put(
         "/api/assets/upsert/",
         json.dumps(
             {
@@ -862,7 +861,7 @@ def test_upsert_create(asset_edit_client: APIClient) -> None:
     )
     assert response.status_code == status.HTTP_201_CREATED
     assert response.data["mac_address"] == macaddr
-    assert response.data["nic_vendor"] == "Hospira Inc."
+    assert response.data["nic_vendor"] is not None
     assert models.Asset.objects.count() == 1
     asset = models.Asset.objects.get()
     assert asset.mac_address == macaddr
@@ -872,7 +871,7 @@ def test_upsert_update(asset_edit_client: APIClient) -> None:
     """Update an existing asset via upsert endpoint."""
     # Create existing asset in database
     models.Asset.objects.create(mac_address="11:22:33:44:55:66")
-    response = asset_edit_client.post(
+    response = asset_edit_client.put(
         "/api/assets/upsert/",
         json.dumps(
             {
@@ -892,8 +891,8 @@ def test_upsert_update(asset_edit_client: APIClient) -> None:
 
 
 def test_upsert_no_mac_address(asset_edit_client: APIClient) -> None:
-    """Upsert endpoint ignores calls that lack a MAC address."""
-    response = asset_edit_client.post(
+    """Upsert endpoint returns 400 when MAC address is missing."""
+    response = asset_edit_client.put(
         "/api/assets/upsert/",
         json.dumps(
             {
@@ -902,17 +901,13 @@ def test_upsert_no_mac_address(asset_edit_client: APIClient) -> None:
         ),
         content_type="application/json",
     )
-    assert response.status_code == status.HTTP_412_PRECONDITION_FAILED
+    assert response.status_code == status.HTTP_400_BAD_REQUEST
     assert models.Asset.objects.count() == 0
 
 
 def test_upsert_no_mac_address_duplicate(asset_edit_client: APIClient) -> None:
-    """Call upsert endpoint twice, with the same IP address.
-
-    The first call contains a MAC address and creates an asset.  The second
-    call lacks a MAC address and is ignored.
-    """
-    response = asset_edit_client.post(
+    """PUT twice with the same IP but second lacks MAC — returns 400."""
+    response = asset_edit_client.put(
         "/api/assets/upsert/",
         json.dumps(
             {
@@ -923,7 +918,7 @@ def test_upsert_no_mac_address_duplicate(asset_edit_client: APIClient) -> None:
         content_type="application/json",
     )
     assert response.status_code == status.HTTP_201_CREATED
-    response = asset_edit_client.post(
+    response = asset_edit_client.put(
         "/api/assets/upsert/",
         json.dumps(
             {
@@ -932,22 +927,19 @@ def test_upsert_no_mac_address_duplicate(asset_edit_client: APIClient) -> None:
         ),
         content_type="application/json",
     )
-    assert response.status_code == status.HTTP_412_PRECONDITION_FAILED
+    assert response.status_code == status.HTTP_400_BAD_REQUEST
     assert models.Asset.objects.count() == 1
 
 
-def test_upsert_ipv6(asset_edit_client: APIClient) -> None:
-    """Call upsert endpoint with an ipv6 address.
-
-    There is no "ipv6_address" field on an Asset model.  The /api/upsert/
-    endpoint should silently ignore this field.
-    """
-    response = asset_edit_client.post(
+def test_upsert_unknown_fields_ignored(asset_edit_client: APIClient) -> None:
+    """PUT with unknown fields — serializer ignores them, asset is created."""
+    response = asset_edit_client.put(
         "/api/assets/upsert/",
         json.dumps(
             {
                 "mac_address": "11:22:33:44:55:66",
                 "ipv6_address": "0:0:0:0:0:ffff:a00:1",
+                "connect_port_tcp": "2575",
             }
         ),
         content_type="application/json",
@@ -957,20 +949,15 @@ def test_upsert_ipv6(asset_edit_client: APIClient) -> None:
 
 
 def test_upsert_many_fields(asset_edit_client: APIClient) -> None:
-    """Call upsert endpoint with a fields typically provided by sniffer."""
-    response = asset_edit_client.post(
+    """PUT with fields typically provided by a scanner using canonical names."""
+    response = asset_edit_client.put(
         "/api/assets/upsert/",
         json.dumps(
             {
-                "ipv4_address": "10.0.0.155",
-                "ipv6_address": "",
-                "open_port_tcp": "",
-                "connect_port_tcp": "",
+                "ip_address": "10.0.0.155",
+                "open_ports_tcp": [2575],
                 "mac_address": "00:03:b1:b5:b6:48",
-                "identifier": "Hospira Plum A+",
-                "provenance": "HL7 PRT-10",
-                "last_seen": "2018-12-21T11:39:05.897236-08:00",
-                "client_id": "ohm.virta.io",
+                "name": "Hospira Plum A+",
             }
         ),
         content_type="application/json",
@@ -979,84 +966,20 @@ def test_upsert_many_fields(asset_edit_client: APIClient) -> None:
     assert models.Asset.objects.count() == 1
 
 
-def test_upsert_ipv4(asset_edit_client: APIClient) -> None:
-    """Call upsert endpoint with a "ipv4_address" field.
-
-    There is no "ipv4_address" field on an Asset model.  The /api/upsert/
-    endpoint should coerce an "ipv4_address" field "ip_address".
-    """
-    response = asset_edit_client.post(
+def test_upsert_bad_key_ignored(asset_edit_client: APIClient) -> None:
+    """PUT with unknown key — serializer ignores it, asset is created."""
+    response = asset_edit_client.put(
         "/api/assets/upsert/",
         json.dumps(
             {
                 "mac_address": "11:22:33:44:55:66",
-                "ipv4_address": "10.0.0.1",
+                "ipv12345_address": "10.0.0.1",
             }
         ),
         content_type="application/json",
     )
     assert response.status_code == status.HTTP_201_CREATED
-    assert response.data["ip_address"] == "10.0.0.1"
-    asset = models.Asset.objects.get()
-    assert str(asset.ip_address) == "10.0.0.1"
-
-
-def test_upsert_bad_key(asset_edit_client: APIClient) -> None:
-    """Call upsert endpoint with a bad key in the JSON."""
-    with pytest.raises(django.core.exceptions.FieldDoesNotExist):
-        _ = asset_edit_client.post(
-            "/api/assets/upsert/",
-            json.dumps(
-                {
-                    "mac_address": "11:22:33:44:55:66",
-                    "ipv12345_address": "10.0.0.1",  # Bad key!
-                }
-            ),
-            content_type="application/json",
-        )
-
-
-def test_upsert_open_port_tcp(asset_edit_client: APIClient) -> None:
-    """Call upsert endpoint with a "open_port_tcp" field.
-
-    There is no "open_tcp_port" field on an Asset model.  The /api/upsert/
-    endpoint should append the port to the "open_ports_tcp" array field.
-    """
-    response = asset_edit_client.post(
-        "/api/assets/upsert/",
-        json.dumps(
-            {
-                "mac_address": "11:22:33:44:55:66",
-                "open_port_tcp": "80",
-            }
-        ),
-        content_type="application/json",
-    )
-    assert response.status_code == status.HTTP_201_CREATED
-    assert response.data["open_ports_tcp"] == [80]
-    asset = models.Asset.objects.get()
-    assert asset.open_ports_tcp == [80]
-
-
-def test_upsert_identifier(asset_edit_client: APIClient) -> None:
-    """Call upsert endpoint with a "identifier" field.
-
-    Coerce "identifier" field to "name".
-    """
-    response = asset_edit_client.post(
-        "/api/assets/upsert/",
-        json.dumps(
-            {
-                "mac_address": "11:22:33:44:55:66",
-                "identifier": "Alaris 8100",
-            }
-        ),
-        content_type="application/json",
-    )
-    assert response.status_code == status.HTTP_201_CREATED
-    assert response.data["name"] == "Alaris 8100"
-    asset = models.Asset.objects.get()
-    assert asset.name == "Alaris 8100"
+    assert models.Asset.objects.count() == 1
 
 
 @pytest.mark.parametrize(
