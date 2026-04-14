@@ -121,33 +121,47 @@ HL7 v2.x messages are transported over TCP using MLLP framing:
 
 Standard MLLP is **plaintext TCP**. Secure MLLP (MLLP+TLS) is increasingly deployed.
 
-### Passive Tap vs. Active Endpoint
+### Passive Capture vs. Active Endpoint
 
-| Approach | Pros | Cons |
+#### Detailed Comparison
+
+| Criterion | Passive Capture (SPAN/Tap) | Active MLLP Endpoint |
 |---|---|---|
-| **Passive capture** (SPAN/tap) | Zero config on clinical systems; discover without participating | Blind to TLS; TCP reassembly is complex; no ACK; HIPAA surface area |
-| **Active MLLP endpoint** | Reliable; works with TLS; standard integration pattern; ACK/NAK flow | Requires interface engine config; you become part of the message flow |
+| **Setup complexity** | Low — network admin mirrors a switch port, BlueFlow connects | Medium-high — integration engine admin creates outbound channels per source |
+| **Who does the work** | Network admin (familiar with SPAN) | Interface engine admin (specialized, may be a contractor or managed service) |
+| **Change control burden** | Low — network infrastructure only | Higher — touches clinical integration layer, often requires change advisory board approval |
+| **Time to deploy** | Hours | Days to weeks (change control lead time) |
+| **Ongoing maintenance** | Minimal — SPAN port is set-and-forget | Channel monitoring, cert rotation, interface engine upgrades can break channels |
+| **Coverage breadth** | Broad — sees all HL7 traffic on the mirrored segment | Selective — only sees traffic from explicitly configured channels |
+| **TLS environments** | Blind — encrypted traffic is opaque | Works — receives decrypted messages as a legitimate endpoint |
+| **TCP reassembly** | Required — must reassemble streams from raw packets (pyshark/tshark) | Not needed — messages arrive fully framed via MLLP |
+| **Data reliability** | Best-effort — dropped packets, retransmissions, no ACK | Reliable — ACK/NAK flow control, guaranteed delivery |
+| **Topology accuracy** | Sees actual network paths (L3/L4) | Sees logical paths through the interface engine |
+| **PHI exposure** | Higher — captures full raw traffic including non-HL7 | Scoped — only receives HL7 messages from configured channels |
+| **Clinical system impact** | None — purely observational | Low but nonzero — BlueFlow becomes a destination in the message flow |
+| **Failure mode ownership** | BlueFlow team owns the capture appliance | Hospital team owns channel availability in their interface engine |
+| **Small hospital fit** | Strong — minimal staff required, familiar workflow | Weaker — requires integration expertise that small hospitals may lack |
 
-### Recommendation: Active MLLP Endpoint (Supporting Both Transport Modes)
+#### Recommendation: Support Both, Default to Passive
 
-Passive capture is attractive for zero-touch discovery but is increasingly impractical as hospitals adopt TLS. The recommended approach:
+BlueFlow targets small hospitals where ease of deployment is a competitive advantage. SPAN-based passive capture should be the **primary deployment mode** — it requires no changes to clinical systems, no coordination with interface engine administrators, and no change control process.
 
-1. **Deploy BlueFlow as an MLLP listener** that receives a copy of HL7 traffic (most interface engines — Mirth Connect, Rhapsody, Epic Bridges — support routing a copy of messages to additional destinations)
-2. **Support both plaintext MLLP and MLLP+TLS** on the listener — these are the same protocol with an optional TLS wrapper, not incompatible formats
-3. **Parse MSH-3 + source IP** from every message for baseline device inventory
-4. **Extract OBX-18, OBX-3, PRT, and EQU** fields when present for enriched device metadata
-5. **Correlate with existing BlueFlow asset records** by IP address to augment the asset model
+Active MLLP endpoint should be supported as an **alternative for sites that need it** — specifically hospitals that have adopted TLS on their HL7 channels, or that prefer a structured integration approach.
 
-This avoids TCP reassembly complexity and fits into existing clinical integration patterns.
+The HL7 parsing layer is identical regardless of capture mode. The only difference is how messages arrive:
 
-#### Target deployment: Small hospital AMPs
+| Mode | Message Delivery |
+|---|---|
+| Passive | Raw TCP → reassemble stream (pyshark/tshark) → strip MLLP framing → parse HL7 |
+| Active | MLLP socket → strip framing → parse HL7 |
+| Active + TLS | TLS socket → MLLP → strip framing → parse HL7 |
 
-BlueFlow targets small hospitals for asset management and security analysis. In this segment:
+#### Small Hospital Deployment Context
 
+- **Passive is the easier sell** — "plug into a SPAN port and go" vs. "configure your interface engine to send us a copy of all HL7 traffic"
 - **Plaintext MLLP is still common** — smaller facilities run older interface engines (Mirth Connect 3.x, legacy Cloverleaf) with less security staff driving TLS adoption
-- **TLS adoption is growing** — even small hospitals are tightening internal network security under HIPAA pressure
-- **Supporting both modes from day one is low-cost** — the difference is `ssl.wrap_socket()` on the TCP connection; the HL7 parsing layer is identical regardless of transport security
-- **Dual-mode support is a buyer checkbox** — security-conscious evaluators expect TLS support even if their current environment doesn't use it
+- **Active mode is future-proofing** — as TLS adoption grows, sites can migrate from passive to active without changing anything in BlueFlow's parsing layer
+- **Supporting both modes from day one is low-cost** — the parsing and asset-mapping code is shared; only the transport layer differs
 
 ---
 
@@ -197,19 +211,21 @@ The active MLLP endpoint approach is advantageous here — the interface engine 
 
 ## 7. Decision
 
-**Pursue** — HL7 v2.x integration via an active MLLP listener is viable and covers a significant portion of the clinical device landscape.
+**Pursue** — HL7 v2.x integration is viable and covers a significant portion of the clinical device landscape. Support both passive (SPAN) and active (MLLP endpoint) capture modes, with passive as the default deployment path for small hospitals.
 
 ### Suggested Next Steps
 
 1. Add `python-hl7` as a dependency
-2. Build a dual-mode MLLP listener service (plaintext + TLS) — Celery worker, Django management command, or standalone asyncio process
-3. Implement a parser that extracts device fingerprints (IP + MSH-3 + OBX-18 + OBX-3) and upserts into BlueFlow's Asset model
-4. Define mapping rules from HL7 fields to Asset model fields (MSH-3 → asset name/vendor, OBX-3 → device class, OBX-18 → serial number)
-5. Make TLS configurable (cert/key paths, optional client cert verification) for sites that require it
-6. Store sender→receiver edges (MSH-3/IP → MSH-5/IP + timestamp + message type) for topology mapping
+2. Build the shared HL7 parsing layer — extract device fingerprints (IP + MSH-3 + OBX-18 + OBX-3) and upsert into BlueFlow's Asset model
+3. **Passive mode (primary):** Build a SPAN-based capture service using pyshark/tshark for TCP reassembly and MLLP frame extraction
+4. **Active mode (alternative):** Build a dual-mode MLLP listener (plaintext + TLS) for sites that require it
+5. Define mapping rules from HL7 fields to Asset model fields (MSH-3 → asset name/vendor, OBX-3 → device class, OBX-18 → serial number)
+6. Make TLS configurable (cert/key paths, optional client cert verification) for active mode
+7. Store sender→receiver edges (MSH-3/IP → MSH-5/IP + timestamp + message type) for topology mapping
 
 ### Open Questions
 
-- Should the MLLP listener run as a Celery worker, a Django management command, or a standalone service?
+- Should the capture services run as Celery workers, Django management commands, or standalone processes?
 - What is the PHI handling strategy? HL7 messages contain patient data (PID segment) that BlueFlow does not need and should not store.
 - How do we handle the many-to-one problem where a device integration engine (e.g., Capsule) aggregates multiple devices behind a single MSH-3/IP? OBX-18 disambiguation may be needed.
+- For passive mode: what are the pyshark/tshark licensing and dependency implications for bundling with BlueFlow? (tshark is GPLv2 — needs evaluation for distribution model)
