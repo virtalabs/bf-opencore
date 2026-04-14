@@ -82,6 +82,9 @@ prod = [
     { name = "gunicorn" },
     { name = "whitenoise" },
 ]
+scanners = [
+    { name = "hl7" },
+]
 
 [package.metadata]
 requires-dist = [
@@ -102,6 +105,7 @@ requires-dist = [
     { name = "drf-spectacular", specifier = "<=0.29" },
     { name = "freezegun", marker = "extra == 'dev'", specifier = ">=1.0,<3" },
     { name = "gunicorn", marker = "extra == 'prod'", specifier = ">=23.0" },
+    { name = "hl7", marker = "extra == 'scanners'", specifier = ">=0.4" },
     { name = "model-bakery", marker = "extra == 'dev'" },
     { name = "netaddr", specifier = ">=0.10.0" },
     { name = "psycopg", extras = ["binary"], specifier = ">=3" },
@@ -115,7 +119,7 @@ requires-dist = [
     { name = "sh", specifier = ">=2.2.2" },
     { name = "whitenoise", marker = "extra == 'prod'", specifier = ">=6.0" },
 ]
-provides-extras = ["prod", "dev"]
+provides-extras = ["prod", "scanners", "dev"]
 
 [[package]]
 name = "celery"
@@ -498,6 +502,15 @@ dependencies = [
 sdist = { url = "https://files.pythonhosted.org/packages/66/13/ef67f59f6a7896fdc2c1d62b5665c5219d6b0a9a1784938eb9a28e55e128/gunicorn-25.1.0.tar.gz", hash = "sha256:1426611d959fa77e7de89f8c0f32eed6aa03ee735f98c01efba3e281b1c47616", size = 594377 }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/da/73/4ad5b1f6a2e21cf1e85afdaad2b7b1a933985e2f5d679147a1953aaa192c/gunicorn-25.1.0-py3-none-any.whl", hash = "sha256:d0b1236ccf27f72cfe14bce7caadf467186f19e865094ca84221424e839b8b8b", size = 197067 },
+]
+
+[[package]]
+name = "hl7"
+version = "0.4.5"
+source = { registry = "https://pypi.org/simple" }
+sdist = { url = "https://files.pythonhosted.org/packages/b4/3a/67e8f7b695423eecbc38a1e8439bbb69fb234945dd3527fbdfdcec869cd0/hl7-0.4.5.tar.gz", hash = "sha256:b6eb97499ebe236e00c3009d43e6b0f040de002df12a292fa5efbd2ce2a8a838", size = 48796 }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/8d/2b/024977b044ca3aa79153e0a4ff13cc465064ccf9cf7b60df46e6eab8340e/hl7-0.4.5-py2.py3-none-any.whl", hash = "sha256:f46bf7c165801fd40e8fcc9f2be41c5794415039adc97646aee7ee6b20ce8ccd", size = 25495 },
 ]
 
 [[package]]
