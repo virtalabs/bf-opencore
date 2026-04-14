@@ -38,6 +38,9 @@ prod = [
     "gunicorn>=23.0",
     "whitenoise>=6.0",
 ]
+scanners = [
+    "hl7>=0.4",
+]
 dev = [
     "pytest",
     "pytest-django",
