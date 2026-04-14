@@ -161,9 +161,20 @@ The HL7 parsing layer is identical regardless of capture mode. The only differen
 
 | Mode | Message Delivery |
 |---|---|
-| Passive | Raw TCP → reassemble stream (pyshark/tshark) → strip MLLP framing → parse HL7 |
-| Active | MLLP socket → strip framing → parse HL7 |
-| Active + TLS | TLS socket → MLLP → strip framing → parse HL7 |
+| Passive | tshark (external) → BlueFlow wraps output → strip MLLP framing → parse HL7 → Celery task → Asset upsert |
+| Active | MLLP socket → strip framing → parse HL7 → Celery task → Asset upsert |
+| Active + TLS | TLS socket → MLLP → strip framing → parse HL7 → Celery task → Asset upsert |
+
+#### Integration Architecture
+
+Passive capture follows BlueFlow's existing pattern for external tool integration (same as nmap/portscan, ping, fingerprint):
+
+- **External tool does the heavy lifting** — tshark handles packet capture, TCP reassembly, and MLLP frame extraction. BlueFlow does not implement its own pcap/TCP stack.
+- **BlueFlow wraps the tool** — calls tshark via the `sh` library (consistent with existing nmap/ping wrappers), parses structured output, and extracts HL7 messages.
+- **Results flow through Celery** — a task receives parsed HL7 messages, extracts device fingerprints (MSH-3, OBX-18, OBX-3, source/dest IP), and upserts into the Asset model.
+- **Provenance via Scan model** — each capture session creates a Scan record with tshark command provenance, matching the existing pattern for nmap scans.
+
+This means tshark is a **runtime dependency** on the host (like nmap is today), not a Python library bundled with BlueFlow. This sidesteps the GPLv2 licensing concern — tshark is called as an external binary, not linked or distributed.
 
 #### Small Hospital Deployment Context
 
@@ -224,22 +235,22 @@ The active MLLP endpoint approach is advantageous here — the interface engine 
 
 ### FY2026 — Passive Capture Prototype (by Sep 30, 2026)
 
-1. Add `python-hl7` as a dependency
-2. Build the shared HL7 parsing layer — extract device fingerprints (IP + MSH-3 + OBX-18 + OBX-3) and upsert into BlueFlow's Asset model
-3. Build SPAN-based capture service using pyshark/tshark for TCP reassembly and MLLP frame extraction
-4. Define mapping rules from HL7 fields to Asset model fields (MSH-3 → asset name/vendor, OBX-3 → device class, OBX-18 → serial number)
-5. Store sender→receiver edges (MSH-3/IP → MSH-5/IP + timestamp + message type) for topology mapping
-6. Evaluate pyshark/tshark licensing implications (tshark is GPLv2 — needs review for BlueFlow's distribution model)
+1. Add `python-hl7` as a dependency; document tshark as a runtime dependency (like nmap)
+2. Build tshark wrapper in `blueflow/hl7/` — call tshark via `sh` to capture on a SPAN interface, reassemble TCP streams, and extract MLLP-framed HL7 messages
+3. Build the shared HL7 parsing layer — extract device fingerprints (IP + MSH-3 + OBX-18 + OBX-3) using `python-hl7`
+4. Build Celery task to receive parsed messages, map HL7 fields to Asset model fields (MSH-3 → asset name/vendor, OBX-3 → device class, OBX-18 → serial number), and upsert into the Asset model
+5. Create Scan records with tshark command provenance (consistent with existing nmap/portscan pattern)
+6. Store sender→receiver edges (MSH-3/IP → MSH-5/IP + timestamp + message type) for topology mapping
 
 ### FY2027 — Active MLLP Endpoint (Oct 2026+)
 
-1. Build dual-mode MLLP listener (plaintext + TLS) reusing the FY2026 parsing layer
+1. Build dual-mode MLLP listener (plaintext + TLS) reusing the FY2026 parsing layer and Celery tasks
 2. Add ACK/NAK response handling for reliable message delivery
 3. Make TLS configurable (cert/key paths, optional client cert verification)
 4. Provide deployment documentation for interface engine configuration (Mirth Connect, Rhapsody)
 
 ### Open Questions
 
-- Should the passive capture service run as a Celery worker, Django management command, or standalone process?
+- tshark supports multiple output formats (JSON via `-T json`, field extraction via `-T fields`). Which output format is easiest to wrap? JSON is richer; `-T fields` is lighter and closer to how we parse nmap text output today.
 - What is the PHI handling strategy? HL7 messages contain patient data (PID segment) that BlueFlow does not need and should not store.
 - How do we handle the many-to-one problem where a device integration engine (e.g., Capsule) aggregates multiple devices behind a single MSH-3/IP? OBX-18 disambiguation may be needed.
