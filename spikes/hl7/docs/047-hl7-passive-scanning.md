@@ -244,18 +244,70 @@ The active MLLP endpoint approach is advantageous here — the interface engine 
 
 ---
 
-## 7. Decision
+## 7. Asset Upsert Gap Analysis
+
+The BlueFlow upsert endpoint (`PUT /api/assets/upsert/` — `AssetUpsertSerializer`) requires `mac_address` as the lookup key. HL7 messages do not contain MAC addresses — they operate at the application layer, not L2.
+
+### Field mapping: HL7 → Asset upsert
+
+| Upsert Field | Required | HL7 Source | Status |
+|---|---|---|---|
+| `mac_address` | **Yes** (lookup key) | Not in HL7 — must come from L2 capture | **Gap: requires tshark MAC extraction from pcap** |
+| `ip_address` | No | tcpflow filename (network layer) | Available |
+| `name` | No | MSH-3 (Sending Application) | Available |
+| `hostname` | No | Not in HL7 (requires DNS reverse lookup) | Not available |
+| `manufacturer` | No | MSH-3 (inferred) or PRT-17 (v2.7+) | Partial — inference only |
+| `model` | No | Not in HL7 v2.x | Not available |
+| `serial_number` | No | OBX-18 (Equipment Instance ID) | Available when populated (~30-50% of deployments) |
+| `os` | No | Not in HL7 | Not available |
+| `category` | No | OBX-3 observation codes (inferred) | Partial — inference from what the device measures |
+| `external_keys` | No | Could store MSH-3 + HL7 version + message metadata | Available |
+| `open_ports_tcp` | No | MLLP port from tcpflow filename | Available |
+
+### Solution: Dual-tool capture
+
+The pcap from a SPAN port contains both Ethernet frames (with MAC addresses) and TCP streams (with HL7 payloads). Two tools extract different layers from the same file:
+
+| Tool | Job | Layer | Output |
+|---|---|---|---|
+| **tcpflow** | TCP stream reassembly | L4/L7 | Per-connection stream files |
+| **tshark** | MAC↔IP mapping | L2/L3 | `mac_map.tsv` — tab-separated `MAC\tIP` pairs |
+
+`capture.sh` runs both tools against the pcap. `sender.py` reads the stream data from stdin and optionally enriches with MAC addresses from the map file.
+
+```bash
+# capture.sh runs:
+tcpflow -r "$PCAP" -o "$OUTDIR"
+tshark -r "$PCAP" -T fields -e eth.src -e ip.src -Y "ip.src" | sort -u > "$OUTDIR/mac_map.tsv"
+```
+
+This adds tshark as a runtime dependency for the capture layer only. tshark is the right tool for structured L2 field extraction — tcpflow operates at L4+ and does not expose Ethernet headers.
+
+### Remaining gaps
+
+Fields that cannot be obtained from passive HL7/network capture and require other methods:
+
+- **`hostname`** — requires DNS reverse lookup or DHCP log correlation
+- **`model`** — not in HL7; requires SNMP, device API, or manual entry
+- **`os`** — not in HL7; requires nmap OS fingerprinting (already supported by BlueFlow)
+- **`manufacturer`** — partially inferable from MSH-3 naming conventions, but not reliable
+
+These gaps are expected. HL7 passive capture is one input to the asset record, not the only one. It complements existing scanning tools (nmap, fingerprint) that fill in network-layer attributes.
+
+---
+
+## 8. Decision
 
 **Pursue** — HL7 v2.x integration is viable and covers a significant portion of the clinical device landscape. Passive capture prototype in FY2026, active MLLP endpoint in FY2027.
 
 ### FY2026 — Passive Capture Prototype (by Sep 30, 2026)
 
-1. Add `python-hl7` as a dependency; document tcpflow as a runtime dependency (like nmap)
-2. Build tcpflow wrapper in `blueflow/hl7/` — call tcpflow via `sh` to capture on a SPAN interface and reassemble TCP streams into per-connection files
-3. Build MLLP frame extractor — scan tcpflow output files for `0x0B...0x1C0x0D` boundaries to extract individual HL7 messages
-4. Build the shared HL7 parsing layer — extract device fingerprints (IP + MSH-3 + OBX-18 + OBX-3) using `python-hl7`
-5. Build Celery task to receive parsed messages, map HL7 fields to Asset model fields (MSH-3 → asset name/vendor, OBX-3 → device class, OBX-18 → serial number), and upsert into the Asset model
-6. Create Scan records with tcpflow command provenance (consistent with existing nmap/portscan pattern)
+1. Add `python-hl7` as a dependency (`scanners` extra); document tcpflow and tshark as runtime dependencies
+2. Build capture layer — tcpflow for TCP stream reassembly, tshark for MAC↔IP mapping from the same pcap
+3. Build MLLP frame extractor — scan reassembled stream files for `0x0B...0x1C0x0D` boundaries to extract individual HL7 messages
+4. Build the shared HL7 parsing layer — extract device fingerprints (IP + MAC + MSH-3 + OBX-18 + OBX-3) using `python-hl7`
+5. Build Celery task to receive parsed messages, map HL7 fields to Asset model fields, enrich with MAC from tshark map, and upsert via `AssetUpsertSerializer`
+6. Create Scan records with capture command provenance (consistent with existing nmap/portscan pattern)
 7. Store sender→receiver edges (MSH-3/IP → MSH-5/IP + timestamp + message type) for topology mapping
 
 ### FY2027 — Active MLLP Endpoint (Oct 2026+)
