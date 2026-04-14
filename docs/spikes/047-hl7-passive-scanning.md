@@ -163,7 +163,39 @@ HL7 v2.x covers the **clinical device** segment well but provides no coverage fo
 
 ---
 
-## 6. Decision
+## 6. Topology Mapping Opportunity
+
+Every HL7 message contains both a sender and receiver, making HL7 traffic a natural source for building a clinical network topology map.
+
+### Data Available Per Message
+
+| Field | Topology Role |
+|---|---|
+| **Source IP** (network layer) | Sending device/gateway address |
+| **Destination IP** (network layer) | Receiving system address |
+| **MSH-3** (Sending Application) | Sending device/application identity |
+| **MSH-5** (Receiving Application) | Receiving system identity |
+| **MSH-4 / MSH-6** (Sending/Receiving Facility) | Department or site grouping |
+| **MSH-7** (Message Timestamp) | Edge timestamp — when communication occurred |
+| **MSH-9** (Message Type) | Edge label — what kind of data is flowing (results, orders, status) |
+
+### What This Enables
+
+- **Communication graph** — directed edges from sender → receiver, weighted by message volume, building a map of which devices talk to which systems over time
+- **Integration hub identification** — interface engines (Mirth, Rhapsody) appear as high-degree nodes; these are critical infrastructure and high-value targets for security analysis
+- **Anomaly detection** — a device communicating with an unexpected destination (outside its normal pattern) is a potential indicator of compromise or misconfiguration
+- **Segmentation gap analysis** — HL7 traffic crossing VLAN boundaries reveals network segmentation weaknesses (e.g., clinical devices reaching admin-network systems directly)
+- **Device activity tracking** — devices that stop sending messages may be offline, decommissioned, or compromised; message timing patterns distinguish always-on devices (monitors) from intermittent ones (lab analyzers)
+
+### Implementation Notes
+
+No additional parsing is required beyond what is already planned for device discovery. The sender/receiver relationship (MSH-3 + source IP → MSH-5 + destination IP) comes from the same message header. The topology map is a second view of the same data, stored as edges rather than nodes.
+
+The active MLLP endpoint approach is advantageous here — the interface engine forwards messages from all connected devices, giving BlueFlow visibility into the full routing path rather than just traffic on a single network segment.
+
+---
+
+## 7. Decision
 
 **Pursue** — HL7 v2.x integration via an active MLLP listener is viable and covers a significant portion of the clinical device landscape.
 
@@ -174,6 +206,7 @@ HL7 v2.x covers the **clinical device** segment well but provides no coverage fo
 3. Implement a parser that extracts device fingerprints (IP + MSH-3 + OBX-18 + OBX-3) and upserts into BlueFlow's Asset model
 4. Define mapping rules from HL7 fields to Asset model fields (MSH-3 → asset name/vendor, OBX-3 → device class, OBX-18 → serial number)
 5. Make TLS configurable (cert/key paths, optional client cert verification) for sites that require it
+6. Store sender→receiver edges (MSH-3/IP → MSH-5/IP + timestamp + message type) for topology mapping
 
 ### Open Questions
 
