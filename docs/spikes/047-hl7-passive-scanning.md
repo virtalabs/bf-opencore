@@ -3,13 +3,22 @@
 **Issue:** #47
 **Date:** 2026-04-14
 **Status:** Complete
-**Recommendation:** Pursue — with active MLLP endpoint approach, not passive tap
+**Recommendation:** Pursue — passive capture prototype in FY2026, active MLLP endpoint in FY2027
 
 ---
 
 ## Summary
 
-HL7 v2.x passive traffic parsing is a viable path for medical device discovery in BlueFlow. The protocol is plaintext, well-structured, and widely deployed across clinical device categories. However, the practical approach should be an **active MLLP listener** (receiving a copy of messages) rather than raw passive network capture, due to increasing TLS adoption and TCP reassembly complexity.
+HL7 v2.x traffic parsing is a viable path for medical device discovery in BlueFlow. The protocol is plaintext, well-structured, and widely deployed across clinical device categories. Both passive (SPAN-based) and active (MLLP endpoint) capture modes are worth building, targeting different deployment scenarios.
+
+### Timeline
+
+| Phase | Fiscal Year | Target | Scope |
+|---|---|---|---|
+| **Passive prototype** | FY2026 (by Sep 30, 2026) | Working SPAN-based capture with HL7 parsing and asset upsert | Core parsing layer, TCP reassembly via pyshark/tshark, device fingerprinting, topology edges |
+| **Active MLLP endpoint** | FY2027 (Oct 2026+) | Dual-mode MLLP listener (plaintext + TLS) | Reuses FY2026 parsing layer, adds MLLP transport, TLS config, ACK/NAK handling |
+
+The passive prototype establishes the shared HL7 parsing and asset-mapping layer, which the active mode will reuse. Building passive first also aligns with BlueFlow's small hospital target market, where SPAN-based deployment is the lowest-friction option.
 
 ---
 
@@ -211,21 +220,26 @@ The active MLLP endpoint approach is advantageous here — the interface engine 
 
 ## 7. Decision
 
-**Pursue** — HL7 v2.x integration is viable and covers a significant portion of the clinical device landscape. Support both passive (SPAN) and active (MLLP endpoint) capture modes, with passive as the default deployment path for small hospitals.
+**Pursue** — HL7 v2.x integration is viable and covers a significant portion of the clinical device landscape. Passive capture prototype in FY2026, active MLLP endpoint in FY2027.
 
-### Suggested Next Steps
+### FY2026 — Passive Capture Prototype (by Sep 30, 2026)
 
 1. Add `python-hl7` as a dependency
 2. Build the shared HL7 parsing layer — extract device fingerprints (IP + MSH-3 + OBX-18 + OBX-3) and upsert into BlueFlow's Asset model
-3. **Passive mode (primary):** Build a SPAN-based capture service using pyshark/tshark for TCP reassembly and MLLP frame extraction
-4. **Active mode (alternative):** Build a dual-mode MLLP listener (plaintext + TLS) for sites that require it
-5. Define mapping rules from HL7 fields to Asset model fields (MSH-3 → asset name/vendor, OBX-3 → device class, OBX-18 → serial number)
-6. Make TLS configurable (cert/key paths, optional client cert verification) for active mode
-7. Store sender→receiver edges (MSH-3/IP → MSH-5/IP + timestamp + message type) for topology mapping
+3. Build SPAN-based capture service using pyshark/tshark for TCP reassembly and MLLP frame extraction
+4. Define mapping rules from HL7 fields to Asset model fields (MSH-3 → asset name/vendor, OBX-3 → device class, OBX-18 → serial number)
+5. Store sender→receiver edges (MSH-3/IP → MSH-5/IP + timestamp + message type) for topology mapping
+6. Evaluate pyshark/tshark licensing implications (tshark is GPLv2 — needs review for BlueFlow's distribution model)
+
+### FY2027 — Active MLLP Endpoint (Oct 2026+)
+
+1. Build dual-mode MLLP listener (plaintext + TLS) reusing the FY2026 parsing layer
+2. Add ACK/NAK response handling for reliable message delivery
+3. Make TLS configurable (cert/key paths, optional client cert verification)
+4. Provide deployment documentation for interface engine configuration (Mirth Connect, Rhapsody)
 
 ### Open Questions
 
-- Should the capture services run as Celery workers, Django management commands, or standalone processes?
+- Should the passive capture service run as a Celery worker, Django management command, or standalone process?
 - What is the PHI handling strategy? HL7 messages contain patient data (PID segment) that BlueFlow does not need and should not store.
 - How do we handle the many-to-one problem where a device integration engine (e.g., Capsule) aggregates multiple devices behind a single MSH-3/IP? OBX-18 disambiguation may be needed.
-- For passive mode: what are the pyshark/tshark licensing and dependency implications for bundling with BlueFlow? (tshark is GPLv2 — needs evaluation for distribution model)
