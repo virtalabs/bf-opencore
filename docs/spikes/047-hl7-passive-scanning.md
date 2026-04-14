@@ -128,16 +128,26 @@ Standard MLLP is **plaintext TCP**. Secure MLLP (MLLP+TLS) is increasingly deplo
 | **Passive capture** (SPAN/tap) | Zero config on clinical systems; discover without participating | Blind to TLS; TCP reassembly is complex; no ACK; HIPAA surface area |
 | **Active MLLP endpoint** | Reliable; works with TLS; standard integration pattern; ACK/NAK flow | Requires interface engine config; you become part of the message flow |
 
-### Recommendation: Active MLLP Endpoint
+### Recommendation: Active MLLP Endpoint (Supporting Both Transport Modes)
 
 Passive capture is attractive for zero-touch discovery but is increasingly impractical as hospitals adopt TLS. The recommended approach:
 
 1. **Deploy BlueFlow as an MLLP listener** that receives a copy of HL7 traffic (most interface engines — Mirth Connect, Rhapsody, Epic Bridges — support routing a copy of messages to additional destinations)
-2. **Parse MSH-3 + source IP** from every message for baseline device inventory
-3. **Extract OBX-18, OBX-3, PRT, and EQU** fields when present for enriched device metadata
-4. **Correlate with existing BlueFlow asset records** by IP address to augment the asset model
+2. **Support both plaintext MLLP and MLLP+TLS** on the listener — these are the same protocol with an optional TLS wrapper, not incompatible formats
+3. **Parse MSH-3 + source IP** from every message for baseline device inventory
+4. **Extract OBX-18, OBX-3, PRT, and EQU** fields when present for enriched device metadata
+5. **Correlate with existing BlueFlow asset records** by IP address to augment the asset model
 
-This avoids TCP reassembly complexity, works with TLS, and fits into existing clinical integration patterns.
+This avoids TCP reassembly complexity and fits into existing clinical integration patterns.
+
+#### Target deployment: Small hospital AMPs
+
+BlueFlow targets small hospitals for asset management and security analysis. In this segment:
+
+- **Plaintext MLLP is still common** — smaller facilities run older interface engines (Mirth Connect 3.x, legacy Cloverleaf) with less security staff driving TLS adoption
+- **TLS adoption is growing** — even small hospitals are tightening internal network security under HIPAA pressure
+- **Supporting both modes from day one is low-cost** — the difference is `ssl.wrap_socket()` on the TCP connection; the HL7 parsing layer is identical regardless of transport security
+- **Dual-mode support is a buyer checkbox** — security-conscious evaluators expect TLS support even if their current environment doesn't use it
 
 ---
 
@@ -160,9 +170,10 @@ HL7 v2.x covers the **clinical device** segment well but provides no coverage fo
 ### Suggested Next Steps
 
 1. Add `python-hl7` as a dependency
-2. Build an MLLP listener service (Celery worker or standalone asyncio process)
+2. Build a dual-mode MLLP listener service (plaintext + TLS) — Celery worker, Django management command, or standalone asyncio process
 3. Implement a parser that extracts device fingerprints (IP + MSH-3 + OBX-18 + OBX-3) and upserts into BlueFlow's Asset model
 4. Define mapping rules from HL7 fields to Asset model fields (MSH-3 → asset name/vendor, OBX-3 → device class, OBX-18 → serial number)
+5. Make TLS configurable (cert/key paths, optional client cert verification) for sites that require it
 
 ### Open Questions
 
