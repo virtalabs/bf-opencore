@@ -161,7 +161,7 @@ The HL7 parsing layer is identical regardless of capture mode. The only differen
 
 | Mode | Message Delivery |
 |---|---|
-| Passive | tshark (external) → BlueFlow wraps output → strip MLLP framing → parse HL7 → Celery task → Asset upsert |
+| Passive | tcpflow (external) → BlueFlow reads reassembled streams → strip MLLP framing → parse HL7 → Celery task → Asset upsert |
 | Active | MLLP socket → strip framing → parse HL7 → Celery task → Asset upsert |
 | Active + TLS | TLS socket → MLLP → strip framing → parse HL7 → Celery task → Asset upsert |
 
@@ -169,12 +169,27 @@ The HL7 parsing layer is identical regardless of capture mode. The only differen
 
 Passive capture follows BlueFlow's existing pattern for external tool integration (same as nmap/portscan, ping, fingerprint):
 
-- **External tool does the heavy lifting** — tshark handles packet capture, TCP reassembly, and MLLP frame extraction. BlueFlow does not implement its own pcap/TCP stack.
-- **BlueFlow wraps the tool** — calls tshark via the `sh` library (consistent with existing nmap/ping wrappers), parses structured output, and extracts HL7 messages.
+- **External tool does the heavy lifting** — tcpflow handles packet capture and TCP stream reassembly. BlueFlow scans the reassembled output for MLLP framing and extracts HL7 messages.
+- **BlueFlow wraps the tool** — calls tcpflow via the `sh` library (consistent with existing nmap/ping wrappers), reads reassembled stream files, and parses HL7 content.
 - **Results flow through Celery** — a task receives parsed HL7 messages, extracts device fingerprints (MSH-3, OBX-18, OBX-3, source/dest IP), and upserts into the Asset model.
-- **Provenance via Scan model** — each capture session creates a Scan record with tshark command provenance, matching the existing pattern for nmap scans.
+- **Provenance via Scan model** — each capture session creates a Scan record with tcpflow command provenance, matching the existing pattern for nmap scans.
 
-This means tshark is a **runtime dependency** on the host (like nmap is today), not a Python library bundled with BlueFlow. This sidesteps the GPLv2 licensing concern — tshark is called as an external binary, not linked or distributed.
+tcpflow is a **runtime dependency** on the host (like nmap is today), not a Python library bundled with BlueFlow.
+
+#### Why tcpflow Over tshark
+
+| Criterion | tcpflow | tshark |
+|---|---|---|
+| **Purpose** | TCP stream reassembly (does one thing well) | Full protocol analyzer (massive feature set) |
+| **macOS** | `brew install tcpflow` (standalone) | Requires full Wireshark install |
+| **Linux** | `apt install tcpflow` (standalone) | `apt install tshark` (standalone) |
+| **Output** | One file per TCP stream — raw bytes, easy to scan for MLLP framing | Structured protocol dissection (JSON, field extraction) |
+| **Weight** | Lightweight (~1 MB) | Heavy (~50+ MB with dependencies) |
+| **License** | GPLv3 (external binary, not bundled) | GPLv2 (external binary, not bundled) |
+
+tcpflow is the right fit for the FY2026 prototype — it reconstructs TCP streams and writes them to files, which BlueFlow scans for `0x0B...0x1C0x0D` MLLP frames. No protocol dissection engine needed.
+
+**tshark as a fallback:** If we later need deeper protocol analysis (e.g., HL7 field-level filtering at the capture layer, or handling edge cases in malformed TCP streams), tshark can be swapped in. The parsing layer above the capture tool does not change.
 
 #### Small Hospital Deployment Context
 
@@ -235,12 +250,13 @@ The active MLLP endpoint approach is advantageous here — the interface engine 
 
 ### FY2026 — Passive Capture Prototype (by Sep 30, 2026)
 
-1. Add `python-hl7` as a dependency; document tshark as a runtime dependency (like nmap)
-2. Build tshark wrapper in `blueflow/hl7/` — call tshark via `sh` to capture on a SPAN interface, reassemble TCP streams, and extract MLLP-framed HL7 messages
-3. Build the shared HL7 parsing layer — extract device fingerprints (IP + MSH-3 + OBX-18 + OBX-3) using `python-hl7`
-4. Build Celery task to receive parsed messages, map HL7 fields to Asset model fields (MSH-3 → asset name/vendor, OBX-3 → device class, OBX-18 → serial number), and upsert into the Asset model
-5. Create Scan records with tshark command provenance (consistent with existing nmap/portscan pattern)
-6. Store sender→receiver edges (MSH-3/IP → MSH-5/IP + timestamp + message type) for topology mapping
+1. Add `python-hl7` as a dependency; document tcpflow as a runtime dependency (like nmap)
+2. Build tcpflow wrapper in `blueflow/hl7/` — call tcpflow via `sh` to capture on a SPAN interface and reassemble TCP streams into per-connection files
+3. Build MLLP frame extractor — scan tcpflow output files for `0x0B...0x1C0x0D` boundaries to extract individual HL7 messages
+4. Build the shared HL7 parsing layer — extract device fingerprints (IP + MSH-3 + OBX-18 + OBX-3) using `python-hl7`
+5. Build Celery task to receive parsed messages, map HL7 fields to Asset model fields (MSH-3 → asset name/vendor, OBX-3 → device class, OBX-18 → serial number), and upsert into the Asset model
+6. Create Scan records with tcpflow command provenance (consistent with existing nmap/portscan pattern)
+7. Store sender→receiver edges (MSH-3/IP → MSH-5/IP + timestamp + message type) for topology mapping
 
 ### FY2027 — Active MLLP Endpoint (Oct 2026+)
 
@@ -251,6 +267,6 @@ The active MLLP endpoint approach is advantageous here — the interface engine 
 
 ### Open Questions
 
-- tshark supports multiple output formats (JSON via `-T json`, field extraction via `-T fields`). Which output format is easiest to wrap? JSON is richer; `-T fields` is lighter and closer to how we parse nmap text output today.
 - What is the PHI handling strategy? HL7 messages contain patient data (PID segment) that BlueFlow does not need and should not store.
 - How do we handle the many-to-one problem where a device integration engine (e.g., Capsule) aggregates multiple devices behind a single MSH-3/IP? OBX-18 disambiguation may be needed.
+- tcpflow writes stream files to disk — what is the cleanup strategy for processed files? Disk usage in long-running capture sessions needs consideration.
