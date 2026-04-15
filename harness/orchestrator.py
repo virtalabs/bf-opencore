@@ -11,6 +11,7 @@ import click
 from harness.agents import (
     SensorResult,
     create_draft_pr,
+    get_changed_files,
     get_diff,
     push_branch,
     run_code_review,
@@ -331,9 +332,10 @@ def _single_attempt(
         log_dir,
     )
 
-    # --- Local lint sensor (programmatic) ---
-    logger.info("Running lint...")
-    lint_result = run_lint(cwd)
+    # --- Local lint sensor (changed files only) ---
+    changed_files = get_changed_files(cwd)
+    logger.info("Running lint on %d changed files...", len(changed_files))
+    lint_result = run_lint(cwd, changed_files=changed_files)
     logger.info(
         "Lint: %s",
         "PASS" if lint_result.passed else "FAIL",
