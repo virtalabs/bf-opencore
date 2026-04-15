@@ -54,9 +54,12 @@ dev = [
     "pytest-json-report",
 ]
 
+[project.scripts]
+harness = "harness.orchestrator:cli"
+
 [tool.setuptools.packages.find]
 where = ["."]
-include = ["blueflow*", "project*"]
+include = ["blueflow*", "project*", "harness*"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests", "blueflow/tests"]
@@ -69,7 +72,7 @@ venv = ".venv"
 
 [tool.ruff]
 target-version = "py312"
-exclude = [".venv", "blueflow/migrations"]
+exclude = [".venv", "blueflow/migrations", "harness/.logs"]
 fix = true
 
 [tool.ruff.lint]
@@ -80,6 +83,7 @@ ignore = ["COM812", "ANN", "D100", "D101", "D102", "D103", "D104", "D105", "D106
 "**/tests/**" = ["S101"]
 "tests/**" = ["S101"]
 "conftest.py" = ["S101"]
+"harness/**" = ["T201", "S603", "S607", "PLR0913"]
 
 [tool.ruff.format]
 skip-magic-trailing-comma = false
