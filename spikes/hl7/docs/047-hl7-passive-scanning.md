@@ -2,7 +2,7 @@
 
 **Issue:** #47
 **Date:** 2026-04-14
-**Status:** Complete
+**Status:** Complete — prototype working (`extract.py | emit.py`)
 **Recommendation:** Pursue — passive capture prototype in FY2026, active MLLP endpoint in FY2027
 
 ---
@@ -273,15 +273,13 @@ The pcap from a SPAN port contains both Ethernet frames (with MAC addresses) and
 | **tcpflow** | TCP stream reassembly | L4/L7 | Per-connection stream files |
 | **tshark** | MAC↔IP mapping | L2/L3 | `mac_map.tsv` — tab-separated `MAC\tIP` pairs |
 
-`capture.sh` runs both tools against the pcap. `sender.py` reads the stream data from stdin and optionally enriches with MAC addresses from the map file.
-
-```bash
-# capture.sh runs:
-tcpflow -r "$PCAP" -o "$OUTDIR"
-tshark -r "$PCAP" -T fields -e eth.src -e ip.src -Y "ip.src" | sort -u > "$OUTDIR/mac_map.tsv"
-```
+`extract.py` runs both tools internally against the pcap, correlates the results, and emits enriched JSON lines to stdout. `emit.py` reads those lines and maps them to Asset fields. See the [README](../README.md) for usage.
 
 This adds tshark as a runtime dependency for the capture layer only. tshark is the right tool for structured L2 field extraction — tcpflow operates at L4+ and does not expose Ethernet headers.
+
+### Prototype findings
+
+**ADT messages have limited device identity.** MSH-3 (`AccMgr`) and MSH-4 (`1`) are always present, but OBX-18 (equipment ID) and PV1-3 (patient location) are only populated for specific message types (ORU, ADT^A01/A04). The prototype confirms this — `equipment_id` is empty across all 124 ADT messages in the sample pcap. ORU-heavy captures (lab analyzers, patient monitors) will yield richer device fingerprints.
 
 ### Remaining gaps
 
@@ -321,4 +319,4 @@ These gaps are expected. HL7 passive capture is one input to the asset record, n
 
 - What is the PHI handling strategy? HL7 messages contain patient data (PID segment) that BlueFlow does not need and should not store.
 - How do we handle the many-to-one problem where a device integration engine (e.g., Capsule) aggregates multiple devices behind a single MSH-3/IP? OBX-18 disambiguation may be needed.
-- tcpflow writes stream files to disk — what is the cleanup strategy for processed files? Disk usage in long-running capture sessions needs consideration.
+- ~~tcpflow writes stream files to disk — what is the cleanup strategy for processed files?~~ **Resolved:** `extract.py` uses `tempfile.mkdtemp` and cleans up on exit. Long-running capture sessions would call extract per pcap rotation, not accumulate files.
