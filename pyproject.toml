@@ -50,6 +50,7 @@ dev = [
     "freezegun>=1.0,<3",
     "django-stubs[compatible-mypy]",
     "ruff",
+    "pre-commit>=4.5.1",
 ]
 
 [tool.setuptools.packages.find]
@@ -81,8 +82,3 @@ ignore = ["COM812", "ANN", "D100", "D101", "D102", "D103", "D104", "D105", "D106
 
 [tool.ruff.format]
 skip-magic-trailing-comma = false
-
-[dependency-groups]
-dev = [
-    "pre-commit>=4.5.1",
-]
