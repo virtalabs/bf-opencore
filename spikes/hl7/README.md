@@ -59,6 +59,11 @@ Total: 124 records from 1 device(s)
 | `sending_app` | MSH-3 | `name` |
 | `equipment_id` | OBX-18 | `serial_number` |
 
+## Notes
+
+- **ACK filtering:** Both TCP stream directions contain MLLP-framed messages. The receiver's ACK responses parse as valid HL7 but carry no device identity — `extract.py` filters these out automatically.
+- **MAC address on sample data:** The included `hl7.pcap` is a loopback capture with no Ethernet headers, so `mac_address` will be empty. Real SPAN captures have Ethernet frames and will populate this field.
+
 ## Files
 
 ```
