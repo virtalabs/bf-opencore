@@ -2,6 +2,7 @@
 
 import json
 import logging
+import os
 import subprocess
 import sys
 from dataclasses import dataclass, field
@@ -138,10 +139,7 @@ def update_baseline_cmd(test_timeout: int, lint_timeout: int) -> None:
         text=True,
         timeout=test_timeout,
         check=False,
-        env={
-            **__import__("os").environ,
-            "DJANGO_SETTINGS_MODULE": "project.settings.test",
-        },
+        env={**os.environ, "DJANGO_SETTINGS_MODULE": "project.settings.test"},
     )
 
     test_report = parse_test_output(test_result.stdout)
