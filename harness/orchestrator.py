@@ -22,11 +22,13 @@ from harness.agents import (
 )
 from harness.ci import (
     TestReport,
-    download_test_report,
     get_ci_status,
     get_failed_logs,
-    parse_test_report,
+    parse_test_output,
     wait_for_ci,
+)
+from harness.ci import (
+    _run_gh as _run_ci_gh,
 )
 from harness.state import (
     comment_on_issue,
@@ -358,18 +360,25 @@ def _single_attempt(
     ci_passed = get_ci_status(repo, run_id)
     logger.info("CI: %s (run %d)", "PASS" if ci_passed else "FAIL", run_id)
 
-    # --- Download + parse test report ---
-    report_dest = log_dir / f"issue-{issue_number}" / f"ci-{attempt}"
-    test_report = _fetch_test_report(repo, run_id, report_dest)
-
-    ci_failure_log = ""
-    if not ci_passed:
-        ci_failure_log = get_failed_logs(repo, run_id)
+    # --- Parse test results from CI logs ---
+    ci_log = get_failed_logs(repo, run_id)
+    if not ci_log:
+        # No failed logs — get full log for parsing
+        ci_log = _get_ci_log(repo, run_id)
+    test_report = parse_test_output(ci_log)
+    logger.info(
+        "Tests: %d passed, %d failed, %d errors (of %d total)",
+        test_report.passed,
+        test_report.failed,
+        test_report.errors,
+        test_report.total,
+    )
+    if ci_log:
         save_output(
             issue_number,
-            "ci-failed-logs",
+            "ci-logs",
             attempt,
-            ci_failure_log,
+            ci_log,
             log_dir,
         )
 
@@ -396,32 +405,25 @@ def _single_attempt(
         lint_result=lint_result,
         test_report=test_report,
         ci_passed=ci_passed,
-        ci_failure_log=ci_failure_log,
         ci_run_id=run_id,
         findings=review_result.findings,
     )
 
 
-def _fetch_test_report(
-    repo: str,
-    run_id: int,
-    dest: Path,
-) -> TestReport:
-    """Download and parse the CI test report artifact."""
-    try:
-        report_path = download_test_report(repo, run_id, dest)
-        report = parse_test_report(report_path)
-        logger.info(
-            "Tests: %d passed, %d failed, %d errors (of %d total)",
-            report.passed,
-            report.failed,
-            report.errors,
-            report.total,
-        )
-    except (FileNotFoundError, RuntimeError):
-        logger.warning("Could not download test report artifact")
-        report = TestReport()
-    return report
+def _get_ci_log(repo: str, run_id: int) -> str:
+    """Get the full CI log for a run (used when --log-failed is empty)."""
+    result = _run_ci_gh(
+        [
+            "run",
+            "view",
+            str(run_id),
+            "--repo",
+            repo,
+            "--log",
+        ],
+        check=False,
+    )
+    return result.stdout
 
 
 def _load_baseline() -> dict:
@@ -437,7 +439,6 @@ def _assemble_verdict(
     lint_result: SensorResult,
     test_report: TestReport,
     ci_passed: bool,
-    ci_failure_log: str,
     ci_run_id: int,
     findings: list[dict] | None,
 ) -> Verdict:
@@ -454,7 +455,7 @@ def _assemble_verdict(
             f"{lint_result.output[:500]}"
         )
 
-    # CI / test sensor — only flag NEW failures not in baseline
+    # Test sensor — only flag NEW failures not in baseline
     new_failures = [t for t in test_report.failed_tests if t not in known_failures]
     if new_failures:
         reasons.append(
@@ -467,12 +468,12 @@ def _assemble_verdict(
             len(test_report.failed_tests),
         )
 
-    # CI failure without test report context
+    # CI failed but no test failures parsed (infra issue)
     if not ci_passed and not test_report.failed_tests:
-        if ci_failure_log:
-            reasons.append(f"CI failed (run {ci_run_id}):\n{ci_failure_log[:1000]}")
-        else:
-            reasons.append(f"CI failed (run {ci_run_id})")
+        reasons.append(
+            f"CI failed (run {ci_run_id}) — no test "
+            f"failures parsed, possible infra issue"
+        )
 
     # Code review findings
     blockers = [f for f in (findings or []) if f.get("severity") == "blocker"]

@@ -43,18 +43,10 @@ jobs:
       - name: Run migrations
         run: uv run python project/manage.py migrate --noinput
 
+      # Parallel via xdist for speed. --tb=no and -q keep output
+      # to just FAILED lines + summary, which the agent harness
+      # parses directly. pytest-json-report is incompatible with
+      # xdist (WSGIRequest serialization crashes workers).
       - name: Run tests
         continue-on-error: true
-        run: >-
-          uv run pytest
-          -n auto
-          --json-report
-          --json-report-file=report.json
-          -ra
-
-      - name: Upload test report
-        if: always()
-        uses: actions/upload-artifact@v7
-        with:
-          name: test-report
-          path: report.json
+        run: uv run pytest -n auto --tb=no -q --no-header -ra
