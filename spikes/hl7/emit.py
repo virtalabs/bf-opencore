@@ -13,14 +13,28 @@ import sys
 
 
 def map_to_asset(record: dict) -> dict:
-    """Transform an extract record into an Asset-shaped dict."""
+    """Transform an extract record into an Asset-shaped dict.
+
+    Preserves all HL7 fields alongside the Asset mapping. Strict
+    conformance to the Asset model happens at upsert time, not here.
+    """
     return {
+        # Asset-mapped fields
         "mac_address": record.get("mac_address", ""),
         "ip_address": record.get("ip_address", ""),
         "name": record.get("sending_app", ""),
         "serial_number": record.get("equipment_id", ""),
         "open_ports_tcp": [record["port"]] if record.get("port") else [],
         "source": "hl7_passive",
+        # HL7 context
+        "sending_facility": record.get("sending_facility", ""),
+        "receiving_app": record.get("receiving_app", ""),
+        "receiving_facility": record.get("receiving_facility", ""),
+        "message_timestamp": record.get("message_timestamp", ""),
+        "message_type": record.get("message_type", ""),
+        "message_id": record.get("message_id", ""),
+        "hl7_version": record.get("hl7_version", ""),
+        "patient_location": record.get("patient_location", ""),
     }
 
 
