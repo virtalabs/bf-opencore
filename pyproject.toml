@@ -81,3 +81,8 @@ ignore = ["COM812", "ANN", "D100", "D101", "D102", "D103", "D104", "D105", "D106
 
 [tool.ruff.format]
 skip-magic-trailing-comma = false
+
+[dependency-groups]
+dev = [
+    "pre-commit>=4.5.1",
+]
