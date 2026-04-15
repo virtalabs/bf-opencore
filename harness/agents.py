@@ -207,10 +207,34 @@ def run_code_review(diff: str, plan_json: str) -> CodeReviewResult:
     return CodeReviewResult(raw_output=raw, findings=findings)
 
 
-def run_lint(cwd: str) -> SensorResult:
-    """Run ruff check and format in the given directory."""
+def get_changed_files(
+    cwd: str,
+    base: str = "develop",
+) -> list[str]:
+    """Get the list of files changed relative to the base branch."""
+    result = subprocess.run(
+        ["git", "diff", "--name-only", f"{base}...HEAD"],
+        capture_output=True,
+        text=True,
+        cwd=cwd,
+        check=False,
+    )
+    return [f for f in result.stdout.strip().splitlines() if f.strip()]
+
+
+def run_lint(
+    cwd: str,
+    changed_files: list[str] | None = None,
+) -> SensorResult:
+    """Run ruff check and format on changed files only.
+
+    If changed_files is None or empty, checks the whole directory
+    (useful for local dev but not recommended for the pipeline).
+    """
+    targets = changed_files or ["."]
+
     check = subprocess.run(
-        ["uv", "run", "ruff", "check", "."],
+        ["uv", "run", "ruff", "check", *targets],
         capture_output=True,
         text=True,
         timeout=LINT_TIMEOUT,
@@ -219,7 +243,7 @@ def run_lint(cwd: str) -> SensorResult:
     )
 
     fmt = subprocess.run(
-        ["uv", "run", "ruff", "format", "--check", "."],
+        ["uv", "run", "ruff", "format", "--check", *targets],
         capture_output=True,
         text=True,
         timeout=LINT_TIMEOUT,
