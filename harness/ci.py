@@ -1,11 +1,10 @@
-"""CI run monitoring, artifact download, and test report parsing."""
+"""CI run monitoring and test output parsing."""
 
-import contextlib
 import json
 import logging
+import re
 import subprocess
 from dataclasses import dataclass, field
-from pathlib import Path
 
 logger = logging.getLogger(__name__)
 
@@ -14,7 +13,7 @@ CI_WATCH_TIMEOUT = 900  # 15 minutes max wait for CI
 
 @dataclass
 class TestReport:
-    """Structured test results parsed from pytest-json-report."""
+    """Structured test results parsed from pytest console output."""
 
     total: int = 0
     passed: int = 0
@@ -45,7 +44,6 @@ def wait_for_ci(repo: str, branch: str) -> int:
     """
     logger.info("Waiting for CI on branch %s...", branch)
 
-    # Get the latest run ID for this branch
     result = _run_gh(
         [
             "run",
@@ -69,7 +67,6 @@ def wait_for_ci(repo: str, branch: str) -> int:
     run_id = runs[0]["databaseId"]
     logger.info("Found CI run %d, waiting for completion...", run_id)
 
-    # Block until the run completes
     _run_gh(
         [
             "run",
@@ -79,7 +76,7 @@ def wait_for_ci(repo: str, branch: str) -> int:
             repo,
             "--exit-status",
         ],
-        check=False,  # don't raise on CI failure — we handle it
+        check=False,
         timeout=CI_WATCH_TIMEOUT,
     )
 
@@ -102,41 +99,6 @@ def get_ci_status(repo: str, run_id: int) -> bool:
     )
     data = json.loads(result.stdout)
     return data.get("conclusion") == "success"
-
-
-def download_test_report(
-    repo: str,
-    run_id: int,
-    dest: Path,
-) -> Path:
-    """Download the test-report artifact from a CI run.
-
-    Returns the path to report.json.
-    """
-    dest.mkdir(parents=True, exist_ok=True)
-
-    _run_gh(
-        [
-            "run",
-            "download",
-            str(run_id),
-            "--repo",
-            repo,
-            "--name",
-            "test-report",
-            "--dir",
-            str(dest),
-        ],
-        check=True,
-    )
-
-    report_path = dest / "report.json"
-    if not report_path.exists():
-        msg = f"test-report artifact downloaded but report.json not found in {dest}"
-        raise FileNotFoundError(msg)
-
-    logger.info("Downloaded test report to %s", report_path)
-    return report_path
 
 
 def get_failed_logs(repo: str, run_id: int) -> str:
@@ -167,27 +129,54 @@ def get_failed_logs(repo: str, run_id: int) -> str:
     return result.stdout
 
 
-def parse_test_report(report_path: Path) -> TestReport:
-    """Parse a pytest-json-report file into a TestReport."""
-    report: dict = {}
-    with contextlib.suppress(json.JSONDecodeError):
-        report = json.loads(report_path.read_text())
+def parse_test_output(output: str) -> TestReport:
+    """Parse pytest's -q --tb=no output into a TestReport.
 
-    if not report:
-        logger.warning("Empty or invalid test report at %s", report_path)
-        return TestReport()
+    Expects output shaped like:
+        FAILED path/to/test.py::test_name
+        FAILED path/to/test.py::test_other - Error...
+        68 failed, 249 passed, 4 skipped, 25 xfailed in 11.52s
 
-    summary = report.get("summary", {})
-    tests = report.get("tests", [])
-
+    This replaces pytest-json-report, which is incompatible with
+    pytest-xdist (xdist workers crash serializing Django WSGIRequest
+    objects through execnet when tests fail).
+    """
     failed_tests = [
-        test["nodeid"] for test in tests if test.get("outcome") in ("failed", "error")
+        match.group(1)
+        for match in re.finditer(
+            r"^FAILED\s+(\S+)",
+            output,
+            re.MULTILINE,
+        )
     ]
 
+    # Parse the summary line: "68 failed, 249 passed, ..."
+    total = 0
+    passed = 0
+    failed = 0
+    errors = 0
+
+    summary_match = re.search(
+        r"(\d+\s+\w+(?:,\s*\d+\s+\w+)*)\s+in\s+[\d.]+s",
+        output,
+    )
+    if summary_match:
+        summary_text = summary_match.group(1)
+        for count_match in re.finditer(r"(\d+)\s+(\w+)", summary_text):
+            count = int(count_match.group(1))
+            label = count_match.group(2)
+            if label == "passed":
+                passed = count
+            elif label == "failed":
+                failed = count
+            elif label in ("error", "errors"):
+                errors = count
+            total += count
+
     return TestReport(
-        total=summary.get("total", 0),
-        passed=summary.get("passed", 0),
-        failed=summary.get("failed", 0),
-        errors=summary.get("error", 0),
+        total=total,
+        passed=passed,
+        failed=failed,
+        errors=errors,
         failed_tests=failed_tests,
     )
