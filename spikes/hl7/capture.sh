@@ -21,7 +21,14 @@ if [ ! -f "$PCAP" ]; then
 fi
 
 mkdir -p "$OUTDIR"
+
+# L4/L7: reassemble TCP streams
 tcpflow -r "$PCAP" -o "$OUTDIR"
 
-STREAM_COUNT=$(find "$OUTDIR" -type f ! -name 'report.*' | wc -l | tr -d ' ')
-echo "Wrote $STREAM_COUNT stream(s) to $OUTDIR"
+# L2/L3: build MAC-IP mapping table
+tshark -r "$PCAP" -T fields -e eth.src -e ip.src -Y "ip.src" 2>/dev/null \
+    | sort -u > "$OUTDIR/mac_map.tsv"
+
+STREAM_COUNT=$(find "$OUTDIR" -type f ! -name 'report.*' ! -name 'mac_map.tsv' | wc -l | tr -d ' ')
+MAC_COUNT=$(wc -l < "$OUTDIR/mac_map.tsv" | tr -d ' ')
+echo "Wrote $STREAM_COUNT stream(s) and $MAC_COUNT MAC mapping(s) to $OUTDIR"

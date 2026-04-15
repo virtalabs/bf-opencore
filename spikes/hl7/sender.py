@@ -1,9 +1,10 @@
 """Read raw TCP stream bytes from stdin, extract MLLP-framed HL7 messages, and dump parsed fields.
 
 Usage:
-    cat <stream_file> | python sender.py
+    cat <stream_file> | python sender.py [--mac-map MAC_MAP] [--source-ip SOURCE_IP]
 """
 
+import argparse
 import sys
 from dataclasses import asdict, dataclass
 
@@ -15,6 +16,8 @@ MLLP_END = b"\x1c\x0d"
 
 @dataclass
 class HL7Message:
+    mac_address: str
+    ip_address: str
     sending_app: str
     sending_facility: str
     receiving_app: str
@@ -28,6 +31,18 @@ class HL7Message:
 
     def to_dict(self):
         return asdict(self)
+
+
+def load_mac_map(path: str) -> dict[str, str]:
+    """Read a mac_map.tsv file and return an {ip: mac} dict."""
+    mapping = {}
+    with open(path) as f:
+        for line in f:
+            parts = line.strip().split("\t")
+            if len(parts) == 2:
+                mac, ip = parts
+                mapping[ip] = mac
+    return mapping
 
 
 def extract_messages(stream_data: bytes) -> list[str]:
@@ -56,10 +71,12 @@ def _field(msg: hl7.Message, segment_id: str, field_num: int) -> str:
         return ""
 
 
-def parse_message(raw: str) -> HL7Message:
+def parse_message(raw: str, *, mac_address: str = "", ip_address: str = "") -> HL7Message:
     """Parse a raw HL7 message string into an HL7Message dataclass."""
     msg = hl7.parse(raw)
     return HL7Message(
+        mac_address=mac_address,
+        ip_address=ip_address,
         sending_app=_field(msg, "MSH", 3),
         sending_facility=_field(msg, "MSH", 4),
         receiving_app=_field(msg, "MSH", 5),
@@ -74,6 +91,17 @@ def parse_message(raw: str) -> HL7Message:
 
 
 def main():
+    parser = argparse.ArgumentParser(description="Parse MLLP-framed HL7 messages from stdin.")
+    parser.add_argument("--mac-map", help="Path to mac_map.tsv (tab-separated MAC/IP pairs)")
+    parser.add_argument("--source-ip", default="", help="Source IP to look up in the MAC map")
+    args = parser.parse_args()
+
+    mac_map: dict[str, str] = {}
+    if args.mac_map:
+        mac_map = load_mac_map(args.mac_map)
+
+    mac_address = mac_map.get(args.source_ip, "") if args.source_ip else ""
+
     stream_data = sys.stdin.buffer.read()
     raw_messages = extract_messages(stream_data)
 
@@ -82,7 +110,7 @@ def main():
         return
 
     for i, raw in enumerate(raw_messages):
-        msg = parse_message(raw)
+        msg = parse_message(raw, mac_address=mac_address, ip_address=args.source_ip)
         print(f"--- Message {i + 1} ---")
         for k, v in msg.to_dict().items():
             print(f"  {k}: {v}")
