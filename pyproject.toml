@@ -51,6 +51,7 @@ dev = [
     "django-stubs[compatible-mypy]",
     "ruff",
     "pre-commit>=4.5.1",
+    "pytest-json-report",
 ]
 
 [tool.setuptools.packages.find]
