@@ -18,7 +18,8 @@ build/
 
 # IDE
 .idea/
+.claude/
 .cursor/
 .vscode/
 
-claude.md
+CLAUDE.md
