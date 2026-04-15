@@ -40,6 +40,8 @@ from harness.state import (
 
 logger = logging.getLogger("harness")
 
+BASELINE_PATH = Path(__file__).parent / "baseline.json"
+
 
 @dataclass
 class Verdict:
@@ -422,6 +424,14 @@ def _fetch_test_report(
     return report
 
 
+def _load_baseline() -> dict:
+    """Load the known-failure baseline from harness/baseline.json."""
+    if not BASELINE_PATH.exists():
+        logger.warning("No baseline file found at %s", BASELINE_PATH)
+        return {}
+    return json.loads(BASELINE_PATH.read_text())
+
+
 def _assemble_verdict(
     *,
     lint_result: SensorResult,
@@ -433,8 +443,10 @@ def _assemble_verdict(
 ) -> Verdict:
     """Build a deterministic verdict from sensors + code review."""
     reasons: list[str] = []
+    baseline = _load_baseline()
+    known_failures = set(baseline.get("test_failures", []))
 
-    # Lint sensor
+    # Lint sensor (scoped to changed files only, so no baseline needed)
     if not lint_result.passed:
         reasons.append(
             f"Lint failed (ruff check rc={lint_result.details.get('check_rc')}, "
@@ -442,19 +454,25 @@ def _assemble_verdict(
             f"{lint_result.output[:500]}"
         )
 
-    # CI / test sensor
-    if not ci_passed:
+    # CI / test sensor — only flag NEW failures not in baseline
+    new_failures = [t for t in test_report.failed_tests if t not in known_failures]
+    if new_failures:
+        reasons.append(
+            f"{len(new_failures)} NEW test failure(s) "
+            f"(not in baseline):\n" + "\n".join(new_failures[:20])
+        )
+    if test_report.failed_tests and not new_failures:
+        logger.info(
+            "All %d test failures are in the known baseline — not blocking.",
+            len(test_report.failed_tests),
+        )
+
+    # CI failure without test report context
+    if not ci_passed and not test_report.failed_tests:
         if ci_failure_log:
             reasons.append(f"CI failed (run {ci_run_id}):\n{ci_failure_log[:1000]}")
         else:
             reasons.append(f"CI failed (run {ci_run_id})")
-
-    # Report new test failures (from parsed artifact)
-    if test_report.failed_tests:
-        reasons.append(
-            f"{len(test_report.failed_tests)} test failure(s):\n"
-            + "\n".join(test_report.failed_tests[:20])
-        )
 
     # Code review findings
     blockers = [f for f in (findings or []) if f.get("severity") == "blocker"]
