@@ -10,7 +10,7 @@ Your job is to execute an implementation plan by writing code and tests, then co
 
 ## Instructions
 
-1. Read the CLAUDE.md file for project conventions before writing any code.
+1. Read `harness/prompts/conventions.md` for project conventions before writing any code.
 2. Execute each step in the plan sequentially.
 3. Follow all coding conventions:
    - Plain function tests (no `class Test*` pattern)

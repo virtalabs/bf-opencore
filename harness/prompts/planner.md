@@ -10,7 +10,7 @@ The following GitHub issue needs to be resolved:
 
 ## Instructions
 
-1. Read the CLAUDE.md file for project conventions and architecture.
+1. Read `harness/prompts/conventions.md` for project conventions and file mapping rules.
 2. Cross-reference the issue against the current state of the codebase.
 3. Identify all files that need to be modified or created.
 4. Classify the ticket type (feature, bug, or chore).
