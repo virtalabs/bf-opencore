@@ -3,7 +3,6 @@
 import contextlib
 import json
 import logging
-import os
 import re
 import subprocess
 from dataclasses import dataclass, field
@@ -17,9 +16,8 @@ DEFAULT_LOG_DIR = HARNESS_DIR / ".logs"
 
 PLANNER_TIMEOUT = 300
 CODER_TIMEOUT = 600
-REVIEWER_TIMEOUT = 300
+CODE_REVIEW_TIMEOUT = 300
 LINT_TIMEOUT = 60
-TEST_TIMEOUT = 300
 
 MAX_PR_TITLE_LENGTH = 70
 
@@ -37,9 +35,9 @@ class CoderResult:
 
 
 @dataclass
-class ReviewResult:
+class CodeReviewResult:
     raw_output: str
-    verdict: dict | None
+    findings: list[dict] | None
 
 
 @dataclass
@@ -173,20 +171,14 @@ def run_coder(
     return CoderResult(raw_output=result.stdout, branch=branch)
 
 
-def run_reviewer(
-    diff: str,
-    plan_json: str,
-    lint_output: str,
-    test_output: str,
-) -> ReviewResult:
-    """Invoke the Reviewer agent to validate the coder's work."""
-    template = load_prompt("reviewer")
-    prompt = (
-        template.replace("{plan}", plan_json)
-        .replace("{diff}", diff)
-        .replace("{lint_output}", lint_output)
-        .replace("{test_output}", test_output)
-    )
+def run_code_review(diff: str, plan_json: str) -> CodeReviewResult:
+    """Invoke the code review agent to analyze the diff against the plan.
+
+    This agent only performs code review — no lint or test analysis.
+    Sensor checks are handled programmatically by the orchestrator.
+    """
+    template = load_prompt("code_review")
+    prompt = template.replace("{plan}", plan_json).replace("{diff}", diff)
 
     result = subprocess.run(
         [
@@ -205,13 +197,14 @@ def run_reviewer(
         ],
         capture_output=True,
         text=True,
-        timeout=REVIEWER_TIMEOUT,
+        timeout=CODE_REVIEW_TIMEOUT,
         check=False,
     )
 
     raw = result.stdout
-    verdict = extract_json(raw)
-    return ReviewResult(raw_output=raw, verdict=verdict)
+    parsed = extract_json(raw)
+    findings = parsed.get("findings") if parsed else None
+    return CodeReviewResult(raw_output=raw, findings=findings)
 
 
 def run_lint(cwd: str) -> SensorResult:
@@ -244,49 +237,6 @@ def run_lint(cwd: str) -> SensorResult:
             "check_rc": check.returncode,
             "format_rc": fmt.returncode,
         },
-    )
-
-
-def run_tests(
-    cwd: str,
-    test_files: list[str] | None = None,
-) -> SensorResult:
-    """Run pytest with JSON reporting in the given directory."""
-    report_path = Path(cwd) / "report.json"
-
-    cmd = [
-        "uv",
-        "run",
-        "pytest",
-        "--json-report",
-        f"--json-report-file={report_path}",
-        "-ra",
-    ]
-    if test_files:
-        cmd.extend(test_files)
-
-    result = subprocess.run(
-        cmd,
-        capture_output=True,
-        text=True,
-        timeout=TEST_TIMEOUT,
-        cwd=cwd,
-        check=False,
-        env={
-            **os.environ,
-            "DJANGO_SETTINGS_MODULE": "project.settings.test",
-        },
-    )
-
-    report: dict = {}
-    if report_path.exists():
-        with contextlib.suppress(json.JSONDecodeError):
-            report = json.loads(report_path.read_text())
-
-    return SensorResult(
-        passed=result.returncode == 0,
-        output=result.stdout + result.stderr,
-        details=report,
     )
 
 

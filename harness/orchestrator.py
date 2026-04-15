@@ -3,20 +3,29 @@
 import json
 import logging
 import sys
+from dataclasses import dataclass, field
 from pathlib import Path
 
 import click
 
 from harness.agents import (
+    SensorResult,
     create_draft_pr,
     get_diff,
     push_branch,
+    run_code_review,
     run_coder,
     run_lint,
     run_planner,
-    run_reviewer,
-    run_tests,
     save_output,
+)
+from harness.ci import (
+    TestReport,
+    download_test_report,
+    get_ci_status,
+    get_failed_logs,
+    parse_test_report,
+    wait_for_ci,
 )
 from harness.state import (
     comment_on_issue,
@@ -29,6 +38,16 @@ from harness.state import (
 )
 
 logger = logging.getLogger("harness")
+
+
+@dataclass
+class Verdict:
+    """Deterministic verdict assembled from sensors + code review."""
+
+    approved: bool
+    reasons: list[str] = field(default_factory=list)
+    ci_run_id: int | None = None
+    findings: list[dict] = field(default_factory=list)
 
 
 def _setup_logging(log_dir: Path, issue_number: int) -> None:
@@ -134,18 +153,13 @@ def _run_pipeline(
     skip_approval: bool,
     log_dir: Path,
 ) -> None:
-    """Execute the Planner -> Coder -> Reviewer pipeline."""
+    """Execute the Planner -> Coder -> CI -> Review pipeline."""
     issue = _phase_fetch(repo, issue_number)
-    plan_result = _phase_plan(
-        repo,
-        issue_number,
-        issue,
-        log_dir,
-    )
-    if plan_result is None:
+    plan = _phase_plan(repo, issue_number, issue, log_dir)
+    if plan is None:
         return
 
-    if not skip_approval and not _gate_human_approval(plan_result):
+    if not skip_approval and not _gate_human_approval(plan):
         _fail(
             repo,
             issue_number,
@@ -160,14 +174,14 @@ def _run_pipeline(
     approved = _phase_code_review_loop(
         repo,
         issue_number,
-        plan_result,
+        plan,
         branch_name=branch_name,
         max_attempts=max_attempts,
         log_dir=log_dir,
     )
 
     if approved:
-        _phase_open_pr(repo, issue_number, issue, plan_result, branch_name)
+        _phase_open_pr(repo, issue_number, issue, plan, branch_name)
 
 
 def _phase_fetch(repo: str, issue_number: int) -> dict:
@@ -229,7 +243,7 @@ def _phase_code_review_loop(
     max_attempts: int,
     log_dir: Path,
 ) -> bool:
-    """Run the Coder/Reviewer loop. Returns True if approved."""
+    """Run the Coder/CI/Review loop. Returns True if approved."""
     plan_json = json.dumps(plan, indent=2)
     feedback: str | None = None
     cwd = str(Path.cwd())
@@ -238,7 +252,7 @@ def _phase_code_review_loop(
         logger.info("=== Attempt %d/%d ===", attempt, max_attempts)
 
         from_label = "agent-planning" if attempt == 1 else "agent-reviewing"
-        approved = _single_attempt(
+        verdict = _single_attempt(
             repo,
             issue_number,
             plan_json,
@@ -250,12 +264,25 @@ def _phase_code_review_loop(
             log_dir=log_dir,
         )
 
-        if approved is True:
+        if verdict.approved:
             return True
-        if approved is None:
-            feedback = "Previous review verdict was unparseable. Please re-review."
-        else:
-            feedback = approved  # rejection feedback string
+
+        feedback = "\n".join(verdict.reasons)
+        if verdict.findings:
+            feedback += "\n\nCode review findings:\n"
+            for finding in verdict.findings:
+                feedback += (
+                    f"- [{finding.get('severity')}] "
+                    f"{finding.get('file', '?')}:"
+                    f"{finding.get('line', '?')} "
+                    f"{finding.get('message', '')}\n"
+                )
+
+        logger.info(
+            "Rejected (attempt %d): %s",
+            attempt,
+            feedback[:200],
+        )
 
         if attempt == max_attempts:
             transition(
@@ -266,7 +293,7 @@ def _phase_code_review_loop(
             )
             msg = (
                 f"Agent pipeline rejected after {max_attempts} "
-                f"attempts.\n\nLast feedback: {feedback}"
+                f"attempts.\n\nLast feedback:\n{feedback}"
             )
             comment_on_issue(repo, issue_number, msg)
             return False
@@ -285,14 +312,8 @@ def _single_attempt(
     feedback: str | None,
     cwd: str,
     log_dir: Path,
-) -> bool | str | None:
-    """Run one code+review cycle.
-
-    Returns:
-        True if approved, None if verdict unparseable,
-        or the rejection feedback string.
-
-    """
+) -> Verdict:
+    """Run one code + CI + review cycle. Returns a Verdict."""
     # --- Code ---
     transition(repo, issue_number, from_label, "agent-coding")
     logger.info("Starting Coder agent (attempt %d)...", attempt)
@@ -310,7 +331,7 @@ def _single_attempt(
         log_dir,
     )
 
-    # --- Local sensors ---
+    # --- Local lint sensor (programmatic) ---
     logger.info("Running lint...")
     lint_result = run_lint(cwd)
     logger.info(
@@ -318,46 +339,137 @@ def _single_attempt(
         "PASS" if lint_result.passed else "FAIL",
     )
 
-    logger.info("Running tests...")
-    test_result = run_tests(cwd)
-    logger.info(
-        "Tests: %s",
-        "PASS" if test_result.passed else "FAIL",
+    # --- Push + CI ---
+    logger.info("Pushing branch %s...", branch_name)
+    push_branch(cwd, branch_name)
+    transition(
+        repo,
+        issue_number,
+        "agent-coding",
+        "agent-ci-pending",
     )
 
-    # --- Review ---
-    transition(repo, issue_number, "agent-coding", "agent-reviewing")
-    diff = get_diff(cwd)
-    logger.info("Starting Reviewer agent (attempt %d)...", attempt)
-    review_result = run_reviewer(
-        diff=diff,
-        plan_json=plan_json,
-        lint_output=lint_result.output,
-        test_output=test_result.output,
+    logger.info("Waiting for CI...")
+    run_id = wait_for_ci(repo, branch_name)
+    ci_passed = get_ci_status(repo, run_id)
+    logger.info("CI: %s (run %d)", "PASS" if ci_passed else "FAIL", run_id)
+
+    # --- Download + parse test report ---
+    report_dest = log_dir / f"issue-{issue_number}" / f"ci-{attempt}"
+    test_report = _fetch_test_report(repo, run_id, report_dest)
+
+    ci_failure_log = ""
+    if not ci_passed:
+        ci_failure_log = get_failed_logs(repo, run_id)
+        save_output(
+            issue_number,
+            "ci-failed-logs",
+            attempt,
+            ci_failure_log,
+            log_dir,
+        )
+
+    # --- Code review (LLM — diff + plan only) ---
+    transition(
+        repo,
+        issue_number,
+        "agent-ci-pending",
+        "agent-reviewing",
     )
+    diff = get_diff(cwd)
+    logger.info("Starting code review agent (attempt %d)...", attempt)
+    review_result = run_code_review(diff=diff, plan_json=plan_json)
     save_output(
         issue_number,
-        "reviewer",
+        "code-review",
         attempt,
         review_result.raw_output,
         log_dir,
     )
 
-    if review_result.verdict is None:
-        logger.warning("Reviewer produced no valid verdict JSON.")
-        return None
-
-    verdict = review_result.verdict.get("verdict", "reject")
-    if verdict == "approve":
-        logger.info("Approved on attempt %d!", attempt)
-        return True
-
-    rej = review_result.verdict.get(
-        "rejection_feedback",
-        "No specific feedback.",
+    # --- Assemble verdict (deterministic) ---
+    return _assemble_verdict(
+        lint_result=lint_result,
+        test_report=test_report,
+        ci_passed=ci_passed,
+        ci_failure_log=ci_failure_log,
+        ci_run_id=run_id,
+        findings=review_result.findings,
     )
-    logger.info("Rejected (attempt %d): %s", attempt, rej[:200])
-    return rej
+
+
+def _fetch_test_report(
+    repo: str,
+    run_id: int,
+    dest: Path,
+) -> TestReport:
+    """Download and parse the CI test report artifact."""
+    try:
+        report_path = download_test_report(repo, run_id, dest)
+        report = parse_test_report(report_path)
+        logger.info(
+            "Tests: %d passed, %d failed, %d errors (of %d total)",
+            report.passed,
+            report.failed,
+            report.errors,
+            report.total,
+        )
+    except (FileNotFoundError, RuntimeError):
+        logger.warning("Could not download test report artifact")
+        report = TestReport()
+    return report
+
+
+def _assemble_verdict(
+    *,
+    lint_result: SensorResult,
+    test_report: TestReport,
+    ci_passed: bool,
+    ci_failure_log: str,
+    ci_run_id: int,
+    findings: list[dict] | None,
+) -> Verdict:
+    """Build a deterministic verdict from sensors + code review."""
+    reasons: list[str] = []
+
+    # Lint sensor
+    if not lint_result.passed:
+        reasons.append(
+            f"Lint failed (ruff check rc={lint_result.details.get('check_rc')}, "
+            f"ruff format rc={lint_result.details.get('format_rc')})\n"
+            f"{lint_result.output[:500]}"
+        )
+
+    # CI / test sensor
+    if not ci_passed:
+        if ci_failure_log:
+            reasons.append(f"CI failed (run {ci_run_id}):\n{ci_failure_log[:1000]}")
+        else:
+            reasons.append(f"CI failed (run {ci_run_id})")
+
+    # Report new test failures (from parsed artifact)
+    if test_report.failed_tests:
+        reasons.append(
+            f"{len(test_report.failed_tests)} test failure(s):\n"
+            + "\n".join(test_report.failed_tests[:20])
+        )
+
+    # Code review findings
+    blockers = [f for f in (findings or []) if f.get("severity") == "blocker"]
+    reasons.extend(
+        f"Blocker: {b.get('file', '?')}:"
+        f"{b.get('line', '?')} — "
+        f"{b.get('message', 'no message')}"
+        for b in blockers
+    )
+
+    approved = len(reasons) == 0
+    return Verdict(
+        approved=approved,
+        reasons=reasons,
+        ci_run_id=ci_run_id,
+        findings=findings or [],
+    )
 
 
 def _phase_open_pr(
@@ -367,12 +479,7 @@ def _phase_open_pr(
     plan: dict,
     branch_name: str,
 ) -> None:
-    """Push the branch and open a draft PR."""
-    cwd = str(Path.cwd())
-
-    logger.info("Pushing branch %s...", branch_name)
-    push_branch(cwd, branch_name)
-
+    """Open a draft PR (branch already pushed during CI phase)."""
     logger.info("Creating draft PR...")
     pr_url = create_draft_pr(repo, branch_name, issue, plan)
     transition(
