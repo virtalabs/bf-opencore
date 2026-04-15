@@ -2,8 +2,10 @@
 
 import json
 import logging
+import subprocess
 import sys
 from dataclasses import dataclass, field
+from datetime import UTC, datetime
 from pathlib import Path
 
 import click
@@ -106,6 +108,88 @@ def list_eligible_cmd() -> None:
     click.echo("-" * 60)
     for issue in issues:
         click.echo(f"{issue['number']:<6} {issue['title']}")
+
+
+@cli.command("update-baseline")
+@click.option(
+    "--test-timeout",
+    default=300,
+    help="Timeout in seconds for pytest run.",
+)
+@click.option(
+    "--lint-timeout",
+    default=60,
+    help="Timeout in seconds for ruff check.",
+)
+def update_baseline_cmd(test_timeout: int, lint_timeout: int) -> None:
+    """Regenerate baseline.json from current test and lint results."""
+    click.echo("Running pytest to capture test failures...")
+    test_result = subprocess.run(
+        [
+            "uv",
+            "run",
+            "pytest",
+            "-q",
+            "--tb=no",
+            "--no-header",
+            "-ra",
+        ],
+        capture_output=True,
+        text=True,
+        timeout=test_timeout,
+        check=False,
+        env={
+            **__import__("os").environ,
+            "DJANGO_SETTINGS_MODULE": "project.settings.test",
+        },
+    )
+
+    test_report = parse_test_output(test_result.stdout)
+    click.echo(
+        f"  {test_report.failed} failed, "
+        f"{test_report.passed} passed, "
+        f"{test_report.total} total"
+    )
+
+    click.echo("Running ruff check to capture lint violations...")
+    lint_result = subprocess.run(
+        ["uv", "run", "ruff", "check", ".", "--output-format", "json"],
+        capture_output=True,
+        text=True,
+        timeout=lint_timeout,
+        check=False,
+    )
+
+    lint_violations = 0
+    lint_summary: dict[str, int] = {}
+    if lint_result.stdout.strip():
+        violations = json.loads(lint_result.stdout)
+        lint_violations = len(violations)
+        for v in violations:
+            code = v.get("code", "unknown")
+            lint_summary[code] = lint_summary.get(code, 0) + 1
+
+    # Sort summary by count descending for readability
+    lint_summary = dict(sorted(lint_summary.items(), key=lambda x: x[1], reverse=True))
+
+    click.echo(f"  {lint_violations} lint violations across {len(lint_summary)} rules")
+
+    now = datetime.now(tz=UTC).strftime("%Y-%m-%d")
+    baseline = {
+        "_description": (
+            "Known pre-existing failures and lint violations "
+            f"as of {now}. The orchestrator uses this to "
+            "distinguish new regressions from baseline noise. "
+            "Update by running: uv run harness update-baseline"
+        ),
+        "_generated_from": "pytest -q --tb=no + ruff check --output-format json",
+        "test_failures": sorted(test_report.failed_tests),
+        "lint_violations": lint_violations,
+        "lint_summary": lint_summary,
+    }
+
+    BASELINE_PATH.write_text(json.dumps(baseline, indent=2) + "\n")
+    click.echo(f"Baseline written to {BASELINE_PATH}")
 
 
 @cli.command()
