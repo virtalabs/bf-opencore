@@ -14,74 +14,57 @@ uv sync --all-extras             # python-hl7
 
 ## Pipeline
 
-### Step 1: Extract streams and MAC map from a pcap
-
 ```bash
-./capture.sh <pcap_file> <output_dir>
+./extract.py <pcap_file> | ./emit.py
 ```
 
-Runs two tools against the same pcap:
+Two scripts, one pipe, no intermediate files.
 
-| Tool | Job | Output |
-|---|---|---|
-| `tcpflow` | TCP stream reassembly (L4/L7) | One file per connection tuple |
-| `tshark` | MAC-IP mapping (L2/L3) | `mac_map.tsv` |
+| Script | Job | Input | Output |
+|---|---|---|---|
+| `extract.py` | Capture + parse + enrich | pcap file | JSON lines (stdout) |
+| `emit.py` | Conform to Asset model | JSON lines (stdin) | Asset records (stdout) |
 
-### Step 2: Parse HL7 messages from a stream
+`extract.py` runs tcpflow (TCP stream reassembly) and tshark (MAC-IP mapping) internally, parses MLLP-framed HL7 messages, correlates MAC addresses, and emits one JSON line per message. ACK messages are filtered out.
 
-```bash
-cat <output_dir>/<stream_file> | python sender.py [--mac-map <mac_map.tsv>] [--source-ip <ip>]
-```
-
-Reads MLLP-framed HL7 messages from stdin, parses MSH/PV1/OBX segments into an `HL7Message` dataclass, and optionally enriches with MAC/IP from the capture layer.
+`emit.py` reads those JSON lines and maps them to BlueFlow Asset fields. For this prototype it prints; in production this becomes the Celery upsert call.
 
 ## Example
 
 ```bash
-./capture.sh data/hl7.pcap /tmp/hl7-streams
-
-cat /tmp/hl7-streams/192.168.056.001.59185-192.168.056.001.42042 \
-    | python sender.py --mac-map /tmp/hl7-streams/mac_map.tsv --source-ip 192.168.56.1
+./extract.py data/hl7.pcap | ./emit.py
 ```
 
 Output:
 
 ```
---- Message 1 ---
-  mac_address: aa:bb:cc:dd:ee:ff
+--- Asset 1 ---
+  mac_address:
   ip_address: 192.168.56.1
-  sending_app: AccMgr
-  sending_facility: 1
-  receiving_app:
-  receiving_facility:
-  message_timestamp: 20060302120610
-  message_type: ADT^A31
-  message_id: 603261
-  hl7_version: 2.3.1
-  patient_location:
-  equipment_id:
+  name: AccMgr
+  serial_number:
+  open_ports_tcp: [59185]
+  source: hl7_passive
 
-Total: 124 messages
+Total: 124 records from 1 device(s)
 ```
 
-## Extracted Fields
+## Field Mapping
 
-| HL7Message field | Source | Future Asset field |
+| Extract field | Source | Asset field |
 |---|---|---|
-| `mac_address` | tshark MAC map | `mac_address` |
-| `ip_address` | tcpflow filename / CLI arg | `ip_address` |
+| `mac_address` | tshark (Ethernet headers) | `mac_address` |
+| `ip_address` | tcpflow filename | `ip_address` |
+| `port` | tcpflow filename | `open_ports_tcp` |
 | `sending_app` | MSH-3 | `name` |
-| `sending_facility` | MSH-4 | -- |
 | `equipment_id` | OBX-18 | `serial_number` |
-| `message_type` | MSH-9 | `category` (inferred) |
-| `patient_location` | PV1-3 | -- |
 
 ## Files
 
 ```
 spikes/hl7/
-  capture.sh    # pcap -> streams + MAC map
-  sender.py     # stream -> parsed HL7 messages
+  extract.py    # pcap -> JSON lines (capture + parse + enrich)
+  emit.py       # JSON lines -> Asset-shaped output
   docs/         # spike writeup
   data/         # sample pcap (hl7.pcap)
 ```
