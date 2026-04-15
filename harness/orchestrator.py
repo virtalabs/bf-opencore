@@ -194,11 +194,6 @@ def update_baseline_cmd(test_timeout: int, lint_timeout: int) -> None:
 @click.argument("issue_number", type=int)
 @click.option("--max-attempts", default=3, help="Max coder/reviewer cycles.")
 @click.option(
-    "--skip-approval",
-    is_flag=True,
-    help="Skip human plan approval gate.",
-)
-@click.option(
     "--log-dir",
     type=click.Path(path_type=Path),
     default=Path(__file__).parent / ".logs",
@@ -208,7 +203,6 @@ def run(
     issue_number: int,
     max_attempts: int,
     *,
-    skip_approval: bool,
     log_dir: Path,
 ) -> None:
     """Run the full agent pipeline for a GitHub issue."""
@@ -220,7 +214,6 @@ def run(
             repo,
             issue_number,
             max_attempts=max_attempts,
-            skip_approval=skip_approval,
             log_dir=log_dir,
         )
     except KeyboardInterrupt:
@@ -237,7 +230,6 @@ def _run_pipeline(
     issue_number: int,
     *,
     max_attempts: int,
-    skip_approval: bool,
     log_dir: Path,
 ) -> None:
     """Execute the Planner -> Coder -> CI -> Review pipeline."""
@@ -246,7 +238,7 @@ def _run_pipeline(
     if plan is None:
         return
 
-    if not skip_approval and not _gate_human_approval(plan):
+    if not _gate_human_approval(plan):
         _fail(
             repo,
             issue_number,
