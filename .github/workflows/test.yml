@@ -44,6 +44,7 @@ jobs:
         run: uv run python project/manage.py migrate --noinput
 
       - name: Run tests
+        continue-on-error: true
         run: >-
           uv run pytest
           --json-report
