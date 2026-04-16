@@ -47,6 +47,10 @@ jobs:
       # to just FAILED lines + summary, which the agent harness
       # parses directly. pytest-json-report is incompatible with
       # xdist (WSGIRequest serialization crashes workers).
+      #
+      # TODO: Remove continue-on-error once baseline test failures
+      # (~88 as of 2026-04-15) are resolved. The agent harness
+      # detects the actual failure via check-run annotations.
       - name: Run tests
         continue-on-error: true
         run: uv run pytest -n auto --tb=no -q --no-header -ra

@@ -129,9 +129,10 @@ def run_coder(
     """Invoke the Coder agent to implement the plan."""
     template = load_prompt("coder")
     feedback_section = f"\n\n## Reviewer Feedback\n{feedback}" if feedback else ""
-    prompt = template.replace("{plan}", plan_json).replace(
-        "{feedback_section}",
-        feedback_section,
+    prompt = (
+        template.replace("{plan}", plan_json)
+        .replace("{branch_name}", branch_name)
+        .replace("{feedback_section}", feedback_section)
     )
 
     cmd = [

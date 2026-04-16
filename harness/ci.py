@@ -84,21 +84,60 @@ def wait_for_ci(repo: str, branch: str) -> int:
 
 
 def get_ci_status(repo: str, run_id: int) -> bool:
-    """Check if a CI run passed. Returns True if successful."""
+    """Check if a CI run's steps actually passed.
+
+    Our CI workflows use ``continue-on-error: true`` to avoid
+    hard-failing on pre-existing baseline lint/test issues.  This
+    means the run *conclusion* is always ``"success"``.  We detect
+    actual step failures by checking for **failure-level annotations**
+    on the check runs, which GitHub creates automatically when a
+    ``continue-on-error`` step exits non-zero.
+
+    TODO: Once baseline lint violations and test failures are resolved,
+    remove ``continue-on-error: true`` from the workflow YAML files
+    (.github/workflows/test.yml, .github/workflows/lint.yml) and
+    simplify this function back to:
+        return data.get("conclusion") == "success"
+    """
+    # Get jobs via the REST API — includes check_run_url for each job
     result = _run_gh(
         [
-            "run",
-            "view",
-            str(run_id),
-            "--repo",
-            repo,
-            "--json",
-            "conclusion",
+            "api",
+            f"repos/{repo}/actions/runs/{run_id}/jobs",
         ],
         check=True,
     )
     data = json.loads(result.stdout)
-    return data.get("conclusion") == "success"
+
+    for job in data.get("jobs", []):
+        check_run_url = job.get("check_run_url", "")
+        if not check_run_url:
+            continue
+        check_run_id = check_run_url.rstrip("/").rsplit("/", 1)[-1]
+
+        ann_result = _run_gh(
+            [
+                "api",
+                f"repos/{repo}/check-runs/{check_run_id}/annotations",
+            ],
+            check=False,
+        )
+        if ann_result.returncode != 0:
+            continue
+
+        annotations = json.loads(ann_result.stdout)
+        failures = [a for a in annotations if a.get("annotation_level") == "failure"]
+        if failures:
+            logger.info(
+                "CI run %d: %d failure annotation(s) from "
+                "continue-on-error step failures (job %s)",
+                run_id,
+                len(failures),
+                job.get("name", "?"),
+            )
+            return False
+
+    return True
 
 
 def get_failed_logs(repo: str, run_id: int) -> str:
