@@ -56,6 +56,7 @@ class Verdict:
     reasons: list[str] = field(default_factory=list)
     ci_run_id: int | None = None
     findings: list[dict] = field(default_factory=list)
+    pr_url: str | None = None
 
 
 def _setup_logging(log_dir: Path, issue_number: int) -> None:
@@ -250,17 +251,18 @@ def _run_pipeline(
     branch_name = derive_branch_name(issue)
     logger.info("Branch: %s", branch_name)
 
-    approved = _phase_code_review_loop(
+    pr_url = _phase_code_review_loop(
         repo,
         issue_number,
+        issue,
         plan,
         branch_name=branch_name,
         max_attempts=max_attempts,
         log_dir=log_dir,
     )
 
-    if approved:
-        _phase_open_pr(repo, issue_number, issue, plan, branch_name)
+    if pr_url:
+        _phase_approve_pr(repo, issue_number, pr_url)
 
 
 def _phase_fetch(repo: str, issue_number: int) -> dict:
@@ -316,16 +318,18 @@ def _gate_human_approval(plan: dict) -> bool:
 def _phase_code_review_loop(
     repo: str,
     issue_number: int,
+    issue: dict,
     plan: dict,
     *,
     branch_name: str,
     max_attempts: int,
     log_dir: Path,
-) -> bool:
-    """Run the Coder/CI/Review loop. Returns True if approved."""
+) -> str | None:
+    """Run the Coder/CI/Review loop. Returns the PR URL if approved."""
     plan_json = json.dumps(plan, indent=2)
     feedback: str | None = None
     cwd = str(Path.cwd())
+    pr_url: str | None = None
 
     for attempt in range(1, max_attempts + 1):
         logger.info("=== Attempt %d/%d ===", attempt, max_attempts)
@@ -334,6 +338,8 @@ def _phase_code_review_loop(
         verdict = _single_attempt(
             repo,
             issue_number,
+            issue,
+            plan,
             plan_json,
             branch_name=branch_name,
             attempt=attempt,
@@ -343,8 +349,11 @@ def _phase_code_review_loop(
             log_dir=log_dir,
         )
 
+        if verdict.pr_url:
+            pr_url = verdict.pr_url
+
         if verdict.approved:
-            return True
+            return pr_url
 
         feedback = "\n".join(verdict.reasons)
         if verdict.findings:
@@ -375,14 +384,16 @@ def _phase_code_review_loop(
                 f"attempts.\n\nLast feedback:\n{feedback}"
             )
             comment_on_issue(repo, issue_number, msg)
-            return False
+            return None
 
-    return False
+    return None
 
 
 def _single_attempt(
     repo: str,
     issue_number: int,
+    issue: dict,
+    plan: dict,
     plan_json: str,
     *,
     branch_name: str,
@@ -419,9 +430,19 @@ def _single_attempt(
         "PASS" if lint_result.passed else "FAIL",
     )
 
-    # --- Push + CI ---
+    # --- Push + draft PR (first attempt) + CI ---
     logger.info("Pushing branch %s...", branch_name)
     push_branch(cwd, branch_name)
+
+    # Open the draft PR before waiting for CI so that the
+    # pull_request event triggers the workflow. On retries the
+    # PR already exists and new pushes fire the synchronize event.
+    pr_url: str | None = None
+    if attempt == 1:
+        logger.info("Creating draft PR to trigger CI...")
+        pr_url = create_draft_pr(repo, branch_name, issue, plan)
+        logger.info("Draft PR: %s", pr_url)
+
     transition(
         repo,
         issue_number,
@@ -475,13 +496,15 @@ def _single_attempt(
     )
 
     # --- Assemble verdict (deterministic) ---
-    return _assemble_verdict(
+    verdict = _assemble_verdict(
         lint_result=lint_result,
         test_report=test_report,
         ci_passed=ci_passed,
         ci_run_id=run_id,
         findings=review_result.findings,
     )
+    verdict.pr_url = pr_url
+    return verdict
 
 
 def _get_ci_log(repo: str, run_id: int) -> str:
@@ -567,16 +590,13 @@ def _assemble_verdict(
     )
 
 
-def _phase_open_pr(
+def _phase_approve_pr(
     repo: str,
     issue_number: int,
-    issue: dict,
-    plan: dict,
-    branch_name: str,
+    pr_url: str,
 ) -> None:
-    """Open a draft PR (branch already pushed during CI phase)."""
-    logger.info("Creating draft PR...")
-    pr_url = create_draft_pr(repo, branch_name, issue, plan)
+    """Mark the draft PR as approved by the agent pipeline."""
+    logger.info("Pipeline approved — PR ready for human review.")
     transition(
         repo,
         issue_number,
@@ -586,11 +606,10 @@ def _phase_open_pr(
     comment_on_issue(
         repo,
         issue_number,
-        f"Draft PR created: {pr_url}",
+        f"Agent pipeline approved. Draft PR ready for review: {pr_url}",
     )
 
-    logger.info("Draft PR: %s", pr_url)
-    click.echo(f"\nDraft PR created: {pr_url}")
+    click.echo(f"\nDraft PR ready for review: {pr_url}")
 
 
 def _fail(
