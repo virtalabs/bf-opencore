@@ -191,6 +191,21 @@ def get_failed_logs(repo: str, run_id: int) -> str:
     return result.stdout
 
 
+_GH_LOG_PREFIX = re.compile(
+    r"^[^\t]+\t[^\t]+\t\d{4}-\d{2}-\d{2}T[\d:.]+Z\s?",
+)
+
+
+def _strip_gh_log_prefixes(output: str) -> str:
+    """Strip ``gh run view --log`` line prefixes.
+
+    Each line from ``gh run view --log`` is prefixed with
+    ``<job><tab><step><tab><ISO-timestamp>``.  This strips that
+    prefix so downstream parsers see raw pytest output.
+    """
+    return "\n".join(_GH_LOG_PREFIX.sub("", line) for line in output.splitlines())
+
+
 def parse_test_output(output: str) -> TestReport:
     """Parse pytest's -q --tb=no output into a TestReport.
 
@@ -199,10 +214,15 @@ def parse_test_output(output: str) -> TestReport:
         FAILED path/to/test.py::test_other - Error...
         68 failed, 249 passed, 4 skipped, 25 xfailed in 11.52s
 
+    Also handles ``gh run view --log`` output where each line
+    is prefixed with ``<job><tab><step><tab><timestamp>``.
+
     This replaces pytest-json-report, which is incompatible with
     pytest-xdist (xdist workers crash serializing Django WSGIRequest
     objects through execnet when tests fail).
     """
+    output = _strip_gh_log_prefixes(output)
+
     failed_tests = [
         match.group(1)
         for match in re.finditer(
