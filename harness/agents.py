@@ -47,6 +47,12 @@ class SensorResult:
     details: dict = field(default_factory=dict)
 
 
+def _recover_stdout(exc: subprocess.TimeoutExpired) -> str:
+    """Extract any partial stdout captured before a timeout."""
+    out = exc.stdout or b""
+    return out.decode() if isinstance(out, bytes) else out
+
+
 def extract_json(text: str) -> dict | None:
     """Extract a JSON object from agent output.
 
@@ -93,27 +99,32 @@ def run_planner(issue_context: str) -> PlanResult:
     template = load_prompt("planner")
     prompt = template.replace("{issue}", issue_context)
 
-    result = subprocess.run(
-        [
-            "claude",
-            "--print",
-            "-p",
-            prompt,
-            "--output-format",
-            "json",
-            "--allowedTools",
-            "Read",
-            "Glob",
-            "Grep",
-            "Bash(git log:*)",
-            "--max-budget-usd",
-            "5",
-        ],
-        capture_output=True,
-        text=True,
-        timeout=PLANNER_TIMEOUT,
-        check=False,
-    )
+    try:
+        result = subprocess.run(
+            [
+                "claude",
+                "--print",
+                "-p",
+                prompt,
+                "--output-format",
+                "json",
+                "--allowedTools",
+                "Read",
+                "Glob",
+                "Grep",
+                "Bash(git log:*)",
+                "--max-budget-usd",
+                "5",
+            ],
+            capture_output=True,
+            text=True,
+            timeout=PLANNER_TIMEOUT,
+            check=False,
+        )
+    except subprocess.TimeoutExpired as exc:
+        logger.warning("Planner timed out after %ds", PLANNER_TIMEOUT)
+        raw = _recover_stdout(exc)
+        return PlanResult(raw_output=raw, plan=None)
 
     raw = result.stdout
     plan = extract_json(raw)
@@ -151,14 +162,19 @@ def run_coder(
         "10",
     ]
 
-    result = subprocess.run(
-        cmd,
-        capture_output=True,
-        text=True,
-        timeout=CODER_TIMEOUT,
-        cwd=cwd,
-        check=False,
-    )
+    try:
+        result = subprocess.run(
+            cmd,
+            capture_output=True,
+            text=True,
+            timeout=CODER_TIMEOUT,
+            cwd=cwd,
+            check=False,
+        )
+    except subprocess.TimeoutExpired as exc:
+        logger.warning("Coder timed out after %ds", CODER_TIMEOUT)
+        raw = _recover_stdout(exc)
+        return CoderResult(raw_output=raw, branch=branch_name)
 
     branch_result = subprocess.run(
         ["git", "rev-parse", "--abbrev-ref", "HEAD"],
@@ -181,26 +197,31 @@ def run_code_review(diff: str, plan_json: str) -> CodeReviewResult:
     template = load_prompt("code_review")
     prompt = template.replace("{plan}", plan_json).replace("{diff}", diff)
 
-    result = subprocess.run(
-        [
-            "claude",
-            "--print",
-            "-p",
-            prompt,
-            "--output-format",
-            "json",
-            "--allowedTools",
-            "Read",
-            "Glob",
-            "Grep",
-            "--max-budget-usd",
-            "5",
-        ],
-        capture_output=True,
-        text=True,
-        timeout=CODE_REVIEW_TIMEOUT,
-        check=False,
-    )
+    try:
+        result = subprocess.run(
+            [
+                "claude",
+                "--print",
+                "-p",
+                prompt,
+                "--output-format",
+                "json",
+                "--allowedTools",
+                "Read",
+                "Glob",
+                "Grep",
+                "--max-budget-usd",
+                "5",
+            ],
+            capture_output=True,
+            text=True,
+            timeout=CODE_REVIEW_TIMEOUT,
+            check=False,
+        )
+    except subprocess.TimeoutExpired as exc:
+        logger.warning("Code review timed out after %ds", CODE_REVIEW_TIMEOUT)
+        raw = _recover_stdout(exc)
+        return CodeReviewResult(raw_output=raw, findings=None)
 
     raw = result.stdout
     parsed = extract_json(raw)
