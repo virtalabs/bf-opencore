@@ -12,6 +12,7 @@ from pathlib import Path
 import click
 
 from harness.agents import (
+    AgentStalledError,
     SensorResult,
     create_draft_pr,
     get_changed_files,
@@ -217,6 +218,23 @@ def run(
             max_attempts=max_attempts,
             log_dir=log_dir,
         )
+    except AgentStalledError as exc:
+        logger.warning(
+            "Agent stalled: %s. Branch left as-is for inspection.",
+            exc,
+        )
+        save_output(
+            issue_number,
+            "stall-dump",
+            1,
+            exc.partial_output,
+            log_dir,
+        )
+        click.echo(
+            f"\n{exc}\nBranch left as-is for inspection. Partial output saved to logs.",
+            err=True,
+        )
+        sys.exit(2)
     except KeyboardInterrupt:
         logger.info("Interrupted by user.")
         sys.exit(1)
