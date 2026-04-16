@@ -74,7 +74,7 @@ def load_prompt(name: str) -> str:
 def save_output(
     issue_number: int,
     agent: str,
-    attempt: int,
+    attempt: int | str,
     content: str,
     log_dir: Path = DEFAULT_LOG_DIR,
 ) -> Path:
