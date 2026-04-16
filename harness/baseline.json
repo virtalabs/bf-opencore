@@ -1,6 +1,6 @@
 {
   "_description": "Known pre-existing failures and lint violations as of 2026-04-15. The orchestrator uses this to distinguish new regressions from baseline noise. Update by running: uv run harness update-baseline",
-  "_generated_from": "pytest-json-report + ruff check --output-format json",
+  "_generated_from": "pytest -q --tb=no -ra + ruff check --output-format json",
   "test_failures": [
     "blueflow/tests/test_api_docs.py::test_get_api_schema",
     "blueflow/tests/test_asset.py::test_api_create_asset",
