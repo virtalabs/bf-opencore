@@ -325,7 +325,7 @@ class AssetFilter(django_filters.rest_framework.FilterSet):
 
         Calling with value False is a silly double negative ("not unassessed").
         """
-        # TODO(taylorcochran): Implement unassessed
+        # TODO(taylorcochran): Implement unassessed  # noqa: TD003, FIX002
         _msg = "Unassessed is not implemented"
         raise NotImplementedError(_msg)
 
@@ -339,7 +339,7 @@ class AssetFilter(django_filters.rest_framework.FilterSet):
         To find assets that *lack* a particular RiskFactor n, query with
         assessed_factor=-n.
         """
-        # TODO(taylorcochran): Implement assessed_factor
+        # TODO(taylorcochran): Implement assessed_factor  # noqa: TD003, FIX002
         _msg = "Assessed factor is not implemented"
         raise NotImplementedError(_msg)
 
@@ -357,7 +357,7 @@ class AssetFilter(django_filters.rest_framework.FilterSet):
             "hostname": ["icontains"],
             "nic_vendor": ["icontains"],
             "category": ["icontains", "exact"],
-            # TODO(taylorcochran): Add risk score filters
+            # TODO(taylorcochran): Add risk score filters  # noqa: TD003, FIX002
             "id": ["in"],
             "ip_address": [
                 "istartswith",
@@ -507,7 +507,7 @@ class AssetViewSet(
             "tag_number",
             "category",
             "date_added",
-            # TODO(taylorcochran): Add risk score filters
+            # TODO(taylorcochran): Add risk score filters  # noqa: TD003, FIX002
             "udi",
         ]
         context = super().get_renderer_context()
@@ -687,7 +687,7 @@ class AssetViewSet(
         # This stuff might not be necessary.  The DRF pagination system
         # might take care of it (since it's the same serializer etc.
         qset = self.get_object().similar_qset(exclude_self=exclude_self)
-        # TODO(taylorcochran): Add risk score ordering
+        # TODO(taylorcochran): Add risk score ordering  # noqa: TD003, FIX002
         return self.paginate_relations(request, qset, "AssetSerializer")
 
     @action(detail=True, methods=["GET", "POST"])
@@ -805,7 +805,7 @@ class AssetViewSet(
     @action(detail=False)
     def summary(self, _request: Request) -> Response:
         """Return summary about an asset queryset."""
-        # TODO(taylorcochran): Implement summary
+        # TODO(taylorcochran): Implement summary  # noqa: TD003, FIX002
         _msg = "Summary is not implemented"
         raise NotImplementedError(_msg)
 

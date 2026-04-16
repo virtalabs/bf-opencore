@@ -3,6 +3,7 @@
 Note: AssetManager has been moved to its own file asset_manager.py.
 """
 
+import contextlib
 import logging
 from collections import Counter
 from functools import reduce
@@ -34,22 +35,22 @@ logger = logging.getLogger(__name__)
 class Asset(models.Model):
     """Holds our Assets."""
 
-    name = models.CharField(max_length=126, blank=True, null=True)
+    name = models.CharField(max_length=126, blank=True, null=True)  # noqa: DJ001
     # 'hostname' for sure does not need to be unique.
-    hostname = models.TextField(blank=True, null=True)
+    hostname = models.TextField(blank=True, null=True)  # noqa: DJ001
     ip_address = InetAddressField(
         store_prefix_length=False, blank=True, null=True, verbose_name="IP address"
     )
     mac_address = MACAddressField(
         blank=True, null=True, unique=True, verbose_name="MAC address"
     )
-    nic_vendor = models.TextField(blank=True, null=True, verbose_name="NIC vendor")
-    manufacturer = models.TextField(blank=True, null=True)
-    model = models.TextField(blank=True, null=True)
-    serial_number = models.TextField(blank=True, null=True)
-    udi = models.TextField(blank=True, null=True, verbose_name="UDI")
-    tag_number = models.TextField(blank=True, null=True)
-    category = models.TextField(blank=True, null=True)
+    nic_vendor = models.TextField(blank=True, null=True, verbose_name="NIC vendor")  # noqa: DJ001
+    manufacturer = models.TextField(blank=True, null=True)  # noqa: DJ001
+    model = models.TextField(blank=True, null=True)  # noqa: DJ001
+    serial_number = models.TextField(blank=True, null=True)  # noqa: DJ001
+    udi = models.TextField(blank=True, null=True, verbose_name="UDI")  # noqa: DJ001
+    tag_number = models.TextField(blank=True, null=True)  # noqa: DJ001
+    category = models.TextField(blank=True, null=True)  # noqa: DJ001
 
     # overall risk score and sub-scores for "safety" & "security"
     risk_score = models.FloatField(blank=True, null=True)
@@ -71,9 +72,9 @@ class Asset(models.Model):
     )
 
     date_added = models.DateTimeField(default=timezone.now)
-    owner = models.TextField(blank=True, null=True)
-    os = models.TextField(blank=True, null=True, verbose_name="Operating System")
-    app_sw_version = models.TextField(
+    owner = models.TextField(blank=True, null=True)  # noqa: DJ001
+    os = models.TextField(blank=True, null=True, verbose_name="Operating System")  # noqa: DJ001
+    app_sw_version = models.TextField(  # noqa: DJ001
         blank=True, null=True, verbose_name="Application software version"
     )
     last_scanned = models.DateTimeField(blank=True, null=True)
@@ -185,18 +186,15 @@ class Asset(models.Model):
 
         Returns True if any ports were added to the set, False otherwise.
         """
-        try:
+        with contextlib.suppress(TypeError):
             # Newports might be a single port as a string
             newports = [int(newports)]
-        except TypeError:
-            # Looks like it wasn't
-            pass
         newports = {int(p) for p in newports}
         ports = sorted(set.union(set(self.open_ports_tcp), newports))
         if ports != self.open_ports_tcp:
             added = set(ports) - set(self.open_ports_tcp)
             # The new list of ports is larger
-            assert added != set()
+            assert added != set()  # noqa: S101
             logger.debug("Added new TCP ports %s", added)
             self.open_ports_tcp = ports
             return True
@@ -247,10 +245,7 @@ class Asset(models.Model):
         # If Asset now has either IP or MAC it's identified!
         if self.ip_address:
             return True
-        if self.mac_address:
-            return True
-        # Uh oh, we don't have what's needed to identify
-        return False
+        return bool(self.mac_address)
 
     def scan_qset(self):
         """Return queryset for all scans of the asset.
@@ -268,7 +263,7 @@ class Asset(models.Model):
         """
         return self.tags.all()
 
-    def similar_qset(self, exclude_self=True):
+    def similar_qset(self, exclude_self=True):  # noqa: FBT002
         """Return queryset for all assets similar to this one.
 
         Two assets are "similar" if they:
@@ -307,7 +302,7 @@ class Asset(models.Model):
         """Return queryset for history of asset."""
         return self.history.all()
 
-    def field_history_rqset(self, field_name, newest_first=True):
+    def field_history_rqset(self, field_name, newest_first=True):  # noqa: FBT002
         """Return RAW queryset for history of some asset field.
 
         Will return only the rows where the field changed.
@@ -330,7 +325,7 @@ class Asset(models.Model):
         # Validate/sanitize field.
         # NOTE: the get_field might cause a FieldDoesNotExist Django
         #       Exception.  The caller must be prepared to handle this.
-        db_field = self.history.model._meta.get_field(field_name)
+        db_field = self.history.model._meta.get_field(field_name)  # noqa: SLF001
         sanitized_field_name = db_field.name
         qset = self.history.order_by("history_date")
         history = [qset[0]]
@@ -385,7 +380,10 @@ class Asset(models.Model):
         asset_field, fk_name = name.split("__", maxsplit=1)
         fieldtype = Asset._meta.get_field(asset_field).get_internal_type()
         if fieldtype != "ForeignKey":
-            msg = f"Expected '{fk_name}' of '{name}' to be a ForeignKey.  Got {fieldtype}."
+            msg = (
+                f"Expected '{fk_name}' of '{name}' to be a ForeignKey."
+                f"  Got {fieldtype}."
+            )
             raise ValueError(msg)
 
         if asset_field == "asset_custom_fields":
@@ -396,10 +394,9 @@ class Asset(models.Model):
                 field = AssetCustomFieldName.objects.get(
                     field_name__regex=fk_name_regex
                 )
-            except AssetCustomFieldName.DoesNotExist:
-                raise AssetCustomFieldName.DoesNotExist(
-                    f"Cannot add unknown custom field {name} to asset {self}",
-                )
+            except AssetCustomFieldName.DoesNotExist as exc:
+                msg = f"Cannot add unknown custom field {name} to asset {self}"
+                raise AssetCustomFieldName.DoesNotExist(msg) from exc
             # Create or update the AssetCustomField object
             acf, _ = self.asset_custom_fields.update_or_create(
                 asset=self,
@@ -422,7 +419,7 @@ class Asset(models.Model):
         https://docs.djangoproject.com/en/2.0/ref/models/meta/#retrieving-all-field-instances-of-a-model
         """
         Asset = apps.get_model("blueflow", "Asset")
-        valid_field_names = [x.name for x in Asset._meta.get_fields()]
+        valid_field_names = [x.name for x in Asset._meta.get_fields()]  # noqa: SLF001
         unflattened_field_name, _ = _unflatten_json_field(name, None)
         return bool(unflattened_field_name in valid_field_names)
 
@@ -433,7 +430,7 @@ class Asset(models.Model):
 
         # Special case for asset_custom_fields__<custom field name>
         if unflattened_field == "asset_custom_fields":
-            assert len(unflattened_val.items()) == 1
+            assert len(unflattened_val.items()) == 1  # noqa: S101
             shortname = next(iter(unflattened_val.items()))[0]
             # Custom fields names may contain spaces.  Support names with
             # spaces replaced by underscore
@@ -448,13 +445,13 @@ class Asset(models.Model):
         # value on Asset.save(), and validate value against that type.
         Asset = apps.get_model("blueflow", "Asset")
         try:
-            orm_field = Asset._meta.get_field(unflattened_field)
+            orm_field = Asset._meta.get_field(unflattened_field)  # noqa: SLF001
             _ = orm_field.get_prep_value(unflattened_val)
         except ValidationError:
             return False
         return True
 
-    def __str__(self):
+    def __str__(self):  # noqa: DJ012
         return f"{self.id}:{self.display_name}:{self.ip_address}"
 
     def todict(self):
@@ -504,7 +501,7 @@ class Asset(models.Model):
 
         # is any of these version numbers greater than ours?
         if asset_ver_ok:
-            for ver in vcounts.keys():
+            for ver in vcounts:
                 if packaging.version.parse(ver) > packaging.version.parse(
                     self.app_sw_version
                 ):

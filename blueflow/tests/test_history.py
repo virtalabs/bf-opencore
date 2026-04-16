@@ -28,7 +28,7 @@ class TestAssetHistory:
     """
 
     @pytest.fixture(autouse=True)
-    def setup_assets(self, db):
+    def setup_assets(self, db):  # noqa: ARG002
         """Register assets for all these tests."""
         asset_names = ["foo", "bar", "baz", "xyzzy", "spam", "ham", "eggs"]
         self.asset_record = {}
@@ -210,7 +210,7 @@ class TestOneFieldHistory:
         res = asset_edit_client.get(f"/api/assets/{self.asset_id}/history/")
         # NOTE: the history data as seen on the API is newest-first
         for hist_item, api_hist_item in zip(
-            reversed(self.history_data), res.data["results"]
+            reversed(self.history_data), res.data["results"], strict=False
         ):
             hist_dict = {k: hist_item[i] for i, k in enumerate(self.history_keys)}
             api_hist_dict = {k: api_hist_item[k] for k in self.history_keys}
@@ -220,7 +220,9 @@ class TestOneFieldHistory:
         """Changelog should be newest-first."""
         res = asset_edit_client.get(f"/api/assets/{self.asset_id}/changelog/")
         # NOTE: the changelog data as seen on the API is newest-first
-        for hist_item, api_hist_item in zip(reversed(self.changelog_data), res.data):
+        for hist_item, api_hist_item in zip(
+            reversed(self.changelog_data), res.data, strict=False
+        ):
             hist_dict = {k: hist_item[i] for i, k in enumerate(self.history_keys)}
             api_hist_dict = {k: api_hist_item[k] for k in self.history_keys}
             assert hist_dict == api_hist_dict
@@ -236,7 +238,7 @@ class TestOneFieldHistory:
         # This gives us the history of one particular field.
         # NOTE: the history data as seen on the API is newest-first
         for hist_hostname, api_hist_item in zip(
-            reversed(self.hostname_history), res.data
+            reversed(self.hostname_history), res.data, strict=False
         ):
             assert hist_hostname == api_hist_item["hostname"]
 
@@ -246,7 +248,7 @@ class TestOneFieldHistory:
 
         # get a field that is default NULL
         default_null_field = "last_scanned"
-        field = bf_mod.Asset._meta.get_field(default_null_field)
+        field = bf_mod.Asset._meta.get_field(default_null_field)  # noqa: SLF001
         # The next two are tests of the model... and as such maybe they
         # belong in app/blueflow/tests/.  However, there are no test
         # files there, and arguably these are just "confirming
@@ -273,7 +275,7 @@ class TestOneFieldHistory:
 
         # get a field that is default blank (empty string)
         non_null_field = "hostname"
-        field = bf_mod.Asset._meta.get_field(non_null_field)
+        field = bf_mod.Asset._meta.get_field(non_null_field)  # noqa: SLF001
         assert field.null is True
         assert field.default is django.db.models.fields.NOT_PROVIDED
 
@@ -346,7 +348,7 @@ class TestAssetRiskHistory:
     """Test that risk history for individual assets works."""
 
     @pytest.fixture(autouse=True)
-    def setup_history(self, db):
+    def setup_history(self, db):  # noqa: ARG002
         """Prepare the history for the tests."""
         self.risk_scores = list(range(5))
         asset = bf_mod.Asset.objects.create(

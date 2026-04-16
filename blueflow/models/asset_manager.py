@@ -22,7 +22,7 @@ logger = logging.getLogger(__name__)
 class AssetManager(models.Manager):
     """Custom manager to query for assets not belonging to a network."""
 
-    def get_by_priority(self, **kwargs):
+    def get_by_priority(self, **kwargs):  # noqa: C901, PLR0912
         """Get an Asset, checking kwargs in priority order and ignoring the rest.
 
         "Priority" here refers to how *exactly* a certain lookup key will
@@ -56,7 +56,7 @@ class AssetManager(models.Manager):
             valid field value for the fields in question, thus we can't
             just test for the truth value.
             """
-            return False if (val is None) or (val == "") else True
+            return val is not None and val != ""
 
         mac_kwarg = kwargs.pop("mac_address", None)
         ip_kwarg = kwargs.pop("ip_address", None)
@@ -72,14 +72,14 @@ class AssetManager(models.Manager):
             # E.g you're not allowed to pass both `external_keys__aims`
             # and `external_keys__tms` in the same call (it would make no
             # sense to do so, anyway.)
-            raise FieldError(f"Multiple JSONField keys are not allowed: {ekeys}")
+            msg = f"Multiple JSONField keys are not allowed: {ekeys}"
+            raise FieldError(msg)
 
         if not any(valid_val(v) for v in [ekey_kwarg, mac_kwarg, ip_kwarg]):
-            raise FieldError(
-                "No lookup field provided.  Got: {}.  Expected 1 or more: {}.".format(
-                    kwargs.keys(), ("external_keys", "mac_address", "ip_address")
-                )
+            msg = "No lookup field provided.  Got: {}.  Expected 1 or more: {}.".format(
+                kwargs.keys(), ("external_keys", "mac_address", "ip_address")
             )
+            raise FieldError(msg)
 
         # Perform lookup in priority order.
         Asset = apps.get_model("blueflow", "Asset")
@@ -87,7 +87,7 @@ class AssetManager(models.Manager):
             try:
                 asset = super().get(**{ekey_fn: ekey_kwarg})
                 logger.debug("Matched asset %s on %s=%s", asset, ekey_fn, ekey_kwarg)
-                return asset
+                return asset  # noqa: TRY300
             except Asset.DoesNotExist:
                 # Didn't find asset via external key, try mac
                 pass
@@ -96,7 +96,7 @@ class AssetManager(models.Manager):
             try:
                 asset = super().get(mac_address=mac_kwarg)
                 logger.debug("Matched asset %s on mac_address=%s", asset, mac_kwarg)
-                return asset
+                return asset  # noqa: TRY300
             except Asset.DoesNotExist:
                 # Didn't find asset via mac, try ip
                 pass
@@ -104,32 +104,32 @@ class AssetManager(models.Manager):
         if valid_val(ip_kwarg):
             try:
                 asset = super().get(ip_address=ip_kwarg)
-            except Asset.MultipleObjectsReturned:
+            except Asset.MultipleObjectsReturned as err:
                 # Coerce `MultipleObjectsReturned` to `DoesNotExist` when
                 # caused by duplicate ip_address and there is a mac_address or
                 # external_keys to fall back on.  In this case, the
                 # `DoesNotExist` error may later cause a new object to be
                 # created, for example, in update_or_create_by_priority().
                 if mac_kwarg is not None or ekey_kwarg is not None:
-                    raise Asset.DoesNotExist()
+                    raise Asset.DoesNotExist from err
                 raise  # otherwise re-raise the original exception
             # NOTE: if Asset.DoesNotExist, we want it to be raised here.
 
             # Decline to clobber mac_address after IP match
             if asset.mac_address and valid_val(mac_kwarg):
-                raise Asset.DoesNotExist()
+                raise Asset.DoesNotExist
 
             # Decline to clobber external_keys after IP match
             if asset.external_keys and valid_val(ekey_kwarg):
-                raise Asset.DoesNotExist()
+                raise Asset.DoesNotExist
 
             logger.debug("Matched asset %s on ip_address=%s", asset, ip_kwarg)
             return asset
 
         # Couldn't find it
-        raise Asset.DoesNotExist()
+        raise Asset.DoesNotExist
 
-    def update_or_create_by_priority(self, defaults=None, **kwargs):
+    def update_or_create_by_priority(self, defaults=None, **kwargs):  # noqa: C901
         """Update or create an asset using get_by_priority().
 
         Returns a tuple of (object, created), where object is the created or
@@ -334,7 +334,7 @@ def _unflatten_json_field_helper(name, value):
 def _unflatten_json_field(field, value):
     """Return key and value of an JSON field unflattened into a dict."""
     field_dict = _unflatten_json_field_helper(field, value)
-    assert len(field_dict.items()) == 1
+    assert len(field_dict.items()) == 1  # noqa: S101
     key, value = next(iter(field_dict.items()))
     return key, value
 
@@ -358,7 +358,7 @@ def _unflatten_json_params(params):
     Asset = apps.get_model("blueflow", "Asset")
     for k, v in params.items():
         field, value = _unflatten_json_field(k, v)
-        fieldtype = Asset._meta.get_field(field).get_internal_type()
+        fieldtype = Asset._meta.get_field(field).get_internal_type()  # noqa: SLF001
         if fieldtype == "JSONField":
             # Use unflattened values for a JSONField
             if field not in output:
@@ -406,7 +406,7 @@ def _partition_fk_params(params):
         # Extract 'asset_risk_factors' from 'asset_risk_factors__tms'
         Asset = apps.get_model("blueflow", "Asset")
         basename = name.split("__")[0]
-        fieldtype = Asset._meta.get_field(basename).get_internal_type()
+        fieldtype = Asset._meta.get_field(basename).get_internal_type()  # noqa: SLF001
         return fieldtype == "ForeignKey"
 
     fk_params = {}
@@ -426,10 +426,7 @@ def _external_keys_overlap(asset, defaults):
     if "external_keys" not in defaults_unflattened:
         return set()
     new = defaults_unflattened["external_keys"]
-    if asset.external_keys is None:
-        old = {}
-    else:
-        old = asset.external_keys
+    old = {} if asset.external_keys is None else asset.external_keys
     overlap = set(new.keys()) & set(old.keys())
 
     # Ignore overlap key if values are the same
@@ -445,25 +442,26 @@ def _validate_external_keys(params):
         if field != "external_keys":
             continue
         if value is None:
-            raise ValidationError("external_keys field may not be None")
+            msg = "external_keys field may not be None"
+            raise ValidationError(msg)
         for k, v in value.items():
             if v is None or v == "":
-                raise ValidationError(
-                    f"External keys may not be empty or None: {field} {k}={v}"
-                )
+                msg = f"External keys may not be empty or None: {field} {k}={v}"
+                raise ValidationError(msg)
 
 
 def _validate_external_keys_overlap(asset, kwargs, defaults):
     """Raise ValidationError if external_keys in defaults overlap w/ asset."""
     overlap = _external_keys_overlap(asset, defaults)
     if overlap:
-        raise ValidationError(
+        msg = (
             f"Existing asset {asset} matched parameters {kwargs}. "
             f"This asset has external_keys={asset.external_keys} "
             f"and mac_address={asset.mac_address}. "
             f"An update would overwrite external_keys {overlap}. "
-            "Refuse to overwrite.",
+            "Refuse to overwrite."
         )
+        raise ValidationError(msg)
 
 
 def _dict_diff(x, y):
