@@ -480,7 +480,6 @@ class AssetViewSet(
             "tag_number",
             "category",
             "date_added",
-            # TODO(taylorcochran): Add risk score filters
             "udi",
         ]
         context = super().get_renderer_context()
@@ -660,7 +659,6 @@ class AssetViewSet(
         # This stuff might not be necessary.  The DRF pagination system
         # might take care of it (since it's the same serializer etc.
         qset = self.get_object().similar_qset(exclude_self=exclude_self)
-        # TODO(taylorcochran): Add risk score ordering
         return self.paginate_relations(request, qset, "AssetSerializer")
 
     @action(detail=True, methods=["GET", "POST"])
@@ -778,7 +776,7 @@ class AssetViewSet(
     @action(detail=False)
     def summary(self, _request: Request) -> Response:
         """Return summary about an asset queryset."""
-        # TODO(taylorcochran): Implement summary
+        # TODO(taylorcochran): Implement summary  # noqa: TD003, FIX002
         _msg = "Summary is not implemented"
         raise NotImplementedError(_msg)
 
