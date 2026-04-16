@@ -263,6 +263,13 @@ def _run_pipeline(
 
     if pr_url:
         _phase_approve_pr(repo, issue_number, pr_url)
+    else:
+        click.echo(
+            f"\nPipeline rejected after {max_attempts} attempt(s). "
+            f"See issue #{issue_number} for details.",
+            err=True,
+        )
+        sys.exit(1)
 
 
 def _phase_fetch(repo: str, issue_number: int) -> dict:
@@ -389,6 +396,75 @@ def _phase_code_review_loop(
     return None
 
 
+MAX_LINT_RETRIES = 2
+
+
+def _code_and_lint(
+    issue_number: int,
+    plan_json: str,
+    branch_name: str,
+    *,
+    attempt: int,
+    feedback: str | None,
+    cwd: str,
+    log_dir: Path,
+) -> SensorResult:
+    """Run the Coder then lint, retrying lint failures locally.
+
+    This inner loop gives the Coder fast feedback on lint issues
+    without burning a full CI round trip.  Lint retries do NOT
+    count toward the outer ``max_attempts`` limit.
+
+    Returns the final lint SensorResult (passed or not).
+    """
+    for lint_try in range(1 + MAX_LINT_RETRIES):
+        suffix = f" (lint retry {lint_try})" if lint_try > 0 else ""
+        logger.info(
+            "Starting Coder agent (attempt %d%s)...",
+            attempt,
+            suffix,
+        )
+        coder_result = run_coder(
+            plan_json,
+            branch_name,
+            feedback=feedback,
+            cwd=cwd,
+        )
+        save_output(
+            issue_number,
+            "coder",
+            attempt if lint_try == 0 else f"{attempt}-lint{lint_try}",
+            coder_result.raw_output,
+            log_dir,
+        )
+
+        changed_files = get_changed_files(cwd)
+        logger.info("Running lint on %d changed files...", len(changed_files))
+        lint_result = run_lint(cwd, changed_files=changed_files)
+        logger.info(
+            "Lint: %s",
+            "PASS" if lint_result.passed else "FAIL",
+        )
+
+        if lint_result.passed:
+            return lint_result
+
+        if lint_try < MAX_LINT_RETRIES:
+            logger.info(
+                "Lint failed — sending feedback to Coder "
+                "(fast retry %d/%d, no push/CI)...",
+                lint_try + 1,
+                MAX_LINT_RETRIES,
+            )
+            feedback = (
+                "Lint failed on your changes. Fix these issues "
+                "before proceeding:\n\n"
+                f"{lint_result.output[:1000]}"
+            )
+
+    return lint_result
+
+
 def _single_attempt(
     repo: str,
     issue_number: int,
@@ -404,31 +480,34 @@ def _single_attempt(
     log_dir: Path,
 ) -> Verdict:
     """Run one code + CI + review cycle. Returns a Verdict."""
-    # --- Code ---
+    # --- Code + lint inner loop ---
     transition(repo, issue_number, from_label, "agent-coding")
-    logger.info("Starting Coder agent (attempt %d)...", attempt)
-    coder_result = run_coder(
+    lint_result = _code_and_lint(
+        issue_number,
         plan_json,
         branch_name,
+        attempt=attempt,
         feedback=feedback,
         cwd=cwd,
-    )
-    save_output(
-        issue_number,
-        "coder",
-        attempt,
-        coder_result.raw_output,
-        log_dir,
+        log_dir=log_dir,
     )
 
-    # --- Local lint sensor (changed files only) ---
-    changed_files = get_changed_files(cwd)
-    logger.info("Running lint on %d changed files...", len(changed_files))
-    lint_result = run_lint(cwd, changed_files=changed_files)
-    logger.info(
-        "Lint: %s",
-        "PASS" if lint_result.passed else "FAIL",
-    )
+    if not lint_result.passed:
+        # Inner lint loop exhausted — reject without burning a
+        # full CI round trip. The attempt still counts because
+        # the Coder failed to produce clean code.
+        logger.warning(
+            "Lint still failing after %d retries, skipping CI/review.",
+            MAX_LINT_RETRIES,
+        )
+        return Verdict(
+            approved=False,
+            reasons=[
+                f"Lint failed after {MAX_LINT_RETRIES} "
+                f"fast retries (no push/CI):\n"
+                f"{lint_result.output[:500]}"
+            ],
+        )
 
     # --- Push + draft PR (first attempt) + CI ---
     logger.info("Pushing branch %s...", branch_name)
