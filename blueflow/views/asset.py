@@ -122,9 +122,7 @@ class AssetSerializer(serializers.HyperlinkedModelSerializer):
 
     url = serializers.HyperlinkedIdentityField(view_name="blueflow:asset-detail")
     tags_url = serializers.HyperlinkedIdentityField(view_name="blueflow:asset-tags")
-    scans_url = serializers.HyperlinkedIdentityField(
-        view_name="blueflow:asset-scans"
-    )
+    scans_url = serializers.HyperlinkedIdentityField(view_name="blueflow:asset-scans")
     external_links_url = serializers.HyperlinkedIdentityField(
         view_name="blueflow:asset-external-links"
     )
@@ -286,6 +284,7 @@ class AssetFilter(django_filters.rest_framework.FilterSet):
     active_vulnerability = django_filters.NumberFilter(
         method="filter_active_vulnerability"
     )
+
     @staticmethod
     def filter_network(queryset: QuerySet, name: str, value: int) -> QuerySet:
         """Get assets that belong to a certain network."""
@@ -395,7 +394,6 @@ class AssetFilter(django_filters.rest_framework.FilterSet):
             "asset_custom_fields__value_text": ["istartswith"],
             "asset_vulnerabilities__date_remediated": ["isnull"],
             "asset_vulnerabilities__date_ignored": ["isnull"],
-            # TODO(taylorcochran): Add asset_risk_factors filters
         }
         filter_overrides = {  # noqa: RUF012
             netfields.InetAddressField: {
@@ -431,8 +429,6 @@ class AssetViewSet(
     `/bulk_update` — PATCH a list of assets by id (partial updates)
     `/duplicate_ips`
     `/histogram`
-    `/risk_per_manufacturer`
-    `/riskiest`
     `/summary`
     `/upsert`
 
@@ -805,43 +801,6 @@ class AssetViewSet(
         if limit > 0:
             results = results[:limit]
         return Response(results)
-
-    @action(detail=False)
-    def risk_per_manufacturer(self, request: Request) -> Response:
-        """Calculate risk per manufacturer.
-
-        Sort into one bin per manufacturer, sum the risks in each bin,
-        and return the `limit` first ones + `others`.
-
-        Seems like this could be accomplished by something like
-
-              SELECT manufacturer, count(manufacturer), sum(risk_score)
-                FROM blueflow_asset
-               WHERE manufacturer IS NOT null
-            GROUP BY manufacturer
-            ORDER BY sum(risk_score) DESC;
-
-        This is basically what we're doing with the Django ORM code
-        below.  I.e., it becomes
-
-               SELECT "blueflow_asset"."manufacturer",
-                      COUNT("blueflow_asset"."manufacturer") AS "count",
-                      SUM("blueflow_asset"."risk_score") AS "risk_score"
-                 FROM "blueflow_asset"
-            WHERE NOT ("blueflow_asset"."manufacturer" IS NULL)
-             GROUP BY "blueflow_asset"."manufacturer"
-             ORDER BY "risk_score" DESC
-        """
-        # TODO(taylorcochran): Implement risk per manufacturer
-        _msg = "Risk per manufacturer is not implemented"
-        raise NotImplementedError(_msg)
-
-    @action(detail=False)
-    def riskiest(self, request: Request) -> Response:
-        """Produce a paginated list of the "riskiest" assets."""
-        # TODO(taylorcochran): Implement riskiest
-        _msg = "Riskiest is not implemented"
-        raise NotImplementedError(_msg)
 
     @action(detail=False)
     def summary(self, _request: Request) -> Response:

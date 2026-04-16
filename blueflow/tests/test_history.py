@@ -58,7 +58,7 @@ class TestAssetHistory:
     def test_spam_simple_history(self, auth_client):
         res = auth_client.get(f"/api/assets/{self.spam_id}/history/")
         assert res.status_code == status.HTTP_200_OK
-        assert res.data["count"] == 2  # noqa: PLR2004  # Creation + initial rescore
+        assert res.data["count"] == 2  # noqa: PLR2004  # Creation + save
 
     def test_history_simple_change(self, asset_edit_client):
         """History should change after a PATCH request."""
@@ -69,7 +69,7 @@ class TestAssetHistory:
         )
         assert res.status_code == status.HTTP_200_OK
         res = asset_edit_client.get(f"/api/assets/{self.spam_id}/history/")
-        assert res.data["count"] == 3  # noqa: PLR2004  # Creation + initial rescore + patch
+        assert res.data["count"] == 3  # noqa: PLR2004  # Creation + save + patch
 
     def test_history_change_order(self, asset_edit_client):
         """History should be newest-first."""
@@ -84,11 +84,11 @@ class TestAssetHistory:
             content_type="application/json",
         )
         res = asset_edit_client.get(f"/api/assets/{self.spam_id}/history/")
-        assert res.data["count"] == 4  # noqa: PLR2004  # C + R + (2 x patch)
+        assert res.data["count"] == 4  # noqa: PLR2004  # C + S + (2 x patch)
         hostname_history = [
             (hi["hostname"], hi["risk_score"]) for hi in res.data["results"]
         ]
-        # Extra 'spam' at the end due to initial rescore on asset creation
+        # Extra 'spam' at the end due to the second history record on save
         assert hostname_history == [
             ("spam_2", 0.0),
             ("spam_1", 0.0),
@@ -111,9 +111,9 @@ class TestAssetHistory:
         res = asset_edit_client.get(f"/api/assets/{self.spam_id}/changelog/")
         # Remember: changelog is not paginated and thus we access it
         # directly as a list.
-        assert len(res.data) == 4  # noqa: PLR2004  # C + R + (2 x patch)
+        assert len(res.data) == 4  # noqa: PLR2004  # C + S + (2 x patch)
         hostname_changelog = [(hi["hostname"], hi["risk_score"]) for hi in res.data]
-        # changelog[-2] is because of initial rescore on asset creation.
+        # changelog[-2] is the second history record on save.
         # Notice that unchanged values are None (compare with the
         # history in the test above.)
         assert hostname_changelog == [
@@ -127,7 +127,7 @@ class TestAssetHistory:
         """Changelog isn't paginated, like the history."""
         res = auth_client.get(f"/api/assets/{self.spam_id}/changelog/")
         assert res.status_code == status.HTTP_200_OK
-        assert len(res.data) == 2  # noqa: PLR2004  # Creation + initial rescore
+        assert len(res.data) == 2  # noqa: PLR2004  # Creation + save
 
     def test_changelog_simple_change(self, asset_edit_client):
         """Changelog is modified by PATCH request."""
@@ -138,7 +138,7 @@ class TestAssetHistory:
         )
         assert res.status_code == status.HTTP_200_OK
         res = asset_edit_client.get(f"/api/assets/{self.spam_id}/changelog/")
-        assert len(res.data) == 3  # noqa: PLR2004  # Creation + initial rescore + patch
+        assert len(res.data) == 3  # noqa: PLR2004  # Creation + save + patch
 
 
 class TestOneFieldHistory:
@@ -331,10 +331,9 @@ def test_history_empty_values(asset_edit_client, field_name, change_sequence):
     api_change_sequence = [hist_item[field_name] for hist_item in reversed(res.data)]
     change_seq_with_rescore = list(change_sequence)
     if field_name == "risk_score":
-        # This is a little bit hairy but: Just after creation, the asset
-        # will be rescored automagically.  This will set the risk_score
-        # to 0.0 (since there are no associated risks).  Then later, the
-        # risk_score will be patched via the API.
+        # Just after creation, a second history record is saved with
+        # risk_score defaulting to 0.0.  Then later, the risk_score
+        # will be patched via the API.
         change_seq_with_rescore.insert(1, 0.0)
     assert api_change_sequence == change_seq_with_rescore
 
@@ -354,9 +353,7 @@ class TestAssetRiskHistory:
             hostname="risky", risk_score=self.risk_scores[0]
         )
         for risk_score in self.risk_scores[1:]:
-            # I'm allowed to save directly to asset.risk_score because it is
-            # a *test* (in the interest of making it a *unit* test.)  In real
-            # code we'd always add AssetRiskFactor objects and then rescore.
+            # Saving directly to asset.risk_score for test purposes.
             asset.risk_score = risk_score
             asset.save()
             hist_utils.update_change_reason(asset, "Test History")
@@ -365,7 +362,7 @@ class TestAssetRiskHistory:
     def test_history_complete(self, auth_client):
         res = auth_client.get(f"/api/assets/{self.asset_id}/history/")
         risk_scores_plus = list(self.risk_scores)
-        # Insert 0.0 at location 1 due to the automagic rescore on creation.
+        # Insert 0.0 at location 1 due to the second history record on save.
         risk_scores_plus.insert(1, 0.0)
         assert res.data["count"] == len(risk_scores_plus)
         api_risk_scores = [hi["risk_score"] for hi in res.data["results"]]
