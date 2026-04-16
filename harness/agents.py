@@ -5,6 +5,8 @@ import json
 import logging
 import re
 import subprocess
+import threading
+import time
 from dataclasses import dataclass, field
 from pathlib import Path
 
@@ -16,6 +18,7 @@ DEFAULT_LOG_DIR = HARNESS_DIR / ".logs"
 
 PLANNER_TIMEOUT = 300
 CODER_TIMEOUT = 600
+CODER_STALL_TIMEOUT = 120  # kill if no stdout activity for this long
 CODE_REVIEW_TIMEOUT = 300
 LINT_TIMEOUT = 60
 
@@ -45,6 +48,17 @@ class SensorResult:
     passed: bool
     output: str
     details: dict = field(default_factory=dict)
+
+
+class AgentStalledError(Exception):
+    """Raised when an agent produces no output for too long."""
+
+    def __init__(self, agent: str, seconds: int, partial_output: str) -> None:
+        self.agent = agent
+        self.seconds = seconds
+        self.partial_output = partial_output
+        msg = f"{agent} stalled — no output for {seconds}s"
+        super().__init__(msg)
 
 
 def _recover_stdout(exc: subprocess.TimeoutExpired) -> str:
@@ -137,7 +151,13 @@ def run_coder(
     feedback: str | None = None,
     cwd: str | None = None,
 ) -> CoderResult:
-    """Invoke the Coder agent to implement the plan."""
+    """Invoke the Coder agent to implement the plan.
+
+    Uses Popen with a stall detector that kills the process if
+    no stdout activity is seen for CODER_STALL_TIMEOUT seconds.
+    Raises AgentStalled on stall so the orchestrator can leave
+    the branch as-is for human inspection.
+    """
     template = load_prompt("coder")
     feedback_section = f"\n\n## Reviewer Feedback\n{feedback}" if feedback else ""
     prompt = (
@@ -162,19 +182,20 @@ def run_coder(
         "10",
     ]
 
-    try:
-        result = subprocess.run(
-            cmd,
-            capture_output=True,
-            text=True,
-            timeout=CODER_TIMEOUT,
-            cwd=cwd,
-            check=False,
+    raw, stalled = _run_with_stall_detection(
+        cmd,
+        cwd=cwd,
+        hard_timeout=CODER_TIMEOUT,
+        stall_timeout=CODER_STALL_TIMEOUT,
+    )
+
+    if stalled:
+        agent_name = "Coder"
+        raise AgentStalledError(
+            agent_name,
+            CODER_STALL_TIMEOUT,
+            raw,
         )
-    except subprocess.TimeoutExpired as exc:
-        logger.warning("Coder timed out after %ds", CODER_TIMEOUT)
-        raw = _recover_stdout(exc)
-        return CoderResult(raw_output=raw, branch=branch_name)
 
     branch_result = subprocess.run(
         ["git", "rev-parse", "--abbrev-ref", "HEAD"],
@@ -185,7 +206,66 @@ def run_coder(
     )
     branch = branch_result.stdout.strip() or branch_name
 
-    return CoderResult(raw_output=result.stdout, branch=branch)
+    return CoderResult(raw_output=raw, branch=branch)
+
+
+def _run_with_stall_detection(
+    cmd: list[str],
+    *,
+    cwd: str | None,
+    hard_timeout: int,
+    stall_timeout: int,
+) -> tuple[str, bool]:
+    """Run a subprocess, killing it if stdout goes silent.
+
+    Returns (captured_output, was_stalled).
+    """
+    chunks: list[str] = []
+    last_activity = time.monotonic()
+    stalled = False
+    lock = threading.Lock()
+
+    proc = subprocess.Popen(
+        cmd,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+        text=True,
+        cwd=cwd,
+    )
+
+    def _reader() -> None:
+        nonlocal last_activity
+        for line in proc.stdout:
+            with lock:
+                chunks.append(line)
+                last_activity = time.monotonic()
+
+    reader = threading.Thread(target=_reader, daemon=True)
+    reader.start()
+
+    deadline = time.monotonic() + hard_timeout
+    while proc.poll() is None:
+        now = time.monotonic()
+        if now >= deadline:
+            logger.warning("Coder hard timeout after %ds", hard_timeout)
+            proc.terminate()
+            break
+        with lock:
+            idle = now - last_activity
+        if idle >= stall_timeout:
+            logger.warning(
+                "Coder stalled — no output for %ds, killing",
+                stall_timeout,
+            )
+            proc.terminate()
+            stalled = True
+            break
+        time.sleep(1)
+
+    reader.join(timeout=5)
+    with lock:
+        raw = "".join(chunks)
+    return raw, stalled
 
 
 def run_code_review(diff: str, plan_json: str) -> CodeReviewResult:
