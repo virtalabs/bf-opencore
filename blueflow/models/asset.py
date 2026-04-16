@@ -4,7 +4,6 @@ Note: AssetManager has been moved to its own file asset_manager.py.
 """
 
 import logging
-import math
 from collections import Counter
 from functools import reduce
 from operator import or_
@@ -14,7 +13,7 @@ import netaddr
 import packaging.version
 from django.apps import apps
 from django.core.exceptions import ValidationError
-from django.db import models, transaction
+from django.db import models
 from django.db.models import Count, Max, Q
 from django.utils import timezone
 from netfields import InetAddressField, MACAddressField
@@ -95,8 +94,6 @@ class Asset(models.Model):
     # note: Asset.custom_fields defined in AssetCustomField class
     # note: Asset.asset_tags defined in AssetTag class
     # note: Asset.asset_vulnerabilities defined in AssetVulnerability class
-    # note: Asset.asset_risk_factors defined in AssetRiskFactor class
-
     history = HistoricalRecords()
 
     # Our manager is a meld of AssetManager and the methods from AssetQuerySet
@@ -365,59 +362,6 @@ class Asset(models.Model):
         qset = qset.order_by("-history_date")
         return qset
 
-    def get_risk_factor(self, shortname):
-        """Fetch an asset risk factor.
-
-        Returns None if there is no such risk factor or this asset does not
-        have the given risk factor associated with it (via AssetRiskFactor).
-        """
-        # TODO(taylorcochran): Implement after we have a generalized algorithm for risk scoring
-        raise NotImplementedError("Get risk factor is not implemented")
-        # TODO(legacy): #65 — this function is only used in tests and in
-        #   `remove_risk_factor`.  Consider removing it altogether...?
-        #   TBH, even remove_risk_factor could/should be removed, it's
-        #   only used in this file to remove cvss_max and cvss_sum.
-        try:
-            rfac = RiskFactor.objects.get(shortname=shortname)
-            return AssetRiskFactor.objects.get(asset=self, risk_factor=rfac)
-        except (RiskFactor.DoesNotExist, AssetRiskFactor.DoesNotExist):
-            return None
-
-    def add_risk_factor(self, shortname, value, reason=None):
-        """Add or replace a risk score factor for this Asset."""
-        # TODO(taylorcochran): Implement after we have a generalized algorithm for risk scoring
-        raise NotImplementedError("Add risk factor is not implemented")
-        # Get RiskFactor object using either 'asset_risk_factor__*' notation
-        # or the human-readable name.
-        try:
-            rfac = RiskFactor.objects.get(shortname=shortname)
-        except RiskFactor.DoesNotExist:
-            raise RiskFactor.DoesNotExist(
-                f"Cannot add unknown risk factor {shortname} to asset {self}",
-            )
-
-        # Create or update the AssetRiskFactor object
-        arf, _ = self.asset_risk_factors.update_or_create(
-            asset=self,
-            risk_factor=rfac,
-            defaults={
-                "value": value,
-                "provenance": reason,
-            },
-        )
-        if reason is not None:
-            hist_utils.update_change_reason(arf, reason)
-
-    def remove_risk_factor(self, shortname, reason=None):
-        """Remove a risk score factor from this Asset."""
-        # TODO(taylorcochran): Implement after we have a generalized algorithm for risk scoring
-        raise NotImplementedError("Remove risk factor is not implemented")
-        arf = self.get_risk_factor(shortname)
-        if arf is not None:
-            arf.delete()
-            if reason is not None:
-                hist_utils.update_change_reason(arf, reason)
-
     def update_or_create_fk_field(self, name, value, reason=None):
         """Update or create a foreign key field with '__' notation.
 
@@ -497,189 +441,6 @@ class Asset(models.Model):
                 hist_utils.update_change_reason(arf, reason)
         else:
             assert False, f"Unsupported foreign key: '{asset_field}'"
-
-    @staticmethod
-    def _soft_clip(x, rmax=10, rmin=0, a=1, typ="arctan"):
-        """Limit input argument x to [0, rmax).
-
-        Domain of x is supposed to be [0, ∞).
-
-        If supplied x < 0, then the output is undefined (and may raise
-        exceptions).
-
-        There are 2 types: 'arctan' and 'inv_x'.  Se code for specific
-        definition.  Either takes an argument `a` which determines the
-        slope.
-        """
-        assert rmin == 0, "Not set up to handle rmin != 0"
-
-        x = x / rmax
-        if typ == "arctan":
-            clipped = math.atan(a * x) / (math.pi / 2)
-        elif typ == "inv_x":
-            clipped = 1 - (1 / ((a * x) + 1))
-        else:
-            raise ValueError(f"'typ' must be 'arctan' or 'inv_x'; was {typ}")
-        return clipped * rmax
-
-    def _update_cvss_risk(self):
-        """Update the cvss risk factors from associated vulnerabilities."""
-        # TODO(taylorcochran): Implement after we have a generalized algorithm for risk scoring
-        raise NotImplementedError("Update cvss risk is not implemented")
-        # cvss scores from vulnerabilities hanging off this (may be empty)
-        vuln_scores = [
-            av.vulnerability.cvss_score
-            for av in self.asset_vulnerabilities.open()
-            if av.vulnerability.cvss_score is not None
-        ]
-
-        if vuln_scores:
-            self.add_risk_factor("cvss_max", max(vuln_scores))
-            self.add_risk_factor("cvss_sum", self._soft_clip(sum(vuln_scores)))
-        else:
-            self.remove_risk_factor("cvss_max")
-            self.remove_risk_factor("cvss_sum")
-
-    def _update_patch_risk(self):
-        """Update the patch risk AssetRiskFactor using needs_sw_update()."""
-        # TODO(taylorcochran): Implement after we have a generalized algorithm for risk scoring
-        raise NotImplementedError("Update patch risk is not implemented")
-        needs_update, _dummy, _dummy2 = self.needs_sw_update()
-        if needs_update:
-            self.add_risk_factor("needs_patch", 1.0)
-        else:
-            self.remove_risk_factor("needs_patch")
-
-    def asset_risk_factors_with_zeros(self):
-        """Return a list of AssetRiskFactor's, including those with zero value.
-
-        All risk factors are included.  If an AssetRiskFactor is associated
-        with this asset, use that.  Otherwise, create a dummy AssetRiskFactor
-        object, automatically initialized with a default value.  This dummy
-        object is not saved to the database.  We need the dummy objects
-        for things like inverted risky tags.  If a tag is *not present*,
-        that contributes a non-zero value to the risk score.
-        """
-        # TODO(taylorcochran): Implement after we have a generalized algorithm for risk scoring
-        raise NotImplementedError("Asset risk factors with zeros is not implemented")
-        factors = []
-        for risk_factor in RiskFactor.enabled.all():
-            try:
-                arf = self.asset_risk_factors.get(
-                    risk_factor_id=risk_factor.id,
-                )
-            except AssetRiskFactor.DoesNotExist:
-                arf = AssetRiskFactor(asset=self, risk_factor=risk_factor)
-            factors.append(arf)
-        return factors
-
-    # Protect this asset's risk-scoring ingredients from changes to RiskFactors
-    # that happen during global rescore. This scenario arises when, for
-    # instance, the user has just saved risk factor weights and then
-    # decides to delete a tag.
-    @transaction.atomic
-    def _calculate_risk(self):
-        """Calculate aggregate risk score for an asset."""
-        # TODO(taylorcochran): Implement after we have a generalized algorithm for risk scoring
-        raise NotImplementedError("Calculate risk is not implemented")
-
-    def risk_score_summary(self):
-        """Return summary only (to avoid 'protected access')."""
-        # TODO(taylorcochran): Implement after we have a generalized algorithm for risk scoring
-        raise NotImplementedError("Risk score summary is not implemented")
-        _dummy_rft_scores, summary = self._calculate_risk()
-        return summary
-
-    def rescore(self, reason="Rescore", save_reason=True):
-        """Update the risk_score field with a newly calculated score."""
-        # TODO(taylorcochran): Implement after we have a generalized algorithm for risk scoring
-        raise NotImplementedError("Rescore is not implemented")
-        self._update_cvss_risk()
-        self._update_patch_risk()
-        rft_scores, summary = self._calculate_risk()
-
-        # Get our total remediable score
-        risk_score_remediable = 0
-        for risk_factor in summary:
-            if risk_factor["user_remediable"] == "True":
-                risk_score_remediable += risk_factor["contribution_raw"] / 2
-
-        need_to_save = False
-        if self.risk_score != rft_scores["total_risk_score"]:
-            self.risk_score = rft_scores["total_risk_score"]
-            need_to_save = True
-        if self.risk_score_cli != rft_scores["cli"]:
-            self.risk_score_cli = rft_scores["cli"]
-            need_to_save = True
-        if self.risk_score_sec != rft_scores["sec"]:
-            self.risk_score_sec = rft_scores["sec"]
-            need_to_save = True
-        if self.risk_score_pri != rft_scores["pri"]:
-            self.risk_score_pri = rft_scores["pri"]
-            need_to_save = True
-        if self.risk_score_likelihood != rft_scores["likelihood"]:
-            self.risk_score_likelihood = rft_scores["likelihood"]
-            need_to_save = True
-        if self.risk_score_impact != rft_scores["impact"]:
-            self.risk_score_impact = rft_scores["impact"]
-            need_to_save = True
-        if self.risk_score_remediable != risk_score_remediable:
-            self.risk_score_remediable = risk_score_remediable
-            need_to_save = True
-
-        if need_to_save:
-            self.save()
-            if save_reason:
-                hist_utils.update_change_reason(self, reason)
-
-        return summary
-
-    @classmethod
-    def rescore_asset_on_save(
-        cls, sender, instance, created, raw, using, update_fields, *args, **kwargs
-    ):
-        """Rescore an asset via a Django signal."""
-        # TODO(taylorcochran): Implement after we have a generalized algorithm for risk scoring
-        raise NotImplementedError("Rescore asset on save is not implemented")
-        # Don't rescore if we're loading a fixture (i.e., we're in "raw" mode)
-        if raw:
-            logger.debug("Raw Asset (id %s), not rescoring", instance.id)
-            return
-
-        # Rescore if asset was created or if app_sw_version changed.  Also
-        # rescore similar assets.
-        #
-        # NOTE: unfortunately, update_fields doesn't appear to be used.  Its
-        # value seems to be None all the time, which indicates "save them all"
-        # Thus, we rescore() if an app_sw_version is present.  In a perfect
-        # world, we'd rescore only if app_sw_version changed.
-        #
-        # NOTE: We could get a cycle, where updating an asset causing an update
-        # to similar assets, which in turn causes an update to the original
-        # asset, ad infinitum.  I add an attribute "norecurse" to break this
-        # cycle.  It's kind of a hack, basically marking assets as "visited"
-        # which is a base case in the BFS.
-        if created or instance.app_sw_version:
-            logger.debug("rescoring after Asset save %s", instance)
-            instance.rescore(save_reason=False)
-            if getattr(instance, "norecurse", None):
-                # HACK break cycle
-                return
-            for asset in instance.similar_qset():
-                logger.debug("rescoring similar asset %s", asset)
-                asset.norecurse = True  # HACK break cycle
-                asset.rescore(reason="Rescore similar assets")
-
-    @staticmethod
-    def rescore_asset_on_delete(sender, instance, using, *args, **kwargs):
-        """Rescore an asset via a Django signal."""
-        # TODO(taylorcochran): Implement after we have a generalized algorithm for risk scoring
-        raise NotImplementedError("Rescore asset on delete is not implemented")
-        # Rescore similar assets if the deleted asset had a sw version
-        if instance.app_sw_version:
-            for asset in instance.similar_qset():
-                logger.debug("rescoring similar asset after delete %s", asset)
-                asset.rescore()
 
     @staticmethod
     def is_valid_field_name(name):

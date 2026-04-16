@@ -122,9 +122,7 @@ class AssetSerializer(serializers.HyperlinkedModelSerializer):
 
     url = serializers.HyperlinkedIdentityField(view_name="blueflow:asset-detail")
     tags_url = serializers.HyperlinkedIdentityField(view_name="blueflow:asset-tags")
-    scans_url = serializers.HyperlinkedIdentityField(
-        view_name="blueflow:asset-scans"
-    )
+    scans_url = serializers.HyperlinkedIdentityField(view_name="blueflow:asset-scans")
     external_links_url = serializers.HyperlinkedIdentityField(
         view_name="blueflow:asset-external-links"
     )
@@ -278,14 +276,13 @@ class AssetFilter(django_filters.rest_framework.FilterSet):
     datetime_range = django_filters.DateTimeFromToRangeFilter(field_name="date_added")
     network = django_filters.NumberFilter(method="filter_network")
     no_network = drf_filters.BooleanFilter(method="filter_no_network")
-    unassessed = drf_filters.BooleanFilter(method="filter_unassessed")
-    assessed_factor = drf_filters.NumberFilter(method="filter_assessed_factor")
     group = django_filters.NumberFilter(field_name="groups")
     tag = django_filters.NumberFilter(field_name="tags")
     vulnerability = django_filters.NumberFilter(field_name="vulnerabilities__id")
     active_vulnerability = django_filters.NumberFilter(
         method="filter_active_vulnerability"
     )
+
     @staticmethod
     def filter_network(queryset: QuerySet, name: str, value: int) -> QuerySet:
         """Get assets that belong to a certain network."""
@@ -320,30 +317,6 @@ class AssetFilter(django_filters.rest_framework.FilterSet):
             asset_vulnerabilities__date_ignored__isnull=True,
         )
 
-    @staticmethod
-    def filter_unassessed(queryset: QuerySet, _name: str, _value: bool) -> QuerySet:  # noqa: FBT001
-        """Get assets that lack AssetRiskFactors.
-
-        Calling with value False is a silly double negative ("not unassessed").
-        """
-        # TODO(taylorcochran): Implement unassessed
-        _msg = "Unassessed is not implemented"
-        raise NotImplementedError(_msg)
-
-    @staticmethod
-    def filter_assessed_factor(queryset: QuerySet, _name: str, value: int) -> QuerySet:
-        """Get assets that have or lack a *particular* RiskFactor.
-
-        To find assets that *have* a particular RiskFactor n, query with
-        assessed_factor=n.
-
-        To find assets that *lack* a particular RiskFactor n, query with
-        assessed_factor=-n.
-        """
-        # TODO(taylorcochran): Implement assessed_factor
-        _msg = "Assessed factor is not implemented"
-        raise NotImplementedError(_msg)
-
     class Meta:
         """Wire this filter to a model."""
 
@@ -358,7 +331,6 @@ class AssetFilter(django_filters.rest_framework.FilterSet):
             "hostname": ["icontains"],
             "nic_vendor": ["icontains"],
             "category": ["icontains", "exact"],
-            # TODO(taylorcochran): Add risk score filters
             "id": ["in"],
             "ip_address": [
                 "istartswith",
@@ -395,7 +367,6 @@ class AssetFilter(django_filters.rest_framework.FilterSet):
             "asset_custom_fields__value_text": ["istartswith"],
             "asset_vulnerabilities__date_remediated": ["isnull"],
             "asset_vulnerabilities__date_ignored": ["isnull"],
-            # TODO(taylorcochran): Add asset_risk_factors filters
         }
         filter_overrides = {  # noqa: RUF012
             netfields.InetAddressField: {
@@ -431,8 +402,6 @@ class AssetViewSet(
     `/bulk_update` — PATCH a list of assets by id (partial updates)
     `/duplicate_ips`
     `/histogram`
-    `/risk_per_manufacturer`
-    `/riskiest`
     `/summary`
     `/upsert`
 
@@ -805,43 +774,6 @@ class AssetViewSet(
         if limit > 0:
             results = results[:limit]
         return Response(results)
-
-    @action(detail=False)
-    def risk_per_manufacturer(self, request: Request) -> Response:
-        """Calculate risk per manufacturer.
-
-        Sort into one bin per manufacturer, sum the risks in each bin,
-        and return the `limit` first ones + `others`.
-
-        Seems like this could be accomplished by something like
-
-              SELECT manufacturer, count(manufacturer), sum(risk_score)
-                FROM blueflow_asset
-               WHERE manufacturer IS NOT null
-            GROUP BY manufacturer
-            ORDER BY sum(risk_score) DESC;
-
-        This is basically what we're doing with the Django ORM code
-        below.  I.e., it becomes
-
-               SELECT "blueflow_asset"."manufacturer",
-                      COUNT("blueflow_asset"."manufacturer") AS "count",
-                      SUM("blueflow_asset"."risk_score") AS "risk_score"
-                 FROM "blueflow_asset"
-            WHERE NOT ("blueflow_asset"."manufacturer" IS NULL)
-             GROUP BY "blueflow_asset"."manufacturer"
-             ORDER BY "risk_score" DESC
-        """
-        # TODO(taylorcochran): Implement risk per manufacturer
-        _msg = "Risk per manufacturer is not implemented"
-        raise NotImplementedError(_msg)
-
-    @action(detail=False)
-    def riskiest(self, request: Request) -> Response:
-        """Produce a paginated list of the "riskiest" assets."""
-        # TODO(taylorcochran): Implement riskiest
-        _msg = "Riskiest is not implemented"
-        raise NotImplementedError(_msg)
 
     @action(detail=False)
     def summary(self, _request: Request) -> Response:
