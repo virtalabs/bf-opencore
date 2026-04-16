@@ -4,11 +4,14 @@ import json
 import logging
 import re
 import subprocess
+import time
 from dataclasses import dataclass, field
 
 logger = logging.getLogger(__name__)
 
 CI_WATCH_TIMEOUT = 900  # 15 minutes max wait for CI
+CI_POLL_INTERVAL = 10  # seconds between polls when waiting for run to appear
+CI_POLL_MAX_WAIT = 120  # seconds to wait for a run to appear after push
 
 
 @dataclass
@@ -37,34 +40,54 @@ def _run_gh(
     )
 
 
+def _poll_for_run(repo: str, branch: str) -> int:
+    """Poll until a CI run appears for the branch, then return its ID."""
+    deadline = time.monotonic() + CI_POLL_MAX_WAIT
+
+    while True:
+        result = _run_gh(
+            [
+                "run",
+                "list",
+                "--repo",
+                repo,
+                "--branch",
+                branch,
+                "--limit",
+                "1",
+                "--json",
+                "databaseId,status",
+            ],
+            check=True,
+        )
+        runs = json.loads(result.stdout)
+        if runs:
+            return runs[0]["databaseId"]
+
+        if time.monotonic() >= deadline:
+            msg = f"No CI runs found for branch {branch} after {CI_POLL_MAX_WAIT}s"
+            raise RuntimeError(msg)
+
+        logger.info(
+            "No CI runs yet, retrying in %ds...",
+            CI_POLL_INTERVAL,
+        )
+        time.sleep(CI_POLL_INTERVAL)
+
+
 def wait_for_ci(repo: str, branch: str) -> int:
     """Wait for the latest CI run on a branch to complete.
 
     Returns the run ID.
+
+    GitHub Actions may take several seconds to register a workflow
+    run after a push, so this function polls until a run appears
+    (up to CI_POLL_MAX_WAIT seconds) before handing off to
+    ``gh run watch``.
     """
     logger.info("Waiting for CI on branch %s...", branch)
 
-    result = _run_gh(
-        [
-            "run",
-            "list",
-            "--repo",
-            repo,
-            "--branch",
-            branch,
-            "--limit",
-            "1",
-            "--json",
-            "databaseId,status",
-        ],
-        check=True,
-    )
-    runs = json.loads(result.stdout)
-    if not runs:
-        msg = f"No CI runs found for branch {branch}"
-        raise RuntimeError(msg)
-
-    run_id = runs[0]["databaseId"]
+    run_id = _poll_for_run(repo, branch)
     logger.info("Found CI run %d, waiting for completion...", run_id)
 
     _run_gh(
