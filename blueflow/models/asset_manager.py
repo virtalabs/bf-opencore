@@ -403,7 +403,7 @@ def _partition_fk_params(params):
 
     def is_fk_field(name):
         """Return True if name refers to a foreign key relationship."""
-        # Extract 'asset_risk_factors' from 'asset_risk_factors__tms'
+        # Extract 'asset_custom_fields' from 'asset_custom_fields__location'
         Asset = apps.get_model("blueflow", "Asset")
         basename = name.split("__")[0]
         fieldtype = Asset._meta.get_field(basename).get_internal_type()  # noqa: SLF001

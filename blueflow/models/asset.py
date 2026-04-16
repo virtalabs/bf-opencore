@@ -95,8 +95,6 @@ class Asset(models.Model):
     # note: Asset.custom_fields defined in AssetCustomField class
     # note: Asset.asset_tags defined in AssetTag class
     # note: Asset.asset_vulnerabilities defined in AssetVulnerability class
-    # note: Asset.asset_risk_factors defined in AssetRiskFactor class
-
     history = HistoricalRecords()
 
     # Our manager is a meld of AssetManager and the methods from AssetQuerySet
@@ -363,10 +361,6 @@ class Asset(models.Model):
         """Update or create a foreign key field with '__' notation.
 
         Examples:
-        update_or_create_fk_field(
-            name='asset_risk_score__tms',
-            value=5.7,
-        )
         update_or_create_fk_field(
             name='asset_custom_fields__location',
             value='Main Hospital',

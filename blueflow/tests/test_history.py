@@ -331,13 +331,12 @@ def test_history_empty_values(asset_edit_client, field_name, change_sequence):
     # NOTE: the history data as seen on the API is newest-first; we
     # reverse it to make it look chronological.
     api_change_sequence = [hist_item[field_name] for hist_item in reversed(res.data)]
-    change_seq_with_rescore = list(change_sequence)
+    change_seq_with_default = list(change_sequence)
     if field_name == "risk_score":
         # Just after creation, a second history record is saved with
-        # risk_score defaulting to 0.0.  Then later, the risk_score
-        # will be patched via the API.
-        change_seq_with_rescore.insert(1, 0.0)
-    assert api_change_sequence == change_seq_with_rescore
+        # risk_score defaulting to 0.0.
+        change_seq_with_default.insert(1, 0.0)
+    assert api_change_sequence == change_seq_with_default
 
 
 ################################################################
