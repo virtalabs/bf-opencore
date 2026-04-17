@@ -4,8 +4,6 @@ To accompany the model Asset in asset.py (in this folder).
 """
 
 import logging
-import statistics
-from collections import defaultdict
 from functools import reduce
 from operator import or_
 
@@ -13,7 +11,6 @@ from django.apps import apps
 from django.core.exceptions import FieldError, ValidationError
 from django.db import models
 from django.db.models import Q
-from django.db.models.functions import Coalesce
 
 from blueflow.utils import Created
 
@@ -25,40 +22,7 @@ logger = logging.getLogger(__name__)
 class AssetManager(models.Manager):
     """Custom manager to query for assets not belonging to a network."""
 
-    def rescore_all(self):
-        """Rescore all assets."""
-        # TODO(taylorcochran): Implement after we have a generalized algorithm for risk scoring
-        raise NotImplementedError("Rescore all is not implemented")
-        RiskFactor = apps.get_model("blueflow", "RiskFactor")
-        RiskFactor.objects.normalize_weights()  # Abundance of caution
-        remediable_risk_sum = defaultdict(int)
-        remediable_asset_count = defaultdict(int)
-        summaries = [asset.rescore() for asset in self.get_queryset().all()]
-        # Iterate over all the summaries
-        # Eng desc of why and what do
-        for summary in summaries:
-            # Iterate over their entries
-            # Eng desc of why and what do
-            for entry in summary:
-                # Check to see if this stuff is remediable
-                if entry["user_remediable"] == "True" and entry["contribution_raw"] > 0:
-                    rf_id = entry["rf_id"]
-                    # Update the scores
-                    # Note: We divide by 2 to get the TOTAL contribution,
-                    # rather than just the contribution to cli or sec
-                    remediable_risk_sum[rf_id] += entry["contribution_raw"] / 2
-                    # Update the number of remediable assets
-                    remediable_asset_count[rf_id] += 1
-        # We now have the user_remediable information
-        # Now, we just need to update it in risk factor
-        RiskFactor = apps.get_model("blueflow", "RiskFactor")
-        for key in remediable_risk_sum:
-            rf = RiskFactor.objects.get(id=key)
-            rf.remediable_asset_count = remediable_asset_count[key]
-            rf.remediable_risk_sum = remediable_risk_sum[key]
-            rf.save()
-
-    def get_by_priority(self, **kwargs):
+    def get_by_priority(self, **kwargs):  # noqa: C901, PLR0912
         """Get an Asset, checking kwargs in priority order and ignoring the rest.
 
         "Priority" here refers to how *exactly* a certain lookup key will
@@ -92,7 +56,7 @@ class AssetManager(models.Manager):
             valid field value for the fields in question, thus we can't
             just test for the truth value.
             """
-            return False if (val is None) or (val == "") else True
+            return val is not None and val != ""
 
         mac_kwarg = kwargs.pop("mac_address", None)
         ip_kwarg = kwargs.pop("ip_address", None)
@@ -108,14 +72,14 @@ class AssetManager(models.Manager):
             # E.g you're not allowed to pass both `external_keys__aims`
             # and `external_keys__tms` in the same call (it would make no
             # sense to do so, anyway.)
-            raise FieldError(f"Multiple JSONField keys are not allowed: {ekeys}")
+            msg = f"Multiple JSONField keys are not allowed: {ekeys}"
+            raise FieldError(msg)
 
         if not any(valid_val(v) for v in [ekey_kwarg, mac_kwarg, ip_kwarg]):
-            raise FieldError(
-                "No lookup field provided.  Got: {}.  Expected 1 or more: {}.".format(
-                    kwargs.keys(), ("external_keys", "mac_address", "ip_address")
-                )
+            msg = "No lookup field provided.  Got: {}.  Expected 1 or more: {}.".format(
+                kwargs.keys(), ("external_keys", "mac_address", "ip_address")
             )
+            raise FieldError(msg)
 
         # Perform lookup in priority order.
         Asset = apps.get_model("blueflow", "Asset")
@@ -123,7 +87,7 @@ class AssetManager(models.Manager):
             try:
                 asset = super().get(**{ekey_fn: ekey_kwarg})
                 logger.debug("Matched asset %s on %s=%s", asset, ekey_fn, ekey_kwarg)
-                return asset
+                return asset  # noqa: TRY300
             except Asset.DoesNotExist:
                 # Didn't find asset via external key, try mac
                 pass
@@ -132,7 +96,7 @@ class AssetManager(models.Manager):
             try:
                 asset = super().get(mac_address=mac_kwarg)
                 logger.debug("Matched asset %s on mac_address=%s", asset, mac_kwarg)
-                return asset
+                return asset  # noqa: TRY300
             except Asset.DoesNotExist:
                 # Didn't find asset via mac, try ip
                 pass
@@ -140,32 +104,32 @@ class AssetManager(models.Manager):
         if valid_val(ip_kwarg):
             try:
                 asset = super().get(ip_address=ip_kwarg)
-            except Asset.MultipleObjectsReturned:
+            except Asset.MultipleObjectsReturned as err:
                 # Coerce `MultipleObjectsReturned` to `DoesNotExist` when
                 # caused by duplicate ip_address and there is a mac_address or
                 # external_keys to fall back on.  In this case, the
                 # `DoesNotExist` error may later cause a new object to be
                 # created, for example, in update_or_create_by_priority().
                 if mac_kwarg is not None or ekey_kwarg is not None:
-                    raise Asset.DoesNotExist()
+                    raise Asset.DoesNotExist from err
                 raise  # otherwise re-raise the original exception
             # NOTE: if Asset.DoesNotExist, we want it to be raised here.
 
             # Decline to clobber mac_address after IP match
             if asset.mac_address and valid_val(mac_kwarg):
-                raise Asset.DoesNotExist()
+                raise Asset.DoesNotExist
 
             # Decline to clobber external_keys after IP match
             if asset.external_keys and valid_val(ekey_kwarg):
-                raise Asset.DoesNotExist()
+                raise Asset.DoesNotExist
 
             logger.debug("Matched asset %s on ip_address=%s", asset, ip_kwarg)
             return asset
 
         # Couldn't find it
-        raise Asset.DoesNotExist()
+        raise Asset.DoesNotExist
 
-    def update_or_create_by_priority(self, defaults=None, **kwargs):
+    def update_or_create_by_priority(self, defaults=None, **kwargs):  # noqa: C901
         """Update or create an asset using get_by_priority().
 
         Returns a tuple of (object, created), where object is the created or
@@ -331,141 +295,6 @@ class AssetQuerySet(models.QuerySet):
             "not_pct": not_pct,
         }
 
-    def risk_histogram(self):
-        """Return a 'risk histogram'.
-
-        Return a dictionary containing the number of assets in 6 categories:
-         - null risk associated (risk_score == null)
-         - zero/no risk (risk_score == 0)
-         - low (< 0.4)
-         - med (< 0.7)
-         - high (< 0.9)
-         - critical (>= 0.9)
-
-        The first 2 are awkwardly named; this is due to poor naming of
-        the fields in the model RiskMetrics.
-        """
-        # TODO(taylorcochran): Implement after we have a generalized algorithm for risk scoring
-        raise NotImplementedError("Risk histogram is not implemented")
-        h = {
-            "critical": self.filter(risk_score__gte=CRITICAL_RISK_LIMIT).count(),
-            "high": self.filter(
-                risk_score__lt=CRITICAL_RISK_LIMIT, risk_score__gte=HIGH_RISK_LIMIT
-            ).count(),
-            "med": self.filter(
-                risk_score__lt=HIGH_RISK_LIMIT, risk_score__gte=MED_RISK_LIMIT
-            ).count(),
-            "low": self.filter(risk_score__lt=MED_RISK_LIMIT, risk_score__gt=0.0).count(),
-            "no": self.filter(risk_score=0.0).count(),
-            # null=self.filter(risk_score__isnull=True).count(),
-        }
-        total_count = sum(h.values())
-        if total_count != self.filter(risk_score__isnull=False).count():
-            logger.error(
-                "Unexpected count when calculating histogram.  "
-                "Was '%d', expected '%d'.",
-                total_count,
-                self.count(),
-            )
-        return h
-
-    def risk_statistics(self):
-        """Return some risk statistics.
-
-        Return a dictionary with the following risk score statistics for
-        the assets contained in the queryset:
-         - sum
-         - mean
-         - median
-         - max
-         - min
-         - cli_sum   # sum of safety risk scores
-         - cli_mean
-         - sec_sum   # sum of security risk scores
-         - sec_mean
-        """
-        # Implementation note 1: Since there's no models.Median aggregate
-        #   function, we have to loop over the list of assets and obtain
-        #   their risk scores in order to use statistics.median.
-        #
-        #   Since we're already looping, it might be that it's more
-        #   efficient to use regular statistics and python functions to
-        #   obtain the other stats as well.
-        #
-        # Implementeation note 2: Choosing not to return `mode`, because
-        #   it's not obvious what to do when there's no unique mode
-        #   (statistics.mode will raise a StatisticsError).
-        #   (Also because, who other than statistics nerds would even care.)
-        # TODO(taylorcochran): Implement after we have a generalized algorithm for risk scoring
-        raise NotImplementedError("Risk statistics is not implemented")
-        notnull = self.filter(risk_score__isnull=False)
-        if notnull.count() == 0:
-            median = None
-        else:
-            median = statistics.median(a.risk_score for a in notnull)
-        s = {
-            "sum": self.aggregate(models.Sum("risk_score"))["risk_score__sum"],
-            "mean": self.aggregate(models.Avg("risk_score"))["risk_score__avg"],
-            "max": self.aggregate(models.Max("risk_score"))["risk_score__max"],
-            "min": self.aggregate(models.Min("risk_score"))["risk_score__min"],
-            "median": median,
-            "sec_sum": self.aggregate(val=Coalesce(models.Sum("risk_score_sec"), 0))[
-                "val"
-            ],
-            "sec_mean": self.aggregate(val=Coalesce(models.Avg("risk_score_sec"), 0))[
-                "val"
-            ],
-            "pri_sum": self.aggregate(val=Coalesce(models.Sum("risk_score_pri"), 0))[
-                "val"
-            ],
-            "pri_mean": self.aggregate(val=Coalesce(models.Avg("risk_score_pri"), 0))[
-                "val"
-            ],
-            "cli_sum": self.aggregate(val=Coalesce(models.Sum("risk_score_cli"), 0))[
-                "val"
-            ],
-            "cli_mean": self.aggregate(val=Coalesce(models.Avg("risk_score_cli"), 0))[
-                "val"
-            ],
-            "likelihood_sum": self.aggregate(
-                val=Coalesce(models.Sum("risk_score_likelihood"), 0)
-            )["val"],
-            "likelihood_mean": self.aggregate(
-                val=Coalesce(models.Avg("risk_score_likelihood"), 0)
-            )["val"],
-            "impact_sum": self.aggregate(
-                val=Coalesce(models.Sum("risk_score_impact"), 0)
-            )["val"],
-            "impact_mean": self.aggregate(
-                val=Coalesce(models.Avg("risk_score_impact"), 0)
-            )["val"],
-        }
-        return s
-
-    def risk_factor_statistics(self):
-        """Return some statistics on risk factors.
-
-        Return a list of lists that would be used for a histogram.  Each
-        element in the list represents a risk factor, and the data in
-        each list indicates how many assets have a certain risk factor.
-        """
-        # TODO(taylorcochran): Implement after we have a generalized algorithm for risk scoring
-        raise NotImplementedError("Risk factor statistics is not implemented")
-        rf_stats = []
-
-        RiskFactor = apps.get_model("blueflow", "RiskFactor")
-        for fac_type in ["sec", "pri", "cli"]:
-            rf_substats = []
-            for rf in RiskFactor.objects.filter(factor_type=fac_type):
-                rf_substats.append(rf.asset_risk_factor_statistics(self))
-                assert "num_affected" in rf_substats[-1]
-            rf_substats.sort(
-                key=lambda x: (x["weight"] > 0.0, x["num_affected"]), reverse=True
-            )
-            rf_stats.extend(rf_substats)
-
-        return rf_stats
-
     def _asset_vuln_query(self):
         """Queryset of asset_vulnerabilities attached to these assets."""
         AssetVulnerability = apps.get_model("blueflow", "AssetVulnerability")
@@ -505,7 +334,7 @@ def _unflatten_json_field_helper(name, value):
 def _unflatten_json_field(field, value):
     """Return key and value of an JSON field unflattened into a dict."""
     field_dict = _unflatten_json_field_helper(field, value)
-    assert len(field_dict.items()) == 1
+    assert len(field_dict.items()) == 1  # noqa: S101
     key, value = next(iter(field_dict.items()))
     return key, value
 
@@ -529,7 +358,7 @@ def _unflatten_json_params(params):
     Asset = apps.get_model("blueflow", "Asset")
     for k, v in params.items():
         field, value = _unflatten_json_field(k, v)
-        fieldtype = Asset._meta.get_field(field).get_internal_type()
+        fieldtype = Asset._meta.get_field(field).get_internal_type()  # noqa: SLF001
         if fieldtype == "JSONField":
             # Use unflattened values for a JSONField
             if field not in output:
@@ -580,7 +409,7 @@ def _partition_fk_params(params):
         # Extract 'asset_risk_factors' from 'asset_risk_factors__tms'
         Asset = apps.get_model("blueflow", "Asset")
         basename = name.split("__")[0]
-        fieldtype = Asset._meta.get_field(basename).get_internal_type()
+        fieldtype = Asset._meta.get_field(basename).get_internal_type()  # noqa: SLF001
         return fieldtype == "ForeignKey"
 
     fk_params = {}
@@ -600,10 +429,7 @@ def _external_keys_overlap(asset, defaults):
     if "external_keys" not in defaults_unflattened:
         return set()
     new = defaults_unflattened["external_keys"]
-    if asset.external_keys is None:
-        old = {}
-    else:
-        old = asset.external_keys
+    old = {} if asset.external_keys is None else asset.external_keys
     overlap = set(new.keys()) & set(old.keys())
 
     # Ignore overlap key if values are the same
@@ -619,25 +445,26 @@ def _validate_external_keys(params):
         if field != "external_keys":
             continue
         if value is None:
-            raise ValidationError("external_keys field may not be None")
+            msg = "external_keys field may not be None"
+            raise ValidationError(msg)
         for k, v in value.items():
             if v is None or v == "":
-                raise ValidationError(
-                    f"External keys may not be empty or None: {field} {k}={v}"
-                )
+                msg = f"External keys may not be empty or None: {field} {k}={v}"
+                raise ValidationError(msg)
 
 
 def _validate_external_keys_overlap(asset, kwargs, defaults):
     """Raise ValidationError if external_keys in defaults overlap w/ asset."""
     overlap = _external_keys_overlap(asset, defaults)
     if overlap:
-        raise ValidationError(
+        msg = (
             f"Existing asset {asset} matched parameters {kwargs}. "
             f"This asset has external_keys={asset.external_keys} "
             f"and mac_address={asset.mac_address}. "
             f"An update would overwrite external_keys {overlap}. "
-            "Refuse to overwrite.",
+            "Refuse to overwrite."
         )
+        raise ValidationError(msg)
 
 
 def _dict_diff(x, y):

@@ -18,8 +18,9 @@ class Task(BaseTask):
     retry_jitter = True
     dont_auto_retry_for = (TypeError,)
 
-    def on_failure(self, exc, task_id, args, kwargs, einfo):
+    def on_failure(self, exc, task_id, _args, _kwargs, _einfo):
         logger.error("[!!] %s failed: %s", task_id, exc)
+
 
 def _send_viper_payload(viper_data: ViperWebhookJob, request_id: str) -> None:
     """Send viper payload, logging partial errors.
@@ -33,12 +34,14 @@ def _send_viper_payload(viper_data: ViperWebhookJob, request_id: str) -> None:
     )
     for response in response_list:
         as_dict = response.to_dict()
-        response = requests.post(
+        http_response = requests.post(
             viper_data.callback,
             json=as_dict,
             headers={"Content-Type": "application/json"},
+            timeout=30,
         )
-        response.raise_for_status()
+        http_response.raise_for_status()
+
 
 @celery_app.task(base=Task)
 def viper_webhook(data: dict, request_id: str = ""):
@@ -46,13 +49,18 @@ def viper_webhook(data: dict, request_id: str = ""):
     viper_data = ViperWebhookRequest(**data)
     logger.info("Processing viper webhook: %s", viper_data)
     if request_id:
-        ViperWebhookJob.objects.filter(pk=request_id).update(status=ViperWebhookJob.Status.STARTED)
+        ViperWebhookJob.objects.filter(pk=request_id).update(
+            status=ViperWebhookJob.Status.STARTED
+        )
     try:
         _send_viper_payload(viper_data, request_id)
     except Exception:
         if request_id:
-            ViperWebhookJob.objects.filter(pk=request_id).update(status=ViperWebhookJob.Status.ERROR)
+            ViperWebhookJob.objects.filter(pk=request_id).update(
+                status=ViperWebhookJob.Status.ERROR
+            )
         raise
     if request_id:
-        ViperWebhookJob.objects.filter(pk=request_id).update(status=ViperWebhookJob.Status.FINISHED)
-
+        ViperWebhookJob.objects.filter(pk=request_id).update(
+            status=ViperWebhookJob.Status.FINISHED
+        )
