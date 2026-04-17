@@ -24,14 +24,12 @@ from harness.agents import (
     save_output,
 )
 from harness.ci import (
+    CIResult,
     TestReport,
-    get_ci_status,
     get_failed_logs,
+    get_run_log,
     parse_test_output,
     wait_for_ci,
-)
-from harness.ci import (
-    _run_gh as _run_ci_gh,
 )
 from harness.state import (
     comment_on_issue,
@@ -530,31 +528,32 @@ def _single_attempt(
     )
 
     logger.info("Waiting for CI...")
-    run_id = wait_for_ci(repo, branch_name)
-    ci_passed = get_ci_status(repo, run_id)
-    logger.info("CI: %s (run %d)", "PASS" if ci_passed else "FAIL", run_id)
+    ci = wait_for_ci(repo, branch_name)
 
-    # --- Parse test results from CI logs ---
-    ci_log = get_failed_logs(repo, run_id)
-    if not ci_log:
-        # No failed logs — get full log for parsing
-        ci_log = _get_ci_log(repo, run_id)
-    test_report = parse_test_output(ci_log)
-    logger.info(
-        "Tests: %d passed, %d failed, %d errors (of %d total)",
-        test_report.passed,
-        test_report.failed,
-        test_report.errors,
-        test_report.total,
-    )
-    if ci_log:
-        save_output(
-            issue_number,
-            "ci-logs",
-            attempt,
-            ci_log,
-            log_dir,
+    # --- Parse test results from the Test workflow specifically ---
+    test_report = TestReport()
+    if ci.test_run_id:
+        test_log = get_failed_logs(repo, ci.test_run_id)
+        if not test_log:
+            test_log = get_run_log(repo, ci.test_run_id)
+        test_report = parse_test_output(test_log)
+        logger.info(
+            "Tests: %d passed, %d failed, %d errors (of %d total)",
+            test_report.passed,
+            test_report.failed,
+            test_report.errors,
+            test_report.total,
         )
+        if test_log:
+            save_output(
+                issue_number,
+                "ci-logs",
+                attempt,
+                test_log,
+                log_dir,
+            )
+    else:
+        logger.warning("No Test workflow run found — cannot parse test results")
 
     # --- Code review (LLM — diff + plan only) ---
     transition(
@@ -578,28 +577,11 @@ def _single_attempt(
     verdict = _assemble_verdict(
         lint_result=lint_result,
         test_report=test_report,
-        ci_passed=ci_passed,
-        ci_run_id=run_id,
+        ci=ci,
         findings=review_result.findings,
     )
     verdict.pr_url = pr_url
     return verdict
-
-
-def _get_ci_log(repo: str, run_id: int) -> str:
-    """Get the full CI log for a run (used when --log-failed is empty)."""
-    result = _run_ci_gh(
-        [
-            "run",
-            "view",
-            str(run_id),
-            "--repo",
-            repo,
-            "--log",
-        ],
-        check=False,
-    )
-    return result.stdout
 
 
 def _load_baseline() -> dict:
@@ -614,8 +596,7 @@ def _assemble_verdict(
     *,
     lint_result: SensorResult,
     test_report: TestReport,
-    ci_passed: bool,
-    ci_run_id: int,
+    ci: CIResult,
     findings: list[dict] | None,
 ) -> Verdict:
     """Build a deterministic verdict from sensors + code review."""
@@ -644,11 +625,18 @@ def _assemble_verdict(
             len(test_report.failed_tests),
         )
 
-    # CI failed but no test failures parsed (infra issue)
-    if not ci_passed and not test_report.failed_tests:
+    # Test CI failed but no test failures parsed (infra issue)
+    if not ci.test_passed and not test_report.failed_tests:
         reasons.append(
-            f"CI failed (run {ci_run_id}) — no test "
+            f"Test CI failed (run {ci.test_run_id}) — no test "
             f"failures parsed, possible infra issue"
+        )
+
+    # Lint CI failed — informational only, local lint is authoritative
+    if not ci.lint_passed:
+        logger.info(
+            "Lint CI failed (run %d) — local lint sensor is authoritative.",
+            ci.lint_run_id,
         )
 
     # Code review findings
@@ -664,7 +652,7 @@ def _assemble_verdict(
     return Verdict(
         approved=approved,
         reasons=reasons,
-        ci_run_id=ci_run_id,
+        ci_run_id=ci.test_run_id,
         findings=findings or [],
     )
 
