@@ -40,32 +40,45 @@ def _run_gh(
     )
 
 
-def _poll_for_run(repo: str, branch: str) -> int:
-    """Poll until a CI run appears for the branch, then return its ID."""
+def _poll_for_run(
+    repo: str,
+    branch: str,
+    *,
+    workflow: str | None = None,
+) -> int:
+    """Poll until a CI run appears for the branch, then return its ID.
+
+    When *workflow* is given (e.g. ``"test.yml"``), only runs from
+    that workflow are considered.
+    """
     deadline = time.monotonic() + CI_POLL_MAX_WAIT
 
     while True:
-        result = _run_gh(
-            [
-                "run",
-                "list",
-                "--repo",
-                repo,
-                "--branch",
-                branch,
-                "--limit",
-                "1",
-                "--json",
-                "databaseId,status",
-            ],
-            check=True,
-        )
+        cmd = [
+            "run",
+            "list",
+            "--repo",
+            repo,
+            "--branch",
+            branch,
+            "--limit",
+            "1",
+            "--json",
+            "databaseId,status",
+        ]
+        if workflow:
+            cmd.extend(["--workflow", workflow])
+
+        result = _run_gh(cmd, check=True)
         runs = json.loads(result.stdout)
         if runs:
             return runs[0]["databaseId"]
 
         if time.monotonic() >= deadline:
-            msg = f"No CI runs found for branch {branch} after {CI_POLL_MAX_WAIT}s"
+            label = f" (workflow={workflow})" if workflow else ""
+            msg = (
+                f"No CI runs found for branch {branch}{label} after {CI_POLL_MAX_WAIT}s"
+            )
             raise RuntimeError(msg)
 
         logger.info(
@@ -75,35 +88,65 @@ def _poll_for_run(repo: str, branch: str) -> int:
         time.sleep(CI_POLL_INTERVAL)
 
 
-def wait_for_ci(repo: str, branch: str) -> int:
-    """Wait for the latest CI run on a branch to complete.
+@dataclass
+class CIResult:
+    """Aggregated result from all CI workflow runs."""
 
-    Returns the run ID.
+    test_run_id: int | None = None
+    lint_run_id: int | None = None
+    test_passed: bool = True
+    lint_passed: bool = True
 
-    GitHub Actions may take several seconds to register a workflow
-    run after a push, so this function polls until a run appears
-    (up to CI_POLL_MAX_WAIT seconds) before handing off to
-    ``gh run watch``.
+
+def wait_for_ci(repo: str, branch: str) -> CIResult:
+    """Wait for both Test and Lint CI runs on a branch to complete.
+
+    Returns a ``CIResult`` with per-workflow run IDs and pass/fail
+    status.  Test output should be parsed from ``test_run_id`` only.
+
+    GitHub Actions may take several seconds to register workflow
+    runs after a push, so this function polls until each run appears
+    (up to CI_POLL_MAX_WAIT seconds) before watching them.
     """
     logger.info("Waiting for CI on branch %s...", branch)
+    result = CIResult()
 
-    run_id = _poll_for_run(repo, branch)
-    logger.info("Found CI run %d, waiting for completion...", run_id)
+    for workflow, attr in [("test.yml", "test"), ("lint.yml", "lint")]:
+        try:
+            run_id = _poll_for_run(repo, branch, workflow=workflow)
+        except RuntimeError:
+            logger.warning("No %s run found for branch %s", workflow, branch)
+            continue
 
-    _run_gh(
-        [
-            "run",
-            "watch",
-            str(run_id),
-            "--repo",
-            repo,
-            "--exit-status",
-        ],
-        check=False,
-        timeout=CI_WATCH_TIMEOUT,
-    )
+        logger.info(
+            "Found %s run %d, waiting for completion...",
+            workflow,
+            run_id,
+        )
+        _run_gh(
+            [
+                "run",
+                "watch",
+                str(run_id),
+                "--repo",
+                repo,
+                "--exit-status",
+            ],
+            check=False,
+            timeout=CI_WATCH_TIMEOUT,
+        )
 
-    return run_id
+        passed = get_ci_status(repo, run_id)
+        setattr(result, f"{attr}_run_id", run_id)
+        setattr(result, f"{attr}_passed", passed)
+        logger.info(
+            "%s: %s (run %d)",
+            workflow,
+            "PASS" if passed else "FAIL",
+            run_id,
+        )
+
+    return result
 
 
 def get_ci_status(repo: str, run_id: int) -> bool:
@@ -188,6 +231,26 @@ def get_failed_logs(repo: str, run_id: int) -> str:
         )
         return ""
 
+    return result.stdout
+
+
+def get_run_log(repo: str, run_id: int) -> str:
+    """Get the full log for a CI run.
+
+    Used when ``--log-failed`` returns nothing (common with
+    ``continue-on-error: true`` steps).
+    """
+    result = _run_gh(
+        [
+            "run",
+            "view",
+            str(run_id),
+            "--repo",
+            repo,
+            "--log",
+        ],
+        check=False,
+    )
     return result.stdout
 
 
