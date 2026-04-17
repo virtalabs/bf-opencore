@@ -225,13 +225,23 @@ def run(
         )
         save_output(
             issue_number,
-            "stall-dump",
+            "stall-stdout",
             1,
-            exc.partial_output,
+            exc.partial_stdout,
+            log_dir,
+        )
+        save_output(
+            issue_number,
+            "stall-stderr",
+            1,
+            exc.partial_stderr,
             log_dir,
         )
         click.echo(
-            f"\n{exc}\nBranch left as-is for inspection. Partial output saved to logs.",
+            f"\n{exc}\n"
+            f"Branch left as-is for inspection.\n"
+            f"Logs: stall-stdout-attempt-1.txt, "
+            f"stall-stderr-attempt-1.txt",
             err=True,
         )
         sys.exit(2)

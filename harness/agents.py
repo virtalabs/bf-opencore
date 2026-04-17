@@ -53,10 +53,17 @@ class SensorResult:
 class AgentStalledError(Exception):
     """Raised when an agent produces no output for too long."""
 
-    def __init__(self, agent: str, seconds: int, partial_output: str) -> None:
+    def __init__(
+        self,
+        agent: str,
+        seconds: int,
+        partial_stdout: str,
+        partial_stderr: str,
+    ) -> None:
         self.agent = agent
         self.seconds = seconds
-        self.partial_output = partial_output
+        self.partial_stdout = partial_stdout
+        self.partial_stderr = partial_stderr
         msg = f"{agent} stalled — no output for {seconds}s"
         super().__init__(msg)
 
@@ -182,7 +189,7 @@ def run_coder(
         "10",
     ]
 
-    raw, stalled = _run_with_stall_detection(
+    raw_out, raw_err, stalled = _run_with_stall_detection(
         cmd,
         cwd=cwd,
         hard_timeout=CODER_TIMEOUT,
@@ -194,7 +201,8 @@ def run_coder(
         raise AgentStalledError(
             agent_name,
             CODER_STALL_TIMEOUT,
-            raw,
+            partial_stdout=raw_out,
+            partial_stderr=raw_err,
         )
 
     branch_result = subprocess.run(
@@ -206,7 +214,7 @@ def run_coder(
     )
     branch = branch_result.stdout.strip() or branch_name
 
-    return CoderResult(raw_output=raw, branch=branch)
+    return CoderResult(raw_output=raw_out, branch=branch)
 
 
 def _run_with_stall_detection(
@@ -215,12 +223,13 @@ def _run_with_stall_detection(
     cwd: str | None,
     hard_timeout: int,
     stall_timeout: int,
-) -> tuple[str, bool]:
+) -> tuple[str, str, bool]:
     """Run a subprocess, killing it if stdout goes silent.
 
-    Returns (captured_output, was_stalled).
+    Returns (stdout, stderr, was_stalled).
     """
-    chunks: list[str] = []
+    out_chunks: list[str] = []
+    err_chunks: list[str] = []
     last_activity = time.monotonic()
     stalled = False
     lock = threading.Lock()
@@ -233,15 +242,22 @@ def _run_with_stall_detection(
         cwd=cwd,
     )
 
-    def _reader() -> None:
+    def _read_stdout() -> None:
         nonlocal last_activity
         for line in proc.stdout:
             with lock:
-                chunks.append(line)
+                out_chunks.append(line)
                 last_activity = time.monotonic()
 
-    reader = threading.Thread(target=_reader, daemon=True)
-    reader.start()
+    def _read_stderr() -> None:
+        for line in proc.stderr:
+            with lock:
+                err_chunks.append(line)
+
+    stdout_reader = threading.Thread(target=_read_stdout, daemon=True)
+    stderr_reader = threading.Thread(target=_read_stderr, daemon=True)
+    stdout_reader.start()
+    stderr_reader.start()
 
     deadline = time.monotonic() + hard_timeout
     while proc.poll() is None:
@@ -262,10 +278,12 @@ def _run_with_stall_detection(
             break
         time.sleep(1)
 
-    reader.join(timeout=5)
+    stdout_reader.join(timeout=5)
+    stderr_reader.join(timeout=5)
     with lock:
-        raw = "".join(chunks)
-    return raw, stalled
+        raw_out = "".join(out_chunks)
+        raw_err = "".join(err_chunks)
+    return raw_out, raw_err, stalled
 
 
 def run_code_review(diff: str, plan_json: str) -> CodeReviewResult:
