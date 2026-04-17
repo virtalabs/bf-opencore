@@ -3,6 +3,7 @@
 Note: AssetManager has been moved to its own file asset_manager.py.
 """
 
+import contextlib
 import logging
 import math
 from collections import Counter
@@ -33,22 +34,22 @@ logger = logging.getLogger(__name__)
 class Asset(models.Model):
     """Holds our Assets."""
 
-    name = models.CharField(max_length=126, blank=True, null=True)
+    name = models.CharField(max_length=126, blank=True, null=True)  # noqa: DJ001
     # 'hostname' for sure does not need to be unique.
-    hostname = models.TextField(blank=True, null=True)
+    hostname = models.TextField(blank=True, null=True)  # noqa: DJ001
     ip_address = InetAddressField(
         store_prefix_length=False, blank=True, null=True, verbose_name="IP address"
     )
     mac_address = MACAddressField(
         blank=True, null=True, unique=True, verbose_name="MAC address"
     )
-    nic_vendor = models.TextField(blank=True, null=True, verbose_name="NIC vendor")
-    manufacturer = models.TextField(blank=True, null=True)
-    model = models.TextField(blank=True, null=True)
-    serial_number = models.TextField(blank=True, null=True)
-    udi = models.TextField(blank=True, null=True, verbose_name="UDI")
-    tag_number = models.TextField(blank=True, null=True)
-    category = models.TextField(blank=True, null=True)
+    nic_vendor = models.TextField(blank=True, null=True, verbose_name="NIC vendor")  # noqa: DJ001
+    manufacturer = models.TextField(blank=True, null=True)  # noqa: DJ001
+    model = models.TextField(blank=True, null=True)  # noqa: DJ001
+    serial_number = models.TextField(blank=True, null=True)  # noqa: DJ001
+    udi = models.TextField(blank=True, null=True, verbose_name="UDI")  # noqa: DJ001
+    tag_number = models.TextField(blank=True, null=True)  # noqa: DJ001
+    category = models.TextField(blank=True, null=True)  # noqa: DJ001
 
     # overall risk score and sub-scores for "safety" & "security"
     risk_score = models.FloatField(blank=True, null=True)
@@ -70,9 +71,9 @@ class Asset(models.Model):
     )
 
     date_added = models.DateTimeField(default=timezone.now)
-    owner = models.TextField(blank=True, null=True)
-    os = models.TextField(blank=True, null=True, verbose_name="Operating System")
-    app_sw_version = models.TextField(
+    owner = models.TextField(blank=True, null=True)  # noqa: DJ001
+    os = models.TextField(blank=True, null=True, verbose_name="Operating System")  # noqa: DJ001
+    app_sw_version = models.TextField(  # noqa: DJ001
         blank=True, null=True, verbose_name="Application software version"
     )
     last_scanned = models.DateTimeField(blank=True, null=True)
@@ -100,6 +101,9 @@ class Asset(models.Model):
     # Our manager is a meld of AssetManager and the methods from AssetQuerySet
     # https://docs.djangoproject.com/en/2.0/topics/db/managers/#from-queryset
     objects = AssetManager.from_queryset(AssetQuerySet)()
+
+    def __str__(self):
+        return f"{self.id}:{self.display_name}:{self.ip_address}"
 
     def save(self, *args, **kwargs):
         """Intercept save, automatically populating some fields."""
@@ -184,18 +188,15 @@ class Asset(models.Model):
 
         Returns True if any ports were added to the set, False otherwise.
         """
-        try:
+        with contextlib.suppress(TypeError):
             # Newports might be a single port as a string
             newports = [int(newports)]
-        except TypeError:
-            # Looks like it wasn't
-            pass
         newports = {int(p) for p in newports}
         ports = sorted(set.union(set(self.open_ports_tcp), newports))
         if ports != self.open_ports_tcp:
             added = set(ports) - set(self.open_ports_tcp)
             # The new list of ports is larger
-            assert added != set()
+            assert added != set()  # noqa: S101
             logger.debug("Added new TCP ports %s", added)
             self.open_ports_tcp = ports
             return True
@@ -244,12 +245,7 @@ class Asset(models.Model):
         if not self.model:
             return False
         # If Asset now has either IP or MAC it's identified!
-        if self.ip_address:
-            return True
-        if self.mac_address:
-            return True
-        # Uh oh, we don't have what's needed to identify
-        return False
+        return bool(self.ip_address or self.mac_address)
 
     def scan_qset(self):
         """Return queryset for all scans of the asset.
@@ -267,7 +263,7 @@ class Asset(models.Model):
         """
         return self.tags.all()
 
-    def similar_qset(self, exclude_self=True):
+    def similar_qset(self, *, exclude_self=True):
         """Return queryset for all assets similar to this one.
 
         Two assets are "similar" if they:
@@ -306,7 +302,7 @@ class Asset(models.Model):
         """Return queryset for history of asset."""
         return self.history.all()
 
-    def field_history_rqset(self, field_name, newest_first=True):
+    def field_history_rqset(self, field_name, *, newest_first=True):
         """Return RAW queryset for history of some asset field.
 
         Will return only the rows where the field changed.
@@ -329,7 +325,7 @@ class Asset(models.Model):
         # Validate/sanitize field.
         # NOTE: the get_field might cause a FieldDoesNotExist Django
         #       Exception.  The caller must be prepared to handle this.
-        db_field = self.history.model._meta.get_field(field_name)
+        db_field = self.history.model._meta.get_field(field_name)  # noqa: SLF001
         sanitized_field_name = db_field.name
         qset = self.history.order_by("history_date")
         history = [qset[0]]
@@ -369,18 +365,21 @@ class Asset(models.Model):
         Returns None if there is no such risk factor or this asset does not
         have the given risk factor associated with it (via AssetRiskFactor).
         """
-        # TODO(taylorcochran): Implement after we have a generalized algorithm for risk scoring
-        raise NotImplementedError("Get risk factor is not implemented")
+        # TODO(#9): implement risk scoring  # noqa: FIX002
+        msg = "Get risk factor is not implemented"
+        raise NotImplementedError(msg)
 
     def add_risk_factor(self, shortname, value, reason=None):
         """Add or replace a risk score factor for this Asset."""
-        # TODO(taylorcochran): Implement after we have a generalized algorithm for risk scoring
-        raise NotImplementedError("Add risk factor is not implemented")
+        # TODO(#9): implement risk scoring  # noqa: FIX002
+        msg = "Add risk factor is not implemented"
+        raise NotImplementedError(msg)
 
     def remove_risk_factor(self, shortname, reason=None):
         """Remove a risk score factor from this Asset."""
-        # TODO(taylorcochran): Implement after we have a generalized algorithm for risk scoring
-        raise NotImplementedError("Remove risk factor is not implemented")
+        # TODO(#9): implement risk scoring  # noqa: FIX002
+        msg = "Remove risk factor is not implemented"
+        raise NotImplementedError(msg)
 
     def update_or_create_fk_field(self, name, value, reason=None):
         """Update or create a foreign key field with '__' notation.
@@ -396,8 +395,9 @@ class Asset(models.Model):
         )
 
         """
-        # TODO(taylorcochran): Implement after we have a generalized algorithm for risk scoring
-        raise NotImplementedError("Update or create fk field is not implemented")
+        # TODO(#9): implement risk scoring  # noqa: FIX002
+        msg = "Update or create fk field is not implemented"
+        raise NotImplementedError(msg)
 
     @staticmethod
     def _soft_clip(x, rmax=10, rmin=0, a=1, typ="arctan"):
@@ -412,7 +412,7 @@ class Asset(models.Model):
         definition.  Either takes an argument `a` which determines the
         slope.
         """
-        assert rmin == 0, "Not set up to handle rmin != 0"
+        assert rmin == 0, "Not set up to handle rmin != 0"  # noqa: S101
 
         x = x / rmax
         if typ == "arctan":
@@ -420,18 +420,21 @@ class Asset(models.Model):
         elif typ == "inv_x":
             clipped = 1 - (1 / ((a * x) + 1))
         else:
-            raise ValueError(f"'typ' must be 'arctan' or 'inv_x'; was {typ}")
+            msg = f"'typ' must be 'arctan' or 'inv_x'; was {typ}"
+            raise ValueError(msg)
         return clipped * rmax
 
     def _update_cvss_risk(self):
         """Update the cvss risk factors from associated vulnerabilities."""
-        # TODO(taylorcochran): Implement after we have a generalized algorithm for risk scoring
-        raise NotImplementedError("Update cvss risk is not implemented")
+        # TODO(#9): implement risk scoring  # noqa: FIX002
+        msg = "Update cvss risk is not implemented"
+        raise NotImplementedError(msg)
 
     def _update_patch_risk(self):
         """Update the patch risk AssetRiskFactor using needs_sw_update()."""
-        # TODO(taylorcochran): Implement after we have a generalized algorithm for risk scoring
-        raise NotImplementedError("Update patch risk is not implemented")
+        # TODO(#9): implement risk scoring  # noqa: FIX002
+        msg = "Update patch risk is not implemented"
+        raise NotImplementedError(msg)
 
     def asset_risk_factors_with_zeros(self):
         """Return a list of AssetRiskFactor's, including those with zero value.
@@ -443,37 +446,43 @@ class Asset(models.Model):
         for things like inverted risky tags.  If a tag is *not present*,
         that contributes a non-zero value to the risk score.
         """
-        # TODO(taylorcochran): Implement after we have a generalized algorithm for risk scoring
-        raise NotImplementedError("Asset risk factors with zeros is not implemented")
+        # TODO(#9): implement risk scoring  # noqa: FIX002
+        msg = "Asset risk factors with zeros is not implemented"
+        raise NotImplementedError(msg)
 
     def _calculate_risk(self):
         """Calculate aggregate risk score for an asset."""
-        # TODO(taylorcochran): Implement after we have a generalized algorithm for risk scoring
-        raise NotImplementedError("Calculate risk is not implemented")
+        # TODO(#9): implement risk scoring  # noqa: FIX002
+        msg = "Calculate risk is not implemented"
+        raise NotImplementedError(msg)
 
     def risk_score_summary(self):
         """Return summary only (to avoid 'protected access')."""
-        # TODO(taylorcochran): Implement after we have a generalized algorithm for risk scoring
-        raise NotImplementedError("Risk score summary is not implemented")
+        # TODO(#9): implement risk scoring  # noqa: FIX002
+        msg = "Risk score summary is not implemented"
+        raise NotImplementedError(msg)
 
-    def rescore(self, reason="Rescore", save_reason=True):
+    def rescore(self, reason="Rescore", *, save_reason=True):
         """Update the risk_score field with a newly calculated score."""
-        # TODO(taylorcochran): Implement after we have a generalized algorithm for risk scoring
-        raise NotImplementedError("Rescore is not implemented")
+        # TODO(#9): implement risk scoring  # noqa: FIX002
+        msg = "Rescore is not implemented"
+        raise NotImplementedError(msg)
 
     @classmethod
-    def rescore_asset_on_save(
+    def rescore_asset_on_save(  # noqa: PLR0913
         cls, sender, instance, created, raw, using, update_fields, *args, **kwargs
     ):
         """Rescore an asset via a Django signal."""
-        # TODO(taylorcochran): Implement after we have a generalized algorithm for risk scoring
-        raise NotImplementedError("Rescore asset on save is not implemented")
+        # TODO(#9): implement risk scoring  # noqa: FIX002
+        msg = "Rescore asset on save is not implemented"
+        raise NotImplementedError(msg)
 
     @staticmethod
     def rescore_asset_on_delete(sender, instance, using, *args, **kwargs):
         """Rescore an asset via a Django signal."""
-        # TODO(taylorcochran): Implement after we have a generalized algorithm for risk scoring
-        raise NotImplementedError("Rescore asset on delete is not implemented")
+        # TODO(#9): implement risk scoring  # noqa: FIX002
+        msg = "Rescore asset on delete is not implemented"
+        raise NotImplementedError(msg)
 
     @staticmethod
     def is_valid_field_name(name):
@@ -482,17 +491,16 @@ class Asset(models.Model):
         Django documentation:
         https://docs.djangoproject.com/en/2.0/ref/models/meta/#retrieving-all-field-instances-of-a-model
         """
-        # TODO(taylorcochran): Implement after we have a generalized algorithm for risk scoring
-        raise NotImplementedError("Is valid field name is not implemented")
+        # TODO(#9): implement risk scoring  # noqa: FIX002
+        msg = "Is valid field name is not implemented"
+        raise NotImplementedError(msg)
 
     @staticmethod
     def is_valid_field_value(field, value):
         """Return True if value is valid for field."""
-        # TODO(taylorcochran): Implement after we have a generalized algorithm for risk scoring
-        raise NotImplementedError("Is valid field value is not implemented")
-
-    def __str__(self):
-        return f"{self.id}:{self.display_name}:{self.ip_address}"
+        # TODO(#9): implement risk scoring  # noqa: FIX002
+        msg = "Is valid field value is not implemented"
+        raise NotImplementedError(msg)
 
     def todict(self):
         """Return concrete fields as a dictionary for diffing in update_or_create.
@@ -541,7 +549,7 @@ class Asset(models.Model):
 
         # is any of these version numbers greater than ours?
         if asset_ver_ok:
-            for ver in vcounts.keys():
+            for ver in vcounts:
                 if packaging.version.parse(ver) > packaging.version.parse(
                     self.app_sw_version
                 ):
