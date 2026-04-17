@@ -4,8 +4,6 @@ To accompany the model Asset in asset.py (in this folder).
 """
 
 import logging
-import statistics
-from collections import defaultdict
 from functools import reduce
 from operator import or_
 
@@ -13,7 +11,6 @@ from django.apps import apps
 from django.core.exceptions import FieldError, ValidationError
 from django.db import models
 from django.db.models import Q
-from django.db.models.functions import Coalesce
 
 from blueflow.utils import Created
 
@@ -29,34 +26,6 @@ class AssetManager(models.Manager):
         """Rescore all assets."""
         # TODO(taylorcochran): Implement after we have a generalized algorithm for risk scoring
         raise NotImplementedError("Rescore all is not implemented")
-        RiskFactor = apps.get_model("blueflow", "RiskFactor")
-        RiskFactor.objects.normalize_weights()  # Abundance of caution
-        remediable_risk_sum = defaultdict(int)
-        remediable_asset_count = defaultdict(int)
-        summaries = [asset.rescore() for asset in self.get_queryset().all()]
-        # Iterate over all the summaries
-        # Eng desc of why and what do
-        for summary in summaries:
-            # Iterate over their entries
-            # Eng desc of why and what do
-            for entry in summary:
-                # Check to see if this stuff is remediable
-                if entry["user_remediable"] == "True" and entry["contribution_raw"] > 0:
-                    rf_id = entry["rf_id"]
-                    # Update the scores
-                    # Note: We divide by 2 to get the TOTAL contribution,
-                    # rather than just the contribution to cli or sec
-                    remediable_risk_sum[rf_id] += entry["contribution_raw"] / 2
-                    # Update the number of remediable assets
-                    remediable_asset_count[rf_id] += 1
-        # We now have the user_remediable information
-        # Now, we just need to update it in risk factor
-        RiskFactor = apps.get_model("blueflow", "RiskFactor")
-        for key in remediable_risk_sum:
-            rf = RiskFactor.objects.get(id=key)
-            rf.remediable_asset_count = remediable_asset_count[key]
-            rf.remediable_risk_sum = remediable_risk_sum[key]
-            rf.save()
 
     def get_by_priority(self, **kwargs):
         """Get an Asset, checking kwargs in priority order and ignoring the rest.
@@ -347,27 +316,6 @@ class AssetQuerySet(models.QuerySet):
         """
         # TODO(taylorcochran): Implement after we have a generalized algorithm for risk scoring
         raise NotImplementedError("Risk histogram is not implemented")
-        h = {
-            "critical": self.filter(risk_score__gte=CRITICAL_RISK_LIMIT).count(),
-            "high": self.filter(
-                risk_score__lt=CRITICAL_RISK_LIMIT, risk_score__gte=HIGH_RISK_LIMIT
-            ).count(),
-            "med": self.filter(
-                risk_score__lt=HIGH_RISK_LIMIT, risk_score__gte=MED_RISK_LIMIT
-            ).count(),
-            "low": self.filter(risk_score__lt=MED_RISK_LIMIT, risk_score__gt=0.0).count(),
-            "no": self.filter(risk_score=0.0).count(),
-            # null=self.filter(risk_score__isnull=True).count(),
-        }
-        total_count = sum(h.values())
-        if total_count != self.filter(risk_score__isnull=False).count():
-            logger.error(
-                "Unexpected count when calculating histogram.  "
-                "Was '%d', expected '%d'.",
-                total_count,
-                self.count(),
-            )
-        return h
 
     def risk_statistics(self):
         """Return some risk statistics.
@@ -384,63 +332,8 @@ class AssetQuerySet(models.QuerySet):
          - sec_sum   # sum of security risk scores
          - sec_mean
         """
-        # Implementation note 1: Since there's no models.Median aggregate
-        #   function, we have to loop over the list of assets and obtain
-        #   their risk scores in order to use statistics.median.
-        #
-        #   Since we're already looping, it might be that it's more
-        #   efficient to use regular statistics and python functions to
-        #   obtain the other stats as well.
-        #
-        # Implementeation note 2: Choosing not to return `mode`, because
-        #   it's not obvious what to do when there's no unique mode
-        #   (statistics.mode will raise a StatisticsError).
-        #   (Also because, who other than statistics nerds would even care.)
         # TODO(taylorcochran): Implement after we have a generalized algorithm for risk scoring
         raise NotImplementedError("Risk statistics is not implemented")
-        notnull = self.filter(risk_score__isnull=False)
-        if notnull.count() == 0:
-            median = None
-        else:
-            median = statistics.median(a.risk_score for a in notnull)
-        s = {
-            "sum": self.aggregate(models.Sum("risk_score"))["risk_score__sum"],
-            "mean": self.aggregate(models.Avg("risk_score"))["risk_score__avg"],
-            "max": self.aggregate(models.Max("risk_score"))["risk_score__max"],
-            "min": self.aggregate(models.Min("risk_score"))["risk_score__min"],
-            "median": median,
-            "sec_sum": self.aggregate(val=Coalesce(models.Sum("risk_score_sec"), 0))[
-                "val"
-            ],
-            "sec_mean": self.aggregate(val=Coalesce(models.Avg("risk_score_sec"), 0))[
-                "val"
-            ],
-            "pri_sum": self.aggregate(val=Coalesce(models.Sum("risk_score_pri"), 0))[
-                "val"
-            ],
-            "pri_mean": self.aggregate(val=Coalesce(models.Avg("risk_score_pri"), 0))[
-                "val"
-            ],
-            "cli_sum": self.aggregate(val=Coalesce(models.Sum("risk_score_cli"), 0))[
-                "val"
-            ],
-            "cli_mean": self.aggregate(val=Coalesce(models.Avg("risk_score_cli"), 0))[
-                "val"
-            ],
-            "likelihood_sum": self.aggregate(
-                val=Coalesce(models.Sum("risk_score_likelihood"), 0)
-            )["val"],
-            "likelihood_mean": self.aggregate(
-                val=Coalesce(models.Avg("risk_score_likelihood"), 0)
-            )["val"],
-            "impact_sum": self.aggregate(
-                val=Coalesce(models.Sum("risk_score_impact"), 0)
-            )["val"],
-            "impact_mean": self.aggregate(
-                val=Coalesce(models.Avg("risk_score_impact"), 0)
-            )["val"],
-        }
-        return s
 
     def risk_factor_statistics(self):
         """Return some statistics on risk factors.
@@ -451,20 +344,6 @@ class AssetQuerySet(models.QuerySet):
         """
         # TODO(taylorcochran): Implement after we have a generalized algorithm for risk scoring
         raise NotImplementedError("Risk factor statistics is not implemented")
-        rf_stats = []
-
-        RiskFactor = apps.get_model("blueflow", "RiskFactor")
-        for fac_type in ["sec", "pri", "cli"]:
-            rf_substats = []
-            for rf in RiskFactor.objects.filter(factor_type=fac_type):
-                rf_substats.append(rf.asset_risk_factor_statistics(self))
-                assert "num_affected" in rf_substats[-1]
-            rf_substats.sort(
-                key=lambda x: (x["weight"] > 0.0, x["num_affected"]), reverse=True
-            )
-            rf_stats.extend(rf_substats)
-
-        return rf_stats
 
     def _asset_vuln_query(self):
         """Queryset of asset_vulnerabilities attached to these assets."""
