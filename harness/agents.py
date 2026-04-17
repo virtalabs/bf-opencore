@@ -189,8 +189,11 @@ def run_coder(
         "10",
     ]
 
+    # stdbuf -oL forces line-buffered stdout on the child process.
+    # Without this, pipe buffering means our stall detector sees
+    # no output even while the agent is actively working.
     raw_out, raw_err, stalled = _run_with_stall_detection(
-        cmd,
+        ["stdbuf", "-oL", *cmd],
         cwd=cwd,
         hard_timeout=CODER_TIMEOUT,
         stall_timeout=CODER_STALL_TIMEOUT,
