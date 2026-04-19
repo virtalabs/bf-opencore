@@ -81,14 +81,6 @@ class FieldMap:
         self._keymap = new_keymap
 
     @staticmethod
-    def validate_orm_keys(keymap):
-        """Validate keymap keys against Asset fields.
-
-        ORM-level field validation is handled by serializers at the API
-        boundary, so this is intentionally a no-op.
-        """
-
-    @staticmethod
     def unique_keymap_values(keymap):
         """Return a unique list of values from a keymap.
 
@@ -114,9 +106,6 @@ class FieldMap:
         string.  Furthermore, every keymap value must map to a key in the
         external data.
         """
-        # Every keymap key must be a valid Asset field
-        FieldMap.validate_orm_keys(self._keymap)
-
         for extkey_list in self._keymap.values():
             for extkey in extkey_list:
                 # External keys must be strings
