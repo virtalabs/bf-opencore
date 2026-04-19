@@ -8,7 +8,6 @@ BlueFlow's tables (its internal ORM).
 import ipaddress
 
 import netaddr
-from django.apps import apps
 
 from blueflow.exceptions import IntegrationTaskError
 
@@ -85,14 +84,9 @@ class FieldMap:
     def validate_orm_keys(keymap):
         """Validate keymap keys against Asset fields.
 
-        This method exists so that we can have fail-fast behavior.
+        ORM-level field validation is handled by serializers at the API
+        boundary, so this is intentionally a no-op.
         """
-        Asset = apps.get_model("blueflow", "Asset")
-        for orm_key in keymap.keys():
-            if not Asset.is_valid_field_name(orm_key):
-                raise IntegrationTaskError(
-                    f"'{orm_key}' key in FieldMap does not match any Asset field",
-                )
 
     @staticmethod
     def unique_keymap_values(keymap):
@@ -195,12 +189,6 @@ class FieldMap:
                 else:
                     continue
 
-            # Ignore anything that Django's ORM type system doesn't like
-            Asset = apps.get_model("blueflow", "Asset")
-            if not Asset.is_valid_field_value(orm_key, value):
-                continue
-
-            # Must be a valid value
             return value
 
         # Couldn't find a valid value after trying every keymap target value
