@@ -151,6 +151,8 @@ def run_coder(
         "--print",
         "-p",
         prompt,
+        "--model",
+        "sonnet",
         "--allowedTools",
         "Read",
         "Glob",
