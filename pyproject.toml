@@ -77,16 +77,13 @@ fix = true
 
 [tool.ruff.lint]
 select = ["ALL"]
-ignore = ["COM812", "ANN", "D100", "D101", "D102", "D103", "D104", "D105", "D106", "D107", "DJ001", "RET504"]
+ignore = ["COM812", "ANN", "D100", "D101", "D102", "D103", "D104", "D105", "D106", "D107", "RET504"]
 
 [tool.ruff.lint.per-file-ignores]
 "**/tests/**" = ["S101"]
 "tests/**" = ["S101"]
 "conftest.py" = ["S101"]
 "harness/**" = ["T201", "S603", "S607", "PLR0913"]
-"blueflow/models/asset.py" = ["DJ012", "FBT002", "S101", "SIM103", "SIM105", "SIM118", "SLF001"]
-"blueflow/models/asset_manager.py" = ["B904", "C901", "EM101", "EM102", "EM103", "PLR0912", "RSE102", "S101", "SIM108", "SIM211", "SLF001", "TRY003", "TRY300"]
-"blueflow/utils/fieldmap.py" = ["B904", "C901", "EM102", "PLR0911", "SIM118", "TRY003"]
 
 [tool.ruff.format]
 skip-magic-trailing-comma = false
