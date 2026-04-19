@@ -232,7 +232,7 @@ def valid_mac_address(mac_address):
         mac_address = mac_address.strip()
 
     try:
-        _ = int(mac_address)
+        dummy = int(mac_address)
     except ValueError:
         pass
     else:
@@ -276,7 +276,7 @@ def valid_ip_address(ip_address):
     # Don't accept pure integers.  The ip_interface() function would
     # accept pure integers as valid IP addresses, but we don't.
     try:
-        _ = int(ip_address)
+        dummy = int(ip_address)
     except ValueError:
         pass
     else:
