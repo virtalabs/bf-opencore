@@ -14,6 +14,7 @@ import click
 from harness.agents import (
     SensorResult,
     create_draft_pr,
+    generate_session_id,
     get_changed_files,
     get_diff,
     push_branch,
@@ -415,8 +416,11 @@ def _code_and_lint(
 
     Returns the final lint SensorResult (passed or not).
     """
+    session_id = generate_session_id()
+
     for lint_try in range(1 + MAX_LINT_RETRIES):
-        suffix = f" (lint retry {lint_try})" if lint_try > 0 else ""
+        is_retry = lint_try > 0
+        suffix = f" (lint retry {lint_try})" if is_retry else ""
         logger.info(
             "Starting Coder agent (attempt %d%s)...",
             attempt,
@@ -427,11 +431,13 @@ def _code_and_lint(
             branch_name,
             feedback=feedback,
             cwd=cwd,
+            session_id=session_id,
+            resume=is_retry,
         )
         save_output(
             issue_number,
             "coder",
-            attempt if lint_try == 0 else f"{attempt}-lint{lint_try}",
+            attempt if not is_retry else f"{attempt}-lint{lint_try}",
             coder_result.raw_output,
             log_dir,
         )

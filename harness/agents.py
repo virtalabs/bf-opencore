@@ -5,6 +5,7 @@ import json
 import logging
 import re
 import subprocess
+import uuid
 from dataclasses import dataclass, field
 from pathlib import Path
 
@@ -131,38 +132,69 @@ def run_planner(issue_context: str) -> PlanResult:
     return PlanResult(raw_output=raw, plan=plan)
 
 
+def generate_session_id() -> str:
+    """Generate a new session ID for coder session continuity."""
+    return str(uuid.uuid4())
+
+
 def run_coder(
     plan_json: str,
     branch_name: str,
     feedback: str | None = None,
     cwd: str | None = None,
+    session_id: str | None = None,
+    *,
+    resume: bool = False,
 ) -> CoderResult:
-    """Invoke the Coder agent to implement the plan."""
-    template = load_prompt("coder")
-    feedback_section = f"\n\n## Reviewer Feedback\n{feedback}" if feedback else ""
-    prompt = (
-        template.replace("{plan}", plan_json)
-        .replace("{branch_name}", branch_name)
-        .replace("{feedback_section}", feedback_section)
-    )
+    """Invoke the Coder agent to implement the plan.
 
-    cmd = [
-        "claude",
-        "--print",
-        "-p",
-        prompt,
-        "--model",
-        "sonnet",
-        "--allowedTools",
-        "Read",
-        "Glob",
-        "Grep",
-        "Edit",
-        "Write",
-        "Bash",
-        "--max-budget-usd",
-        "10",
-    ]
+    When *session_id* is provided on the first call (resume=False),
+    the session is pinned so that lint retries can resume it.
+    When *resume* is True, the existing session is continued with
+    only the feedback as the new prompt — no plan re-injection.
+    """
+    if resume and session_id:
+        # Resume existing session — only send the feedback as the prompt
+        cmd = [
+            "claude",
+            "--print",
+            "--resume",
+            session_id,
+            "--model",
+            "sonnet",
+            "-p",
+            feedback or "Continue.",
+            "--max-budget-usd",
+            "10",
+        ]
+    else:
+        template = load_prompt("coder")
+        feedback_section = f"\n\n## Reviewer Feedback\n{feedback}" if feedback else ""
+        prompt = (
+            template.replace("{plan}", plan_json)
+            .replace("{branch_name}", branch_name)
+            .replace("{feedback_section}", feedback_section)
+        )
+
+        cmd = [
+            "claude",
+            "--print",
+            "-p",
+            prompt,
+            "--model",
+            "sonnet",
+            "--allowedTools",
+            "Read",
+            "Glob",
+            "Grep",
+            "Edit",
+            "Write",
+            "Bash",
+            "--max-budget-usd",
+            "10",
+        ]
+        if session_id:
+            cmd.extend(["--session-id", session_id])
 
     try:
         result = subprocess.run(
