@@ -32,6 +32,7 @@ These paths require human review and must not be changed by agents:
 
 - `blueflow/migrations/` — never edit migration files directly
 - `project/settings/` — settings changes require human review
+- `pyproject.toml` — never modify linter config, dependencies, or project metadata
 - `conftest.py` (root) — shared test infrastructure; changes affect all tests
 - Any file outside `blueflow/` and `tests/` without explicit plan approval
 
