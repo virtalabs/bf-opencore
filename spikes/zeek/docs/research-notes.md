@@ -94,24 +94,59 @@ timestamps, message types) stored in `external_keys` or custom fields.
 |---|---|---|---|
 | `conn.log` | `ip_address`, `open_ports_tcp`, topology edges | No — already covered by tcpflow | Provides richer data: connection duration, byte counts, protocol detection. Topology edges (IP pairs + ports) are a direct upgrade over MSH-3/MSH-5 inference from #47 Section 6. |
 | `dns.log` | `hostname` | **Yes** — closes the DNS gap | Zeek passively logs all DNS queries/responses on the monitored segment. Maps `ip_address` → `hostname` without active reverse lookups. This was identified as a gap in #47. |
-| `dhcp.log` | `mac_address` ↔ `ip_address` binding | **Partially** — reduces tshark dependency | Logs DHCP transactions including MAC, assigned IP, and hostname. Covers devices that use DHCP. Static-IP devices (common in medical equipment) will not appear — tshark Ethernet frame extraction may still be needed as a fallback. |
+| `dhcp.log` | `mac_address` ↔ `ip_address` binding | **No** — DHCP devices only | Logs DHCP transactions including MAC, assigned IP, and hostname. Static-IP devices and Docker containers (no DHCP) will not appear. Not sufficient on its own. |
 | `ssl.log` | `manufacturer` (from cert CN/SAN/issuer) | **Partially** — new data source | TLS certificate metadata (CN, SAN, issuer, validity) provides device/manufacturer identification not available from HL7. Only covers TLS-enabled connections. Does **not** decrypt TLS-wrapped MLLP — the "TLS blindness" problem remains. |
 | `known_hosts.log` | Entity resolution / deduplication | No new fields | Deduplicated host tracking — natural fit for asset entity resolution. Provides first-seen/last-seen timestamps. |
 | `known_services.log` | `open_ports_tcp`, service identification | Supplements nmap | Service fingerprinting overlaps with nmap but works passively. Useful for detecting services nmap doesn't scan for. |
 
-### Key finding: dhcp.log and the MAC-IP gap
+### Key finding: MAC-IP resolution — tshark vs. Zeek `conn.log` L2 fields
 
-The #47 spike identified `mac_address` as the primary lookup key for asset upsert,
-and tshark as the only way to extract MAC-IP bindings from pcap. Zeek's `dhcp.log`
-provides MAC-IP correlation for DHCP-using devices, but **static-IP medical devices
-(monitors, infusion pumps, imaging systems) will not appear in DHCP logs**. This
-means tshark remains necessary as a fallback for complete MAC coverage.
+The #47 spike uses tshark to extract MAC-IP bindings from Ethernet frame headers
+(`eth.src` + `ip.src`). This works for **all** devices in the pcap — DHCP and
+static-IP alike — because every IP packet has an Ethernet header regardless of how
+the device obtained its address.
 
-However, Zeek's `conn.log` does record the `orig_l2_addr` and `resp_l2_addr` fields
-(MAC addresses of connection endpoints) when Zeek monitors a live interface — this
-would eliminate the tshark dependency entirely in live-capture mode. These fields are
-**not populated when reading from pcap** (no Ethernet headers in tcpdump-style
-captures unless captured with `-e`).
+Zeek's `conn.log` records `orig_l2_addr` and `resp_l2_addr` (MAC addresses of
+connection endpoints), but **only in live-capture mode** — not when replaying pcap
+files. This means:
+
+| Scenario | tshark (#47) | Zeek `dhcp.log` | Zeek `conn.log` L2 |
+|---|---|---|---|
+| DHCP device | Works | Works | Live only |
+| Static-IP device | Works | **Missing** | Live only |
+| Pcap replay (dev/test) | Works | DHCP only | **Missing** |
+| Live capture (prod) | Works | DHCP only | **Works** |
+
+**In production** (live Zeek on a mirror port), `conn.log` L2 fields give full
+MAC-IP coverage — matching tshark and eliminating it as a dependency.
+
+**In dev/test** (pcap replay), `conn.log` L2 fields are empty. However, Docker
+bridge networks provide an alternative live-capture path (see below).
+
+### Docker bridge as a dev/test strategy
+
+Docker bridge networks (`docker0` or custom bridges) operate at Layer 2. Containers
+get virtual ethernet pairs with Docker-assigned MAC addresses. Traffic between
+containers traverses the bridge as full Ethernet frames.
+
+When Zeek does live capture on a Docker bridge interface, it sees those Ethernet
+frames — `conn.log` L2 fields are populated for every container regardless of IP
+assignment. Docker's internal IPAM assigns IPs from the subnet without DHCP, so
+these are effectively "static" IPs, and `dhcp.log` will be empty. But `conn.log`
+L2 fields cover them.
+
+This makes Docker-compose a viable test harness for Phase 2:
+
+```bash
+# Monitor the docker-compose bridge
+zeek -i br-<network_id> spikes/zeek/scripts/hl7_extract.zeek
+```
+
+A container emitting HL7 traffic on that bridge gives Zeek the same L2 visibility
+it would have on a hospital mirror port — sidestepping the pcap-replay limitation.
+
+**Note:** Docker `host` network mode bypasses the bridge entirely. The default
+bridge mode (used by the project's `docker-compose.yml`) is the relevant case.
 
 ### Net new data from Zeek (not available in #47 pipeline)
 
