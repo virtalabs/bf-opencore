@@ -1,0 +1,16 @@
+module MLLP;
+
+# MLLP (Minimal Lower Layer Protocol) framing for HL7 over TCP.
+#
+# Frame format:
+#   0x0B (start) + HL7 payload + 0x1C (end block) + 0x0D (carriage return)
+
+public type Message = unit {
+    start_byte: uint8 &requires=($$ == 0x0B);
+    payload:    bytes &until=b"\x1c";
+    end_cr:     uint8 &requires=($$ == 0x0D);
+};
+
+public type Messages = unit {
+    : Message[];
+};

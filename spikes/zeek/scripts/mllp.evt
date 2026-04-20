@@ -1,0 +1,7 @@
+protocol analyzer spicy::MLLP over TCP:
+    parse originator with MLLP::Messages,
+    parse responder  with MLLP::Messages,
+    port 42042/tcp,
+    port 2575/tcp;
+
+on MLLP::Message -> event mllp_message($conn, $is_orig, self.payload);
