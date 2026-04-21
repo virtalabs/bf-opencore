@@ -32,11 +32,19 @@ echo "Running Zeek against: $PCAP"
 cd "$OUTDIR" && rm -f *.log
 zeek -Cr "$PCAP" \
     "$OUTDIR/mllp.hlto" \
-    "$SCRIPT_DIR/scripts/hl7_extract.zeek"
+    "$SCRIPT_DIR/scripts/hl7_extract.zeek" \
+    LogAscii::use_json=T
 
 # Report
-MSG_COUNT=$(grep -cv '^#' "$OUTDIR/hl7.log" 2>/dev/null || echo 0)
+MSG_COUNT=$(wc -l < "$OUTDIR/hl7.log" 2>/dev/null | tr -d ' ')
 echo ""
 echo "Done. $MSG_COUNT HL7 messages extracted."
 echo "Logs: $OUTDIR/"
 ls -1 "$OUTDIR"/*.log
+
+# Optionally run the sidecar in dry-run mode
+if [ "${SIDECAR:-}" = "1" ]; then
+    echo ""
+    echo "Running sidecar (dry-run)..."
+    uv run "$SCRIPT_DIR/sidecar.py" "$OUTDIR"
+fi

@@ -8,6 +8,8 @@ tcpflow/tshark as the passive capture layer for MLLP-framed HL7 traffic.
 ```
 spikes/zeek/
   run.sh                               # Test runner (compile + run, output to /tmp)
+  sidecar.py                           # Log-to-upsert sidecar prototype
+  stub_server.py                       # Stub HTTP server for end-to-end testing
   data/                                # Sample pcap (reuses spikes/hl7/data/hl7.pcap)
   scripts/
     mllp.spicy                         # Spicy grammar for MLLP framing
@@ -33,16 +35,45 @@ spikes/zeek/
 # With a custom pcap
 ./spikes/zeek/run.sh path/to/capture.pcap
 
-# Output lands in /tmp/zeek-test/
+# Output lands in /tmp/zeek-test/ (JSON format)
 cat /tmp/zeek-test/hl7.log    # Extracted HL7 messages
 cat /tmp/zeek-test/conn.log   # Connection metadata
 ```
+
+## Sidecar prototype
+
+The sidecar reads Zeek JSON logs, correlates across log types, and produces
+upsert payloads compatible with `PUT /api/assets/upsert/`.
+
+```bash
+# Dry-run: print upsert payloads to stdout
+uv run spikes/zeek/sidecar.py /tmp/zeek-test/
+
+# Run Zeek + sidecar together
+SIDECAR=1 ./spikes/zeek/run.sh
+
+# End-to-end with stub server (no BlueFlow needed)
+uv run spikes/zeek/stub_server.py &                           # terminal 1
+uv run spikes/zeek/sidecar.py /tmp/zeek-test/ --url http://localhost:8000  # terminal 2
+
+# Against a real BlueFlow instance
+uv run spikes/zeek/sidecar.py /tmp/zeek-test/ --url http://localhost:8000 --token <tok>
+```
+
+### Synthetic MAC addresses
+
+When Zeek replays pcap files (rather than live capture), Layer 2 MAC addresses
+are unavailable from `conn.log`. The sidecar generates a deterministic
+locally-administered MAC from the device IP: `02:00:xx:xx:xx:xx`. The `02:00`
+prefix avoids collision with real OUI-assigned MACs. Re-runs against the same
+pcap produce the same MAC, so upserts are idempotent.
 
 ## Notes
 
 - The `-C` flag is used to ignore checksum errors (common in loopback/test pcaps)
 - The sample pcap uses port 42042 (non-standard); the analyzer also registers port 2575 (IANA MLLP)
 - Spicy analyzers must be precompiled with `spicyz` — `run.sh` handles this automatically
+- Zeek outputs JSON format (`LogAscii::use_json=T`) for sidecar consumption
 
 ## Phases
 

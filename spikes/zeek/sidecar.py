@@ -1,0 +1,186 @@
+#!/usr/bin/env python3
+"""Zeek log sidecar — reads JSON logs and pushes asset upsert payloads.
+
+Reads hl7.log and conn.log from a Zeek output directory, correlates entries
+across log types by connection UID, aggregates per-device, and either prints
+upsert payloads (dry-run) or PUTs them to BlueFlow's /api/assets/upsert/.
+
+Usage:
+    uv run spikes/zeek/sidecar.py /tmp/zeek-test/
+    uv run spikes/zeek/sidecar.py /tmp/zeek-test/ --url http://localhost:8000
+    uv run spikes/zeek/sidecar.py /tmp/zeek-test/ \
+        --url http://localhost:8000 --token <tok>
+"""
+
+import argparse
+import json
+import sys
+import urllib.request
+from pathlib import Path
+
+SCALAR_FIELDS = (
+    ("name", "sending_app"),
+    ("serial_number", "equipment_id"),
+    ("sending_facility", "sending_facility"),
+    ("receiving_app", "receiving_app"),
+    ("hl7_version", "hl7_version"),
+)
+
+
+def mac_from_ip(ip: str) -> str:
+    """Generate a locally-administered MAC from an IPv4 address.
+
+    The 02:00 prefix indicates a locally-administered unicast address,
+    avoiding collision with real OUI-assigned MACs. Deterministic so
+    re-runs upsert the same asset rather than creating duplicates.
+    """
+    octets = [int(o) for o in ip.split(".")]
+    return f"02:00:{octets[0]:02x}:{octets[1]:02x}:{octets[2]:02x}:{octets[3]:02x}"
+
+
+def load_log(path: Path) -> list[dict]:
+    """Read a Zeek JSON log file. Skip comment lines, return list of dicts."""
+    if not path.exists():
+        return []
+    entries = []
+    for raw in path.read_text().splitlines():
+        stripped = raw.strip()
+        if not stripped or stripped.startswith("#"):
+            continue
+        entries.append(json.loads(stripped))
+    return entries
+
+
+def correlate(hl7_entries: list[dict], conn_entries: list[dict]) -> list[dict]:
+    """Join hl7 entries with conn entries on uid to enrich with L2."""
+    conn_by_uid = {e["uid"]: e for e in conn_entries}
+    for entry in hl7_entries:
+        conn = conn_by_uid.get(entry.get("uid"))
+        if conn:
+            for field in ("orig_l2_addr", "resp_l2_addr"):
+                if field in conn:
+                    entry[field] = conn[field]
+    return hl7_entries
+
+
+def _init_device(mac: str, orig_h: str) -> dict:
+    """Create a new device accumulator."""
+    return {
+        "mac_address": mac or mac_from_ip(orig_h),
+        "ip_address": orig_h,
+        "name": "",
+        "serial_number": "",
+        "open_ports_tcp": set(),
+        "message_types": set(),
+        "sending_facility": "",
+        "receiving_app": "",
+        "hl7_version": "",
+        "client_id": "zeek-sidecar",
+        "provenance": "Zeek",
+    }
+
+
+def _build_payload(dev: dict) -> dict:
+    """Convert a device accumulator into an upsert payload."""
+    payload = {
+        "mac_address": dev["mac_address"],
+        "ip_address": dev["ip_address"],
+        "name": dev["name"],
+        "open_ports_tcp": sorted(dev["open_ports_tcp"]),
+        "external_keys": {
+            "hl7_sending_facility": dev["sending_facility"],
+            "hl7_receiving_app": dev["receiving_app"],
+            "hl7_message_types": sorted(dev["message_types"]),
+            "hl7_version": dev["hl7_version"],
+        },
+        "client_id": dev["client_id"],
+        "provenance": dev["provenance"],
+    }
+    if dev["serial_number"]:
+        payload["serial_number"] = dev["serial_number"]
+    return payload
+
+
+def aggregate(entries: list[dict]) -> list[dict]:
+    """Group entries by device, produce one upsert payload per device."""
+    devices: dict[str, dict] = {}
+
+    for entry in entries:
+        orig_h = entry.get("id.orig_h", "")
+        resp_p = entry.get("id.resp_p")
+        mac = entry.get("orig_l2_addr", "")
+        device_key = mac or orig_h
+
+        if not device_key:
+            continue
+
+        if device_key not in devices:
+            devices[device_key] = _init_device(mac, orig_h)
+
+        dev = devices[device_key]
+
+        for dev_field, entry_field in SCALAR_FIELDS:
+            if not dev[dev_field] and entry.get(entry_field):
+                dev[dev_field] = entry[entry_field]
+
+        if resp_p is not None:
+            dev["open_ports_tcp"].add(int(resp_p))
+        if entry.get("message_type"):
+            dev["message_types"].add(entry["message_type"])
+
+    return [_build_payload(dev) for dev in devices.values()]
+
+
+def push(payload: dict, base_url: str, token: str | None) -> int:
+    """PUT payload to the upsert endpoint. Returns HTTP status code."""
+    url = f"{base_url.rstrip('/')}/api/assets/upsert/"
+    data = json.dumps(payload).encode()
+    headers = {"Content-Type": "application/json"}
+    if token:
+        headers["Authorization"] = f"Token {token}"
+    req = urllib.request.Request(  # noqa: S310
+        url, data=data, headers=headers, method="PUT"
+    )
+    with urllib.request.urlopen(req) as resp:  # noqa: S310
+        return resp.status
+
+
+def main():
+    parser = argparse.ArgumentParser(description="Zeek log sidecar for BlueFlow")
+    parser.add_argument("logdir", type=Path, help="Zeek JSON log directory")
+    parser.add_argument("--url", help="BlueFlow base URL (omit for dry-run)")
+    parser.add_argument("--token", help="API token for authentication")
+    args = parser.parse_args()
+
+    if not args.logdir.is_dir():
+        print(  # noqa: T201
+            f"Error: not a directory: {args.logdir}",
+            file=sys.stderr,
+        )
+        sys.exit(1)
+
+    hl7_entries = load_log(args.logdir / "hl7.log")
+    conn_entries = load_log(args.logdir / "conn.log")
+
+    if not hl7_entries:
+        print("No HL7 log entries found.")  # noqa: T201
+        sys.exit(0)
+
+    enriched = correlate(hl7_entries, conn_entries)
+    payloads = aggregate(enriched)
+
+    count = len(hl7_entries)
+    assets = len(payloads)
+    print(f"Aggregated {count} HL7 entries into {assets} asset(s).\n")  # noqa: T201
+
+    for payload in payloads:
+        if args.url:
+            status_code = push(payload, args.url, args.token)
+            mac = payload["mac_address"]
+            print(f"PUT {mac} -> {status_code}")  # noqa: T201
+        else:
+            print(json.dumps(payload, indent=2))  # noqa: T201
+
+
+if __name__ == "__main__":
+    main()
