@@ -50,7 +50,8 @@ cat /tmp/zeek-test/conn.log   # Connection metadata
    Zeek fits small hospital deployment (1 core, 1-2 GB RAM)
 2. **Prototype** (complete) — Spicy MLLP analyzer produces 124/124 message parity with
    the #47 tcpflow/tshark pipeline
-3. **Decision** — Recommend adopt / partial / stay with tcpflow+tshark
+3. **Decision** (complete) — Adopt Zeek as probe platform with HTTP-push integration;
+   supports remote, multi-probe deployments
 
 ## Related issues
 
