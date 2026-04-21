@@ -4,10 +4,11 @@
 
 **Adopt Zeek as the probe platform** for passive network capture.
 
-Zeek should serve as a stateless, remote-capable probe that pushes structured
-data to BlueFlow over HTTP. The architecture must support multiple probes per
-deployment (e.g. one per network segment) and probes that are not co-located
-with the BlueFlow application server.
+A lightweight sidecar on each probe host correlates Zeek log entries into
+asset observations and pushes them to BlueFlow's existing
+`PUT /api/assets/upsert/` endpoint. The architecture must support multiple
+probes per deployment (e.g. one per network segment) and probes that are not
+co-located with the BlueFlow application server.
 
 ## Summary of findings
 
@@ -52,7 +53,7 @@ Both are viable tools, but Zeek is a better foundation for a production probe:
 | DNS hostname resolution | Gap — needs separate tooling | Built-in (`dns.log`) |
 | TLS metadata | Not available | `ssl.log` (cert CN/SAN/issuer) |
 | Extensibility | Script per protocol | Spicy grammar + Zeek script |
-| Multi-probe support | No built-in agent model | Stateless probe with `ActiveHTTP` or sidecar push |
+| Multi-probe support | No built-in agent model | Sidecar pushes to existing upsert endpoint |
 | Operational overhead | Cron + scripts | Daemon (`zeekctl`) — heavier, but structured |
 
 The main cost is operational complexity: Zeek is a persistent daemon that needs
@@ -70,8 +71,10 @@ Key concerns introduced by multi-probe:
 1. **Deduplication** — Overlapping probe coverage (e.g. two probes on the same
    span port) can produce duplicate data. Deduplicate by MSH-10 message control
    ID + timestamp for HL7, and by connection tuple + Zeek UID for conn data.
-2. **Probe identity** — Each probe needs an API token and must be associated
-   with a network/CIDR to disambiguate overlapping RFC1918 address space.
+2. **Probe identity** — Each probe identifies itself via the `client_id` field
+   on upsert requests, recorded in the existing `simple_history` audit trail.
+   For sites with overlapping RFC1918 space, a future `ProbeRegistration`
+   model associating `client_id` with a Network/CIDR would be needed.
 3. **Probe liveness** — Silent probe could mean quiet network or dead probe.
    BlueFlow needs a heartbeat or last-seen tracker per probe.
 4. **Configuration distribution** — New analyzers (e.g. DICOM) must reach N
@@ -88,6 +91,6 @@ Key concerns introduced by multi-probe:
   adoption makes this feasible — tcpflow/tshark would require building DICOM
   parsing from scratch.
 - **#49 (Naabu + Zeek):** Naabu is an active scanner; Zeek is passive. They
-  complement rather than overlap. Both can push results to BlueFlow via the same
-  HTTP integration pattern — a probe-side sidecar or script that POSTs to the
-  asset API. Adopting Zeek establishes the push model that Naabu can reuse.
+  complement rather than overlap. Both can push results to BlueFlow via the
+  existing upsert endpoint using the same sidecar pattern. Adopting Zeek
+  establishes the push model that Naabu can reuse.
