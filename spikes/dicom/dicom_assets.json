@@ -1,0 +1,355 @@
+[
+  {
+    "ip": "10.104.57.14",
+    "mac": "e8:f7:24:6b:4e:01",
+    "oui_vendor": "Arista Networks",
+    "ae_title": "",
+    "role": "SCP",
+    "sop_classes": [],
+    "modality": "",
+    "inferred_modality": "MWL",
+    "philips_uid_detected": false,
+    "bytes_sent": 0,
+    "data_rate_mbps": 0.0,
+    "mac_note": "rx-only-span-gateway-mac"
+  },
+  {
+    "ip": "10.105.14.110",
+    "mac": "40:b0:34:1f:b3:70",
+    "oui_vendor": "",
+    "ae_title": "DX1020404",
+    "role": "SCU",
+    "sop_classes": [
+      "1.2.840.10008.5.1.4.31"
+    ],
+    "modality": "MWL",
+    "inferred_modality": "US/SC",
+    "philips_uid_detected": false,
+    "bytes_sent": 18384,
+    "data_rate_mbps": 0.027,
+    "mac_note": ""
+  },
+  {
+    "ip": "10.105.14.115",
+    "mac": "00:d0:c9:b5:87:ab",
+    "oui_vendor": "",
+    "ae_title": "US1020601",
+    "role": "SCU",
+    "sop_classes": [
+      "1.2.840.10008.5.1.4.1.1.7",
+      "1.2.840.10008.5.1.4.1.1.6.1",
+      "1.2.840.10008.5.1.4.1.1.3.1",
+      "1.2.840.10008.5.1.4.1.1.6",
+      "1.2.840.10008.5.1.4.1.1.3",
+      "1.2.840.10008.5.1.4.1.1.2",
+      "1.2.840.10008.5.1.4.1.1.4",
+      "1.2.840.10008.5.1.4.1.1.1.2",
+      "1.2.840.10008.5.1.4.1.1.1.2.1",
+      "1.2.840.10008.5.1.4.1.1.128"
+    ],
+    "modality": "US",
+    "inferred_modality": "CT/MR",
+    "philips_uid_detected": false,
+    "bytes_sent": 1726094,
+    "data_rate_mbps": 17.027,
+    "mac_note": ""
+  },
+  {
+    "ip": "10.105.14.152",
+    "mac": "40:b0:34:1a:ab:6d",
+    "oui_vendor": "",
+    "ae_title": "CT1033601",
+    "role": "SCU",
+    "sop_classes": [
+      "1.2.840.10008.5.1.4.31"
+    ],
+    "modality": "MWL",
+    "inferred_modality": "MWL",
+    "philips_uid_detected": false,
+    "bytes_sent": 1787,
+    "data_rate_mbps": 0.004,
+    "mac_note": ""
+  },
+  {
+    "ip": "10.105.14.156",
+    "mac": "00:e0:f4:31:3c:da",
+    "oui_vendor": "",
+    "ae_title": "DX1033603",
+    "role": "SCU",
+    "sop_classes": [
+      "1.2.840.10008.5.1.4.1.1.88.67",
+      "1.2.840.10008.5.1.4.31",
+      "1.2.840.10008.5.1.4.1.1.1.1"
+    ],
+    "modality": "DX",
+    "inferred_modality": "CT/MR",
+    "philips_uid_detected": true,
+    "bytes_sent": 28674923,
+    "data_rate_mbps": 58.505,
+    "mac_note": ""
+  },
+  {
+    "ip": "10.105.14.167",
+    "mac": "98:90:96:de:5f:21",
+    "oui_vendor": "Dell",
+    "ae_title": "",
+    "role": "SCU",
+    "sop_classes": [
+      "1.2.840.10008.5.1.4.1.1.2"
+    ],
+    "modality": "CT",
+    "inferred_modality": "CT/MR",
+    "philips_uid_detected": true,
+    "bytes_sent": 313015338,
+    "data_rate_mbps": 46.783,
+    "mac_note": ""
+  },
+  {
+    "ip": "10.105.14.21",
+    "mac": "00:e0:81:d7:6a:31",
+    "oui_vendor": "",
+    "ae_title": "MR1020301",
+    "role": "SCU",
+    "sop_classes": [
+      "1.2.840.10008.5.1.4.1.1.4",
+      "1.2.840.10008.5.1.4.1.1.2",
+      "1.2.840.10008.5.1.4.1.1.11.1",
+      "1.2.840.10008.5.1.4.1.1.7",
+      "1.2.840.10008.5.1.4.1.1.481.3",
+      "1.2.840.10008.5.1.4.1.1.128",
+      "1.2.840.10008.5.1.4.1.1.88.22"
+    ],
+    "modality": "MR",
+    "inferred_modality": "CT/MR",
+    "philips_uid_detected": false,
+    "bytes_sent": 4412567,
+    "data_rate_mbps": 23.676,
+    "mac_note": ""
+  },
+  {
+    "ip": "10.105.14.223",
+    "mac": "00:00:50:3b:91:9f",
+    "oui_vendor": "",
+    "ae_title": "",
+    "role": "SCU",
+    "sop_classes": [],
+    "modality": "",
+    "inferred_modality": "MWL",
+    "philips_uid_detected": false,
+    "bytes_sent": 198,
+    "data_rate_mbps": 0.0,
+    "mac_note": ""
+  },
+  {
+    "ip": "10.105.14.227",
+    "mac": "28:b9:d9:0d:1a:95",
+    "oui_vendor": "",
+    "ae_title": "XA1033615",
+    "role": "SCU",
+    "sop_classes": [
+      "1.2.840.10008.5.1.4.31"
+    ],
+    "modality": "MWL",
+    "inferred_modality": "US/SC",
+    "philips_uid_detected": false,
+    "bytes_sent": 1569,
+    "data_rate_mbps": 0.015,
+    "mac_note": ""
+  },
+  {
+    "ip": "10.105.14.253",
+    "mac": "00:e0:4b:59:3a:c1",
+    "oui_vendor": "",
+    "ae_title": "US1033619",
+    "role": "SCU",
+    "sop_classes": [
+      "1.2.840.10008.5.1.4.1.1.7",
+      "1.2.840.10008.5.1.4.1.1.6.1",
+      "1.2.840.10008.5.1.4.1.1.3.1",
+      "1.2.840.10008.5.1.4.1.1.6",
+      "1.2.840.10008.5.1.4.1.1.3",
+      "1.2.840.10008.5.1.4.1.1.6.2",
+      "1.2.840.10008.5.1.4.1.1.2",
+      "1.2.840.10008.5.1.4.1.1.4",
+      "1.2.840.10008.5.1.4.1.1.1.2",
+      "1.2.840.10008.5.1.4.1.1.1.2.1",
+      "1.2.840.10008.5.1.4.1.1.128"
+    ],
+    "modality": "US",
+    "inferred_modality": "CT/MR",
+    "philips_uid_detected": false,
+    "bytes_sent": 2170621,
+    "data_rate_mbps": 11.417,
+    "mac_note": ""
+  },
+  {
+    "ip": "10.105.14.4",
+    "mac": "00:60:0a:08:11:65",
+    "oui_vendor": "",
+    "ae_title": "US1033622",
+    "role": "SCU",
+    "sop_classes": [
+      "1.2.840.10008.5.1.4.1.1.6.1",
+      "1.2.840.10008.5.1.4.1.1.7",
+      "1.2.840.10008.5.1.4.1.1.3.1",
+      "1.2.840.10008.5.1.4.1.1.6.2",
+      "1.2.840.10008.5.1.4.1.1.88.11",
+      "1.2.840.10008.5.1.4.1.1.88.33",
+      "1.2.840.10008.5.1.4.1.1.88.22"
+    ],
+    "modality": "US",
+    "inferred_modality": "CT/MR",
+    "philips_uid_detected": false,
+    "bytes_sent": 6289393,
+    "data_rate_mbps": 71.879,
+    "mac_note": ""
+  },
+  {
+    "ip": "10.105.14.44",
+    "mac": "64:00:6a:92:92:47",
+    "oui_vendor": "",
+    "ae_title": "BMD1033601",
+    "role": "SCU",
+    "sop_classes": [
+      "1.2.840.10008.5.1.4.31"
+    ],
+    "modality": "MWL",
+    "inferred_modality": "US/SC",
+    "philips_uid_detected": false,
+    "bytes_sent": 2196,
+    "data_rate_mbps": 0.03,
+    "mac_note": ""
+  },
+  {
+    "ip": "10.105.14.45",
+    "mac": "00:15:17:bb:03:34",
+    "oui_vendor": "Philips Medical",
+    "ae_title": "XA1033617",
+    "role": "SCU",
+    "sop_classes": [
+      "1.2.840.10008.5.1.4.31"
+    ],
+    "modality": "MWL",
+    "inferred_modality": "MWL",
+    "philips_uid_detected": false,
+    "bytes_sent": 2228,
+    "data_rate_mbps": 0.001,
+    "mac_note": ""
+  },
+  {
+    "ip": "10.105.14.5",
+    "mac": "00:e0:81:b6:66:4d",
+    "oui_vendor": "",
+    "ae_title": "",
+    "role": "SCU",
+    "sop_classes": [],
+    "modality": "",
+    "inferred_modality": "MWL",
+    "philips_uid_detected": false,
+    "bytes_sent": 264,
+    "data_rate_mbps": 0.0,
+    "mac_note": ""
+  },
+  {
+    "ip": "10.105.14.66",
+    "mac": "00:1b:21:04:89:ea",
+    "oui_vendor": "Intel",
+    "ae_title": "MR102042",
+    "role": "SCU",
+    "sop_classes": [
+      "1.2.840.10008.5.1.4.1.1.2",
+      "1.2.840.10008.5.1.4.1.1.4",
+      "1.2.840.10008.5.1.4.1.1.7",
+      "1.2.840.10008.5.1.4.1.1.8",
+      "1.2.840.10008.5.1.4.1.1.128",
+      "1.2.840.10008.5.1.4.1.2.2.1",
+      "1.2.840.10008.5.1.4.1.2.2.2"
+    ],
+    "modality": "MR",
+    "inferred_modality": "CT/MR",
+    "philips_uid_detected": false,
+    "bytes_sent": 101183174,
+    "data_rate_mbps": 54.105,
+    "mac_note": ""
+  },
+  {
+    "ip": "10.105.14.82",
+    "mac": "78:e3:b5:ca:40:9f",
+    "oui_vendor": "",
+    "ae_title": "DX1020302",
+    "role": "SCU",
+    "sop_classes": [
+      "1.2.840.10008.5.1.4.1.1.7",
+      "1.2.840.10008.5.1.4.1.1.1",
+      "1.2.840.10008.5.1.4.1.1.1.1",
+      "1.2.840.10008.5.1.4.1.1.1.1.1",
+      "1.2.840.10008.5.1.4.1.1.1.2",
+      "1.2.840.10008.5.1.4.1.1.1.2.1"
+    ],
+    "modality": "DX",
+    "inferred_modality": "CT/MR",
+    "philips_uid_detected": false,
+    "bytes_sent": 18726454,
+    "data_rate_mbps": 44.297,
+    "mac_note": ""
+  },
+  {
+    "ip": "10.105.14.87",
+    "mac": "00:e0:81:73:b5:34",
+    "oui_vendor": "",
+    "ae_title": "WS1020311",
+    "role": "SCU",
+    "sop_classes": [
+      "1.2.840.10008.5.1.4.1.2.1.2",
+      "1.2.840.10008.5.1.4.1.1.128"
+    ],
+    "modality": "",
+    "inferred_modality": "DR/CR",
+    "philips_uid_detected": false,
+    "bytes_sent": 488295,
+    "data_rate_mbps": 0.284,
+    "mac_note": ""
+  },
+  {
+    "ip": "10.105.15.244",
+    "mac": "e8:f7:24:6b:4e:01",
+    "oui_vendor": "Arista Networks",
+    "ae_title": "sspaFIR",
+    "role": "SCP",
+    "sop_classes": [],
+    "modality": "",
+    "inferred_modality": "MWL",
+    "philips_uid_detected": false,
+    "bytes_sent": 0,
+    "data_rate_mbps": 0.0,
+    "mac_note": "rx-only-span-gateway-mac"
+  },
+  {
+    "ip": "10.105.15.245",
+    "mac": "e8:f7:24:6b:4e:01",
+    "oui_vendor": "Arista Networks",
+    "ae_title": "sspaFIR",
+    "role": "SCP",
+    "sop_classes": [],
+    "modality": "",
+    "inferred_modality": "MWL",
+    "philips_uid_detected": false,
+    "bytes_sent": 0,
+    "data_rate_mbps": 0.0,
+    "mac_note": "rx-only-span-gateway-mac"
+  },
+  {
+    "ip": "10.105.15.246",
+    "mac": "e8:f7:24:6b:4e:01",
+    "oui_vendor": "Arista Networks",
+    "ae_title": "sspaEIS",
+    "role": "SCP",
+    "sop_classes": [],
+    "modality": "",
+    "inferred_modality": "MWL",
+    "philips_uid_detected": false,
+    "bytes_sent": 0,
+    "data_rate_mbps": 0.0,
+    "mac_note": "rx-only-span-gateway-mac"
+  }
+]
