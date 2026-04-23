@@ -161,6 +161,40 @@ The heartbeat can be a lightweight `PUT /api/assets/upsert/` with only
 the probe's own MAC and `client_id`, or a dedicated health endpoint if
 the overhead of upsert is undesirable.
 
+## Docker Compose validation
+
+The full pipeline was validated using a 3-container Docker Compose setup
+(`docker-compose.yml`):
+
+- **traffic** — replays the sample pcap via `tcpreplay` over a veth pair
+- **zeek** — live-captures on the veth pair, compiles the Spicy MLLP analyzer,
+  runs the sidecar to push to blueflow
+- **blueflow** — stub HTTP server that accepts any PUT and returns 200
+
+### Key findings from containerized testing
+
+1. **Raw IP pcap framing** — The sample pcap uses `DLT_RAW` (captured on
+   loopback). Veth pairs are Ethernet interfaces (`DLT_EN10MB`), so a
+   conversion step (`raw2enet.py`) wraps each packet in an Ethernet frame.
+   Production probes doing live capture would not need this step — they already
+   see Ethernet-framed traffic.
+
+2. **Veth pair for in-container capture** — Docker bridge networks are switched;
+   containers only see traffic destined for them. Sharing a network namespace
+   between the traffic generator and Zeek, then using a veth pair for packet
+   injection, gives Zeek proper incoming traffic to capture.
+
+3. **End-to-end result** — 503 packets replayed, Zeek extracted 124 HL7
+   messages (matching the #47 baseline), sidecar aggregated into 1 asset,
+   upsert payload reached the stub server with correct fields.
+
+4. **Deduplication gap** — The sidecar does not yet deduplicate by MSH-10
+   message control ID + timestamp. It aggregates all entries into per-device
+   payloads without tracking seen messages. For overlapping probes, this would
+   produce redundant `external_keys` data and unnecessary history entries in
+   BlueFlow. The `message_id` field is already extracted by Zeek and available
+   in the sidecar — the dedup logic just needs to be added to `aggregate()`.
+
 ## Relationship with active MLLP endpoint (FY2027)
 
 The passive Zeek probe and a future active MLLP endpoint (BlueFlow listening

@@ -80,6 +80,28 @@ Key concerns introduced by multi-probe:
 4. **Configuration distribution** — New analyzers (e.g. DICOM) must reach N
    probes. Initial approach: manual deployment. Future: config pull endpoint.
 
+## Docker Compose validation
+
+The full pipeline was validated end-to-end in a containerized environment using
+`docker compose up --build --abort-on-container-exit`. Three containers:
+
+- **traffic:** Converts the Raw IP pcap to Ethernet framing (`raw2enet.py`),
+  replays 503 packets via `tcpreplay` on a veth pair at 500 pps.
+- **zeek:** Captures live traffic, compiles and runs the Spicy MLLP analyzer,
+  extracts 124 HL7 messages (matching Phase 2 baseline), runs the sidecar.
+- **blueflow:** Stub server receives one `PUT /api/assets/upsert/` with the
+  aggregated asset payload (MAC, IP, name, ports, external_keys) and returns 200.
+
+Logs from all containers are written to `/tmp/zeek-spike-logs/` on the host for
+inspection.
+
+### Open gaps identified during testing
+
+- **Sidecar deduplication** — `sidecar.py` does not deduplicate by MSH-10
+  message control ID before aggregation. The `message_id` field is available in
+  Zeek's `hl7.log` output but the sidecar's `aggregate()` function does not use
+  it. Overlapping probes would produce redundant data.
+
 ## Applicability to future work
 
 - **#48 (FHIR):** FHIR runs over HTTP/REST. Zeek already produces `http.log`
