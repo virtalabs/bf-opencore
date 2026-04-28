@@ -63,9 +63,30 @@ cp /work/*.log /logs/ 2>/dev/null || echo "      (no log files produced)"
 echo ""
 
 # ── Step 5: Run sidecar ────────────────────────────
-echo "[5/5] Running sidecar -> $BLUEFLOW_URL"
+# Wait for an upstream blueflow (stub or real) to signal ready, then read
+# the URL + token it published. Falls back to the BLUEFLOW_URL env var if
+# no sentinel was written (back-compat).
+echo "[5/5] Waiting for blueflow ready..."
+WAIT=0
+while [ ! -f /shared/blueflow-ready ] && [ "$WAIT" -lt 120 ]; do
+    sleep 1
+    WAIT=$((WAIT + 1))
+done
+if [ ! -f /shared/blueflow-ready ]; then
+    echo "      WARN: /shared/blueflow-ready never appeared; using \$BLUEFLOW_URL=$BLUEFLOW_URL"
+fi
+if [ -f /shared/api-url ]; then
+    BLUEFLOW_URL="$(cat /shared/api-url)"
+fi
+TOKEN_ARG=""
+if [ -f /shared/api-token ] && [ -s /shared/api-token ]; then
+    TOKEN_ARG="--token $(cat /shared/api-token)"
+    echo "      Using API token from /shared/api-token"
+fi
+echo "      Pushing to: $BLUEFLOW_URL"
 echo "------------------------------------------------"
-python3 /app/sidecar.py /work/ --url "$BLUEFLOW_URL"
+# shellcheck disable=SC2086 # TOKEN_ARG is intentionally unquoted to expand
+python3 /app/sidecar.py /work/ --url "$BLUEFLOW_URL" $TOKEN_ARG
 echo ""
 
 echo "================================================"

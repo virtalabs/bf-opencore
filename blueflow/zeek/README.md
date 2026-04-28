@@ -39,8 +39,11 @@ Dockerfiles + a non-docker local-run script). See `docker/README.md` for
 details. Quick paths:
 
 ```bash
-# 3-container end-to-end (host needs docker)
-docker compose -f docker/docker-compose.yml up --build --abort-on-container-exit
+# Stub upstream (fast plumbing test, no DB)
+docker compose -f docker/docker-compose.yml --profile stub up --build --abort-on-container-exit
+
+# Real BlueFlow + ephemeral Postgres (full ingest path)
+docker compose -f docker/docker-compose.yml --profile real up --build --abort-on-container-exit
 
 # Local non-docker (host needs zeek + spicyz)
 ./docker/run-local.sh

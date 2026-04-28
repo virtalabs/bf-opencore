@@ -1,10 +1,16 @@
 # docker/ — integration test harness for the Zeek HL7 ingest pipeline
 
-End-to-end test rig for `blueflow.zeek`. Three containers replay a pcap of
+End-to-end test rig for `blueflow.zeek`. Containers replay a pcap of
 HL7 traffic into a live Zeek instance and verify the sidecar's HTTP push
-to a stub BlueFlow endpoint.
+to a BlueFlow endpoint. Two compose profiles select what's on the
+receiving end:
 
-This harness is preserved as the integration-test method for the Zeek
+- **`stub`** — a tiny Python `HTTPServer` that accepts any PUT and writes
+  a JSONL ledger. Fast (~3s start), no DB. Exercises plumbing only.
+- **`real`** — the actual BlueFlow image + ephemeral Postgres. Exercises
+  serializer validation, ORM upsert, entity resolution.
+
+The harness is preserved as the integration-test method for the Zeek
 ingest path until/unless it is extracted into its own repo. Day-to-day
 unit testing of the Python ingest path lives in
 `blueflow/tests/test_zeek_ingest.py`.
@@ -13,35 +19,41 @@ unit testing of the Python ingest path lives in
 
 ```
 docker/
-  docker-compose.yml          # 3-container compose
-  run-local.sh                # non-docker local test (just zeek + sidecar)
-  blueflow/
+  docker-compose.yml          # 5-service compose (stub + real profiles)
+  run-local.sh                # non-docker zeek + sidecar local run
+  verify.py                   # post-run assertion script (stub mode)
+  blueflow/                   # [stub profile]
     Dockerfile                # python:3.12-slim — stub HTTP server only
     entrypoint.sh
     stub_server.py            # NOT real BlueFlow — accepts any PUT, returns 200
-  zeek/
+  blueflow-real/              # [real profile]
+    bootstrap.sh              # migrate + waffle + token, then exec runserver
+                              # (mounted into the repo-root BlueFlow image)
+  zeek/                       # always runs
     Dockerfile                # zeek/zeek:latest + python3 + iproute2
     entrypoint.sh             # spicyz compile -> live capture -> sidecar push
-  traffic/
+  traffic/                    # always runs
     Dockerfile                # ubuntu + tcpreplay
     entrypoint.sh             # raw-IP -> ethernet rewrite -> tcpreplay
     raw2enet.py               # pcap link-type rewriter (DLT_RAW -> DLT_EN10MB)
 ```
 
-The `blueflow` container here is a **stub** — it exists only so the
-sidecar has somewhere to PUT. The repo-root `Dockerfile` is the real
-BlueFlow image. Names match the spike's testing-method vocabulary;
-renaming would change the mental model of the harness.
+The `blueflow` (stub) container is a Python `HTTPServer`, not the real
+BlueFlow image. The repo-root `Dockerfile` is what `blueflow-real`
+builds from. Names match the spike's testing-method vocabulary.
 
 ## Run
 
 ```bash
-# 3-container end-to-end (compose) — defaults to spikes/hl7/data/hl7.pcap
-docker compose -f docker/docker-compose.yml up --build --abort-on-container-exit
+# Stub profile — fast plumbing test, no DB
+docker compose -f docker/docker-compose.yml --profile stub up --build --abort-on-container-exit
 
-# Custom pcap directory + filename
+# Real profile — actual BlueFlow + ephemeral Postgres
+docker compose -f docker/docker-compose.yml --profile real up --build --abort-on-container-exit
+
+# Custom pcap directory + filename (works with either profile)
 PCAP_DIR=/path/to/my/pcaps PCAP_FILE=multi-device.pcap \
-    docker compose -f docker/docker-compose.yml up --build --abort-on-container-exit
+    docker compose -f docker/docker-compose.yml --profile stub up --build --abort-on-container-exit
 
 # Local non-docker (zeek + spicyz must be installed on host)
 ./docker/run-local.sh                              # defaults to spikes/hl7/data/hl7.pcap
@@ -50,6 +62,19 @@ PCAP_DIR=/path/to/my/pcaps PCAP_FILE=multi-device.pcap \
 SIDECAR=1 ./docker/run-local.sh                    # also run sidecar dry-run
 ```
 
+You **must** specify `--profile stub` or `--profile real`. A bare
+`docker compose ... up` only starts `zeek` + `traffic`, both of which
+block waiting for `/shared/blueflow-ready` from an upstream that isn't
+running.
+
+### How the upstream selection works
+
+Both profiles write `/shared/api-url` (and the real profile also writes
+`/shared/api-token`) before touching `/shared/blueflow-ready`. The zeek
+container blocks on that sentinel and reads the URL/token from the
+shared volume. So the same `zeek` service points at either upstream
+without per-profile env wiring.
+
 ### Pcap selection
 
 `PCAP_DIR` (host path, default `../spikes/hl7/data`) is bind-mounted to
@@ -57,14 +82,13 @@ SIDECAR=1 ./docker/run-local.sh                    # also run sidecar dry-run
 `hl7.pcap`) is the filename inside that directory. Both have sensible
 defaults so the bare `up` command works out of the box.
 
-Compose output lands at `/tmp/zeek-spike-logs/{blueflow,zeek,traffic}/`.
+Compose output lands at `/tmp/zeek-spike-logs/{blueflow,blueflow-real,zeek,traffic}/`.
 Local-run output lands at `/tmp/zeek-test/`.
 
-## Verifying a compose run
+## Verifying a stub run
 
-After `docker compose ... up --abort-on-container-exit` exits, run the
-verifier to assert hl7.log row count, upsert ledger count, unique-MAC
-count, and per-payload structural invariants:
+After a `--profile stub` run, the stub server's JSONL ledger is on the
+host:
 
 ```bash
 python3 docker/verify.py /tmp/zeek-spike-logs/                 # defaults
@@ -72,17 +96,32 @@ python3 docker/verify.py /tmp/zeek-spike-logs/ \
     --expect-hl7 124 --expect-upserts 1 --expect-macs 1
 ```
 
-The stub server writes one JSONL row per request to
-`/tmp/zeek-spike-logs/blueflow/upserts.jsonl` (override path with
-`STUB_LEDGER_PATH`). The local-run path (`run-local.sh`) does its own
-row-count assertion via `--expect <N>`.
+The verifier asserts `hl7.log` row count, upsert ledger count, unique-MAC
+count, and per-payload structural invariants. The local-run path
+(`run-local.sh`) does its own row-count assertion via `--expect <N>`.
+
+## Verifying a real run
+
+The bootstrap script writes the API token to
+`/tmp/zeek-spike-logs/blueflow-real/api-token` (host-visible). After the
+run, query the API directly to confirm assets landed:
+
+```bash
+TOKEN=$(cat /tmp/zeek-spike-logs/blueflow-real/api-token)
+curl -sH "Authorization: Token $TOKEN" http://localhost:8000/api/assets/ | jq '.count, .results[].mac_address'
+```
+
+A formal `verify-real.py` is on the test-tier roadmap (T4c) but not yet
+shipped — for now this manual check is the post-condition.
 
 ## Build context note
 
 The `zeek` service uses `context: ..` (repo root) so its Dockerfile can
 `COPY blueflow/zeek/scripts/` and `blueflow/zeek/sidecar.py` from the
-promoted Python package. The `blueflow` and `traffic` services use
-per-folder context — everything they need is local.
+promoted Python package. `blueflow-real` also uses repo-root context to
+build from the canonical `Dockerfile`. The `blueflow` (stub) and
+`traffic` services use per-folder context — everything they need is
+local.
 
 ## Pcap fixture
 
