@@ -77,3 +77,9 @@ per-folder context — everything they need is local.
 The HL7 sample pcap lives at `spikes/hl7/data/hl7.pcap` (124 messages,
 1 device). It is mounted read-only into the `zeek` and `traffic`
 containers via `../spikes/hl7/data:/pcap:ro`.
+
+**Pcap files are not tracked by git** — `.gitignore` excludes `*.pcap`,
+`*.pcapng`, `*.cap` and their gzipped variants because pcaps may carry
+PHI. To populate the fixture for a fresh clone, see
+`spikes/hl7/README.md`. The harness will fail with a clear error if
+the pcap is missing.
