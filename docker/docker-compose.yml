@@ -1,21 +1,24 @@
 # Zeek HL7 end-to-end pipeline test.
 #
-# Three containers:
-#   blueflow  — stub HTTP server (accepts any PUT, returns 200, dumps to stdout)
-#   zeek      — compiles Spicy MLLP analyzer, captures traffic, runs sidecar
-#   traffic   — replays pcap via tcpreplay on zeek's network namespace
+# Two profiles select the upstream BlueFlow:
+#   --profile stub   blueflow-stub HTTP server (accepts any PUT, returns 200)
+#   --profile real   real BlueFlow + ephemeral Postgres
+#
+# The zeek and traffic services are profile-agnostic — they wait on a
+# /shared/blueflow-ready sentinel that whichever upstream writes.
 #
 # Usage (from repo root):
-#   docker compose -f docker/docker-compose.yml up --build --abort-on-container-exit
+#   docker compose -f docker/docker-compose.yml --profile stub up --build --abort-on-container-exit
+#   docker compose -f docker/docker-compose.yml --profile real up --build --abort-on-container-exit
 #
-# Logs land on the host at /tmp/zeek-spike-logs/{blueflow,zeek,traffic}/.
-# The pcap fixture is read from spikes/hl7/data/hl7.pcap.
+#   PCAP_DIR=/path/to/pcaps PCAP_FILE=other.pcap \
+#       docker compose -f docker/docker-compose.yml --profile stub up --build --abort-on-container-exit
 #
-# This harness is preserved as the integration-test method for the
-# Zeek ingest path until/unless we extract it into its own repo.
+# Logs land on the host at /tmp/zeek-spike-logs/{blueflow,blueflow-real,zeek,traffic}/.
 
 services:
   blueflow:
+    profiles: [stub]
     build:
       context: ./blueflow
       dockerfile: Dockerfile
@@ -23,7 +26,54 @@ services:
     environment:
       PYTHONUNBUFFERED: "1"
     volumes:
+      - shared:/shared
       - /tmp/zeek-spike-logs/blueflow:/logs
+
+  blueflow-real:
+    profiles: [real]
+    # Builds from the repo-root Dockerfile so we exercise the actual
+    # BlueFlow image, not a harness-specific variant.
+    build:
+      context: ..
+      dockerfile: Dockerfile
+    container_name: zeek-spike-blueflow-real
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      DJANGO_SETTINGS_MODULE: project.settings.development
+      DATABASE_URL: postgresql://blueflow:blueflow@db:5432/blueflow
+      DJANGO_SECRET_KEY: dev-secret-not-for-production
+      DJANGO_DEBUG: "true"
+      DJANGO_ALLOWED_HOSTS: "*"
+      PYTHONUNBUFFERED: "1"
+    volumes:
+      - ./blueflow-real/bootstrap.sh:/bootstrap.sh:ro
+      - shared:/shared
+      - /tmp/zeek-spike-logs/blueflow-real:/logs
+    entrypoint: ["/bin/bash", "/bootstrap.sh"]
+    # CMD from the Dockerfile (runserver) is passed as $@ to bootstrap.sh
+    # and exec'd after migrate + waffle + token are set up.
+    ports:
+      - "8000:8000"
+
+  db:
+    profiles: [real]
+    image: postgres:16
+    container_name: zeek-spike-db
+    environment:
+      POSTGRES_DB: blueflow
+      POSTGRES_USER: blueflow
+      POSTGRES_PASSWORD: blueflow
+    # Ephemeral — every harness run starts with an empty DB, so entity
+    # resolution tests start from a clean slate.
+    tmpfs:
+      - /var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U blueflow"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
 
   zeek:
     # context is the repo root so the image can pull in
@@ -35,9 +85,9 @@ services:
     cap_add:
       - NET_RAW
       - NET_ADMIN
-    depends_on:
-      - blueflow
     environment:
+      # Fallback URL if no /shared/api-url is written by the upstream.
+      # Real upstream overrides this via the sentinel.
       BLUEFLOW_URL: "http://blueflow:9000"
       PYTHONUNBUFFERED: "1"
     volumes:
