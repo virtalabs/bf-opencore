@@ -7,9 +7,11 @@ echo "  Traffic Replay Container"
 echo "================================================"
 echo ""
 
-PCAP="/pcap/hl7.pcap"
+PCAP_FILE="${PCAP_FILE:-hl7.pcap}"
+PCAP="/pcap/$PCAP_FILE"
 if [ ! -f "$PCAP" ]; then
     echo "ERROR: pcap not found at $PCAP"
+    echo "       (set PCAP_FILE to override; PCAP_DIR mounts to /pcap)"
     exit 1
 fi
 

@@ -36,14 +36,26 @@ renaming would change the mental model of the harness.
 ## Run
 
 ```bash
-# 3-container end-to-end (compose)
+# 3-container end-to-end (compose) — defaults to spikes/hl7/data/hl7.pcap
 docker compose -f docker/docker-compose.yml up --build --abort-on-container-exit
+
+# Custom pcap directory + filename
+PCAP_DIR=/path/to/my/pcaps PCAP_FILE=multi-device.pcap \
+    docker compose -f docker/docker-compose.yml up --build --abort-on-container-exit
 
 # Local non-docker (zeek + spicyz must be installed on host)
 ./docker/run-local.sh                              # defaults to spikes/hl7/data/hl7.pcap
 ./docker/run-local.sh path/to/capture.pcap         # custom pcap
+./docker/run-local.sh --expect 530 path/to/big.pcap
 SIDECAR=1 ./docker/run-local.sh                    # also run sidecar dry-run
 ```
+
+### Pcap selection
+
+`PCAP_DIR` (host path, default `../spikes/hl7/data`) is bind-mounted to
+`/pcap` in the `zeek` and `traffic` containers. `PCAP_FILE` (default
+`hl7.pcap`) is the filename inside that directory. Both have sensible
+defaults so the bare `up` command works out of the box.
 
 Compose output lands at `/tmp/zeek-spike-logs/{blueflow,zeek,traffic}/`.
 Local-run output lands at `/tmp/zeek-test/`.
