@@ -43,7 +43,7 @@ services:
     volumes:
       - shared:/shared
       - /tmp/zeek-spike-logs/zeek:/logs
-      - ../spikes/hl7/data:/pcap:ro
+      - ${PCAP_DIR:-../spikes/hl7/data}:/pcap:ro
 
   traffic:
     build:
@@ -58,10 +58,13 @@ services:
       - NET_ADMIN
     depends_on:
       - zeek
+    environment:
+      PCAP_FILE: "${PCAP_FILE:-hl7.pcap}"
+      PYTHONUNBUFFERED: "1"
     volumes:
       - shared:/shared
       - /tmp/zeek-spike-logs/traffic:/logs
-      - ../spikes/hl7/data:/pcap:ro
+      - ${PCAP_DIR:-../spikes/hl7/data}:/pcap:ro
 
 volumes:
   shared:
