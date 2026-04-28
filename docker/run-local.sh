@@ -2,8 +2,13 @@
 # Run the Zeek MLLP/HL7 analyzer against a pcap file (no docker required).
 #
 # Usage (from repo root):
-#   ./docker/run-local.sh                          # defaults to spikes/hl7/data/hl7.pcap
+#   ./docker/run-local.sh                              # defaults: bundled pcap, expect 124
 #   ./docker/run-local.sh path/to/capture.pcap
+#   ./docker/run-local.sh --expect 530 path/to/other.pcap
+#
+# Exit codes:
+#   0  — hl7.log row count == --expect (or default 124)
+#   1  — pcap missing, tooling missing, or row-count mismatch
 #
 # Set SIDECAR=1 to additionally run the Python sidecar in dry-run mode
 # (prints upsert payloads to stdout):
@@ -16,7 +21,31 @@ REPO_ROOT="$(dirname "$SCRIPT_DIR")"
 ZEEK_PKG="$REPO_ROOT/blueflow/zeek"
 
 OUTDIR="/tmp/zeek-test"
-PCAP="${1:-$REPO_ROOT/spikes/hl7/data/hl7.pcap}"
+EXPECTED=124
+PCAP=""
+
+while [ $# -gt 0 ]; do
+    case "$1" in
+        --expect)
+            EXPECTED="$2"
+            shift 2
+            ;;
+        --expect=*)
+            EXPECTED="${1#--expect=}"
+            shift
+            ;;
+        -h|--help)
+            sed -n '2,15p' "$0"
+            exit 0
+            ;;
+        *)
+            PCAP="$1"
+            shift
+            ;;
+    esac
+done
+
+PCAP="${PCAP:-$REPO_ROOT/spikes/hl7/data/hl7.pcap}"
 
 if [ ! -f "$PCAP" ]; then
     echo "Error: pcap not found: $PCAP" >&2
@@ -33,7 +62,7 @@ spicyz -o "$OUTDIR/mllp.hlto" \
     "$ZEEK_PKG/scripts/mllp.spicy" \
     "$ZEEK_PKG/scripts/mllp.evt"
 
-echo "Running Zeek against: $PCAP"
+echo "Running Zeek against: $PCAP (expecting $EXPECTED HL7 messages)"
 cd "$OUTDIR" && rm -f *.log
 zeek -Cr "$PCAP" \
     "$OUTDIR/mllp.hlto" \
@@ -51,3 +80,12 @@ if [ "${SIDECAR:-}" = "1" ]; then
     echo "Running sidecar (dry-run)..."
     uv run "$ZEEK_PKG/sidecar.py" "$OUTDIR"
 fi
+
+if [ "$MSG_COUNT" -ne "$EXPECTED" ]; then
+    echo "" >&2
+    echo "FAIL: expected $EXPECTED HL7 messages, got $MSG_COUNT" >&2
+    exit 1
+fi
+
+echo ""
+echo "PASS: $MSG_COUNT == $EXPECTED expected"
