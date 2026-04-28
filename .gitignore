@@ -26,3 +26,11 @@ CLAUDE.md
 
 # Harness
 harness/.logs/
+
+# Packet captures — may contain PHI; obtain test fixtures out-of-band.
+# See docker/README.md and spikes/hl7/README.md for sourcing notes.
+*.pcap
+*.pcapng
+*.cap
+*.pcap.gz
+*.pcapng.gz

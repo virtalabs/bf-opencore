@@ -12,6 +12,22 @@ brew install tcpflow wireshark   # tcpflow + tshark
 uv sync --all-extras             # python-hl7
 ```
 
+## Test pcap fixture (NOT in git)
+
+`data/hl7.pcap` is **not tracked** by git — pcap files are excluded
+project-wide via `.gitignore` because they may carry PHI. Obtain the
+spike's reference pcap (124 messages, 1 device, synthetic data) from
+a project maintainer or restore it from the `zeek-hl7-spike-frozen`
+tag, which still contains the file in its historical snapshot:
+
+```bash
+git show zeek-hl7-spike-frozen:spikes/hl7/data/hl7.pcap > spikes/hl7/data/hl7.pcap
+```
+
+Do **not** commit pcaps captured from real environments. The
+`.gitignore` rules block `*.pcap` etc., but `git add -f` would
+override — be deliberate.
+
 ## Pipeline
 
 ```bash
