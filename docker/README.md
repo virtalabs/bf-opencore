@@ -48,6 +48,23 @@ SIDECAR=1 ./docker/run-local.sh                    # also run sidecar dry-run
 Compose output lands at `/tmp/zeek-spike-logs/{blueflow,zeek,traffic}/`.
 Local-run output lands at `/tmp/zeek-test/`.
 
+## Verifying a compose run
+
+After `docker compose ... up --abort-on-container-exit` exits, run the
+verifier to assert hl7.log row count, upsert ledger count, unique-MAC
+count, and per-payload structural invariants:
+
+```bash
+python3 docker/verify.py /tmp/zeek-spike-logs/                 # defaults
+python3 docker/verify.py /tmp/zeek-spike-logs/ \
+    --expect-hl7 124 --expect-upserts 1 --expect-macs 1
+```
+
+The stub server writes one JSONL row per request to
+`/tmp/zeek-spike-logs/blueflow/upserts.jsonl` (override path with
+`STUB_LEDGER_PATH`). The local-run path (`run-local.sh`) does its own
+row-count assertion via `--expect <N>`.
+
 ## Build context note
 
 The `zeek` service uses `context: ..` (repo root) so its Dockerfile can
