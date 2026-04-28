@@ -1,0 +1,70 @@
+# Zeek HL7 end-to-end pipeline test.
+#
+# Three containers:
+#   blueflow  — stub HTTP server (accepts any PUT, returns 200, dumps to stdout)
+#   zeek      — compiles Spicy MLLP analyzer, captures traffic, runs sidecar
+#   traffic   — replays pcap via tcpreplay on zeek's network namespace
+#
+# Usage (from repo root):
+#   docker compose -f docker/docker-compose.yml up --build --abort-on-container-exit
+#
+# Logs land on the host at /tmp/zeek-spike-logs/{blueflow,zeek,traffic}/.
+# The pcap fixture is read from spikes/hl7/data/hl7.pcap.
+#
+# This harness is preserved as the integration-test method for the
+# Zeek ingest path until/unless we extract it into its own repo.
+
+services:
+  blueflow:
+    build:
+      context: ./blueflow
+      dockerfile: Dockerfile
+    container_name: zeek-spike-blueflow
+    environment:
+      PYTHONUNBUFFERED: "1"
+    volumes:
+      - /tmp/zeek-spike-logs/blueflow:/logs
+
+  zeek:
+    # context is the repo root so the image can pull in
+    # blueflow/zeek/{scripts,sidecar.py} from the promoted subpackage.
+    build:
+      context: ..
+      dockerfile: docker/zeek/Dockerfile
+    container_name: zeek-spike-zeek
+    cap_add:
+      - NET_RAW
+      - NET_ADMIN
+    depends_on:
+      - blueflow
+    environment:
+      BLUEFLOW_URL: "http://blueflow:9000"
+      PYTHONUNBUFFERED: "1"
+    volumes:
+      - shared:/shared
+      - /tmp/zeek-spike-logs/zeek:/logs
+      - ../spikes/hl7/data:/pcap:ro
+
+  traffic:
+    build:
+      context: ./traffic
+      dockerfile: Dockerfile
+    container_name: zeek-spike-traffic
+    # Share zeek's network namespace so tcpreplay injects frames on the same
+    # eth0 that Zeek captures on. AF_PACKET sees both rx and tx.
+    network_mode: "service:zeek"
+    cap_add:
+      - NET_RAW
+      - NET_ADMIN
+    depends_on:
+      - zeek
+    volumes:
+      - shared:/shared
+      - /tmp/zeek-spike-logs/traffic:/logs
+      - ../spikes/hl7/data:/pcap:ro
+
+volumes:
+  shared:
+    driver_opts:
+      type: tmpfs
+      device: tmpfs

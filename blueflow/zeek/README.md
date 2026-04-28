@@ -34,18 +34,21 @@ consumed: `name`, `serial_number`, `ip_address`, `mac_address`,
 
 ## Running Zeek
 
-The compose-based test harness (`docker-compose.yml`, `Dockerfile.*`,
-`run.sh`) was not promoted from the spike. To run it locally, check out
-the frozen tag in a worktree:
+The integration-test harness lives at `docker/` (compose + per-container
+Dockerfiles + a non-docker local-run script). See `docker/README.md` for
+details. Quick paths:
 
 ```bash
-git worktree add /tmp/zeek-spike zeek-hl7-spike-frozen
-cd /tmp/zeek-spike/spikes/zeek
-./run.sh
+# 3-container end-to-end (host needs docker)
+docker compose -f docker/docker-compose.yml up --build --abort-on-container-exit
+
+# Local non-docker (host needs zeek + spicyz)
+./docker/run-local.sh
 ```
 
-The frozen harness writes `hl7.log` + `conn.log` to `/tmp/zeek-test/`,
-which can then be ingested via:
+Either path produces `hl7.log` + `conn.log` (compose: in
+`/tmp/zeek-spike-logs/zeek/`; local: in `/tmp/zeek-test/`). Feed them to
+the management command:
 
 ```bash
 python manage.py zeek_ingest --logdir /tmp/zeek-test/
