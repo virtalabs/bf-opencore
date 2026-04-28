@@ -4,10 +4,22 @@ Reads Zeek JSON logs (hl7.log + conn.log), correlates entries by connection
 UID, and aggregates them into per-device payloads compatible with
 ``AssetUpsertSerializer``.
 
+Two consumers:
+
+- ``blueflow.management.commands.zeek_ingest`` calls ``payloads_from_logdir``
+  in-process and upserts via the ORM.
+- The docker test harness (``docker/``) runs this module as a CLI script
+  (``python3 sidecar.py <logdir> --url <bf>``) to push payloads over HTTP
+  to a running BlueFlow (or stub server). This path is preserved for the
+  end-to-end pipeline test.
+
 Promoted from spike #111 (frozen at tag ``zeek-hl7-spike-frozen``).
 """
 
+import argparse
 import json
+import sys
+import urllib.request
 from pathlib import Path
 
 SCALAR_FIELDS = (
@@ -129,3 +141,51 @@ def payloads_from_logdir(logdir: Path) -> list[dict]:
     conn_entries = load_log(logdir / "conn.log")
     enriched = correlate(hl7_entries, conn_entries)
     return aggregate(enriched)
+
+
+def push(payload: dict, base_url: str, token: str | None) -> int:
+    """PUT payload to the upsert endpoint. Returns HTTP status code."""
+    url = f"{base_url.rstrip('/')}/api/assets/upsert/"
+    data = json.dumps(payload).encode()
+    headers = {"Content-Type": "application/json"}
+    if token:
+        headers["Authorization"] = f"Token {token}"
+    req = urllib.request.Request(  # noqa: S310
+        url, data=data, headers=headers, method="PUT"
+    )
+    with urllib.request.urlopen(req) as resp:  # noqa: S310
+        return resp.status
+
+
+def main():
+    """CLI entry point used by the docker harness."""
+    parser = argparse.ArgumentParser(description="Zeek log sidecar for BlueFlow")
+    parser.add_argument("logdir", type=Path, help="Zeek JSON log directory")
+    parser.add_argument("--url", help="BlueFlow base URL (omit for dry-run)")
+    parser.add_argument("--token", help="API token for authentication")
+    args = parser.parse_args()
+
+    if not args.logdir.is_dir():
+        print(  # noqa: T201
+            f"Error: not a directory: {args.logdir}",
+            file=sys.stderr,
+        )
+        sys.exit(1)
+
+    payloads = payloads_from_logdir(args.logdir)
+    if not payloads:
+        print("No HL7 log entries found.")  # noqa: T201
+        sys.exit(0)
+
+    print(f"Aggregated into {len(payloads)} asset(s).\n")  # noqa: T201
+
+    for payload in payloads:
+        if args.url:
+            status_code = push(payload, args.url, args.token)
+            print(f"PUT {payload['mac_address']} -> {status_code}")  # noqa: T201
+        else:
+            print(json.dumps(payload, indent=2))  # noqa: T201
+
+
+if __name__ == "__main__":
+    main()
