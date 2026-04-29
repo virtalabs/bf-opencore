@@ -90,6 +90,10 @@ def scan_ledger(ledger: Path) -> tuple[set[str], int]:
             fail(f"upserts.jsonl line {lineno}: not JSON ({exc})")
             failures += 1
             continue
+        if not isinstance(entry, dict):
+            fail(f"upserts.jsonl line {lineno}: row is not an object")
+            failures += 1
+            continue
         body = entry.get("body")
         if not isinstance(body, dict):
             fail(f"upserts.jsonl line {lineno}: body is not an object")

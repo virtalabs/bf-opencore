@@ -60,8 +60,10 @@ event mllp_message(c: connection, is_orig: bool, payload: string) {
 
     local msg_type = extract_field(msh, 8);
 
-    # Skip ACK messages, matching extract.py behavior.
-    if ( msg_type == "ACK" )
+    # MSH-9 may be composite (e.g. "ACK^A01^ACK"); only the first component
+    # carries the message code, so split on '^' before comparing.
+    local msg_kind = split_string(msg_type, /\^/)[0];
+    if ( msg_kind == "ACK" )
         return;
 
     local pv1 = find_segment(segments, "PV1");

@@ -153,7 +153,7 @@ def push(payload: dict, base_url: str, token: str | None) -> int:
     req = urllib.request.Request(  # noqa: S310
         url, data=data, headers=headers, method="PUT"
     )
-    with urllib.request.urlopen(req) as resp:  # noqa: S310
+    with urllib.request.urlopen(req, timeout=10) as resp:  # noqa: S310
         return resp.status
 
 

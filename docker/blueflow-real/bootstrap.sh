@@ -4,7 +4,7 @@
 # 1. uv sync + migrate
 # 2. enable the "core" waffle switch — without it every viewset 404s
 # 3. create a test user + mint an API token
-# 4. persist token + URL to /shared/ (for the sidecar) and /logs/ (host-visible)
+# 4. persist token + URL to /shared/ (for the sidecar handoff)
 # 5. touch /shared/blueflow-ready so the zeek container can proceed
 # 6. exec the CMD passed by the Dockerfile (runserver by default)
 #
@@ -36,9 +36,8 @@ if [ -z "$TOKEN" ]; then
 fi
 
 echo "[bootstrap] persist token + URL..."
-mkdir -p /shared /logs
+mkdir -p /shared
 printf '%s' "$TOKEN"                       > /shared/api-token
-printf '%s' "$TOKEN"                       > /logs/api-token
 printf '%s' "http://blueflow-real:8000"    > /shared/api-url
 touch /shared/blueflow-ready
 

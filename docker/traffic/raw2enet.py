@@ -28,6 +28,8 @@ ETHER_IPV6 = b"\x00\x00\x00\x00\x00\x01" + b"\x00\x00\x00\x00\x00\x02" + b"\x86\
 ETHER_HDR_LEN = 14
 
 DLT_EN10MB = 1
+DLT_RAW = 101
+IP_VERSION_4 = 4
 IP_VERSION_6 = 6
 EXPECTED_ARGC = 3
 
@@ -35,7 +37,18 @@ EXPECTED_ARGC = 3
 def convert(inpath, outpath):
     with Path(inpath).open("rb") as fin, Path(outpath).open("wb") as fout:
         ghdr = fin.read(GLOBAL_HDR_SIZE)
-        magic, vmaj, vmin, tz, sigfigs, snaplen, _ = struct.unpack(GLOBAL_HDR_FMT, ghdr)
+        if len(ghdr) != GLOBAL_HDR_SIZE:
+            msg = (
+                f"truncated pcap: global header is {len(ghdr)} bytes, "
+                f"expected {GLOBAL_HDR_SIZE}"
+            )
+            raise ValueError(msg)
+        magic, vmaj, vmin, tz, sigfigs, snaplen, network = struct.unpack(
+            GLOBAL_HDR_FMT, ghdr
+        )
+        if network != DLT_RAW:
+            msg = f"expected DLT_RAW ({DLT_RAW}) input, got link type {network}"
+            raise ValueError(msg)
 
         # Write new global header with Ethernet link type
         fout.write(
@@ -63,7 +76,13 @@ def convert(inpath, outpath):
 
             # Pick ethertype based on IP version nibble
             ip_version = (data[0] >> 4) if data else 0
-            ether_hdr = ETHER_IPV6 if ip_version == IP_VERSION_6 else ETHER_IPV4
+            if ip_version == IP_VERSION_4:
+                ether_hdr = ETHER_IPV4
+            elif ip_version == IP_VERSION_6:
+                ether_hdr = ETHER_IPV6
+            else:
+                msg = f"unsupported IP version nibble {ip_version} at packet {count}"
+                raise ValueError(msg)
 
             fout.write(
                 struct.pack(

@@ -21,6 +21,7 @@ a project maintainer or restore it from the `zeek-hl7-spike-frozen`
 tag, which still contains the file in its historical snapshot:
 
 ```bash
+mkdir -p spikes/hl7/data
 git show zeek-hl7-spike-frozen:spikes/hl7/data/hl7.pcap > spikes/hl7/data/hl7.pcap
 ```
 
