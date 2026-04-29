@@ -32,8 +32,17 @@ zeek -i veth-probe -C \
     LogAscii::use_json=T &
 ZEEK_PID=$!
 
-# Give Zeek a moment to open the capture socket before signaling ready
-sleep 2
+# Don't signal ready until Zeek is still alive after startup. If it crashed
+# (bad script, missing analyzer, no capture permission), fail fast instead of
+# letting the traffic container replay into a dead probe.
+for _ in $(seq 1 10); do
+    if ! kill -0 "$ZEEK_PID" 2>/dev/null; then
+        echo "      FAIL: Zeek exited before capture was ready" >&2
+        wait "$ZEEK_PID" || exit $?
+        exit 1
+    fi
+    sleep 0.5
+done
 touch /shared/zeek-ready
 echo "      Zeek PID: $ZEEK_PID"
 echo "      Signaled ready — waiting for traffic..."
@@ -47,7 +56,13 @@ sleep 3
 
 echo "      Traffic done. Stopping Zeek..."
 kill "$ZEEK_PID" 2>/dev/null || true
-wait "$ZEEK_PID" 2>/dev/null || true
+zeek_status=0
+wait "$ZEEK_PID" || zeek_status=$?
+# 0 = clean exit, 143 = SIGTERM (the kill above). Anything else is a real failure.
+if [ "$zeek_status" -ne 0 ] && [ "$zeek_status" -ne 143 ]; then
+    echo "      FAIL: Zeek exited with status $zeek_status" >&2
+    exit "$zeek_status"
+fi
 echo ""
 
 echo "      Zeek log summary:"
