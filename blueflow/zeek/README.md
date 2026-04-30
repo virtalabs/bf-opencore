@@ -13,6 +13,23 @@ blueflow/zeek/
     mllp.spicy               # Spicy grammar for MLLP framing
     mllp.evt                 # Event mapping (Spicy -> Zeek)
     hl7_extract.zeek         # HL7 field parsing into hl7.log
+  data/                      # pcap fixtures (gitignored — see below)
+```
+
+## Test pcap fixture
+
+The end-to-end harness (`docker/`) and `docker/run-local.sh` mount
+`blueflow/zeek/data/` to source a pcap. The fixture itself is **never
+tracked** by git — `*.pcap` is gitignored project-wide and
+`blueflow/zeek/data/.gitignore` additionally walls off the directory's
+contents so only the `.gitignore` file is tracked. This prevents
+accidental commits of pcaps that may carry PHI.
+
+To populate the fixture on a fresh clone, restore it from the
+`zeek-hl7-spike-frozen` tag (124 messages, 1 device, synthetic data):
+
+```bash
+git show zeek-hl7-spike-frozen:spikes/hl7/data/hl7.pcap > blueflow/zeek/data/hl7.pcap
 ```
 
 The Django management command `zeek_ingest`

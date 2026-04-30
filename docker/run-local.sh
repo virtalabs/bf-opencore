@@ -45,7 +45,7 @@ while [ $# -gt 0 ]; do
     esac
 done
 
-PCAP="${PCAP:-$REPO_ROOT/spikes/hl7/data/hl7.pcap}"
+PCAP="${PCAP:-$REPO_ROOT/blueflow/zeek/data/hl7.pcap}"
 
 if [ ! -f "$PCAP" ]; then
     echo "Error: pcap not found: $PCAP" >&2
