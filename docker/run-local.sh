@@ -76,6 +76,7 @@ echo "Logs: $OUTDIR/"
 ls -1 "$OUTDIR"/*.log
 
 if [ "${SIDECAR:-}" = "1" ]; then
+    command -v uv >/dev/null 2>&1 || { echo "Error: uv not found (required for SIDECAR=1)" >&2; exit 1; }
     echo ""
     echo "Running sidecar (dry-run)..."
     uv run "$ZEEK_PKG/sidecar.py" "$OUTDIR"
