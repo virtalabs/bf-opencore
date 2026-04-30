@@ -14,16 +14,21 @@ uv sync --all-extras             # python-hl7
 
 ## Test pcap fixture (NOT in git)
 
-`data/hl7.pcap` is **not tracked** by git — pcap files are excluded
-project-wide via `.gitignore` because they may carry PHI. Obtain the
-spike's reference pcap (124 messages, 1 device, synthetic data) from
-a project maintainer or restore it from the `zeek-hl7-spike-frozen`
-tag, which still contains the file in its historical snapshot:
+The pcap fixture has moved out of the spike — it now lives at
+`blueflow/zeek/data/hl7.pcap` for harness use. Pcap files are
+excluded project-wide via `.gitignore` because they may carry PHI.
+Obtain the reference pcap (124 messages, 1 device, synthetic data)
+from a project maintainer or restore it from the
+`zeek-hl7-spike-frozen` tag, which still contains the file in its
+historical snapshot:
 
 ```bash
-mkdir -p spikes/hl7/data
-git show zeek-hl7-spike-frozen:spikes/hl7/data/hl7.pcap > spikes/hl7/data/hl7.pcap
+git show zeek-hl7-spike-frozen:spikes/hl7/data/hl7.pcap > blueflow/zeek/data/hl7.pcap
 ```
+
+To re-run the spike's own scripts (`./extract.py data/hl7.pcap`)
+from this directory, additionally symlink or copy the pcap into
+`spikes/hl7/data/`.
 
 Do **not** commit pcaps captured from real environments. The
 `.gitignore` rules block `*.pcap` etc., but `git add -f` would

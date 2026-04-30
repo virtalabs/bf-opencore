@@ -56,7 +56,7 @@ PCAP_DIR=/path/to/my/pcaps PCAP_FILE=multi-device.pcap \
     docker compose -f docker/docker-compose.yml --profile stub up --build --abort-on-container-exit
 
 # Local non-docker (zeek + spicyz must be installed on host)
-./docker/run-local.sh                              # defaults to spikes/hl7/data/hl7.pcap
+./docker/run-local.sh                              # defaults to blueflow/zeek/data/hl7.pcap
 ./docker/run-local.sh path/to/capture.pcap         # custom pcap
 ./docker/run-local.sh --expect 530 path/to/big.pcap
 SIDECAR=1 ./docker/run-local.sh                    # also run sidecar dry-run
@@ -77,7 +77,7 @@ without per-profile env wiring.
 
 ### Pcap selection
 
-`PCAP_DIR` (host path, default `../spikes/hl7/data`) is bind-mounted to
+`PCAP_DIR` (host path, default `../blueflow/zeek/data`) is bind-mounted to
 `/pcap` in the `zeek` and `traffic` containers. `PCAP_FILE` (default
 `hl7.pcap`) is the filename inside that directory. Both have sensible
 defaults so the bare `up` command works out of the box.
@@ -102,12 +102,16 @@ count, and per-payload structural invariants. The local-run path
 
 ## Verifying a real run
 
-The bootstrap script writes the API token to
-`/tmp/zeek-spike-logs/blueflow-real/api-token` (host-visible). After the
-run, query the API directly to confirm assets landed:
+The bootstrap script writes the API token to a `tmpfs` shared volume
+(`/shared/api-token`) for the in-container sidecar handoff only — it
+is **not** persisted to the host-visible logs volume. To query the
+running API after a `--profile real` run, exec into the container or
+mint a fresh token:
 
 ```bash
-TOKEN=$(cat /tmp/zeek-spike-logs/blueflow-real/api-token)
+docker exec zeek-spike-blueflow-real cat /shared/api-token
+# or, with the container still up:
+TOKEN=$(docker exec zeek-spike-blueflow-real cat /shared/api-token)
 curl -sH "Authorization: Token $TOKEN" http://localhost:8000/api/assets/ | jq '.count, .results[].mac_address'
 ```
 
@@ -125,12 +129,13 @@ local.
 
 ## Pcap fixture
 
-The HL7 sample pcap lives at `spikes/hl7/data/hl7.pcap` (124 messages,
+The HL7 sample pcap lives at `blueflow/zeek/data/hl7.pcap` (124 messages,
 1 device). It is mounted read-only into the `zeek` and `traffic`
-containers via `../spikes/hl7/data:/pcap:ro`.
+containers via `../blueflow/zeek/data:/pcap:ro`.
 
 **Pcap files are not tracked by git** — `.gitignore` excludes `*.pcap`,
 `*.pcapng`, `*.cap` and their gzipped variants because pcaps may carry
-PHI. To populate the fixture for a fresh clone, see
-`spikes/hl7/README.md`. The harness will fail with a clear error if
-the pcap is missing.
+PHI. The `blueflow/zeek/data/.gitignore` additionally walls off the
+directory's contents so only the `.gitignore` itself is tracked. To
+populate the fixture for a fresh clone, see `blueflow/zeek/README.md`.
+The harness will fail with a clear error if the pcap is missing.

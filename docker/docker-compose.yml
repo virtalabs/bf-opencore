@@ -93,7 +93,7 @@ services:
     volumes:
       - shared:/shared
       - /tmp/zeek-spike-logs/zeek:/logs
-      - ${PCAP_DIR:-../spikes/hl7/data}:/pcap:ro
+      - ${PCAP_DIR:-../blueflow/zeek/data}:/pcap:ro
 
   traffic:
     build:
@@ -114,7 +114,7 @@ services:
     volumes:
       - shared:/shared
       - /tmp/zeek-spike-logs/traffic:/logs
-      - ${PCAP_DIR:-../spikes/hl7/data}:/pcap:ro
+      - ${PCAP_DIR:-../blueflow/zeek/data}:/pcap:ro
 
 volumes:
   shared:
