@@ -17,6 +17,8 @@ Promoted from spike #111 (frozen at tag ``zeek-hl7-spike-frozen``).
 """
 
 import argparse
+import hashlib
+import ipaddress
 import json
 import sys
 import urllib.request
@@ -32,16 +34,30 @@ SCALAR_FIELDS = (
 
 
 def mac_from_ip(ip: str) -> str:
-    """Synthesize a locally-administered MAC from an IPv4 address.
+    """Synthesize a locally-administered MAC from a source IP.
 
     Used only when Zeek runs against pcap files (pcap replay carries no L2).
     Live capture populates ``conn.log`` ``orig_l2_addr`` / ``resp_l2_addr``
     with real MACs and this fallback is not exercised. The 02:00 prefix
     marks the MAC as locally administered, avoiding collision with real
     OUI-assigned MACs. Deterministic so re-runs upsert the same asset.
+
+    IPv4 inputs map directly to the 4-byte packed form (preserves the
+    readable ``02:00:c0:a8:38:01`` style for ``192.168.56.1``). IPv6 and
+    other non-v4 strings hash to a stable 4-byte suffix so the contract
+    holds for any input Zeek can emit.
     """
-    octets = [int(o) for o in ip.split(".")]
-    return f"02:00:{octets[0]:02x}:{octets[1]:02x}:{octets[2]:02x}:{octets[3]:02x}"
+    try:
+        addr = ipaddress.ip_address(ip)
+    except ValueError:
+        suffix = hashlib.sha256(ip.encode()).digest()[:4]
+    else:
+        suffix = (
+            addr.packed
+            if isinstance(addr, ipaddress.IPv4Address)
+            else hashlib.sha256(addr.packed).digest()[:4]
+        )
+    return f"02:00:{suffix[0]:02x}:{suffix[1]:02x}:{suffix[2]:02x}:{suffix[3]:02x}"
 
 
 def load_log(path: Path) -> list[dict]:

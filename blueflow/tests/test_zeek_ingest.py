@@ -80,6 +80,17 @@ def test_payloads_synthetic_mac_when_no_conn_log(tmp_path: Path) -> None:
     assert payloads[0]["mac_address"] == "02:00:0a:00:00:9b"
 
 
+def test_payloads_synthetic_mac_handles_ipv6_source(tmp_path: Path) -> None:
+    """IPv6 source addresses hash to a stable MAC instead of crashing."""
+    ipv6_entry = {**HL7_ENTRY, "id.orig_h": "2001:db8::1"}
+    logdir = _write_logs(tmp_path, [ipv6_entry], [])
+
+    payloads = payloads_from_logdir(logdir)
+
+    assert len(payloads) == 1
+    assert payloads[0]["mac_address"] == "02:00:1e:03:d7:e1"
+
+
 @pytest.mark.django_db
 def test_zeek_ingest_creates_asset(tmp_path: Path) -> None:
     """Management command creates an Asset on first ingest."""
