@@ -122,7 +122,6 @@ In blueflow, all role-scoped clients are aliases to `auth_client` (adds per-reso
 - `nwk_authorized_client` — User allowed to manage networks
 - `biomed_client` — User with biomed role
 - `custom_field_edit_client` — User allowed to edit custom field names
-- `pulse_feed_auth_client` — User allowed to delete/close pulse feed items
 
 ### App-level data fixtures (`blueflow/tests/conftest.py`)
 
@@ -133,7 +132,6 @@ In blueflow, all role-scoped clients are aliases to `auth_client` (adds per-reso
 - **`acme_assets`** — Alias for `completables`.
 - **`asset_groups`** — Two assets, three groups, and three asset-group links (named tuple `AssetGroups`).
 - **`asset_vulnerabilities`** — Two assets, four vulnerabilities, and linking records.
-- **`pulse_feed_items`** — Three `PulseFeedItem` objects.
 - **`complete_us`** — Six assets (manufacturer/model pairs) for autocomplete field tests.
 
 ### Factory module (`blueflow/tests/factories.py`)
