@@ -27,6 +27,10 @@ PCAP=""
 while [ $# -gt 0 ]; do
     case "$1" in
         --expect)
+            if [ $# -lt 2 ]; then
+                echo "Error: --expect requires a numeric value" >&2
+                exit 1
+            fi
             EXPECTED="$2"
             shift 2
             ;;
@@ -44,6 +48,11 @@ while [ $# -gt 0 ]; do
             ;;
     esac
 done
+
+if ! [[ "$EXPECTED" =~ ^[0-9]+$ ]]; then
+    echo "Error: --expect must be an integer, got: $EXPECTED" >&2
+    exit 1
+fi
 
 PCAP="${PCAP:-$REPO_ROOT/blueflow/zeek/data/hl7.pcap}"
 
