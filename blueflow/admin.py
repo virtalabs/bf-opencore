@@ -14,7 +14,6 @@ from .models import (
     Group,
     Network,
     NetworkEndpoint,
-    PulseFeedItem,
     SavedSearch,
     Scan,
     Tag,
@@ -85,11 +84,6 @@ class NetworkAdmin(admin.ModelAdmin):
 
 @admin.register(NetworkEndpoint)
 class NetworkEndpointAdmin(admin.ModelAdmin):
-    pass
-
-
-@admin.register(PulseFeedItem)
-class PulseFeedItemAdmin(admin.ModelAdmin):
     pass
 
 
