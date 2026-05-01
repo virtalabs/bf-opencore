@@ -7,7 +7,6 @@ from .attachment import Attachment
 from .group import AssetGroup, Group
 from .network import Cidr, Network, SavedSearch
 from .network_endpoint import EndpointSuggestion, NetworkEndpoint
-from .pulse import PulseFeedItem
 from .scan import Scan
 from .tag import AssetTag, Tag
 from .viper import ViperWebhookJob
@@ -27,7 +26,6 @@ __all__ = [
     "Group",
     "Network",
     "NetworkEndpoint",
-    "PulseFeedItem",
     "SavedSearch",
     "Scan",
     "Tag",
