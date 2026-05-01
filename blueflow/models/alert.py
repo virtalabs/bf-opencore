@@ -22,12 +22,6 @@ class Alert(models.Model):
         related_name="alert_assets",
         null=True,
     )
-    pulsefeeditem = models.ForeignKey(
-        "PulseFeedItem",
-        on_delete=models.SET_NULL,
-        related_name="alert_pulsefeeditems",
-        null=True,
-    )
     # TODO(taylorcochran): Implement risk metrics after we have a generalized algorithm
     # for risk scoring
     # riskmetrics = models.ForeignKey(

@@ -28,7 +28,6 @@ from .periodic_task import (
     PeriodicTaskSerializer,
     PeriodicTaskViewSet,
 )
-from .pulse import PulseFeedItemSerializer, PulseFeedItemViewSet
 from .scan import ScanSerializer, ScanViewSet
 from .tag import TagSerializer, TagViewSet
 from .user import UserSerializer, UserViewSet
@@ -68,8 +67,6 @@ __all__ = [
     "NetworkViewSet",
     "PeriodicTaskSerializer",
     "PeriodicTaskViewSet",
-    "PulseFeedItemSerializer",
-    "PulseFeedItemViewSet",
     "SavedSearchViewSet",
     "ScanSerializer",
     "ScanViewSet",
