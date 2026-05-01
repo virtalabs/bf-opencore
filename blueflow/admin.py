@@ -107,7 +107,13 @@ class ViperWebhookJobAdmin(admin.ModelAdmin):
     list_display = ("id", "status", "callback", "since", "before", "created_at")
     list_filter = ("status",)
     readonly_fields = (
-        "id", "created_at", "callback", "since", "before", "request_body", "status"
+        "id",
+        "created_at",
+        "callback",
+        "since",
+        "before",
+        "request_body",
+        "status",
     )
 
 
