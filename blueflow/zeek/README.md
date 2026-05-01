@@ -5,7 +5,7 @@ Zeek log ingest for BlueFlow Asset records. Promoted from spike #111
 
 ## Components
 
-```
+```text
 blueflow/zeek/
   __init__.py
   sidecar.py                 # Log loader + correlator + aggregator
