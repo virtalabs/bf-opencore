@@ -1,6 +1,7 @@
 """ViewSet for scans."""
 
 import logging
+from typing import ClassVar
 
 import django_filters
 from rest_framework import serializers, viewsets
@@ -19,14 +20,8 @@ class ScanSerializer(serializers.HyperlinkedModelSerializer):
 
     url = serializers.HyperlinkedIdentityField(view_name="blueflow:scan-detail")
     asset = serializers.HyperlinkedRelatedField(
-        #     many=True,
         read_only=True,
         view_name="blueflow:asset-detail",
-    )
-    connector_task = serializers.HyperlinkedRelatedField(
-        #     many=True,
-        read_only=True,
-        view_name="blueflow:connectortask-detail",
     )
 
     class Meta:
@@ -34,10 +29,7 @@ class ScanSerializer(serializers.HyperlinkedModelSerializer):
 
         model = Scan
 
-        # Fields defined in the schema
-        scan_fields = tuple(f.name for f in model._meta.fields)
-
-        # Fields that are computed (not stored directly in schema)
+        scan_fields = tuple(f.name for f in model._meta.fields)  # noqa: SLF001
         computed_fields = ("url",)
 
         fields = scan_fields + computed_fields
@@ -51,7 +43,7 @@ class ScanFilter(django_filters.rest_framework.FilterSet):
 
         # Documentation about lookups is here:
         # https://docs.djangoproject.com/en/1.11/ref/models/querysets/#field-lookups
-        fields = {
+        fields: ClassVar = {
             "asset": ["exact"],
         }
 
