@@ -17,7 +17,7 @@ unit testing of the Python ingest path lives in
 
 ## Layout
 
-```
+```text
 docker/
   docker-compose.yml          # 5-service compose (stub + real profiles)
   run-local.sh                # non-docker zeek + sidecar local run
