@@ -3,8 +3,8 @@
 import csv as pycsv
 import json
 import logging
-import os
 from collections import OrderedDict
+from pathlib import Path
 
 import celery
 from django.apps import apps
@@ -87,7 +87,7 @@ logger = celery.utils.log.get_task_logger(__name__)
 
 def linecount(filename):
     """Return the number of lines in a file."""
-    with open(filename) as filehandle:
+    with Path(filename).open() as filehandle:
         return sum(1 for row in filehandle)
 
 
@@ -101,7 +101,7 @@ def process_csv(ctx, filename, field_mapping, require_network_info, update_only)
     # The 'utf-8-sig' encoding makes us robust to Excel-exported CSV
     # files (they contain a 3-byte "byte order mark" at the beginning of
     # the file.)
-    with open(filename, encoding="utf-8-sig") as csv_file:
+    with Path(filename).open(encoding="utf-8-sig") as csv_file:
         stats = {
             "total": 0,
             "updated": 0,
@@ -244,12 +244,9 @@ def main(
 
     # Save attachment provided by the web UI, if any
     if ctx.ct.attachment:
-        filename = os.path.join(
-            django_settings.MEDIA_ROOT,
-            ctx.ct.attachment.name,
-        )
+        filename = Path(django_settings.MEDIA_ROOT) / ctx.ct.attachment.name
         logger.debug("Saved file %s", filename)
-        if not os.path.exists(filename):
+        if not Path(filename).exists():
             raise ValueError(f"File not found: {filename}")
 
     # Read field mapping from the database if one is not provided
@@ -270,4 +267,4 @@ def main(
 
     # Remove temporary file
     if ctx.ct.attachment:
-        os.remove(filename)
+        Path(filename).unlink()
