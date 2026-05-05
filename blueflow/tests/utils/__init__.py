@@ -1,12 +1,13 @@
 """test utilities."""
 
 import os
+from pathlib import Path
 
 
 def path_nparent(path, n):
     """Return the n'th parent of path."""
     for _ in range(n):
-        path = os.path.dirname(path)
+        path = str(Path(path).parent)
     return path
 
 
@@ -28,6 +29,6 @@ def write_tempfile(text, bom_utf8=False):
         encoding = "utf-8-sig"
     else:
         encoding = None
-    with open(csvfd, "w", encoding=encoding) as fh:
+    with os.fdopen(csvfd, "w", encoding=encoding) as fh:
         fh.write(text)
     return filename

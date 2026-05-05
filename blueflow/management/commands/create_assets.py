@@ -2,6 +2,7 @@
 
 import json
 from collections.abc import Generator
+from pathlib import Path
 
 from django.apps import apps
 from django.core.management.base import BaseCommand
@@ -46,7 +47,7 @@ class Command(BaseCommand):
     def handle(self, *args, **options) -> None:
         Asset = apps.get_model("blueflow", "Asset")
         file_path = options.get("filepath")
-        with open(file_path, encoding="utf-8") as file:
+        with Path(file_path).open(encoding="utf-8") as file:
             data = json.loads(file.read())
             assets = make_assets(data)
             Asset.objects.bulk_create([Asset(**asset) for asset in assets])
