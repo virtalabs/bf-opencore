@@ -3,6 +3,8 @@
 from codecs import BOM_UTF8
 from pathlib import Path
 
+import pytest
+
 from blueflow.csv import process_csv
 from blueflow.models import Asset
 from blueflow.tests.utils import write_tempfile
@@ -44,7 +46,8 @@ def test_tempfile_auto_bom():
     assert csv[1:] == csv_orig
 
 
-def test_process_csv_without_bom(_setup_db):
+@pytest.mark.usefixtures("_setup_db")
+def test_process_csv_without_bom():
     """We can import from a CSV file that doesn't contains the BOM mark."""
     Asset.objects.create(
         manufacturer="Foo",
@@ -74,7 +77,8 @@ def test_process_csv_without_bom(_setup_db):
     assert asset.manufacturer == "Bar"
 
 
-def test_process_csv_with_bom(_setup_db):
+@pytest.mark.usefixtures("_setup_db")
+def test_process_csv_with_bom():
     """We can import from a CSV file that contains the BOM mark."""
     Asset.objects.create(
         manufacturer="Foo",
