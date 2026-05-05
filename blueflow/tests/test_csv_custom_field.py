@@ -1,6 +1,6 @@
 """Test CSV integration."""
 
-import os
+from pathlib import Path
 
 from blueflow.csv import process_csv
 from blueflow.models import Asset, AssetCustomField, AssetCustomFieldName
@@ -41,7 +41,7 @@ def test_process_csv_with_custom_field(setup_db):
         require_network_info=False,
         update_only=True,
     )
-    os.unlink(filename)
+    Path(filename).unlink()
     assert asset_custom_fields.count() == 1
 
     asset_custom_fields = AssetCustomField.objects.filter(asset=asset)
@@ -80,7 +80,7 @@ def test_process_csv_with_custom_field_underscores(setup_db):
         require_network_info=False,
         update_only=True,
     )
-    os.unlink(filename)
+    Path(filename).unlink()
 
     assert asset_custom_fields.count() == 1
     asset_custom_fields = AssetCustomField.objects.filter(asset=asset)
@@ -121,7 +121,7 @@ def test_process_csv_with_custom_field_spaces(setup_db):
         require_network_info=False,
         update_only=True,
     )
-    os.unlink(filename)
+    Path(filename).unlink()
 
     assert asset_custom_fields.count() == 1
     asset_custom_fields = AssetCustomField.objects.filter(asset=asset)

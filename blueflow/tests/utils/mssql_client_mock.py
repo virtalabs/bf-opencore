@@ -1,6 +1,7 @@
 """Utilities for creating a mock MSSQL Client."""
 
 import csv
+import os
 import tempfile
 
 
@@ -12,7 +13,7 @@ def write_temp_csv(data, fieldnames):
     - fieldnames is a list of columns names for the CSV header row
     """
     csvfd, csvfilename = tempfile.mkstemp(suffix=".csv")
-    with open(csvfd, "w") as csvfile:
+    with os.fdopen(csvfd, "w") as csvfile:
         writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
         writer.writeheader()
         for row in data:

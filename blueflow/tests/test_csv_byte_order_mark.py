@@ -1,7 +1,7 @@
 """Test CSV integration."""
 
-import os
 from codecs import BOM_UTF8
+from pathlib import Path
 
 from blueflow.csv import process_csv
 from blueflow.models import Asset
@@ -14,9 +14,9 @@ def test_tempfile_plain():
     """Test that the tempfile writer works as expected."""
     csv_orig = "A,B\n1,2\n"
     filename = write_tempfile(csv_orig)
-    with open(filename, encoding="utf-8") as fh:
+    with Path(filename).open(encoding="utf-8") as fh:
         csv = fh.read()
-    os.unlink(filename)
+    Path(filename).unlink()
     assert csv == csv_orig
 
 
@@ -24,9 +24,9 @@ def test_tempfile_manual_bom():
     """Insert BOM manually."""
     csv_orig = "A,B\n1,2\n"
     filename = write_tempfile(BOM_UTF8.decode("utf-8") + csv_orig)
-    with open(filename, encoding="utf-8") as fh:
+    with Path(filename).open(encoding="utf-8") as fh:
         csv = fh.read()
-    os.unlink(filename)
+    Path(filename).unlink()
     assert csv[0].encode("utf-8") == BOM_UTF8
     assert csv[0] == BOM_UTF8.decode("utf-8")
     assert csv[1:] == csv_orig
@@ -36,9 +36,9 @@ def test_tempfile_auto_bom():
     """Insert BOM with write_tempfile."""
     csv_orig = "A,B\n1,2\n"
     filename = write_tempfile(csv_orig, bom_utf8=True)
-    with open(filename, encoding="utf-8") as fh:
+    with Path(filename).open(encoding="utf-8") as fh:
         csv = fh.read()
-    os.unlink(filename)
+    Path(filename).unlink()
     assert csv[0].encode("utf-8") == BOM_UTF8
     assert csv[0] == BOM_UTF8.decode("utf-8")
     assert csv[1:] == csv_orig
@@ -68,7 +68,7 @@ def test_process_csv_without_bom(setup_db):
         require_network_info=False,
         update_only=True,
     )
-    os.unlink(filename)
+    Path(filename).unlink()
 
     asset = Asset.objects.last()
     assert asset.manufacturer == "Bar"
@@ -99,7 +99,7 @@ def test_process_csv_with_bom(setup_db):
         require_network_info=False,
         update_only=True,
     )
-    os.unlink(filename)
+    Path(filename).unlink()
 
     asset = Asset.objects.last()
     assert asset.manufacturer == "Bar"
