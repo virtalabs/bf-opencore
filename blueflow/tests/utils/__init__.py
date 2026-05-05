@@ -1,7 +1,6 @@
 """test utilities."""
 
 import os
-import tempfile
 from pathlib import Path
 
 
@@ -15,7 +14,7 @@ def path_nparent(path, n):
 BLUEFLOW_HOME = path_nparent(__file__, 5)
 
 
-def write_tempfile(text, *, bom_utf8=False):
+def write_tempfile(text, bom_utf8=False):
     """Write text (ostensibly, CSV) to a temp file and return the filename."""
     csvfd, filename = tempfile.mkstemp(suffix=".csv")
     # 'utf-8-sig' inserts/strips the BOM (0xef 0xbb 0xbf); discouraged in

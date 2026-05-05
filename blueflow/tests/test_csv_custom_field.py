@@ -2,8 +2,6 @@
 
 from pathlib import Path
 
-import pytest
-
 from blueflow.csv import process_csv
 from blueflow.models import Asset, AssetCustomField, AssetCustomFieldName
 from blueflow.tests.utils import write_tempfile
@@ -11,8 +9,7 @@ from blueflow.tests.utils import write_tempfile
 from .test_csv import TestCTX
 
 
-@pytest.mark.usefixtures("_setup_db")
-def test_process_csv_with_custom_field():
+def test_process_csv_with_custom_field(setup_db):
     """We can import from CSV into a custom field.
 
     Similar to test above but lower level (more unit test)
@@ -53,8 +50,7 @@ def test_process_csv_with_custom_field():
     assert asset_shininess == "Very shiny"
 
 
-@pytest.mark.usefixtures("_setup_db")
-def test_process_csv_with_custom_field_underscores():
+def test_process_csv_with_custom_field_underscores(setup_db):
     """We can import from CSV into a custom field that contains underscores."""
     Asset.objects.create(
         manufacturer="Foo",
@@ -95,8 +91,7 @@ def test_process_csv_with_custom_field_underscores():
     assert asset_site_description == "Very shiny"
 
 
-@pytest.mark.usefixtures("_setup_db")
-def test_process_csv_with_custom_field_spaces():
+def test_process_csv_with_custom_field_spaces(setup_db):
     """We can import from CSV into a custom field that contains spaces."""
     Asset.objects.create(
         manufacturer="Foo",
