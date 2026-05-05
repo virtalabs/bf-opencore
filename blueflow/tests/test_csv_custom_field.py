@@ -1,5 +1,6 @@
 """Test CSV integration."""
 
+import pytest
 from pathlib import Path
 
 from blueflow.csv import process_csv
@@ -9,7 +10,8 @@ from blueflow.tests.utils import write_tempfile
 from .test_csv import TestCTX
 
 
-def test_process_csv_with_custom_field(setup_db):
+@pytest.mark.usefixtures("setup_db")
+def test_process_csv_with_custom_field():
     """We can import from CSV into a custom field.
 
     Similar to test above but lower level (more unit test)
@@ -50,7 +52,8 @@ def test_process_csv_with_custom_field(setup_db):
     assert asset_shininess == "Very shiny"
 
 
-def test_process_csv_with_custom_field_underscores(setup_db):
+@pytest.mark.usefixtures("setup_db")
+def test_process_csv_with_custom_field_underscores():
     """We can import from CSV into a custom field that contains underscores."""
     Asset.objects.create(
         manufacturer="Foo",
@@ -91,7 +94,8 @@ def test_process_csv_with_custom_field_underscores(setup_db):
     assert asset_site_description == "Very shiny"
 
 
-def test_process_csv_with_custom_field_spaces(setup_db):
+@pytest.mark.usefixtures("setup_db")
+def test_process_csv_with_custom_field_spaces():
     """We can import from CSV into a custom field that contains spaces."""
     Asset.objects.create(
         manufacturer="Foo",

@@ -3,8 +3,8 @@
 import csv as pycsv
 import json
 import logging
-from pathlib import Path
 from collections import OrderedDict
+from pathlib import Path
 
 import celery
 from django.apps import apps
