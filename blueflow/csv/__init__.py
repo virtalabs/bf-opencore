@@ -1,9 +1,6 @@
 """CSV import."""
 
 import csv as pycsv
-import json
-import logging
-from collections import OrderedDict
 from pathlib import Path
 
 import celery
@@ -14,7 +11,7 @@ from django.db.utils import IntegrityError
 from simple_history import utils as hist_utils
 
 from blueflow.celery import celery_app
-from blueflow.utils import FieldMap, FileWrapper
+from blueflow.utils import FieldMap
 
 logger = celery.utils.log.get_task_logger(__name__)
 
