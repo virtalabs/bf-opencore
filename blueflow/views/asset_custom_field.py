@@ -20,10 +20,6 @@ class AssetCustomFieldNameSerializer(serializers.HyperlinkedModelSerializer):
     Teaches the rest_framework (the ViewSet) which fields to expect.
     """
 
-    url = serializers.HyperlinkedIdentityField(
-        view_name="blueflow:assetcustomfieldname-detail"
-    )
-
     re_non_alphanum = re.compile(r"[^A-Za-z0-9]+")
 
     class Meta:
@@ -35,10 +31,7 @@ class AssetCustomFieldNameSerializer(serializers.HyperlinkedModelSerializer):
         tag_fields = tuple(f.name for f in model._meta.fields)
 
         # Fields that are computed (not stored directly in schema)
-        computed_fields = (
-            "url",
-            "num_assets",
-        )
+        computed_fields = ("num_assets",)
 
         fields = tag_fields + computed_fields
 
@@ -75,23 +68,6 @@ class AssetCustomFieldNameSerializer(serializers.HyperlinkedModelSerializer):
                 "Custom field name too similar to existing field name"
             )
         return field_name
-
-
-class AssetCustomFieldNameViewSet(WaffleSwitchMixin, viewsets.ModelViewSet):
-    """Custom asset field (name)."""
-
-    waffle_switch = "core"
-
-    # AssetCustomFieldName model does have 'objects'
-    queryset = AssetCustomFieldName.objects.all()
-    serializer_class = AssetCustomFieldNameSerializer
-    # filterset_class = AssetCustomFieldNameFilter
-    pagination_class = HugeLimitOffsetPagination
-
-    def get_queryset(self):
-        """Override so we can order by field_name."""
-        qset = super().get_queryset()
-        return qset.order_by("field_name")
 
 
 class AssetCustomFieldSerializer(serializers.HyperlinkedModelSerializer):
