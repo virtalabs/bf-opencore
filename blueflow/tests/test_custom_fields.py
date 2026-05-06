@@ -14,7 +14,7 @@ from rest_framework import status
 from blueflow import models
 
 
-def test_custom_field_api(cleandb, auth_client):
+def test_custom_field_api(cleandb, auth_client):  # noqa: ARG001
     """Test get custom fields."""
     asset_obj = models.Asset.objects.create(hostname="foo.com")
     custom_field_name = models.AssetCustomFieldName.objects.create(field_name="red")
@@ -28,7 +28,7 @@ def test_custom_field_api(cleandb, auth_client):
     assert results[0]["value_text"] == "foovalue"
 
 
-def test_custom_field_via_model(cleandb, auth_client):
+def test_custom_field_via_model(cleandb, auth_client):  # noqa: ARG001
     """Test get Custom fields associated with one asset."""
     asset_obj = models.Asset.objects.create(hostname="foo.com")
     assert hasattr(asset_obj, "custom_fields")  # The list of field names
@@ -53,7 +53,7 @@ def test_custom_field_via_model(cleandb, auth_client):
 
 
 @pytest.mark.skip(reason="This route isn't implemented (and won't be)")
-def test_api_add_custom_field_via_asset(cleandb, auth_client, admin_client):
+def test_api_add_custom_field_via_asset(cleandb, auth_client, admin_client):  # noqa: ARG001
     """Add custom fields via asset API.
 
     Not implemented (and probably won't be).
@@ -77,7 +77,7 @@ def test_api_add_custom_field_via_asset(cleandb, auth_client, admin_client):
     assert af["results"][0]["field"]["field_name"] == "sparkliness"
 
 
-def test_api_add_custom_field(cleandb, auth_client, admin_client):
+def test_api_add_custom_field(cleandb, auth_client, admin_client):  # noqa: ARG001
     """Add custom fields via API."""
     asset_id = models.Asset.objects.create(hostname="foo.com").id
     custom_fn_id = models.AssetCustomFieldName.objects.create(
@@ -104,7 +104,7 @@ def test_api_add_custom_field(cleandb, auth_client, admin_client):
     assert af["results"][0]["field"]["field_name"] == "sparkliness"
 
 
-def test_api_change_custom_field(cleandb, auth_client, admin_client):
+def test_api_change_custom_field(cleandb, auth_client, admin_client):  # noqa: ARG001
     """Add custom fields via API."""
     asset_id = models.Asset.objects.create(hostname="foo.com").id
     custom_fn_id = models.AssetCustomFieldName.objects.create(
@@ -138,7 +138,7 @@ def test_api_change_custom_field(cleandb, auth_client, admin_client):
     assert res["results"][0]["value_text"] == "not sparkly at all"
 
 
-def test_api_delete_custom_field(cleandb, auth_client, admin_client):
+def test_api_delete_custom_field(cleandb, auth_client, admin_client):  # noqa: ARG001
     """Add custom fields via API."""
     asset_id = models.Asset.objects.create(hostname="foo.com").id
     custom_fn_id = models.AssetCustomFieldName.objects.create(
@@ -170,7 +170,7 @@ def test_api_delete_custom_field(cleandb, auth_client, admin_client):
     assert len(res["results"]) == 0
 
 
-def test_api_asset_custom_field(cleandb, auth_client, admin_client):
+def test_api_asset_custom_field(cleandb, auth_client, admin_client):  # noqa: ARG001
     """View custom fields arriving with the asset."""
     asset_id = models.Asset.objects.create(hostname="foo.com").id
     afn = models.AssetCustomFieldName.objects.create(field_name="sparkliness")
