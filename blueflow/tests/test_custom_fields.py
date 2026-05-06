@@ -173,19 +173,17 @@ def test_api_delete_custom_field(cleandb, auth_client, admin_client):
 def test_api_asset_custom_field(cleandb, auth_client, admin_client):
     """View custom fields arriving with the asset."""
     asset_id = models.Asset.objects.create(hostname="foo.com").id
-    kwargs = {
-        "data": json.dumps({"field_name": "sparkliness"}),
-        "content_type": "application/json",
-    }
-    res = admin_client.post("/api/assetcustomfieldnames/", **kwargs)
-    afn = res.json()
+    afn = models.AssetCustomFieldName.objects.create(field_name="sparkliness")
     asset = auth_client.get(f"/api/assets/{asset_id}/").json()
     assert asset["hostname"] == "foo.com"
     assert len(asset["asset_custom_fields"]) == 0
     assert asset["asset_custom_fields"] == []
-    kwargs["data"] = json.dumps(
-        {"field_id": afn["id"], "asset_id": asset_id, "value_text": "very sparkly"}
-    )
+    kwargs = {
+        "data": json.dumps(
+            {"field_id": afn.id, "asset_id": asset_id, "value_text": "very sparkly"}
+        ),
+        "content_type": "application/json",
+    }
     _ = admin_client.post("/api/assetcustomfields/", **kwargs)
     asset = auth_client.get(f"/api/assets/{asset_id}/").json()
     assert asset["hostname"] == "foo.com"
