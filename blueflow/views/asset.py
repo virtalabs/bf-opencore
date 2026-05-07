@@ -92,7 +92,7 @@ class AssetUpsertSerializer(serializers.Serializer):
         required=False, allow_blank=False, allow_null=True
     )
     name = serializers.CharField(required=False, allow_blank=True, allow_null=True)
-    hostname = serializers.CharField(required=False, allow_blank=True, allow_null=True)
+    hostname = serializers.CharField(required=False, allow_blank=False, allow_null=True)
     manufacturer = serializers.CharField(
         required=False, allow_blank=True, allow_null=True
     )
@@ -927,6 +927,28 @@ class AssetViewSet(
             return Response(serializer.errors, status.HTTP_400_BAD_REQUEST)
 
         validated = serializer.validated_data
+
+        # Reject if the proposed hostname is already owned by a different MAC.
+        # Same-MAC reuse (a legitimate update) falls through; missing/null
+        # hostname falls through. Empty strings are blocked by the serializer.
+        proposed_hostname = validated.get("hostname")
+        if proposed_hostname:
+            conflict = (
+                Asset.objects.filter(hostname=proposed_hostname)
+                .exclude(mac_address=validated["mac_address"])
+                .first()
+            )
+            if conflict is not None:
+                return Response(
+                    {
+                        "hostname": [
+                            f"Hostname '{proposed_hostname}' is already used by "
+                            f"asset id={conflict.id}.",
+                        ],
+                    },
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
+
         created = False
         try:
             mac_address = validated.pop("mac_address")
