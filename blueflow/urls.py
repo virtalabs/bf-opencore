@@ -19,11 +19,6 @@ router.register(r"assets", views.AssetViewSet)
 router.register(r"assetgroups", views.AssetGroupViewSet)
 router.register(r"assettags", views.AssetTagViewSet)
 router.register(r"assetvulnerabilities", views.AssetVulnerabilityViewSet)
-router.register(
-    r"autocomplete_field",
-    views.AutocompleteAssetFieldViewSet,
-    basename="autocomplete_field",
-)
 router.register(r"cidrs", views.CidrViewSet)
 router.register(r"groups", views.GroupViewSet)
 router.register(r"networks", views.NetworkViewSet)
