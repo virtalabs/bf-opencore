@@ -6,7 +6,6 @@ from .asset import AssetSerializer, AssetViewSet, HistoricalAssetSerializer
 from .assetgroup import AssetGroupSerializer, AssetGroupViewSet
 from .assettag import AssetTagSerializer, AssetTagViewSet
 from .assetvulnerability import AssetVulnerabilitySerializer, AssetVulnerabilityViewSet
-from .autocomplete import AutocompleteAssetFieldViewSet
 from .group import GroupSerializer, GroupViewSet
 from .network import CidrViewSet, NetworkSerializer, NetworkViewSet, SavedSearchViewSet
 from .periodic_task import (
@@ -34,7 +33,6 @@ __all__ = [
     "AssetViewSet",
     "AssetVulnerabilitySerializer",
     "AssetVulnerabilityViewSet",
-    "AutocompleteAssetFieldViewSet",
     "CidrViewSet",
     "CrontabScheduleSerializer",
     "CrontabScheduleViewSet",
