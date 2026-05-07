@@ -3,7 +3,6 @@
 # ViewSets
 from .alert import AlertSerializer, AlertViewSet
 from .asset import AssetSerializer, AssetViewSet, HistoricalAssetSerializer
-from .asset_custom_field import AssetCustomFieldViewSet
 from .assetgroup import AssetGroupSerializer, AssetGroupViewSet
 from .assettag import AssetTagSerializer, AssetTagViewSet
 from .assetvulnerability import AssetVulnerabilitySerializer, AssetVulnerabilityViewSet
@@ -27,7 +26,6 @@ from .vulnerability import VulnerabilitySerializer, VulnerabilityViewSet
 __all__ = [
     "AlertSerializer",
     "AlertViewSet",
-    "AssetCustomFieldViewSet",
     "AssetGroupSerializer",
     "AssetGroupViewSet",
     "AssetSerializer",

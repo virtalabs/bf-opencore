@@ -31,7 +31,6 @@ from blueflow.models import (
     Tag,
 )
 
-from .asset_custom_field import AssetCustomFieldSerializer
 from .assettag import AssetTagSerializer
 from .utils import ChangeReasonMixin, PaginateRelationsMixin
 
@@ -122,15 +121,12 @@ class AssetSerializer(serializers.HyperlinkedModelSerializer):
 
     url = serializers.HyperlinkedIdentityField(view_name="blueflow:asset-detail")
     tags_url = serializers.HyperlinkedIdentityField(view_name="blueflow:asset-tags")
-    scans_url = serializers.HyperlinkedIdentityField(
-        view_name="blueflow:asset-scans"
-    )
+    scans_url = serializers.HyperlinkedIdentityField(view_name="blueflow:asset-scans")
     external_links_url = serializers.HyperlinkedIdentityField(
         view_name="blueflow:asset-external-links"
     )
 
     asset_tags = AssetTagSerializer(read_only=True, many=True)
-    asset_custom_fields = AssetCustomFieldSerializer(read_only=True, many=True)
     asset_vulnerabilities = MiniAssetVulnerabilitySerializer(read_only=True, many=True)
 
     display_name = serializers.CharField(
@@ -154,7 +150,6 @@ class AssetSerializer(serializers.HyperlinkedModelSerializer):
             "display_name",
             "last_updated",
             "asset_tags",
-            "asset_custom_fields",
             "asset_vulnerabilities",
         )
 
@@ -286,6 +281,7 @@ class AssetFilter(django_filters.rest_framework.FilterSet):
     active_vulnerability = django_filters.NumberFilter(
         method="filter_active_vulnerability"
     )
+
     @staticmethod
     def filter_network(queryset: QuerySet, name: str, value: int) -> QuerySet:
         """Get assets that belong to a certain network."""
