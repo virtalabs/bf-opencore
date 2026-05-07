@@ -16,7 +16,6 @@ router = DefaultRouter()
 # Regular BlueFlow Models
 router.register(r"alerts", views.AlertViewSet)
 router.register(r"assets", views.AssetViewSet)
-router.register(r"assetcustomfields", views.AssetCustomFieldViewSet)
 router.register(r"assetgroups", views.AssetGroupViewSet)
 router.register(r"assettags", views.AssetTagViewSet)
 router.register(r"assetvulnerabilities", views.AssetVulnerabilityViewSet)
