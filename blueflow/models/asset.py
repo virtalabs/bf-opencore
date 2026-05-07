@@ -36,8 +36,7 @@ class Asset(models.Model):
     """Holds our Assets."""
 
     name = models.CharField(max_length=126, blank=True, null=True)
-    # 'hostname' for sure does not need to be unique.
-    hostname = models.TextField(blank=True, null=True)
+    hostname = models.TextField(null=True, unique=True)
     ip_address = InetAddressField(
         store_prefix_length=False, blank=True, null=True, verbose_name="IP address"
     )
@@ -102,6 +101,14 @@ class Asset(models.Model):
     # Our manager is a meld of AssetManager and the methods from AssetQuerySet
     # https://docs.djangoproject.com/en/2.0/topics/db/managers/#from-queryset
     objects = AssetManager.from_queryset(AssetQuerySet)()
+
+    class Meta:
+        constraints = (
+            models.CheckConstraint(
+                condition=Q(hostname__isnull=True) | ~Q(hostname=""),
+                name="asset_hostname_not_empty_when_set",
+            ),
+        )
 
     def save(self, *args, **kwargs):
         """Intercept save, automatically populating some fields."""
