@@ -12,6 +12,7 @@ Stage 1 is shippable on its own and delivers the core asset-discovery value. Sta
 - [zeek-and-channels-ideal-usage.md](zeek-and-channels-ideal-usage.md) — how Channels and Zeek each want to be deployed in isolation.
 - [zeek-to-django-integration-options.md](zeek-to-django-integration-options.md) — four-option analysis (A: Channels, B: Celery, C: log-tail sidecar, D: Streams consumer) across effort, compatibility, and tradeoffs.
 - [existing-telemetry-ingestion-solutions.md](existing-telemetry-ingestion-solutions.md) — survey of mature stacks; pattern extraction; validation that Option D matches the canon.
+- [bridge-investigation-findings.md](bridge-investigation-findings.md) — resolution of open question §6.0. No viable zeek-redis package exists; Stage 1's bridge is Vector.
 
 ---
 
@@ -25,7 +26,7 @@ A decision is needed now so prototype work can begin with a fixed target archite
 
 ## Decision
 
-**Adopt Option D.** Roll it out in two stages, where the staging axis is *product capability* (ingestion only → ingestion + live UX), not implementation choices within ingestion. The bridge mechanism (zeek-redis plugin if viable, Vector otherwise) is an implementation choice within Stage 1 — fixed by investigation before implementation begins, but not a staging axis.
+**Adopt Option D.** Roll it out in two stages, where the staging axis is *product capability* (ingestion only → ingestion + live UX), not implementation choices within ingestion. The Stage 1 bridge mechanism is **Vector**, fixed by the §6.0 investigation that found no viable zeek-redis plugin with Streams support — see [bridge-investigation-findings.md](bridge-investigation-findings.md).
 
 ### Target architecture (Stage 2 — full picture)
 
@@ -79,12 +80,7 @@ Long form is in the companion docs. Headline reasons:
 
 **Components**
 
-- **Bridge mechanism** (one of the following, in preference order):
-  1. **zeek-redis plugin** — *first choice if viable.* In-process to Zeek; no separate bridge daemon. Simplest topology and lowest operational surface. Requires investigation (see open question §6.0) to confirm a maintained plugin exists for the target Zeek version with Redis Streams (`XADD`) support, not just pub/sub. If that confirmation lands, this is the bridge.
-  2. **Vector** — *fallback when zeek-redis is not viable.* Off-the-shelf shipper recommended by survey §5.2. Battle-tested rotation handling, retry/backoff, observability, disk buffering. Adds one daemon to operate.
-  3. **Custom Python tailer** — *not recommended.* Listed only for completeness. Reimplements rotation handling, offset persistence, and back-pressure that off-the-shelf shippers have solved. Survey §4.2 specifically argues against this path. If both options above are blocked for hard reasons (no viable plugin, Vector adoption blocked operationally), revisit the decision rather than fall through to custom code.
-
-  The bridge investigation (open question §6.0) must complete before Stage 1 implementation begins, so the bridge choice is fixed before code is written.
+- **Bridge mechanism: Vector.** Off-the-shelf shipper recommended by survey §5.2 — battle-tested rotation handling, retry/backoff, observability, disk buffering. Configured with a file source per Zeek log type, a VRL transform that filters to the streams of interest and reshapes payloads, and a Redis Streams sink writing to `zeek:events`. This choice is fixed by the §6.0 bridge investigation ([findings](bridge-investigation-findings.md)), which found no current zeek-redis package with Redis Streams support. Custom Python tailing remains explicitly excluded per survey §4.2.
 - **Redis stream `zeek:events`.** Single stream, retention configured per open question §6.1. Lives in the same Redis instance as Celery, in a separate logical DB.
 - **Consumer group `blueflow-ingest`.** Starts with one consumer; horizontal scaling deferred until Stage 1 data shows it's needed.
 - **Django management command** (`python manage.py zeek_stream_consume`). Runs an `XREADGROUP BLOCK` loop, parses payloads, calls `Asset.objects.update_or_create(...)`, then `XACK`s. Permanently-failing entries route to a dead-letter stream (`zeek:dead`) and the main entry is acked.
@@ -170,7 +166,7 @@ Stage 2 is complete when:
 
 - Operating Redis Streams as a durable buffer with a defined retention policy. This is a new operational responsibility distinct from existing Celery use of Redis.
 - Maintaining a Django management command consumer as a long-running process supervised at the same tier as Celery workers.
-- A bridge mechanism — zeek-redis plugin if viable, Vector otherwise. Custom Python is explicitly not in the recommended set.
+- Vector as the Stage 1 bridge daemon (committed by §6.0 investigation findings).
 - Treating the Streams payload contract as a real interface — versioned, evolved with care.
 - Reserving the `blueflow-fanout` consumer group name for Stage 2 use.
 
@@ -184,12 +180,11 @@ Stage 2 is complete when:
 
 **What this decision still does NOT commit us to**
 
-- A specific bridge implementation. zeek-redis plugin is the first choice pending investigation; Vector is the fallback. Custom Python is excluded.
 - A specific Stage 2 consumer shape (stream-direct vs. post-commit signal). Deferred to Stage 2 design.
 - A specific raw-archive strategy. Survey §5.4 surfaced this; on the open-questions list, not part of this decision.
 - A specific multi-tenant or multi-sensor topology. Single-sensor scope only.
-- The Zeek Broker subscriber as the bridge mechanism. If low-latency live ingestion later dominates over file durability, Broker is a possible Stage 3 replacement for the bridge.
-- A specific `zeek-redis` plugin package as the production bridge. Investigation (§6.0) names the candidate; that decision is downstream of this one.
+- The Zeek Broker subscriber as the bridge mechanism. If low-latency live ingestion later dominates over file durability, Broker is a possible Stage 3 replacement for Vector. The §6.0 findings explicitly leave this door open.
+- Long-term commitment to Vector. If a Streams-supporting zeek-redis plugin emerges in the future, the bridge can be swapped without consumer-side changes — the payload contract on the stream is what survives across bridge implementations.
 
 ---
 
@@ -198,8 +193,8 @@ Stage 2 is complete when:
 | Risk | Stage | Impact | Mitigation |
 |---|---|---|---|
 | Streams retention misconfigured (too short) → consumer falls behind → data loss | 1 | **High** — silent data loss | Monitor `XPENDING` and `XLEN`; alert on growth beyond a configured threshold; document the retention SLA explicitly |
-| Bridge investigation (§6.0) finds neither zeek-redis plugin viable nor Vector adoption clear | 1 | High — blocks Stage 1 | Schedule investigation early; if both paths block, the decision returns here for revision rather than falling through to custom code |
-| zeek-redis plugin chosen but plugin proves unstable in production | 1 | Medium — bridge swap required | Stage 1's payload contract on the stream is the same regardless of bridge; switching from zeek-redis to Vector is a bridge replacement, not a consumer change |
+| Vector adoption blocked operationally (e.g., footprint, packaging, learning curve) | 1 | High — blocks Stage 1 | Stage 1 cannot fall through to custom Python per §6.0 findings; the right move is to revisit the decision (re-evaluate Broker subscriber as a Stage 1 alternative, or accept the operational cost of Vector). Document the resolution before proceeding |
+| Vector's VRL transform configuration drifts from consumer's payload expectations | 1 | Medium — bug-shaped, not architectural | Pin the payload schema before Stage 1 ships; add a contract test that runs Vector against fixture Zeek logs and asserts the consumer parses the resulting `XADD` payloads correctly |
 | Redis becomes a hard dependency for ingest | 1 | Medium — already shared with Celery | Configure AOF persistence to limit data loss across restarts; document Redis as a Tier-1 dependency in the runbook |
 | At-least-once delivery means duplicate ORM writes | 1 | Low — by design | `Asset.objects.update_or_create` on `mac_address` is already idempotent. Document this contract in the consumer's module docstring so future maintainers don't break it |
 | Stage 2 design choice (stream vs. signal) ambiguous | 2 | Medium if unresolved | Decision deferred to Stage 2 design pass; tradeoff documented above. Not a blocker for Stage 1 |
@@ -213,7 +208,7 @@ Stage 2 is complete when:
 
 These are imported from the integration-options doc's open-questions list, narrowed to those that block Stage 1.
 
-0. **Bridge investigation.** Identify the current state of zeek-redis plugins. Specifically: which package(s) are maintained as of investigation, which Zeek versions they support, whether any of them write to Redis Streams (vs. only pub/sub), and whether anyone is running them in production at non-trivial scale. If a viable plugin is identified, the bridge is zeek-redis. Otherwise, the bridge is Vector. Custom Python is not in the decision tree. Output of this investigation: a one-page findings doc with a clear "use X" recommendation. Estimated effort: a few hours. **Must complete before Stage 1 implementation begins.**
+0. ~~**Bridge investigation.**~~ **RESOLVED 2026-05-08.** No current zeek-redis package supports Redis Streams; both living packages (`sedarasecurity/zeek-redis`, `mbispham/zeekjs-redis`) write to Lists, and a GitHub-wide search for `XADD` in `*.zeek` files returned zero results. Stage 1's bridge is **Vector**. See [bridge-investigation-findings.md](bridge-investigation-findings.md) for the full record of what was checked and why each option was rejected.
 1. **Streams retention bound** — concrete number (length, time, or both). Defines the SLA: "consumer can be down for X before data is lost." Cannot be left as a placeholder.
 2. **Which Zeek streams matter** — the bridge filter set. `conn.log`, `dns.log`, `software.log` are the obvious candidates; the full list and the field subset of each must be enumerated.
 3. **Consumer group sizing** — how many consumers in `blueflow-ingest`? Stage 1 starts at one; verify under expected load before declaring exit.

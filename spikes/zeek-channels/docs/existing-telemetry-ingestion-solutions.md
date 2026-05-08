@@ -332,7 +332,7 @@ Every mature stack surveyed maps onto this shape:
 | Sentry | Relay | Kafka | Snuba → ClickHouse |
 | PostHog | Django capture endpoint | Kafka | Plugin Server → ClickHouse |
 | Loki | Promtail / Vector | Loki distributor | Loki ingester → object store |
-| **Option D (decided)** | **`zeek-redis` (in-process, preferred) or Vector (fallback)** | **Redis Streams** | **Django mgmt command → Postgres** |
+| **Option D (decided)** | **Vector** (per §6.0 bridge investigation; zeek-redis ruled out for Stage 1) | **Redis Streams** | **Django mgmt command → Postgres** |
 
 This is the strongest validation in the survey: Option D has the same shape as the canon. Option C skips the buffer (like Arkime); Option A puts the buffer in the wrong layer (channel layer is not durable); Option B duplicates the buffer (Celery on top of Streams is two buffers).
 
@@ -340,7 +340,7 @@ This is the strongest validation in the survey: Option D has the same shape as t
 
 Every NSM/observability stack uses an off-the-shelf shipper as the bridge. Custom file-tailing is rare in mature systems because rotation handling, offset persistence, and back-pressure are subtle and worth not re-implementing.
 
-For BlueFlow specifically: dependency minimalism is the only honest argument for a custom tailer, and that argument loses on examination. Off-the-shelf options solve the hard parts — rotation handling, offset persistence, back-pressure — that a custom tailer would have to reimplement, and the Zeek-native `zeek-redis` plugin (if a viable maintained package exists) eliminates the need for any separate bridge daemon at all. The decision doc accordingly excludes custom Python from the recommended set: **`zeek-redis` if viable, Vector otherwise.**
+For BlueFlow specifically: dependency minimalism is the only honest argument for a custom tailer, and that argument loses on examination. Off-the-shelf options solve the hard parts — rotation handling, offset persistence, back-pressure — that a custom tailer would have to reimplement. The decision doc accordingly excludes custom Python from the recommended set; Stage 1's bridge is **Vector**, with the in-process `zeek-redis` path investigated and ruled out for now ([findings](bridge-investigation-findings.md)).
 
 ### 4.3 Django apps stay out of the ingest hot path
 
@@ -376,15 +376,14 @@ Reading the option doc cold, "Redis Streams + Django management command consumer
 
 ### 5.2 Off-the-shelf is the bridge default, not "custom tailer"
 
-Off-the-shelf options should be promoted ahead of any custom-code path: every comparable stack in §1–§3 uses an off-the-shelf shipper. And `zeek-redis` (in-process to Zeek itself) is even simpler than running a separate shipper *if* a viable maintained package exists, because it eliminates the bridge daemon entirely.
+Off-the-shelf options should be promoted ahead of any custom-code path: every comparable stack in §1–§3 uses an off-the-shelf shipper. The original framing of this section also held out `zeek-redis` (in-process to Zeek itself) as potentially even simpler than a separate shipper. **That option was investigated and ruled out** — see [bridge-investigation-findings.md](bridge-investigation-findings.md): no current Zeek package writes to Redis Streams, so the in-process path is unavailable today.
 
-The right preference order for Option D's bridge slot:
+The resolved preference for Option D's bridge slot:
 
-1. **`zeek-redis` plugin** — first choice if investigation confirms a maintained package with Streams (`XADD`) support. Zeek's own runtime publishes events; no separate bridge daemon needed.
-2. **Vector** — off-the-shelf fallback when `zeek-redis` is not viable. Survey §2.1 covers it; battle-tested rotation handling, retry/backoff, observability, disk buffering.
-3. **Custom Python tailing** — excluded. Reimplements rotation handling and offset persistence that off-the-shelf options have solved (see §4.2).
-
-This is the framing adopted by the decision doc; the integration-options doc has been updated to match.
+1. **Vector** — committed Stage 1 bridge per the decision doc. Survey §2.1 covers it; battle-tested rotation handling, retry/backoff, observability, disk buffering.
+2. **Zeek Broker subscriber** — Stage 3 candidate if low-latency live ingestion later dominates over file durability.
+3. **`zeek-redis` plugin** — revisitable only if a Streams-supporting package emerges in the ecosystem; not viable today.
+4. **Custom Python tailing** — excluded. Reimplements rotation handling and offset persistence that off-the-shelf options have solved (see §4.2).
 
 ### 5.3 Option B's redundancy is now a stronger claim
 
@@ -410,7 +409,7 @@ Security Onion, Malcolm, Corelight, and friends are all *security-monitoring* pr
 Adding to the open-questions list in the option doc:
 
 - **Should raw Zeek logs be retained separately from the Asset model?** If yes, where (cheap disk, S3-compatible storage), and for how long? This is a forensic-replay and re-derivation question — if the consumer's parsing logic ever changes, raw logs are the only way to back-fill.
-- **Bridge mechanism choice** — resolved by the decision doc as `zeek-redis` plugin (first choice if investigation confirms a viable maintained package, decision doc §6.0) or Vector (off-the-shelf fallback). Custom Python is excluded.
+- **Bridge mechanism choice** — ~~resolved by the decision doc as `zeek-redis` if viable, Vector otherwise~~. **Updated 2026-05-08:** the §6.0 [bridge investigation findings](bridge-investigation-findings.md) ruled out current zeek-redis packages (none support Redis Streams); Stage 1's bridge is committed to **Vector**.
 - **Sampling/filtering policy at the bridge.** Which Zeek streams do we care about, and at what rate? Filebeat / Vector / Fluent Bit configs are where this lives if we adopt one of them.
 - **Is there appetite for an HTTP-push variant of the bridge?** Loki's Promtail-style HTTP push is a real alternative to Streams as the buffer protocol. Worth considering only if a Django capture endpoint can be made cheap enough (Sentry's Relay pattern, but in Python — which is harder than in Rust).
 
