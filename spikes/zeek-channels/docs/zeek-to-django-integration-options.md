@@ -33,7 +33,7 @@ These hold for every option below; flagging once to keep each section focused.
 - The Asset upsert path already exists (`AssetViewSet.upsert`, `Asset.objects.update_or_create(...)`) and tolerates idempotent retries on `mac_address`. Any option's "write to Django" step is a thin wrapper over that.
 - Redis is already deployed for Celery. Adding Channels' Redis layer or Redis Streams is a reuse, not a new dependency.
 - **Redis Streams is treated as a first-class buffer primitive in this analysis.** It is the append-only, durable, consumer-group-aware data structure available in Redis ≥ 5.0 — distinct from Redis pub/sub. Where an option benefits from Streams (or is changed by it being available), this is called out per-section.
-- **`zeek-redis` (the plugin) is not assumed to be production-ready.** Available implementations are community-maintained and uneven; none of the major Zeek-distributed packages currently write to Redis Streams natively. Bridge mechanisms in this analysis assume Broker bindings or log-tailing instead. If a stable Zeek-side Redis writer materializes, it slots into the bridge role of Option D without changing the rest of the design.
+- **`zeek-redis` (the plugin) needs investigation before it can be ruled in or out.** Several community-maintained packages exist; their Streams support, current maintenance, and production-readiness vary by package. If investigation surfaces a viable maintained package with `XADD`-style Streams support (not just pub/sub), it is the cleanest possible bridge for Option D — Zeek's own runtime publishes directly to the stream, eliminating the separate bridge daemon entirely. The decision-doc commits to investigating this before Stage 1 implementation begins; Vector and log-tailing are described in this analysis as fallback bridge mechanisms for the case where investigation does not surface a viable plugin.
 - The target deployment is the small-hospital sensor described in `BlueFlow product positioning`. Throughput is hundreds of Mbps, not data-center scale. This rules out Kafka-grade infrastructure as the default but does not rule it out forever.
 
 ---
@@ -286,7 +286,7 @@ The "durable buffer without a task framework" baseline. Uses Redis Streams as th
 
 ### D.2 How data flows
 
-1. A bridge process (Broker subscriber, file tailer, or `zeek-redis` plugin if/when one stabilizes) writes each relevant Zeek event to a Redis stream via `XADD zeek:events * stream <name> payload <json>`.
+1. A bridge mechanism writes each relevant Zeek event to a Redis stream via `XADD zeek:events * stream <name> payload <json>`. The bridge is preferably the `zeek-redis` plugin (in-process to Zeek; no separate daemon) if a viable maintained package is confirmed by investigation; Vector or a Broker subscriber are off-the-shelf alternatives if that confirmation does not land. Custom Python tailing is excluded from the recommended set per survey §4.2.
 2. The stream is configured with a retention policy — by approximate length (`MAXLEN ~ 10000000`) or by ID-based trimming on a schedule. Retention is the operational SLA for "how long can the consumer be down before data is lost?"
 3. A Django management command (`python manage.py zeek_stream_consume`) runs an `XREADGROUP` loop in a consumer group, blocking on new entries.
 4. Per entry, the consumer parses the payload, calls `Asset.objects.update_or_create(...)`, then `XACK`s.
@@ -326,7 +326,7 @@ The "durable buffer without a task framework" baseline. Uses Redis Streams as th
 - **Redis becomes a hard dependency for the ingest path.** A Redis outage stops both Celery and ingestion. C avoids this; B already shares the dependency.
 - **Stream retention is a real configuration choice.** Set too short and a slow consumer loses data; set too long and Redis memory grows. There is no "just works" default.
 - **No built-in retry/scheduling framework.** If the asset-upsert workload ever needs Celery's task semantics (retries with backoff schedules, periodic tasks, chains), they'd have to be reintroduced — or that work moves into Celery while Streams stays as the buffer (which is B-stream, but specifically *only* for those tasks).
-- **Bridge is still required.** Same caveat as A and B; the "Zeek → Streams" arrow does not happen by itself unless `zeek-redis` proves out.
+- **Bridge is still required as a process** unless `zeek-redis` (running in-process inside Zeek) is the chosen mechanism. Same caveat as A and B otherwise — the "Zeek → Streams" arrow needs a process to draw it.
 
 ### D.6 Failure modes
 
@@ -386,8 +386,8 @@ These were considered and deliberately deferred. Each could become a fourth opti
 | **Direct HTTP webhook** — Zeek scripts POST to a DRF endpoint | Zeek is not idiomatically an HTTP client; this couples Zeek's loop to Django's response time and creates a synchronous failure dependency in the wrong direction. Also requires writing the POST in Zeek script, which is awkward |
 | **Kafka pipeline** — Zeek's Kafka writer plugin → Kafka topic → Django consumer | Adds Kafka as a runtime dependency. Defensible at multi-sensor / multi-tenant scale; overkill for a small-hospital sensor today. If multi-tenancy lands, Kafka becomes a serious alternative to Redis Streams (Option D) |
 | **Zeek Broker direct → Django ORM** (no Streams, no Celery, no Channels) — a Python process subscribed to Broker events, calling ORM directly | A real option, distinct from Option D in that it has *no* durable buffer between Zeek and Django. Subscriber downtime drops events. Lowest latency available; lowest durability. Worth a pass if live ingestion latency dominates and durability is tolerable (e.g., sub-second telemetry where occasional gaps are fine) |
-| **Vector / Filebeat as bridge for Option D** — Vector tails Zeek logs and `XADD`s to Streams | A bridge variant of Option D, not a separate option. Vector is a battle-tested file→stream shipper with retry, backoff, and observability built in; the cost is one more daemon to operate. Worth picking up if the custom Python bridge proves fragile |
-| **`zeek-redis` plugin as bridge for Option D** — Zeek scripts publish to a Redis stream directly via a community plugin | Same role as the Vector or Broker bridge, but in-process to Zeek. Currently not assumed reliable (see common-assumptions); promote to a real bridge option only if a stable plugin is identified |
+| **Vector / Filebeat as bridge for Option D** — Vector tails Zeek logs and `XADD`s to Streams | A bridge variant of Option D, not a separate option. Vector is the off-the-shelf fallback chosen by the decision doc when `zeek-redis` is not viable. Battle-tested file→stream shipper with retry, backoff, and observability built in; the cost is one more daemon to operate |
+| **`zeek-redis` plugin as primary bridge for Option D** — Zeek scripts publish to a Redis stream directly via a community plugin | First-choice bridge mechanism if investigation (decision doc §6.0) confirms a viable maintained package with Streams support. In-process to Zeek; eliminates the separate bridge daemon entirely. Investigation result determines whether `zeek-redis` or Vector becomes the actual bridge in Stage 1 |
 | **Hybrid C + A** — sidecar writes to ORM and `group_send`s to Channels for browser fan-out | Subsumed by **D + Channels** in the comparison-table phasing notes. Listed here for completeness; not a separate option |
 
 ---
@@ -401,7 +401,7 @@ These were considered and deliberately deferred. Each could become a fourth opti
 5. **What happens to events the sidecar can't map to an Asset?** A DLQ table, a side log, or a notice — needs a decision so the design isn't silent on the unhappy path.
 6. **Idempotency window.** Asset upserts on `mac_address` are idempotent; replays are safe. But what about events that update mutable state (last-seen timestamps, port lists)? Replay semantics need to be specified before any option is wired up.
 7. **Streams retention policy.** If Option D is on the table, the retention bound (length, time, or both) defines the operational SLA — "the consumer can be down for X before data is lost." Needs a number, not a placeholder, before any code is written.
-8. **Bridge mechanism for Option D.** Three real candidates: log-tail (least latency-sensitive, most familiar), Broker subscriber (lowest latency, requires the `broker` Python package), or `zeek-redis` (only if a stable plugin emerges). Choosing one before prototyping prevents bikeshedding mid-spike.
+8. **Bridge mechanism for Option D.** Resolved in the decision doc as: `zeek-redis` plugin if investigation confirms a viable maintained package, Vector otherwise. Custom Python tailing is excluded. Broker subscriber remains a future alternative if low-latency live ingestion later dominates over file durability. The decision doc's open question §6.0 captures the investigation that fixes this choice before Stage 1 implementation begins.
 
 ---
 

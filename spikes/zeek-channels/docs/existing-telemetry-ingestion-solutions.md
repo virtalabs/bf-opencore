@@ -227,7 +227,7 @@ CNCF project that has become the standard for vendor-neutral telemetry collectio
 | **OTel Collector** | ~50MB | First-class | Custom exporter required | Defer until Redis support matures or destination changes |
 | **Custom Python tailer** | trivial | Library-dependent | Trivial | When the bridge needs are minimal and dependency cost is the dominant constraint |
 
-The first four are all viable; "custom" stays in the table because for a single-stream, single-host sensor it is genuinely competitive. The cost of a custom tailer is Python code we own; the cost of Vector is Python code we don't write but a daemon we operate.
+The first four are all viable; "custom" stays in the table for completeness, but §4.2 concludes against it and the decision doc excludes it from the recommended set. Of the off-the-shelf options Vector is the strongest match for Option D as defined here. Note that a Zeek-native option — `zeek-redis` (in-process, no separate daemon) — is not in this table because it is not a generic shipper; it is described separately in the integration-options doc and chosen ahead of these candidates if a viable maintained package is confirmed.
 
 ---
 
@@ -332,7 +332,7 @@ Every mature stack surveyed maps onto this shape:
 | Sentry | Relay | Kafka | Snuba → ClickHouse |
 | PostHog | Django capture endpoint | Kafka | Plugin Server → ClickHouse |
 | Loki | Promtail / Vector | Loki distributor | Loki ingester → object store |
-| **Option D (proposed)** | **Vector or custom tailer or Broker subscriber** | **Redis Streams** | **Django mgmt command → Postgres** |
+| **Option D (decided)** | **`zeek-redis` (in-process, preferred) or Vector (fallback)** | **Redis Streams** | **Django mgmt command → Postgres** |
 
 This is the strongest validation in the survey: Option D has the same shape as the canon. Option C skips the buffer (like Arkime); Option A puts the buffer in the wrong layer (channel layer is not durable); Option B duplicates the buffer (Celery on top of Streams is two buffers).
 
@@ -340,7 +340,7 @@ This is the strongest validation in the survey: Option D has the same shape as t
 
 Every NSM/observability stack uses an off-the-shelf shipper as the bridge. Custom file-tailing is rare in mature systems because rotation handling, offset persistence, and back-pressure are subtle and worth not re-implementing.
 
-For BlueFlow specifically: the case for a **custom Python tailer** is dependency minimalism. The case for **Vector** is everything else — rotation handling, retry, observability, disk buffer, transforms. If the spike's prototype uses a custom tailer to keep the dependency surface small, it is worth treating that as a temporary choice and revisiting Vector before the prototype hardens into production.
+For BlueFlow specifically: dependency minimalism is the only honest argument for a custom tailer, and that argument loses on examination. Off-the-shelf options solve the hard parts — rotation handling, offset persistence, back-pressure — that a custom tailer would have to reimplement, and the Zeek-native `zeek-redis` plugin (if a viable maintained package exists) eliminates the need for any separate bridge daemon at all. The decision doc accordingly excludes custom Python from the recommended set: **`zeek-redis` if viable, Vector otherwise.**
 
 ### 4.3 Django apps stay out of the ingest hot path
 
@@ -374,11 +374,17 @@ The survey does not surface a fifth option. It does refine the existing four:
 
 Reading the option doc cold, "Redis Streams + Django management command consumer" might look like a clever invention. The survey shows it is the same three-stage shape every mature stack uses, with sensible primitive choices. That is a meaningful update to how Option D should be presented: not as one of four, but as **the option that matches industry practice at our scale**.
 
-### 5.2 Vector is the bridge default, not "custom tailer"
+### 5.2 Off-the-shelf is the bridge default, not "custom tailer"
 
-The four-option doc lists Vector under "deferred / bridge variant of D." The survey argues it should be promoted: every comparable stack uses an off-the-shelf shipper. The custom-tailer choice is reasonable only as a *prototype simplification*, not as the production shape.
+Off-the-shelf options should be promoted ahead of any custom-code path: every comparable stack in §1–§3 uses an off-the-shelf shipper. And `zeek-redis` (in-process to Zeek itself) is even simpler than running a separate shipper *if* a viable maintained package exists, because it eliminates the bridge daemon entirely.
 
-This suggests an amendment to the integration doc: in §C and §D, lead with "Vector as the bridge" and treat custom Python tailing as the prototype-only fallback.
+The right preference order for Option D's bridge slot:
+
+1. **`zeek-redis` plugin** — first choice if investigation confirms a maintained package with Streams (`XADD`) support. Zeek's own runtime publishes events; no separate bridge daemon needed.
+2. **Vector** — off-the-shelf fallback when `zeek-redis` is not viable. Survey §2.1 covers it; battle-tested rotation handling, retry/backoff, observability, disk buffering.
+3. **Custom Python tailing** — excluded. Reimplements rotation handling and offset persistence that off-the-shelf options have solved (see §4.2).
+
+This is the framing adopted by the decision doc; the integration-options doc has been updated to match.
 
 ### 5.3 Option B's redundancy is now a stronger claim
 
@@ -404,7 +410,7 @@ Security Onion, Malcolm, Corelight, and friends are all *security-monitoring* pr
 Adding to the open-questions list in the option doc:
 
 - **Should raw Zeek logs be retained separately from the Asset model?** If yes, where (cheap disk, S3-compatible storage), and for how long? This is a forensic-replay and re-derivation question — if the consumer's parsing logic ever changes, raw logs are the only way to back-fill.
-- **Should the bridge be Vector from day one, or a custom Python tailer that gets replaced before production?** The survey leans Vector; the integration doc leans custom-then-maybe-Vector. Resolving this informs the prototype scope.
+- **Bridge mechanism choice** — resolved by the decision doc as `zeek-redis` plugin (first choice if investigation confirms a viable maintained package, decision doc §6.0) or Vector (off-the-shelf fallback). Custom Python is excluded.
 - **Sampling/filtering policy at the bridge.** Which Zeek streams do we care about, and at what rate? Filebeat / Vector / Fluent Bit configs are where this lives if we adopt one of them.
 - **Is there appetite for an HTTP-push variant of the bridge?** Loki's Promtail-style HTTP push is a real alternative to Streams as the buffer protocol. Worth considering only if a Django capture endpoint can be made cheap enough (Sentry's Relay pattern, but in Python — which is harder than in Rust).
 
