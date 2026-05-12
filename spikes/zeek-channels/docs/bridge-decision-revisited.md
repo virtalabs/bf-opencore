@@ -187,6 +187,8 @@ For the spike's Stage 1 prototype, in-process + JavaScript (ZeekJS) wins on both
 
 ## Revised Stage 1 plan
 
+The Stage 1 plan below is the *short-term* row of the broader bridge-implementation timeline (short-term: ZeekJS → mid-term: forked C++ plugin → long-term: re-evaluate Redis itself) codified in the [decision doc's "Direction and timeline" section](decision-option-d-two-stage-rollout.md#direction-and-timeline). The short-term framing is deliberate: ZeekJS is the right choice for hackathon-shaped work and the Stage 1 spike, but it is explicitly *not* the long-term answer for hardened production.
+
 **Prototype with ZeekJS.** Validate the rest of the pipeline (consumer, stream contract, Postgres materialization, dead-letter handling) end-to-end against real Zeek output as fast as possible.
 
 **Hold two swap-in paths in reserve, both of which leave the consumer unchanged:**

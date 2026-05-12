@@ -165,6 +165,61 @@ Stage 2 is complete when:
 
 ---
 
+## Direction and timeline
+
+The bridge implementation choice evolves with the project's lifecycle. The Stage 1 / Stage 2 rollout above stages *product capability* (ingestion-only → ingestion + live UX); this section stages *bridge implementation*. The two are orthogonal — the consumer side stays stable across all three implementation stages because the integration boundary is the payload contract on `zeek:events`, not the bridge process itself.
+
+### Short-term: native ZeekJS (hackathon-shaped work)
+
+For short-term needs — **hackathon prototypes, internal demos, and the Stage 1 spike validation** — the native ZeekJS path is best. A ~30-line `send-to-redis.js` invoked as `zeek -i <iface> send-to-redis.js`, with zero new daemons and zero new packages: ZeekJS is bundled with Zeek as a built-in plugin since v6.0. Edit-then-restart iteration loop, native typed access to Zeek records, time-to-working-prototype measured in hours rather than days. Full example and rationale in [bridge-decision-revisited.md](bridge-decision-revisited.md).
+
+This is explicitly the right choice for time-boxed work where iteration speed dominates and the production-deploy constraints haven't bitten yet.
+
+### Mid-term: fork a community C++ plugin
+
+When the prototype graduates to a hardened production deploy — long enough on a real sensor that Node.js footprint (~50MB) and in-process coupling start mattering — the next step is to **fork a community C++ Zeek plugin** as the bridge. Two reasonable fork bases, both leaving the Django consumer unchanged:
+
+- **`sedarasecurity/zeek-redis`** — the literal Redis writer plugin. Swap `LPUSH` for `XADD` in `DoWrite` (already supported by `redis-plus-plus`). ~20-line C++ patch. Upstream stale (last functional change 2024-05-08), so we take over de facto maintenance.
+- **`SeisoLLC/zeek-kafka`** — better-maintained plugin in the same architectural shape (Apache-2.0, actively tracking Zeek master). Reasonable base if rebasing rather than patching; the CMake glue and `zkg.meta` patterns transfer cleanly, with the Kafka-client → Redis-client substitution as the bulk of the work.
+
+Either fork swaps the ~50MB Node.js runtime for ~200KB of hiredis. Mid-term commitment is real because we own the fork — track Zeek plugin-API changes across versions, ship binaries per release.
+
+### Long-term: explore replacing Redis entirely
+
+Redis Streams is the right primitive *now*: already deployed for Celery, the team operates it, and it provides Option D's required durability/replay/consumer-group properties out of the box. But the brokering layer is **not architecturally load-bearing in the deeper sense** — the bridge produces structured events, the consumer reads them, and the integration boundary is the payload contract. Whether that contract rides on Redis Streams, Kafka topics, NATS JetStream, or no broker at all (a direct Zeek-Broker subscriber) is a swap that doesn't change the consumer's shape.
+
+Long-term, when the project's needs grow past what Redis comfortably provides — multi-sensor topologies, multi-tenant fan-out, durability guarantees that exceed Redis AOF, geo-distribution — **re-evaluating the broker entirely** is on the table. Candidates already surfaced in the integration-options analysis:
+
+- **Kafka** — defensible at multi-sensor / multi-tenant scale, overkill on a single small-hospital sensor today. See [zeek-to-django-integration-options.md](zeek-to-django-integration-options.md) "What's not analyzed."
+- **NATS JetStream** — lighter than Kafka, similar at-least-once durability semantics, but a runtime the team hasn't operated.
+- **Zeek Broker → direct subscriber** — no broker at all between Zeek and Django; lowest latency, no durable buffer; documented as a possible Stage 3 alternative if low-latency live ingestion ever dominates over file durability.
+
+This is explicitly *not a Stage 1 decision*. It's a flagged direction for when the operational envelope expands past what a single-sensor Redis deployment comfortably handles. The takeaway for short-term and mid-term work: build against the `zeek:events` payload contract, not against Redis-specific primitives in the consumer.
+
+### Candidate bridges at a glance
+
+The full per-axis analysis is in [bridge-decision-revisited.md](bridge-decision-revisited.md). Summary:
+
+| Property | **ZeekJS (Stage 1 default)** | **C plugin (forked)** | Storage Framework KV | **Vector** | Python sidecar |
+|---|---|---|---|---|---|
+| Lines we own | ~30 JS | C++ plugin + build glue | Zeek scripts + scan/sub consumer | ~50 TOML/VRL config | ~150–250 Py |
+| New daemons | 0 | 0 | 1 (KV consumer) | 1 (Vector) | 1 (sidecar) |
+| Producer mechanism | In-Zeek JS hook → `XADD` | In-Zeek C++ → `XADD` | In-Zeek `Storage::put` (SET/HSET) | Tail logs → `XADD` | Tail logs → `XADD` |
+| Disk buffer when Redis is down | **No** (RAM offline queue) | No | No | **Yes** (configurable) | Yes (log files = buffer) |
+| Delivery semantics | At-least-once if write ack'd, else lost | Same | **Lossy (pubsub)** or **stale (poll)** | At-least-once, disk-durable | At-least-once if offset persisted |
+| Replay capability | Yes (Streams) | Yes (Streams) | **No** | Yes | Yes |
+| Iteration speed | Fast (edit file, restart) | Slow (rebuild C++) | Medium | Fast (edit config) | Fast |
+| Runtime deps | Node.js (~50MB) | hiredis (~200KB) | hiredis | Vector binary (~50–100MB) | Python (already installed) |
+| Failure blast radius | Inside Zeek process | Inside Zeek process | Inside Zeek + KV consumer | Independent process | Independent process |
+| Long-term maintenance | npm `redis` (community) | We own the fork | Zeek script + custom consumer | Vector upstream | We own the tailer |
+| Off-the-shelf? | Mostly (npm `redis`) | Plugin needs forking | First-class Zeek | Yes | No |
+| **Suits short-term (hackathon)** | ★ best | Worst | Wrong shape | Heavy | Medium |
+| **Suits mid-term (hardened production)** | OK with coupling caveats | **Strong** | No | **Strong** | Strong |
+
+The "★ best" cell aligns with the short-term row of the timeline above; the "Strong" cells under the C-plugin and Vector columns align with the mid-term options. Storage Framework KV is wrong-shape at every horizon and is excluded. The long-term option (replacing Redis entirely) is not represented on this table because the table is *Redis-bridge candidates* — by definition every column assumes Redis Streams as the buffer.
+
+---
+
 ## Consequences
 
 **What Stage 1 commits us to**
