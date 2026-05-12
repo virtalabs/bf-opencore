@@ -1,9 +1,14 @@
 # Bridge Investigation Findings — Decision Doc §6.0
 
 **Date:** 2026-05-08
-**Status:** Resolved
-**Resolution:** No current zeek-redis package supports Redis Streams. **Stage 1's bridge is Vector.** Custom Python remains excluded.
+**Status:** Amended 2026-05-12 — operative conclusion superseded by [bridge-decision-revisited.md](bridge-decision-revisited.md). Historical investigation preserved below.
+**Original resolution (2026-05-08):** No current zeek-redis package supports Redis Streams. Stage 1's bridge is Vector. Custom Python remains excluded.
+**Revised resolution (2026-05-12):** Stage 1 prototype default is **bespoke ZeekJS** (~30-line in-process producer using Zeek's bundled JavaScript runtime). The C-plugin fork (`sedarasecurity/zeek-redis` patched `LPUSH`→`XADD`) and Vector are documented swap-in paths. The Storage Framework KV side-channel is evaluated and explicitly rejected. See [bridge-decision-revisited.md](bridge-decision-revisited.md) for the full revised analysis.
 **Related:** [decision-option-d-two-stage-rollout.md §6.0](decision-option-d-two-stage-rollout.md)
+
+---
+
+> **AMENDED 2026-05-12.** The original conclusion below ("no plugin → Vector") collapsed two independent decision axes (buffer location and producer language) and missed bespoke ZeekJS as a third architectural point. The package-by-package findings in this doc remain accurate as a record of what was checked; only the operative conclusion is superseded. **For the current Stage 1 bridge decision, read [bridge-decision-revisited.md](bridge-decision-revisited.md) first.**
 
 ---
 

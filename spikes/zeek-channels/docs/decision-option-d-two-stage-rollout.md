@@ -1,6 +1,6 @@
 # DECISION: Adopt Option D (Streams-Buffered Ingest), with Channels Layered in Stage 2
 
-**Status:** Decided 2026-05-08
+**Status:** Decided 2026-05-08; bridge-mechanism amended 2026-05-12 (see Decision section below).
 **Decision:** Adopt **Option D** — Zeek → bridge → Redis Streams → Django consumer → PostgreSQL — and roll it out in two stages:
 - **Stage 1** ships the ingestion pipeline. Asset state is materialized in Postgres from Zeek-derived events. No live browser updates yet.
 - **Stage 2** layers Channels on top as a *second consumer* of the same stream, providing live browser fan-out. The Stage 1 path is unchanged.
@@ -12,7 +12,8 @@ Stage 1 is shippable on its own and delivers the core asset-discovery value. Sta
 - [zeek-and-channels-ideal-usage.md](zeek-and-channels-ideal-usage.md) — how Channels and Zeek each want to be deployed in isolation.
 - [zeek-to-django-integration-options.md](zeek-to-django-integration-options.md) — four-option analysis (A: Channels, B: Celery, C: log-tail sidecar, D: Streams consumer) across effort, compatibility, and tradeoffs.
 - [existing-telemetry-ingestion-solutions.md](existing-telemetry-ingestion-solutions.md) — survey of mature stacks; pattern extraction; validation that Option D matches the canon.
-- [bridge-investigation-findings.md](bridge-investigation-findings.md) — resolution of open question §6.0. No viable zeek-redis package exists; Stage 1's bridge is Vector.
+- [bridge-investigation-findings.md](bridge-investigation-findings.md) — original §6.0 investigation. Catalogs `sedarasecurity/zeek-redis`, `mbispham/zeekjs-redis`, and the legacy `Bro::Redis`; concluded "no off-the-shelf plugin → Vector." Operative conclusion **superseded by the doc below**.
+- [bridge-decision-revisited.md](bridge-decision-revisited.md) — **operative bridge decision.** ZeekJS as Stage 1 prototype default; C-plugin fork and Vector as documented swap-in paths; Storage Framework KV evaluated and rejected.
 
 ---
 
@@ -26,7 +27,11 @@ A decision is needed now so prototype work can begin with a fixed target archite
 
 ## Decision
 
-**Adopt Option D.** Roll it out in two stages, where the staging axis is *product capability* (ingestion only → ingestion + live UX), not implementation choices within ingestion. The Stage 1 bridge mechanism is **Vector**, fixed by the §6.0 investigation that found no viable zeek-redis plugin with Streams support — see [bridge-investigation-findings.md](bridge-investigation-findings.md).
+**Adopt Option D.** Roll it out in two stages, where the staging axis is *product capability* (ingestion only → ingestion + live UX), not implementation choices within ingestion.
+
+The Stage 1 bridge mechanism is **bespoke ZeekJS** (a ~30-line in-process producer using Zeek's bundled JavaScript runtime, calling `redis.xAdd(...)` from a `Conn::log_policy` hook). The C-plugin fork (`sedarasecurity/zeek-redis` patched `LPUSH`→`XADD`) and Vector are documented swap-in paths, neither of which requires changing the consumer. The Storage Framework KV side-channel is evaluated and explicitly rejected.
+
+The bridge decision was originally fixed to Vector on 2026-05-08 by the §6.0 investigation ([bridge-investigation-findings.md](bridge-investigation-findings.md)). That conclusion was **amended on 2026-05-12** after closer reading of ZeekJS (bundled with Zeek since v6.0, not a third-party package) and Zeek 8's Storage Framework. See [bridge-decision-revisited.md](bridge-decision-revisited.md) for the full revised analysis.
 
 ### Target architecture (Stage 2 — full picture)
 
@@ -80,7 +85,7 @@ Long form is in the companion docs. Headline reasons:
 
 **Components**
 
-- **Bridge mechanism: Vector.** Off-the-shelf shipper recommended by survey §5.2 — battle-tested rotation handling, retry/backoff, observability, disk buffering. Configured with a file source per Zeek log type, a VRL transform that filters to the streams of interest and reshapes payloads, and a Redis Streams sink writing to `zeek:events`. This choice is fixed by the §6.0 bridge investigation ([findings](bridge-investigation-findings.md)), which found no current zeek-redis package with Redis Streams support. Custom Python tailing remains explicitly excluded per survey §4.2.
+- **Bridge mechanism: bespoke ZeekJS** (revised 2026-05-12). A ~30-line script invoked as `zeek -i <iface> send-to-redis.js` that subscribes to `Conn::log_policy` (and other relevant log hooks) and calls `redis.xAdd('zeek:events', '*', {...})` per record. ZeekJS is bundled with Zeek as a built-in plugin since v6.0 — not a third-party package. The full minimal example is in [bridge-decision-revisited.md](bridge-decision-revisited.md). Two swap-in paths are documented and leave the consumer unchanged: (i) **C-plugin fork** of `sedarasecurity/zeek-redis` with `LPUSH`→`XADD` (~20-line patch) for production hardening when Node footprint becomes binding; (ii) **Vector** when disk-buffered durability across Redis outages matters more than in-process simplicity. Custom Python tailing remains explicitly excluded per survey §4.2.
 - **Redis stream `zeek:events`.** Single stream, retention configured per open question §6.1. Lives in the same Redis instance as Celery, in a separate logical DB.
 - **Consumer group `blueflow-ingest`.** Starts with one consumer; horizontal scaling deferred until Stage 1 data shows it's needed.
 - **Django management command** (`python manage.py zeek_stream_consume`). Runs an `XREADGROUP BLOCK` loop, parses payloads, calls `Asset.objects.update_or_create(...)`, then `XACK`s. Permanently-failing entries route to a dead-letter stream (`zeek:dead`) and the main entry is acked.
@@ -166,8 +171,8 @@ Stage 2 is complete when:
 
 - Operating Redis Streams as a durable buffer with a defined retention policy. This is a new operational responsibility distinct from existing Celery use of Redis.
 - Maintaining a Django management command consumer as a long-running process supervised at the same tier as Celery workers.
-- Vector as the Stage 1 bridge daemon (committed by §6.0 investigation findings).
-- Treating the Streams payload contract as a real interface — versioned, evolved with care.
+- A ZeekJS-based in-process bridge for the Stage 1 prototype, with the explicit Node.js footprint and in-process-coupling caveats documented in [bridge-decision-revisited.md](bridge-decision-revisited.md). Production hardening may swap to the C-plugin path; that swap is a ~20-line patch and does not change the consumer.
+- Treating the Streams payload contract on `zeek:events` as a real interface — versioned, evolved with care. This contract is the bridge/consumer integration boundary that survives all documented bridge swaps.
 - Reserving the `blueflow-fanout` consumer group name for Stage 2 use.
 
 **What Stage 2 commits us to (additionally)**
@@ -183,8 +188,8 @@ Stage 2 is complete when:
 - A specific Stage 2 consumer shape (stream-direct vs. post-commit signal). Deferred to Stage 2 design.
 - A specific raw-archive strategy. Survey §5.4 surfaced this; on the open-questions list, not part of this decision.
 - A specific multi-tenant or multi-sensor topology. Single-sensor scope only.
-- The Zeek Broker subscriber as the bridge mechanism. If low-latency live ingestion later dominates over file durability, Broker is a possible Stage 3 replacement for Vector. The §6.0 findings explicitly leave this door open.
-- Long-term commitment to Vector. If a Streams-supporting zeek-redis plugin emerges in the future, the bridge can be swapped without consumer-side changes — the payload contract on the stream is what survives across bridge implementations.
+- The Zeek Broker subscriber as the bridge mechanism. If low-latency live ingestion later dominates over file durability, Broker remains a possible Stage 3 replacement for the in-process producer. The §6.0 findings explicitly leave this door open.
+- Long-term commitment to ZeekJS as the bridge. The payload contract on `zeek:events` is the integration boundary that survives across bridge implementations. The C-plugin fork, Vector, a Broker subscriber, or a future Streams-supporting community plugin are all swap-in candidates without consumer-side change.
 
 ---
 
@@ -193,8 +198,8 @@ Stage 2 is complete when:
 | Risk | Stage | Impact | Mitigation |
 |---|---|---|---|
 | Streams retention misconfigured (too short) → consumer falls behind → data loss | 1 | **High** — silent data loss | Monitor `XPENDING` and `XLEN`; alert on growth beyond a configured threshold; document the retention SLA explicitly |
-| Vector adoption blocked operationally (e.g., footprint, packaging, learning curve) | 1 | High — blocks Stage 1 | Stage 1 cannot fall through to custom Python per §6.0 findings; the right move is to revisit the decision (re-evaluate Broker subscriber as a Stage 1 alternative, or accept the operational cost of Vector). Document the resolution before proceeding |
-| Vector's VRL transform configuration drifts from consumer's payload expectations | 1 | Medium — bug-shaped, not architectural | Pin the payload schema before Stage 1 ships; add a contract test that runs Vector against fixture Zeek logs and asserts the consumer parses the resulting `XADD` payloads correctly |
+| ZeekJS bridge fails in production (Node memory growth, GC pause, in-process coupling intolerable) | 1 | High — affects Stage 1 viability in prod | Two documented swap-ins, neither of which changes the consumer: fork `sedarasecurity/zeek-redis` to a C-plugin (~20-line patch) if footprint/coupling is the issue, or swap to Vector if disk-buffered durability is the issue. See [bridge-decision-revisited.md](bridge-decision-revisited.md) |
+| Bridge payload shape drifts from consumer's expectations (any bridge implementation) | 1 | Medium — bug-shaped, not architectural | Pin the payload schema on `zeek:events` before Stage 1 ships; add a contract test that runs the bridge against fixture Zeek output and asserts the consumer parses the resulting `XADD` payloads correctly. The contract is the bridge/consumer interface — it must survive bridge swaps |
 | Redis becomes a hard dependency for ingest | 1 | Medium — already shared with Celery | Configure AOF persistence to limit data loss across restarts; document Redis as a Tier-1 dependency in the runbook |
 | At-least-once delivery means duplicate ORM writes | 1 | Low — by design | `Asset.objects.update_or_create` on `mac_address` is already idempotent. Document this contract in the consumer's module docstring so future maintainers don't break it |
 | Stage 2 design choice (stream vs. signal) ambiguous | 2 | Medium if unresolved | Decision deferred to Stage 2 design pass; tradeoff documented above. Not a blocker for Stage 1 |
@@ -208,7 +213,7 @@ Stage 2 is complete when:
 
 These are imported from the integration-options doc's open-questions list, narrowed to those that block Stage 1.
 
-0. ~~**Bridge investigation.**~~ **RESOLVED 2026-05-08.** No current zeek-redis package supports Redis Streams; both living packages (`sedarasecurity/zeek-redis`, `mbispham/zeekjs-redis`) write to Lists, and a GitHub-wide search for `XADD` in `*.zeek` files returned zero results. Stage 1's bridge is **Vector**. See [bridge-investigation-findings.md](bridge-investigation-findings.md) for the full record of what was checked and why each option was rejected.
+0. ~~**Bridge investigation.**~~ **RESOLVED 2026-05-08; AMENDED 2026-05-12.** No current third-party zeek-redis package supports Redis Streams ([bridge-investigation-findings.md](bridge-investigation-findings.md)). However, bespoke ZeekJS — Zeek's bundled JavaScript runtime, in-tree since v6.0 — provides a ~30-line in-process producer path that the original investigation did not separate from third-party packages. Stage 1's prototype bridge is **bespoke ZeekJS**, with the **C-plugin fork** (~20-line patch to `sedarasecurity/zeek-redis`) and **Vector** as documented swap-in paths. The Zeek 8 Storage Framework KV side-channel is evaluated and explicitly rejected. Full revised analysis in [bridge-decision-revisited.md](bridge-decision-revisited.md).
 1. **Streams retention bound** — concrete number (length, time, or both). Defines the SLA: "consumer can be down for X before data is lost." Cannot be left as a placeholder.
 2. **Which Zeek streams matter** — the bridge filter set. `conn.log`, `dns.log`, `software.log` are the obvious candidates; the full list and the field subset of each must be enumerated.
 3. **Consumer group sizing** — how many consumers in `blueflow-ingest`? Stage 1 starts at one; verify under expected load before declaring exit.
