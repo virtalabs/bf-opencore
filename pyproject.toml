@@ -41,6 +41,9 @@ prod = [
 scanners = [
     "hl7>=0.4",
 ]
+pcap-fixtures = [
+    "scapy>=2.5",
+]
 dev = [
     "pytest",
     "pytest-django",
