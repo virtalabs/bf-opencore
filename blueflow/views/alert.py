@@ -3,6 +3,7 @@
 import logging
 
 from django.utils import timezone
+from drf_spectacular.utils import extend_schema
 from rest_framework import serializers, viewsets
 from waffle.mixins import WaffleSwitchMixin
 
@@ -74,6 +75,7 @@ class AlertSerializer(serializers.HyperlinkedModelSerializer):
         return super().update(instance, validated_data)
 
 
+@extend_schema(exclude=True)
 class AlertViewSet(WaffleSwitchMixin, viewsets.ModelViewSet):
     """Alert."""
 

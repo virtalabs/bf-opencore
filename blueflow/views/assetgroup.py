@@ -1,6 +1,7 @@
 """Join table for assets and vulns."""
 
 import django_filters
+from drf_spectacular.utils import extend_schema
 from rest_framework import serializers, viewsets
 from rest_framework.exceptions import MethodNotAllowed
 from rest_framework.fields import IntegerField
@@ -55,6 +56,7 @@ class AssetGroupFilter(django_filters.rest_framework.FilterSet):
         }
 
 
+@extend_schema(exclude=True)
 class AssetGroupViewSet(WaffleSwitchMixin, viewsets.ModelViewSet):
     """An AssetGroup links a group to an asset."""
 

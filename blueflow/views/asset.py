@@ -13,6 +13,7 @@ from django.db.models import Case, Count, QuerySet, When
 from django.db.models.aggregates import Func
 from django.db.utils import IntegrityError
 from django.utils import timezone
+from drf_spectacular.utils import extend_schema
 from rest_framework import serializers, status, viewsets
 from rest_framework.decorators import action
 from rest_framework.request import Request
@@ -512,6 +513,7 @@ class AssetViewSet(
     ################################
     # Detail methods/actions
 
+    @extend_schema(exclude=True)
     @action(detail=True)
     def changelog(self, request: Request, _pk: int) -> Response:
         """Like full history but fields are null except the one that changed.
@@ -530,6 +532,7 @@ class AssetViewSet(
         )
         return Response(serializer.data)
 
+    @extend_schema(exclude=True)
     @action(detail=True)
     def fields(self, request: Request, pk: int) -> Response:
         """List fields for an Asset.
@@ -595,6 +598,7 @@ class AssetViewSet(
             }
         )
 
+    @extend_schema(exclude=True)
     @action(detail=True)
     def history(self, request: Request, _pk: int) -> Response:
         """Full history of asset (paginated).
@@ -629,6 +633,7 @@ class AssetViewSet(
         )
         return Response(serializer.data)
 
+    @extend_schema(exclude=True)
     @action(detail=True)
     def needs_sw_update(self, _request: Request, _pk: int) -> Response:
         """Return whether this asset needs a software update.
@@ -647,6 +652,7 @@ class AssetViewSet(
         }
         return Response(resp)
 
+    @extend_schema(exclude=True)
     @action(detail=True)
     def networks(self, request: Request, _pk: int) -> Response:
         """Networks that this asset belongs to."""
@@ -655,6 +661,7 @@ class AssetViewSet(
         qset = self.get_object().network_qset()
         return self.paginate_relations(request, qset, "NetworkSerializer")
 
+    @extend_schema(exclude=True)
     @action(detail=True)
     def scans(self, request: Request, _pk: int) -> Response:
         """Return scans of the asset."""
@@ -663,6 +670,7 @@ class AssetViewSet(
         scan_qset = self.get_object().scan_qset()
         return self.paginate_relations(request, scan_qset, "ScanSerializer")
 
+    @extend_schema(exclude=True)
     @action(detail=True)
     def similar(self, request: Request, _pk: int) -> Response:
         """Similar assets."""
@@ -676,6 +684,7 @@ class AssetViewSet(
         # TODO(taylorcochran): Add risk score ordering
         return self.paginate_relations(request, qset, "AssetSerializer")
 
+    @extend_schema(exclude=True)
     @action(detail=True, methods=["GET", "POST"])
     def tags(self, request: Request, _pk: int) -> Response | None:
         """Tags attached to the asset."""
@@ -728,6 +737,7 @@ class AssetViewSet(
     ################################
     # List methods/actions
 
+    @extend_schema(exclude=True)
     @action(detail=False)
     def duplicate_ips(self, _request: Request) -> Response:
         """Return set of duplicate IP addresses and their counts."""
@@ -741,6 +751,7 @@ class AssetViewSet(
         resp = [(str(x["ip_address"]), x["howmany"]) for x in qset]
         return Response(resp)
 
+    @extend_schema(exclude=True)
     @action(detail=False)
     def histogram(self, request: Request) -> Response:
         """Return an optionally filtered histogram over an asset field.

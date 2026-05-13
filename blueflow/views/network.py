@@ -3,6 +3,7 @@
 import logging
 
 import django_filters
+from drf_spectacular.utils import extend_schema
 from rest_framework import mixins, permissions, serializers, viewsets
 from rest_framework.decorators import action
 from rest_framework.fields import IntegerField
@@ -96,6 +97,7 @@ class NetworkFilter(django_filters.rest_framework.FilterSet):
         #   asset.py::AssetFilter.Meta.filter_overrides for inspiration.
 
 
+@extend_schema(exclude=True)
 class NetworkViewSet(WaffleSwitchMixin, viewsets.ModelViewSet):
     """CIDR-based collection/network of Assets."""
 
@@ -137,6 +139,7 @@ class CidrSerializer(serializers.HyperlinkedModelSerializer):
         fields = ("id", "url", "cidr", "network_id")
 
 
+@extend_schema(exclude=True)
 class CidrViewSet(mixins.DestroyModelMixin, viewsets.ReadOnlyModelViewSet):
     """CIDR-based collection/network of Assets."""
 
@@ -169,6 +172,7 @@ class SavedSearchSerializer(serializers.HyperlinkedModelSerializer):
         # to think about how to accomplish this...
 
 
+@extend_schema(exclude=True)
 class SavedSearchViewSet(WaffleSwitchMixin, viewsets.ModelViewSet):
     """CIDR-based collection/network of Assets."""
 

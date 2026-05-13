@@ -4,6 +4,7 @@ import logging
 from typing import ClassVar
 
 import django_filters
+from drf_spectacular.utils import extend_schema
 from rest_framework import serializers, viewsets
 from waffle.mixins import WaffleSwitchMixin
 
@@ -48,6 +49,7 @@ class ScanFilter(django_filters.rest_framework.FilterSet):
         }
 
 
+@extend_schema(exclude=True)
 class ScanViewSet(WaffleSwitchMixin, viewsets.ModelViewSet):
     """Each scan represents one "Scan" of one asset."""
 

@@ -5,6 +5,7 @@ import logging
 import django_filters
 from django.core.exceptions import ObjectDoesNotExist
 from django.db.utils import IntegrityError
+from drf_spectacular.utils import extend_schema
 from rest_framework import serializers, status, viewsets
 from rest_framework.decorators import action
 from rest_framework.response import Response
@@ -84,6 +85,7 @@ class TagFilter(django_filters.rest_framework.FilterSet):
         }
 
 
+@extend_schema(exclude=True)
 class TagViewSet(WaffleSwitchMixin, ChangeReasonMixin, viewsets.ModelViewSet):
     """Free-text tag associated with one or more assets."""
 
