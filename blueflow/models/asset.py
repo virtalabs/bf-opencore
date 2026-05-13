@@ -31,6 +31,14 @@ from .vulnerability import AssetVulnerability, Vulnerability
 
 logger = logging.getLogger(__name__)
 
+TCP_PORT_MAX = 65535
+
+
+def validate_tcp_port_range(ports: list[int]) -> None:
+    if not all(1 <= p <= TCP_PORT_MAX for p in ports):
+        msg = f"All TCP ports must be in range 1-{TCP_PORT_MAX}."
+        raise ValidationError(msg)
+
 
 class Asset(models.Model):
     """Holds our Assets."""
@@ -79,7 +87,10 @@ class Asset(models.Model):
     last_scanned = models.DateTimeField(blank=True, null=True)
     last_pinged = models.DateTimeField(blank=True, null=True)
     open_ports_tcp = pg_fields.ArrayField(
-        models.IntegerField(), default=list, verbose_name="Open TCP ports"
+        models.IntegerField(),
+        default=list,
+        verbose_name="Open TCP ports",
+        validators=[validate_tcp_port_range],
     )
     external_keys = models.JSONField(blank=True, null=True)
 

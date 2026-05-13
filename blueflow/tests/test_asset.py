@@ -7,6 +7,7 @@ http://pytest-django.readthedocs.io/en/latest/helpers.html
 import json
 
 import pytest
+from django.core.exceptions import ValidationError
 from freezegun import freeze_time
 from rest_framework import status
 from rest_framework.test import APIClient
@@ -386,6 +387,15 @@ def test_patch_asset(asset_edit_client: APIClient) -> None:
     # hostname has changed.
     spam_asset = models.Asset.objects.get(id=spam_asset.id)
     assert spam_asset.hostname == "nospam"
+
+
+def test_open_ports_tcp_model_validator_rejects_out_of_range() -> None:
+    """Model-level ArrayField validator rejects ports outside 1-65535."""
+    asset = models.Asset(
+        hostname="test-port-validator", open_ports_tcp=[-1, 80]
+    )
+    with pytest.raises(ValidationError):
+        asset.full_clean()
 
 
 def test_patch_asset_open_ports_tcp_string(asset_edit_client: APIClient) -> None:
