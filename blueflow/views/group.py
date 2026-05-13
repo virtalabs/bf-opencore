@@ -5,6 +5,7 @@ import logging
 import django_filters
 from django.core.exceptions import ObjectDoesNotExist
 from django.db.utils import IntegrityError
+from drf_spectacular.utils import extend_schema
 from rest_framework import serializers, status, viewsets
 from rest_framework.decorators import action
 from rest_framework.response import Response
@@ -66,6 +67,7 @@ class GroupFilter(django_filters.rest_framework.FilterSet):
         }
 
 
+@extend_schema(exclude=True)
 class GroupViewSet(WaffleSwitchMixin, viewsets.ModelViewSet):
     """Free-text group associated with one or more assets."""
 

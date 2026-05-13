@@ -3,6 +3,7 @@
 import logging
 
 from django.contrib.auth.models import User
+from drf_spectacular.utils import extend_schema
 from rest_framework import serializers, viewsets
 from waffle.mixins import WaffleSwitchMixin
 
@@ -34,6 +35,7 @@ class UserSerializer(serializers.HyperlinkedModelSerializer):
         )
 
 
+@extend_schema(exclude=True)
 class UserViewSet(WaffleSwitchMixin, viewsets.ModelViewSet):
     """API endpoint that allows users to be viewed or edited."""
 
