@@ -1,15 +1,36 @@
 from django.db import migrations
 
-CONSTRAINT_SQL = """
-ALTER TABLE blueflow_asset
-ADD CONSTRAINT asset_open_ports_tcp_valid_range CHECK (
-    array_length(open_ports_tcp, 1) IS NULL
-    OR (SELECT bool_and(p >= 1 AND p <= 65535)
-        FROM unnest(open_ports_tcp) AS p)
-);
+# PostgreSQL forbids subqueries inside CHECK expressions. Delegate validation to an
+# IMMUTABLE SQL function so migration applies cleanly on PostgreSQL.
+_CREATE_FN_SQL = """
+CREATE FUNCTION blueflow_asset_open_ports_tcp_valid(p_ports integer[])
+RETURNS boolean
+LANGUAGE sql
+IMMUTABLE
+PARALLEL SAFE
+AS $$
+    SELECT COALESCE(
+        NOT EXISTS (
+            SELECT 1
+            FROM unnest(COALESCE(p_ports, '{}'::integer[])) AS u(p)
+            WHERE u.p < 1 OR u.p > 65535
+        ),
+        TRUE
+    );
+$$;
 """
 
-DROP_CONSTRAINT_SQL = """
+_DROP_FN_SQL = """
+DROP FUNCTION IF EXISTS blueflow_asset_open_ports_tcp_valid(integer[]);
+"""
+
+_ADD_CONSTRAINT_SQL = """
+ALTER TABLE blueflow_asset
+ADD CONSTRAINT asset_open_ports_tcp_valid_range
+CHECK (blueflow_asset_open_ports_tcp_valid(open_ports_tcp));
+"""
+
+_DROP_CONSTRAINT_SQL = """
 ALTER TABLE blueflow_asset
 DROP CONSTRAINT IF EXISTS asset_open_ports_tcp_valid_range;
 """
@@ -36,5 +57,14 @@ class Migration(migrations.Migration):
             _remove_invalid_tcp_ports,
             reverse_code=migrations.RunPython.noop,
         ),
-        migrations.RunSQL(CONSTRAINT_SQL, DROP_CONSTRAINT_SQL),
+        migrations.RunSQL(
+            sql=[
+                _CREATE_FN_SQL,
+                _ADD_CONSTRAINT_SQL,
+            ],
+            reverse_sql=[
+                _DROP_CONSTRAINT_SQL,
+                _DROP_FN_SQL,
+            ],
+        ),
     ]
