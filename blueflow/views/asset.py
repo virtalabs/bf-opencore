@@ -122,9 +122,6 @@ class AssetSerializer(serializers.HyperlinkedModelSerializer):
     url = serializers.HyperlinkedIdentityField(view_name="blueflow:asset-detail")
     tags_url = serializers.HyperlinkedIdentityField(view_name="blueflow:asset-tags")
     scans_url = serializers.HyperlinkedIdentityField(view_name="blueflow:asset-scans")
-    external_links_url = serializers.HyperlinkedIdentityField(
-        view_name="blueflow:asset-external-links"
-    )
 
     asset_tags = AssetTagSerializer(read_only=True, many=True)
     asset_vulnerabilities = MiniAssetVulnerabilitySerializer(read_only=True, many=True)
@@ -146,7 +143,6 @@ class AssetSerializer(serializers.HyperlinkedModelSerializer):
             "url",
             "tags_url",
             "scans_url",
-            "external_links_url",
             "display_name",
             "last_updated",
             "asset_tags",
@@ -412,7 +408,6 @@ class AssetViewSet(
 
     See additional methods:
     `/changelog`
-    `/external_links`
     `/fields`
     `/history`
     `/needs_sw_update`
@@ -427,9 +422,6 @@ class AssetViewSet(
     `/bulk_update` — PATCH a list of assets by id (partial updates)
     `/duplicate_ips`
     `/histogram`
-    `/risk_per_manufacturer`
-    `/riskiest`
-    `/summary`
     `/upsert`
 
     In addition, there are several filtering and search terms available.
@@ -537,12 +529,6 @@ class AssetViewSet(
             qset, many=True, context={"request": request}
         )
         return Response(serializer.data)
-
-    @action(detail=True)
-    def external_links(self, _request: Request, _pk: int) -> Response:
-        """Return a dictionary of (systemname, url) external links."""
-        _msg = "Connectors have been removed"
-        raise NotImplementedError(_msg)
 
     @action(detail=True)
     def fields(self, request: Request, pk: int) -> Response:
@@ -801,50 +787,6 @@ class AssetViewSet(
         if limit > 0:
             results = results[:limit]
         return Response(results)
-
-    @action(detail=False)
-    def risk_per_manufacturer(self, request: Request) -> Response:
-        """Calculate risk per manufacturer.
-
-        Sort into one bin per manufacturer, sum the risks in each bin,
-        and return the `limit` first ones + `others`.
-
-        Seems like this could be accomplished by something like
-
-              SELECT manufacturer, count(manufacturer), sum(risk_score)
-                FROM blueflow_asset
-               WHERE manufacturer IS NOT null
-            GROUP BY manufacturer
-            ORDER BY sum(risk_score) DESC;
-
-        This is basically what we're doing with the Django ORM code
-        below.  I.e., it becomes
-
-               SELECT "blueflow_asset"."manufacturer",
-                      COUNT("blueflow_asset"."manufacturer") AS "count",
-                      SUM("blueflow_asset"."risk_score") AS "risk_score"
-                 FROM "blueflow_asset"
-            WHERE NOT ("blueflow_asset"."manufacturer" IS NULL)
-             GROUP BY "blueflow_asset"."manufacturer"
-             ORDER BY "risk_score" DESC
-        """
-        # TODO(taylorcochran): Implement risk per manufacturer
-        _msg = "Risk per manufacturer is not implemented"
-        raise NotImplementedError(_msg)
-
-    @action(detail=False)
-    def riskiest(self, request: Request) -> Response:
-        """Produce a paginated list of the "riskiest" assets."""
-        # TODO(taylorcochran): Implement riskiest
-        _msg = "Riskiest is not implemented"
-        raise NotImplementedError(_msg)
-
-    @action(detail=False)
-    def summary(self, _request: Request) -> Response:
-        """Return summary about an asset queryset."""
-        # TODO(taylorcochran): Implement summary
-        _msg = "Summary is not implemented"
-        raise NotImplementedError(_msg)
 
     @action(detail=False, methods=["PATCH"])
     def bulk_update(self, request: Request) -> Response:

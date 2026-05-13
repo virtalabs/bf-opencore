@@ -1011,16 +1011,12 @@ def test_asset_date_range(
         assert res.data["count"] == num_assets
 
 
-def test_external_key_non_connector(auth_client: APIClient) -> None:
-    """Test that external_links/ detail route handles non-connector external keys."""
+def test_external_key_non_connector(db) -> None:
+    """Test that external_keys JSON field accepts arbitrary key-value pairs."""
     foobar = models.Asset.objects.create(name="Foobar")
     foobar.external_keys = {"ECN": "12345"}
     foobar.save()
     assert foobar.external_keys["ECN"] == "12345"
-
-    res = auth_client.get(f"/api/assets/{foobar.id}/external_links/")
-    assert res.status_code == status.HTTP_200_OK
-    assert len(res.data) == 1
 
 
 # ---------------------------------------------------------------------------
