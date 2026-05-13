@@ -1,0 +1,9 @@
+{
+  "name": "blueflow-zeek-bridge",
+  "version": "0.0.1",
+  "private": true,
+  "description": "Stage 1 ZeekJS bridge that emits conn-log records to a Redis Stream.",
+  "dependencies": {
+    "redis": "^4.7.0"
+  }
+}

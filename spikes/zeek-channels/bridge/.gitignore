@@ -1,0 +1,9 @@
+# Zeek's default log files (conn.log, http.log, etc.). The compose runs
+# Zeek from /work inside the container so logs should never reach this
+# dir -- this is defense-in-depth for anyone running zeek from here
+# directly.
+*.log
+
+# Host-side npm install would populate this; the production path is the
+# anonymous volume in docker-compose.yml.
+node_modules/

@@ -1,0 +1,48 @@
+# Smoke-test substrate for the Stage 1 ZeekJS -> Redis Streams bridge.
+# Brings up Redis + a Zeek container with the bridge loaded.
+#
+# Default command runs the bridge against the F-MINIMAL fixture, which
+# exercises smoke tests A.1 ("bridge starts cleanly"), A.2 ("bridge
+# produces something to Redis"), and A.3 ("stream reachable from a
+# separate consumer"). Generate F-MINIMAL first via
+# `spikes/zeek-channels/fixtures/minimal_smoke.py`; the .pcap is gitignored.
+
+services:
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 2s
+      timeout: 2s
+      retries: 10
+
+  zeek:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile.zeek
+    depends_on:
+      redis:
+        condition: service_healthy
+    environment:
+      REDIS_URL: redis://redis:6379
+      STREAM_KEY: zeek:events
+    # Run Zeek out of /work, NOT /bridge. Zeek emits its default logs
+    # (conn.log, http.log, packet_filter.log) into the CWD; running from
+    # /bridge (bind-mounted) would leak those logs back to the host.
+    working_dir: /work
+    volumes:
+      # Bridge source bind-mounted for hot edits.
+      - ./bridge:/bridge
+      # Preserve the image's node_modules across the bind mount above.
+      - /bridge/node_modules
+      # Anonymous volume gives Zeek a writable CWD that disappears on --rm.
+      - /work
+      # Fixtures dir read-only; pcaps land here after running the generators.
+      - ./fixtures:/fixtures:ro
+    # Default: replay F-MINIMAL. Zeek exits when the pcap is consumed --
+    # success criterion for A.1 is exit code 0 and no errors on stderr.
+    # For the stricter "live steady-state" form of A.1, override to
+    # `zeek -i lo /bridge/send-to-redis.js` and add cap_add: [NET_RAW].
+    command: ["zeek", "-r", "/fixtures/minimal-smoke.pcap", "/bridge/send-to-redis.js"]
