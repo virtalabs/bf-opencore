@@ -4,13 +4,12 @@ app_name = "blueflow"
 
 from django.conf.urls import include
 from django.urls import path
-from drf_spectacular.views import SpectacularAPIView, SpectacularSwaggerView
+from drf_spectacular.views import SpectacularAPIView
 from rest_framework.authtoken import views as authview
 from rest_framework.routers import DefaultRouter
 
 from . import views
-
-API_TITLE = "BlueFlow REST API"
+from .scalar_viewer import scalar_viewer
 
 router = DefaultRouter()
 # Regular BlueFlow Models
@@ -38,11 +37,7 @@ router.register(r"viper", views.ViperViewSet, basename="viper")
 
 urlpatterns = [
     path("schema/", SpectacularAPIView.as_view(), name="schema"),
-    path(
-        "docs/",
-        SpectacularSwaggerView.as_view(url_name="blueflow:schema"),
-        name="swagger-ui",
-    ),
+    path("docs/", scalar_viewer, name="api-docs"),
     path(r"api-token-auth/", authview.obtain_auth_token, name="auth-token"),
     path("", include(router.urls)),
 ]
