@@ -50,7 +50,7 @@ def main() -> None:
     inputs = [str(IPV4_TCP_PCAP)] * IPV4_TCP_COPIES + [
         str(LOOPBACK_PCAP)
     ] * LOOPBACK_COPIES
-    cmd = [mergecap, "-F", "pcap", "-w", str(OUTPUT), *inputs]
+    cmd = [mergecap, "-F", "pcapng", "-w", str(OUTPUT), *inputs]
     subprocess.run(cmd, check=True)  # noqa: S603
 
 
