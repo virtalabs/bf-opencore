@@ -1,7 +1,7 @@
 """BlueFlow Models / Database schema definitions."""
 
 from .alert import Alert
-from .asset import Asset
+from .asset import TCP_PORT_MAX, Asset
 from .asset_custom_field import AssetCustomField, AssetCustomFieldName
 from .attachment import Attachment
 from .group import AssetGroup, Group
@@ -13,6 +13,7 @@ from .viper import ViperWebhookJob
 from .vulnerability import AssetVulnerability, Vulnerability
 
 __all__ = [
+    "TCP_PORT_MAX",
     "Alert",
     "Asset",
     "AssetCustomField",

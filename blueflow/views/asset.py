@@ -24,6 +24,7 @@ from simple_history import utils as hist_utils
 from waffle.mixins import WaffleSwitchMixin
 
 from blueflow.models import (
+    TCP_PORT_MAX,
     Asset,
     AssetCustomField,
     AssetCustomFieldName,
@@ -105,7 +106,7 @@ class AssetUpsertSerializer(serializers.Serializer):
     category = serializers.CharField(required=False, allow_blank=True, allow_null=True)
     external_keys = serializers.JSONField(required=False, allow_null=True)
     open_ports_tcp = serializers.ListField(
-        child=serializers.IntegerField(min_value=1, max_value=65535),
+        child=serializers.IntegerField(min_value=1, max_value=TCP_PORT_MAX),
         required=False,
     )
 
@@ -129,6 +130,12 @@ class AssetSerializer(serializers.HyperlinkedModelSerializer):
 
     display_name = serializers.CharField(
         max_length=126, allow_blank=True, allow_null=True, required=False
+    )
+
+    open_ports_tcp = serializers.ListField(
+        child=serializers.IntegerField(min_value=1, max_value=TCP_PORT_MAX),
+        required=False,
+        default=list,
     )
 
     class Meta:
@@ -168,20 +175,8 @@ class AssetSerializer(serializers.HyperlinkedModelSerializer):
             raise serializers.ValidationError(msg)
         return mac_string
 
-    def validate_open_ports_tcp(self, ports_list: list) -> list:
-        """Ensure that TCP ports are in the correct range.
-
-        NOTE: For UDP, '0' is in fact an acceptable port... but not for TCP.
-        """
-        # Built-in field validator has already validated that we have a
-        # list of integers - now we validate that they are in range.
-        # Ideally, this should have been solved with a CHECK CONSTRAINT
-        # at the database level, then we wouldn't have needed a
-        # validator here.
-        max_port = 65535
-        if not all(1 <= port <= max_port for port in ports_list):
-            _msg = "TCP Ports must be in range 1--65535"
-            raise serializers.ValidationError(_msg)
+    def validate_open_ports_tcp(self, ports_list: list[int]) -> list[int]:
+        """Deduplicate and sort ports."""
         return sorted(set(ports_list))
 
 
