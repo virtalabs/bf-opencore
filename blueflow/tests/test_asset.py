@@ -472,6 +472,19 @@ def test_patch_asset_open_ports_tcp_list_bad(asset_edit_client: APIClient) -> No
     assert response.status_code == status.HTTP_400_BAD_REQUEST
 
 
+def test_patch_asset_open_ports_tcp_list_out_of_range(asset_edit_client: APIClient) -> None:
+    """PATCH with an integer list containing an out-of-range port → 400."""
+    spam_asset = models.Asset.objects.create(hostname="spam", open_ports_tcp=[80])
+    response = asset_edit_client.patch(
+        f"/api/assets/{spam_asset.id}/",
+        json.dumps({"open_ports_tcp": [65536, 80]}),
+        content_type="application/json",
+    )
+    assert response.status_code == status.HTTP_400_BAD_REQUEST
+    spam_asset.refresh_from_db()
+    assert spam_asset.open_ports_tcp == [80]
+
+
 def test_patch_asset_open_ports_tcp_bad(asset_edit_client: APIClient) -> None:
     """Patching ports with a string of integers... but they are bad."""
     client = asset_edit_client
@@ -967,6 +980,45 @@ def test_upsert_bad_key_ignored(asset_edit_client: APIClient) -> None:
     )
     assert response.status_code == status.HTTP_201_CREATED
     assert models.Asset.objects.count() == 1
+
+
+def test_upsert_open_ports_tcp_out_of_range(asset_edit_client: APIClient) -> None:
+    """PUT with out-of-range port → 400, no asset created."""
+    response = asset_edit_client.put(
+        "/api/assets/upsert/",
+        json.dumps({"mac_address": "11:22:33:44:55:66", "open_ports_tcp": [0, 80]}),
+        content_type="application/json",
+    )
+    assert response.status_code == status.HTTP_400_BAD_REQUEST
+    assert models.Asset.objects.count() == 0
+
+
+def test_upsert_open_ports_tcp_above_max(asset_edit_client: APIClient) -> None:
+    """PUT with port above 65535 → 400, no asset created."""
+    response = asset_edit_client.put(
+        "/api/assets/upsert/",
+        json.dumps({"mac_address": "11:22:33:44:55:66", "open_ports_tcp": [65536, 80]}),
+        content_type="application/json",
+    )
+    assert response.status_code == status.HTTP_400_BAD_REQUEST
+    assert models.Asset.objects.count() == 0
+
+
+def test_upsert_open_ports_tcp_dedup_sort(asset_edit_client: APIClient) -> None:
+    """PUT with duplicate, unsorted ports → stored deduplicated and sorted."""
+    response = asset_edit_client.put(
+        "/api/assets/upsert/",
+        json.dumps(
+            {
+                "mac_address": "11:22:33:44:55:66",
+                "open_ports_tcp": [8000, 80, 443, 80],
+            }
+        ),
+        content_type="application/json",
+    )
+    assert response.status_code == status.HTTP_201_CREATED
+    asset = models.Asset.objects.get()
+    assert asset.open_ports_tcp == [80, 443, 8000]
 
 
 @pytest.mark.parametrize(
