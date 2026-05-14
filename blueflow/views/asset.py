@@ -138,6 +138,8 @@ class AssetSerializer(serializers.HyperlinkedModelSerializer):
         default=list,
     )
 
+    last_updated = serializers.DateTimeField(read_only=True, allow_null=True)
+
     class Meta:
         """Wire this serializer to a model."""
 
