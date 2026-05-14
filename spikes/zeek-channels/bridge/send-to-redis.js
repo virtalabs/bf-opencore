@@ -25,17 +25,47 @@ zeek.on("zeek_init", async () => {
 });
 
 zeek.hook("Conn::log_policy", (rec, _id, _filter) => {
+  // Required fields. A conn-log record without any of these is malformed;
+  // dropping noisily beats writing empties downstream, where they'd
+  // pollute Asset upserts and erase the signal that something is broken
+  // (this exact pattern was hiding a field-access bug previously).
+  const ts = rec.ts;
+  const uid = rec.uid;
+  const srcIp = rec.id?.orig_h;
+  const dstIp = rec.id?.resp_h;
+  const proto = rec.proto;
+
+  const missing = [];
+  if (ts === undefined || ts === null) missing.push("ts");
+  if (!uid) missing.push("uid");
+  if (!srcIp) missing.push("id.orig_h");
+  if (!dstIp) missing.push("id.resp_h");
+  if (!proto) missing.push("proto");
+
+  if (missing.length > 0) {
+    console.error(
+      `[bridge] dropping malformed conn-log record: missing ${missing.join(", ")}`,
+    );
+    return;
+  }
+
+  // Optional fields -- empty here is legitimate, not a bug signal:
+  //   service: Zeek may not identify the application protocol.
+  //   id.orig_l2_addr / id.resp_l2_addr: only populated when
+  //     policy/protocols/conn/mac-logging is @load'd (see B.4 follow-up).
+  //   duration: absent for in-flight connections. 0 is a real value
+  //     (instantaneous flows), so don't conflate "missing" with "zero".
   client
     .xAdd(STREAM_KEY, "*", {
-      ts: String(rec.ts ?? ""),
-      uid: rec.uid ?? "",
-      src_ip: rec.id?.orig_h ?? "",
-      dst_ip: rec.id?.resp_h ?? "",
+      ts: String(ts),
+      uid,
+      src_ip: srcIp,
+      dst_ip: dstIp,
       src_mac: rec.id?.orig_l2_addr ?? "",
       dst_mac: rec.id?.resp_l2_addr ?? "",
-      proto: rec.proto ?? "",
+      proto,
       service: rec.service ?? "",
-      duration: String(rec.duration ?? 0),
+      duration: rec.duration !== undefined ? String(rec.duration) : "",
     })
     .catch((err) => {
       console.error("[bridge] xAdd failed:", err.message);
