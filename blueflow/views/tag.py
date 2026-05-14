@@ -32,6 +32,7 @@ class TagSerializer(serializers.HyperlinkedModelSerializer):
     add_assets_url = serializers.HyperlinkedIdentityField(
         view_name="blueflow:tag-assets"
     )
+    num_assets = serializers.IntegerField(read_only=True)
 
     class Meta:
         """Wire this serializer to a model."""

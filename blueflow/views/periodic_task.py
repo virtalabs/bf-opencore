@@ -4,6 +4,7 @@ import logging
 
 import django_filters
 from django_celery_beat.models import CrontabSchedule, IntervalSchedule, PeriodicTask
+from drf_spectacular.utils import extend_schema_field
 from rest_framework import serializers, viewsets
 from waffle.mixins import WaffleSwitchMixin
 
@@ -23,6 +24,7 @@ class CrontabScheduleSerializer(serializers.HyperlinkedModelSerializer):
     # Human-readable name
     display_name = serializers.SerializerMethodField("do_display_name")
 
+    @extend_schema_field(serializers.CharField())
     def do_display_name(self, crontabschedule):
         """Human-readable name."""
         return str(crontabschedule)
@@ -64,6 +66,7 @@ class IntervalScheduleSerializer(serializers.HyperlinkedModelSerializer):
     # Human-readable name
     display_name = serializers.SerializerMethodField("do_display_name")
 
+    @extend_schema_field(serializers.CharField())
     def do_display_name(self, intervalschedule):
         """Human-readable name."""
         return str(intervalschedule)
@@ -101,10 +104,12 @@ class PeriodicTaskSerializer(serializers.HyperlinkedModelSerializer):
     display_name = serializers.SerializerMethodField("do_display_name")
     display_schedule = serializers.SerializerMethodField("do_display_schedule")
 
+    @extend_schema_field(serializers.CharField())
     def do_display_name(self, periodictask):
         """Server-controlled human-readable name."""
         return periodictask.name
 
+    @extend_schema_field(serializers.CharField(allow_null=True))
     def do_display_schedule(self, periodictask):
         """Human-readable interval or crontab schedule."""
         if periodictask.interval:

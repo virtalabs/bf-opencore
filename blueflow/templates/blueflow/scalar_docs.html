@@ -1,0 +1,23 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <title>{{ page_title }}</title>
+  <style>
+    body { margin: 0; padding: 0; }
+  </style>
+</head>
+<body>
+  <noscript>
+    Scalar requires JavaScript to browse the API reference.
+  </noscript>
+  <script
+    id="api-reference"
+    data-url="{% url 'blueflow:schema' %}"
+    data-proxy-url=""
+  ></script>
+  <script src="{% static 'blueflow/js/scalar-api-reference-standalone-1.55.3.js' %}"></script>
+</body>
+</html>

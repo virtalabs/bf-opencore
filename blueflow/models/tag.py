@@ -32,7 +32,7 @@ class Tag(models.Model):
         """Calculate number of assets with this tag."""
         Asset = apps.get_model("blueflow", "Asset")
         asset_qset = Asset.objects.filter(tags__id=self.id)
-        return asset_qset.count
+        return asset_qset.count()
 
 
 class AssetTag(models.Model):
