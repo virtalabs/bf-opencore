@@ -9,7 +9,7 @@ Real derivation from Asset / NetworkEndpoint is a follow-up.
 import uuid
 from datetime import UTC, datetime
 
-from drf_spectacular.utils import extend_schema
+from drf_spectacular.utils import extend_schema, extend_schema_field
 from rest_framework import serializers
 from rest_framework.response import Response
 from rest_framework.views import APIView
@@ -61,11 +61,15 @@ class TopologyConnectionSerializer(serializers.Serializer):
 class TopologySerializer(serializers.Serializer):
     """Root topology snapshot."""
 
-    schema_version = serializers.CharField(default="0.1.0-minimal")
+    schema_version = serializers.SerializerMethodField()
     snapshot_id = serializers.UUIDField()
     timestamp = serializers.DateTimeField()
     assets = TopologyAssetSerializer(many=True)
     connections = TopologyConnectionSerializer(many=True, required=False)
+
+    @extend_schema_field({"type": "string", "const": "0.1.0-minimal"})
+    def get_schema_version(self, _obj):
+        return "0.1.0-minimal"
 
 
 class TopologyView(APIView):
