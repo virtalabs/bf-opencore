@@ -1,7 +1,5 @@
 """Blueflow Django app URLs."""
 
-app_name = "blueflow"
-
 from django.conf.urls import include
 from django.urls import path
 from drf_spectacular.views import SpectacularAPIView
@@ -10,6 +8,8 @@ from rest_framework.routers import DefaultRouter
 
 from . import views
 from .scalar_viewer import scalar_viewer
+
+app_name = "blueflow"
 
 router = DefaultRouter()
 # Regular BlueFlow Models
