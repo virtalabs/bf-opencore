@@ -39,5 +39,6 @@ urlpatterns = [
     path("schema/", SpectacularAPIView.as_view(), name="schema"),
     path("docs/", scalar_viewer, name="api-docs"),
     path(r"api-token-auth/", authview.obtain_auth_token, name="auth-token"),
+    path("topology/", views.TopologyView.as_view(), name="topology"),
     path("", include(router.urls)),
 ]
