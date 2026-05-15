@@ -1,0 +1,184 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://virtalabs.com/schemas/topology-minimal/v0.1.0",
+  "title": "Network Topology Snapshot (Minimal, Flow-Derived)",
+  "description": "Minimal topology snapshot containing only fields derivable with high confidence from network flow records on access-layer exporters.",
+  "type": "object",
+  "required": [
+    "schema_version",
+    "snapshot_id",
+    "timestamp",
+    "assets"
+  ],
+  "properties": {
+    "schema_version": {
+      "const": "0.1.0-minimal"
+    },
+    "snapshot_id": {
+      "type": "string",
+      "description": "Unique identifier for this topology snapshot.",
+      "format": "uuid",
+      "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
+    },
+    "timestamp": {
+      "type": "string",
+      "description": "ISO-8601 timestamp when this snapshot was generated.",
+      "format": "date-time"
+    },
+    "assets": {
+      "type": "array",
+      "description": "Assets observed in flow records.",
+      "items": {
+        "$ref": "#/$defs/asset"
+      }
+    },
+    "connections": {
+      "type": "array",
+      "description": "Observed traffic flows between assets.",
+      "items": {
+        "$ref": "#/$defs/connection"
+      }
+    }
+  },
+  "$defs": {
+    "interface": {
+      "type": "object",
+      "description": "A network interface observed on a device.",
+      "required": [
+        "id"
+      ],
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "String representation of network interface id."
+        },
+        "mac_address": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "description": "Observed MAC address.",
+          "pattern": "^([0-9a-fA-F]{2}:){5}[0-9a-fA-F]{2}$"
+        },
+        "ipv4_address": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "description": "Observed IPv4 address from flow record source/destination fields.",
+          "format": "ipv4"
+        },
+        "ipv6_address": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "description": "Observed IPv6 address from flow record source/destination fields.",
+          "format": "ipv6"
+        }
+      }
+    },
+    "service": {
+      "type": "object",
+      "description": "A port/protocol pair observed receiving traffic on an asset.",
+      "required": [
+        "port",
+        "protocol"
+      ],
+      "properties": {
+        "port": {
+          "type": "integer",
+          "description": "Observed listening port number.",
+          "minimum": 1,
+          "maximum": 65535
+        },
+        "protocol": {
+          "type": "string",
+          "description": "Transport protocol.",
+          "enum": [
+            "tcp",
+            "udp"
+          ]
+        }
+      }
+    },
+    "asset": {
+      "type": "object",
+      "description": "A device observed on the network.",
+      "required": [
+        "id",
+        "interfaces"
+      ],
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Stable asset identity (hostname; sourced from Asset.hostname)."
+        },
+        "manufacturer": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "description": "Manufacturer derived from OUI lookup on observed MAC address."
+        },
+        "interfaces": {
+          "type": "array",
+          "description": "Network interfaces observed for this asset.",
+          "items": {
+            "$ref": "#/$defs/interface"
+          }
+        },
+        "services": {
+          "type": "array",
+          "description": "Ports and protocols observed receiving traffic during the capture window.",
+          "items": {
+            "$ref": "#/$defs/service"
+          }
+        }
+      }
+    },
+    "connection": {
+      "type": "object",
+      "description": "An observed traffic flow between two assets.",
+      "required": [
+        "src_asset_id",
+        "dst_asset_id",
+        "dst_port",
+        "protocol",
+        "direction"
+      ],
+      "properties": {
+        "src_asset_id": {
+          "type": "string",
+          "description": "References the originating asset.id (hostname)."
+        },
+        "dst_asset_id": {
+          "type": "string",
+          "description": "References the destination asset.id (hostname)."
+        },
+        "dst_port": {
+          "type": "integer",
+          "description": "Destination port observed.",
+          "minimum": 1,
+          "maximum": 65535
+        },
+        "protocol": {
+          "type": "string",
+          "description": "Transport protocol.",
+          "enum": [
+            "tcp",
+            "udp"
+          ]
+        },
+        "direction": {
+          "type": "string",
+          "description": "Whether traffic was observed in one direction or both.",
+          "enum": [
+            "unidirectional",
+            "bidirectional"
+          ]
+        }
+      }
+    }
+  }
+}
