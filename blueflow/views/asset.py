@@ -115,24 +115,29 @@ class AssetUpsertSerializer(serializers.Serializer):
         return sorted(set(ports_list))
 
 
-class UsageSerializer(serializers.Serializer):
-    """Asset usage pattern by weekday and hour.
-
-    Each weekday maps to a dict of hour (0-23, as JSON string keys) to
-    observation count. Hours with zero observations are omitted from
-    the response. Today's implementation is a contract-only stub
-    returning empty hour dicts for every weekday; the backing model
-    and aggregation logic (time scope, time zone, what counts as a
-    "use") are deferred to a follow-up issue.
-    """
-
-    sunday = serializers.DictField(child=serializers.IntegerField(min_value=0))
-    monday = serializers.DictField(child=serializers.IntegerField(min_value=0))
-    tuesday = serializers.DictField(child=serializers.IntegerField(min_value=0))
-    wednesday = serializers.DictField(child=serializers.IntegerField(min_value=0))
-    thursday = serializers.DictField(child=serializers.IntegerField(min_value=0))
-    friday = serializers.DictField(child=serializers.IntegerField(min_value=0))
-    saturday = serializers.DictField(child=serializers.IntegerField(min_value=0))
+# Usage field schema. Index follows Python's datetime.weekday() / ISO 8601:
+# 0=Monday, 1=Tuesday, 2=Wednesday, 3=Thursday, 4=Friday, 5=Saturday, 6=Sunday.
+# Each entry maps hour-of-day (0-23, JSON-string-coerced) to non-negative count.
+# Hours with zero observations are omitted. The schema is inlined here (rather
+# than a named Usage component) because it's small and used in exactly one place.
+_USAGE_FIELD_SCHEMA = {
+    "type": "array",
+    "minItems": 7,
+    "maxItems": 7,
+    "items": {
+        "type": "object",
+        "additionalProperties": {"type": "integer", "minimum": 0},
+    },
+    "example": [
+        {"9": 1, "10": 12, "11": 8, "14": 3, "15": 5},  # 0 = Monday
+        {"9": 1, "10": 8, "11": 15},                    # 1 = Tuesday
+        {"9": 2, "14": 5},                              # 2 = Wednesday
+        {"10": 6, "11": 9, "13": 4},                    # 3 = Thursday
+        {"9": 1, "13": 2},                              # 4 = Friday
+        {},                                             # 5 = Saturday
+        {},                                             # 6 = Sunday
+    ],
+}
 
 
 class AssetSerializer(serializers.HyperlinkedModelSerializer):
@@ -162,10 +167,13 @@ class AssetSerializer(serializers.HyperlinkedModelSerializer):
 
     usage = serializers.SerializerMethodField(
         help_text=(
-            "Usage pattern by weekday and hour. Each weekday maps to a "
-            "dict of hour (0-23) to observation count; hours with zero "
-            "observations are omitted. Stub today — backing model and "
-            "aggregation logic to be implemented in a follow-up."
+            "Usage pattern: 7-element array of hour-of-day to observation-count "
+            "maps. Index is 0-based with Monday first — 0=Monday, 1=Tuesday, "
+            "2=Wednesday, 3=Thursday, 4=Friday, 5=Saturday, 6=Sunday. Hour keys "
+            "are JSON-string-coerced integers 0-23; counts are non-negative; "
+            "hours with zero observations are omitted from the response. Stub "
+            "today — backing model and aggregation logic to be implemented in "
+            "a follow-up."
         ),
     )
 
@@ -211,20 +219,9 @@ class AssetSerializer(serializers.HyperlinkedModelSerializer):
         """Deduplicate and sort ports."""
         return sorted(set(ports_list))
 
-    @extend_schema_field(UsageSerializer)
+    @extend_schema_field(_USAGE_FIELD_SCHEMA)
     def get_usage(self, _obj):
-        return {
-            day: {}
-            for day in (
-                "sunday",
-                "monday",
-                "tuesday",
-                "wednesday",
-                "thursday",
-                "friday",
-                "saturday",
-            )
-        }
+        return [{} for _ in range(7)]
 
 
 class HistoricalAssetSerializer(serializers.HyperlinkedModelSerializer):
