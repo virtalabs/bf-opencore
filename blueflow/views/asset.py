@@ -13,7 +13,7 @@ from django.db.models import Case, Count, QuerySet, When
 from django.db.models.aggregates import Func
 from django.db.utils import IntegrityError
 from django.utils import timezone
-from drf_spectacular.utils import extend_schema
+from drf_spectacular.utils import extend_schema, extend_schema_field
 from rest_framework import serializers, status, viewsets
 from rest_framework.decorators import action
 from rest_framework.request import Request
@@ -115,6 +115,26 @@ class AssetUpsertSerializer(serializers.Serializer):
         return sorted(set(ports_list))
 
 
+class UsageSerializer(serializers.Serializer):
+    """Asset usage pattern by weekday and hour.
+
+    Each weekday maps to a dict of hour (0-23, as JSON string keys) to
+    observation count. Hours with zero observations are omitted from
+    the response. Today's implementation is a contract-only stub
+    returning empty hour dicts for every weekday; the backing model
+    and aggregation logic (time scope, time zone, what counts as a
+    "use") are deferred to a follow-up issue.
+    """
+
+    sunday = serializers.DictField(child=serializers.IntegerField(min_value=0))
+    monday = serializers.DictField(child=serializers.IntegerField(min_value=0))
+    tuesday = serializers.DictField(child=serializers.IntegerField(min_value=0))
+    wednesday = serializers.DictField(child=serializers.IntegerField(min_value=0))
+    thursday = serializers.DictField(child=serializers.IntegerField(min_value=0))
+    friday = serializers.DictField(child=serializers.IntegerField(min_value=0))
+    saturday = serializers.DictField(child=serializers.IntegerField(min_value=0))
+
+
 class AssetSerializer(serializers.HyperlinkedModelSerializer):
     """Serializes assets.
 
@@ -140,6 +160,15 @@ class AssetSerializer(serializers.HyperlinkedModelSerializer):
 
     last_updated = serializers.DateTimeField(read_only=True, allow_null=True)
 
+    usage = serializers.SerializerMethodField(
+        help_text=(
+            "Usage pattern by weekday and hour. Each weekday maps to a "
+            "dict of hour (0-23) to observation count; hours with zero "
+            "observations are omitted. Stub today — backing model and "
+            "aggregation logic to be implemented in a follow-up."
+        ),
+    )
+
     class Meta:
         """Wire this serializer to a model."""
 
@@ -157,6 +186,7 @@ class AssetSerializer(serializers.HyperlinkedModelSerializer):
             "last_updated",
             "asset_tags",
             "asset_vulnerabilities",
+            "usage",
         )
 
         fields = asset_fields + computed_fields
@@ -180,6 +210,21 @@ class AssetSerializer(serializers.HyperlinkedModelSerializer):
     def validate_open_ports_tcp(self, ports_list: list[int]) -> list[int]:
         """Deduplicate and sort ports."""
         return sorted(set(ports_list))
+
+    @extend_schema_field(UsageSerializer)
+    def get_usage(self, _obj):
+        return {
+            day: {}
+            for day in (
+                "sunday",
+                "monday",
+                "tuesday",
+                "wednesday",
+                "thursday",
+                "friday",
+                "saturday",
+            )
+        }
 
 
 class HistoricalAssetSerializer(serializers.HyperlinkedModelSerializer):
