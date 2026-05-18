@@ -1,112 +1,92 @@
 #!/usr/bin/env bash
+#
+# Long-running entrypoint for the standalone Zeek probe.
+#
+# Lifecycle:
+#   1. Validate required env (ZEEK_INTERFACE, BLUEFLOW_URL).
+#   2. Start Zeek in the background on $ZEEK_INTERFACE with JSON logs +
+#      the bundled arp_extract.zeek log policy.
+#   3. Loop: every PUSH_INTERVAL_SECONDS, invoke the sidecar to PUT every
+#      device it can extract from the current conn.log + arp.log to the
+#      configured BlueFlow. Asset upsert is idempotent on mac_address, so
+#      pushing cumulative logs each cycle is safe (open_ports_tcp merges).
+#   4. On SIGTERM / SIGINT, stop Zeek cleanly, do a final push, exit 0.
+#
+# Logs grow unbounded inside the container for the MVP. Restart the
+# container or wire in `Log::default_rotation_interval` if that becomes a
+# problem.
+
 set -euo pipefail
-exec > >(tee /logs/output.log) 2>&1
 
-echo "================================================"
-echo "  Zeek Probe Container"
-echo "================================================"
-echo ""
+# ── Required env ────────────────────────────────────────────────
+: "${ZEEK_INTERFACE:?ZEEK_INTERFACE must be set (e.g. eth0)}"
+: "${BLUEFLOW_URL:?BLUEFLOW_URL must be set (e.g. http://blueflow.internal:8000)}"
 
-# ── Step 1: Compile Spicy analyzer ──────────────────
-echo "[1/5] Compiling MLLP Spicy analyzer..."
-spicyz -o /work/mllp.hlto /scripts/mllp.spicy /scripts/mllp.evt
-echo "      Done."
-echo ""
+# ── Optional env ────────────────────────────────────────────────
+PUSH_INTERVAL_SECONDS="${PUSH_INTERVAL_SECONDS:-60}"
+BLUEFLOW_TOKEN="${BLUEFLOW_TOKEN:-}"
+ZEEK_LOG_DIR="${ZEEK_LOG_DIR:-/var/log/zeek}"
 
-# ── Step 2: Create veth pair for traffic capture ────
-# tcpreplay sends on veth-replay, Zeek captures on veth-probe.
-# Packets sent on one end of a veth pair arrive as incoming on the other.
-echo "[2/5] Creating veth pair (veth-probe <-> veth-replay)..."
-ip link add veth-probe type veth peer name veth-replay
-ip link set veth-probe up
-ip link set veth-replay up
-echo "      Done."
-echo ""
+echo "[zeek-probe] interface=$ZEEK_INTERFACE upstream=$BLUEFLOW_URL push_interval=${PUSH_INTERVAL_SECONDS}s log_dir=$ZEEK_LOG_DIR"
 
-# ── Step 3: Start live capture on veth-probe ────────
-echo "[3/5] Starting Zeek capture on veth-probe..."
-cd /work
-zeek -i veth-probe -C \
-    /work/mllp.hlto \
-    /scripts/hl7_extract.zeek \
-    LogAscii::use_json=T &
+mkdir -p "$ZEEK_LOG_DIR"
+cd "$ZEEK_LOG_DIR"
+
+# ── Start Zeek in the background ────────────────────────────────
+# JSON output is required by the sidecar's load_log() parser.
+zeek -i "$ZEEK_INTERFACE" \
+     /opt/blueflow-zeek/scripts/arp_extract.zeek \
+     LogAscii::use_json=T &
 ZEEK_PID=$!
+echo "[zeek-probe] zeek pid=$ZEEK_PID"
 
-# Don't signal ready until Zeek is still alive after startup. If it crashed
-# (bad script, missing analyzer, no capture permission), fail fast instead of
-# letting the traffic container replay into a dead probe.
+# Fail-fast if Zeek crashed on startup (bad interface name, missing
+# capability, parse error). 5s window mirrors the HL7 harness probe.
 for _ in $(seq 1 10); do
     if ! kill -0 "$ZEEK_PID" 2>/dev/null; then
-        echo "      FAIL: Zeek exited before capture was ready" >&2
+        echo "[zeek-probe] FAIL: zeek exited before capture was ready" >&2
         wait "$ZEEK_PID" || exit $?
         exit 1
     fi
     sleep 0.5
 done
-touch /shared/zeek-ready
-echo "      Zeek PID: $ZEEK_PID"
-echo "      Signaled ready — waiting for traffic..."
-echo ""
+echo "[zeek-probe] zeek alive after 5s — capture started"
 
-# ── Step 4: Wait for traffic, then stop Zeek ───────
-echo "[4/5] Waiting for traffic replay..."
-while [ ! -f /shared/traffic-done ]; do sleep 0.5; done
-# Let Zeek finish processing the final packets
-sleep 3
+# ── Push helper ─────────────────────────────────────────────────
+push_logs() {
+    local token_arg=""
+    [ -n "$BLUEFLOW_TOKEN" ] && token_arg="--token $BLUEFLOW_TOKEN"
+    # shellcheck disable=SC2086  # token_arg expands to two args or none
+    python3 /opt/blueflow-zeek/sidecar.py "$ZEEK_LOG_DIR" \
+        --url "$BLUEFLOW_URL" $token_arg
+}
 
-echo "      Traffic done. Stopping Zeek..."
-kill "$ZEEK_PID" 2>/dev/null || true
-zeek_status=0
-wait "$ZEEK_PID" || zeek_status=$?
-# 0 = clean exit, 143 = SIGTERM (the kill above). Anything else is a real failure.
-if [ "$zeek_status" -ne 0 ] && [ "$zeek_status" -ne 143 ]; then
-    echo "      FAIL: Zeek exited with status $zeek_status" >&2
-    exit "$zeek_status"
-fi
-echo ""
+# ── Signal handling: clean stop + final push ────────────────────
+shutting_down=0
+cleanup() {
+    [ "$shutting_down" -eq 1 ] && return
+    shutting_down=1
+    echo "[zeek-probe] signal received, stopping zeek..."
+    kill "$ZEEK_PID" 2>/dev/null || true
+    wait "$ZEEK_PID" 2>/dev/null || true
+    echo "[zeek-probe] final push..."
+    push_logs || echo "[zeek-probe] WARN: final push failed"
+    echo "[zeek-probe] exiting cleanly"
+    exit 0
+}
+trap cleanup TERM INT
 
-echo "      Zeek log summary:"
-for f in /work/*.log; do
-    if [ -f "$f" ]; then
-        lines=$(wc -l < "$f" | tr -d ' ')
-        echo "        $(basename "$f"): $lines lines"
-    fi
+# ── Main push loop ──────────────────────────────────────────────
+while kill -0 "$ZEEK_PID" 2>/dev/null; do
+    sleep "$PUSH_INTERVAL_SECONDS" &
+    SLEEP_PID=$!
+    wait "$SLEEP_PID" || true     # interruptible by trap
+    if ! kill -0 "$ZEEK_PID" 2>/dev/null; then break; fi
+    echo "[zeek-probe] push cycle..."
+    push_logs || echo "[zeek-probe] WARN: push failed; will retry next cycle"
 done
 
-# Copy Zeek log files to /logs so they appear on the host
-cp /work/*.log /logs/ 2>/dev/null || echo "      (no log files produced)"
-echo ""
-
-# ── Step 5: Run sidecar ────────────────────────────
-# Wait for an upstream blueflow (stub or real) to signal ready, then read
-# the URL + token it published. Falls back to the BLUEFLOW_URL env var if
-# no sentinel was written (back-compat).
-echo "[5/5] Waiting for blueflow ready..."
-WAIT=0
-while [ ! -f /shared/blueflow-ready ] && [ "$WAIT" -lt 120 ]; do
-    sleep 1
-    WAIT=$((WAIT + 1))
-done
-if [ ! -f /shared/blueflow-ready ]; then
-    echo "      WARN: /shared/blueflow-ready never appeared; using \$BLUEFLOW_URL=$BLUEFLOW_URL"
-fi
-if [ -f /shared/api-url ]; then
-    BLUEFLOW_URL="$(cat /shared/api-url)"
-fi
-TOKEN_ARG=""
-if [ -f /shared/api-token ] && [ -s /shared/api-token ]; then
-    TOKEN_ARG="--token $(cat /shared/api-token)"
-    echo "      Using API token from /shared/api-token"
-fi
-echo "      Pushing to: $BLUEFLOW_URL"
-echo "------------------------------------------------"
-# shellcheck disable=SC2086 # TOKEN_ARG is intentionally unquoted to expand
-python3 /app/sidecar.py /work/ --url "$BLUEFLOW_URL" $TOKEN_ARG
-echo ""
-
-echo "================================================"
-echo "  Zeek pipeline complete"
-echo "================================================"
-
-# Signal traffic container that it can exit now
-touch /shared/zeek-done
+echo "[zeek-probe] zeek exited unexpectedly; final push + bail"
+push_logs || true
+wait "$ZEEK_PID" 2>/dev/null
+exit $?
