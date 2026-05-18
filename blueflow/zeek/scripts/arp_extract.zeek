@@ -14,6 +14,12 @@
 ##   zeek -Cr <pcap> arp_extract.zeek
 ##   zeek -i <iface> arp_extract.zeek
 
+## Stock Zeek does not include orig_l2_addr / resp_l2_addr in conn.log
+## without this policy. The sidecar's per-MAC aggregation depends on
+## those fields -- otherwise it falls back to mac_from_ip() and emits
+## synthesized 02:00:* MACs that obscure the real devices.
+@load policy/protocols/conn/mac-logging
+
 module ARP;
 
 export {

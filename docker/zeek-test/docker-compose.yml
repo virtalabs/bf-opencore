@@ -1,0 +1,82 @@
+# Compose test for the standalone zeek-probe image, end-to-end against
+# a real BlueFlow (Django + PostgreSQL).
+#
+# Topology:
+#   postgres      ephemeral DB for BlueFlow
+#   blueflow      top-level Dockerfile + bootstrap (migrate + enable 'core' switch)
+#   zeek-probe    the probe image; listens on its eth0
+#   traffic-gen   scapy; shares zeek-probe's net ns; after sending, verifies
+#
+# To run:
+#   docker compose -f docker/zeek-test/docker-compose.yml up --build \
+#                                                         --abort-on-container-exit
+#
+# traffic-gen exits 0 once it has fetched /api/assets/ and printed the
+# devices BlueFlow has on file. --abort-on-container-exit then brings
+# the rest down cleanly.
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: zeek-test-postgres
+    environment:
+      POSTGRES_USER: blueflow
+      POSTGRES_PASSWORD: blueflow
+      POSTGRES_DB: blueflow
+    healthcheck:
+      test: ["CMD", "pg_isready", "-U", "blueflow"]
+      interval: 2s
+      timeout: 2s
+      retries: 20
+
+  blueflow:
+    build:
+      context: ../..
+      dockerfile: Dockerfile
+    container_name: zeek-test-blueflow
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      DATABASE_URL: postgresql://blueflow:blueflow@postgres:5432/blueflow
+      DJANGO_SETTINGS_MODULE: project.settings.development
+      DJANGO_ALLOWED_HOSTS: "*"
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./blueflow-bootstrap.sh:/bootstrap.sh:ro
+    # Override the image's default entrypoint+cmd; the bootstrap script
+    # runs migrate + flips the 'core' waffle switch then execs runserver.
+    entrypoint: ["/bin/bash", "/bootstrap.sh"]
+
+  zeek-probe:
+    image: virtalabsinc/zeek-probe:dev
+    build:
+      context: ../..
+      dockerfile: docker/zeek/Dockerfile
+    container_name: zeek-test-probe
+    depends_on:
+      - blueflow
+    cap_add:
+      - NET_ADMIN
+      - NET_RAW
+    environment:
+      ZEEK_INTERFACE: eth0
+      BLUEFLOW_URL: http://blueflow:8000
+      PUSH_INTERVAL_SECONDS: "10"
+
+  traffic-gen:
+    build:
+      context: ./traffic-gen
+    container_name: zeek-test-traffic
+    depends_on:
+      - zeek-probe
+    # Share zeek-probe's network namespace so sendp() on eth0 lands on
+    # the same NIC zeek is listening on. NET_RAW is per-container even
+    # under a shared namespace.
+    network_mode: "service:zeek-probe"
+    cap_add:
+      - NET_RAW
+    environment:
+      BLUEFLOW_URL: http://blueflow:8000
+      VERIFY_WAIT_SECONDS: "20"
