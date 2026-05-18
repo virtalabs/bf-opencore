@@ -1,9 +1,14 @@
-// Stage 1 ZeekJS bridge: Conn::log_policy hook -> Redis Streams XADD.
+// Stage 1 ZeekJS bridge: fan-in from multiple Zeek sources -> Redis Streams XADD.
 //
-// Reads from Zeek's bundled JavaScript runtime (in-tree since v6.0). Emits
-// one XADD entry per conn-log record onto the `zeek:events` stream. The
-// payload contract here is the bridge/consumer integration boundary --
-// alterations should be co-ordinated with the Django XREADGROUP consumer.
+// Sources currently wired:
+//   conn  -- Conn::log_policy hook; one entry per connection (TCP/UDP/ICMP)
+//   arp   -- raw arp_request / arp_reply events; one entry per ARP frame
+//
+// Every entry on the Stream has a uniform keyset — consumers can read the
+// same fields regardless of source and branch on the `source` discriminator.
+// Source-specific required fields are enforced at validation time so a
+// conn-log record with no uid still drops loudly (preserves the a52bcbf
+// guarantee), while ARP records (which legitimately have no uid) don't.
 //
 // Configuration via environment:
 //   REDIS_URL  default redis://localhost:6379
@@ -24,55 +29,98 @@ zeek.on("zeek_init", async () => {
   console.log(`[bridge] connected to ${REDIS_URL}, stream=${STREAM_KEY}`);
 });
 
-zeek.hook("Conn::log_policy", (rec, _id, _filter) => {
-  // Required fields. A conn-log record without any of these is malformed;
-  // dropping noisily beats writing empties downstream, where they'd
-  // pollute Asset upserts and erase the signal that something is broken
-  // (this exact pattern was hiding a field-access bug previously).
-  const ts = rec.ts;
-  const uid = rec.uid;
-  const srcIp = rec.id?.orig_h;
-  const dstIp = rec.id?.resp_h;
-  const proto = rec.proto;
+// Per-source required fields. ts is universal. Conn records need the
+// 5-tuple + uid to be a meaningful connection observation. ARP records
+// need at least one MAC + the operation to be a meaningful L2 observation.
+function validate(source, f) {
+  if (f.ts === undefined || f.ts === null) return ["ts"];
+  if (source === "conn") {
+    const missing = [];
+    if (!f.uid) missing.push("uid");
+    if (!f.src_ip) missing.push("src_ip");
+    if (!f.dst_ip) missing.push("dst_ip");
+    if (!f.proto) missing.push("proto");
+    return missing;
+  }
+  if (source === "arp") {
+    const missing = [];
+    if (!f.src_mac && !f.dst_mac) missing.push("src_mac|dst_mac");
+    if (!f.operation) missing.push("operation");
+    return missing;
+  }
+  return ["unknown-source"];
+}
 
-  const missing = [];
-  if (ts === undefined || ts === null) missing.push("ts");
-  if (!uid) missing.push("uid");
-  if (!srcIp) missing.push("id.orig_h");
-  if (!dstIp) missing.push("id.resp_h");
-  if (!proto) missing.push("proto");
-
+function emit(source, f) {
+  const missing = validate(source, f);
   if (missing.length > 0) {
     console.error(
-      `[bridge] dropping malformed conn-log record: missing ${missing.join(", ")}`,
+      `[bridge] dropping malformed ${source} record: missing ${missing.join(", ")}`,
     );
     return;
   }
-
-  // Optional fields -- empty here is legitimate, not a bug signal:
-  //   service: Zeek may not identify the application protocol.
-  //   orig_l2_addr / resp_l2_addr: flat on Conn::Info (NOT nested under id)
-  //     and only populated when policy/protocols/conn/mac-logging is @load'd.
-  //     Mac-logging copies c$orig$l2_addr -> c$conn$orig_l2_addr at
-  //     connection_state_remove time, so the bridge sees them on the
-  //     conn-log record itself, not on rec.id.
-  //   duration: absent for in-flight connections. 0 is a real value
-  //     (instantaneous flows), so don't conflate "missing" with "zero".
   client
     .xAdd(STREAM_KEY, "*", {
-      ts: String(ts),
-      uid,
-      src_ip: srcIp,
-      dst_ip: dstIp,
-      src_mac: rec.orig_l2_addr ?? "",
-      dst_mac: rec.resp_l2_addr ?? "",
-      proto,
-      service: rec.service ?? "",
-      duration: rec.duration !== undefined ? String(rec.duration) : "",
+      source,
+      ts: String(f.ts),
+      uid: f.uid ?? "",
+      src_ip: f.src_ip ?? "",
+      dst_ip: f.dst_ip ?? "",
+      src_mac: f.src_mac ?? "",
+      dst_mac: f.dst_mac ?? "",
+      proto: f.proto ?? "",
+      service: f.service ?? "",
+      duration: f.duration ?? "",
+      operation: f.operation ?? "",
     })
     .catch((err) => {
       console.error("[bridge] xAdd failed:", err.message);
     });
+}
+
+zeek.hook("Conn::log_policy", (rec, _id, _filter) => {
+  // Field nesting reminder (see prior commits 2e4ee21 / a22da90):
+  //   - 5-tuple (orig_h/resp_h/...) is nested under rec.id
+  //   - mac-logging fields (orig_l2_addr/resp_l2_addr) are flat on rec
+  emit("conn", {
+    ts: rec.ts,
+    uid: rec.uid,
+    src_ip: rec.id?.orig_h,
+    dst_ip: rec.id?.resp_h,
+    src_mac: rec.orig_l2_addr,
+    dst_mac: rec.resp_l2_addr,
+    proto: rec.proto,
+    service: rec.service,
+    duration: rec.duration !== undefined ? String(rec.duration) : "",
+  });
+});
+
+// Raw ARP events. Stock Zeek 6.x has no arp.log script, so the bridge
+// IS the log policy for ARP. SPA/TPA are protocol addrs (IPs), SHA/THA
+// are payload hardware addrs; for C.8's "MAC appears on the stream"
+// assertion the Ethernet header MACs (mac_src/mac_dst) are what matter.
+zeek.on("arp_request", (mac_src, mac_dst, SPA, _SHA, TPA, _THA) => {
+  emit("arp", {
+    ts: zeek.invoke("network_time"),
+    src_ip: SPA,
+    dst_ip: TPA,
+    src_mac: mac_src,
+    dst_mac: mac_dst,
+    proto: "arp",
+    operation: "REQUEST",
+  });
+});
+
+zeek.on("arp_reply", (mac_src, mac_dst, SPA, _SHA, TPA, _THA) => {
+  emit("arp", {
+    ts: zeek.invoke("network_time"),
+    src_ip: SPA,
+    dst_ip: TPA,
+    src_mac: mac_src,
+    dst_mac: mac_dst,
+    proto: "arp",
+    operation: "REPLY",
+  });
 });
 
 zeek.on("zeek_done", async () => {
