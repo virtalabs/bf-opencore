@@ -28,6 +28,7 @@ def test_asset_usage_stub_emits_empty_hour_dicts(auth_client):
     """Stub usage returns an empty hour dict at every weekday index."""
     asset = models.Asset.objects.create(hostname="usage-empty.example.com")
     response = auth_client.get(f"/api/assets/{asset.id}/")
+    assert response.status_code == status.HTTP_200_OK
     body = response.json()
     for index, hours in enumerate(body["usage"]):
         assert hours == {}, f"index {index} should be empty in stub (got {hours!r})"
