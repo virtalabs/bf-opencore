@@ -62,7 +62,7 @@ where = ["."]
 include = ["blueflow*", "project*", "harness*"]
 
 [tool.pytest.ini_options]
-testpaths = ["tests", "blueflow/tests"]
+testpaths = ["tests", "blueflow/tests", "blueflow/zeek/hl7/tests"]
 addopts = "-ra"
 filterwarnings = ["ignore::DeprecationWarning"]
 
