@@ -51,8 +51,11 @@ zeek.hook("Conn::log_policy", (rec, _id, _filter) => {
 
   // Optional fields -- empty here is legitimate, not a bug signal:
   //   service: Zeek may not identify the application protocol.
-  //   id.orig_l2_addr / id.resp_l2_addr: only populated when
-  //     policy/protocols/conn/mac-logging is @load'd (see B.4 follow-up).
+  //   orig_l2_addr / resp_l2_addr: flat on Conn::Info (NOT nested under id)
+  //     and only populated when policy/protocols/conn/mac-logging is @load'd.
+  //     Mac-logging copies c$orig$l2_addr -> c$conn$orig_l2_addr at
+  //     connection_state_remove time, so the bridge sees them on the
+  //     conn-log record itself, not on rec.id.
   //   duration: absent for in-flight connections. 0 is a real value
   //     (instantaneous flows), so don't conflate "missing" with "zero".
   client
@@ -61,8 +64,8 @@ zeek.hook("Conn::log_policy", (rec, _id, _filter) => {
       uid,
       src_ip: srcIp,
       dst_ip: dstIp,
-      src_mac: rec.id?.orig_l2_addr ?? "",
-      dst_mac: rec.id?.resp_l2_addr ?? "",
+      src_mac: rec.orig_l2_addr ?? "",
+      dst_mac: rec.resp_l2_addr ?? "",
       proto,
       service: rec.service ?? "",
       duration: rec.duration !== undefined ? String(rec.duration) : "",
