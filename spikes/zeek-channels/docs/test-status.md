@@ -39,8 +39,8 @@ promote `not run` to `pass` based on indirect evidence — re-run the test.
 
 | Test | Fixture | Status | Verified | Notes |
 |---|---|---|---|---|
-| C.8 | F-ARP-ONLY | not run | — | Expected to fail at current head: bridge only hooks `Conn::log_policy`, doesn't consume `arp.log`. Running it would confirm and pin the gap. |
-| C.9 | F-DHCP-DORA | not run | — | Bridge must emit even for the DISCOVER frame where the client has no L3. Likely passes for the conn-log entry produced for the later DHCP frames; the "from frame 1" assertion may fail. |
+| C.8 | F-ARP-ONLY | pass | `2f1501f` | Bridge now subscribes to raw `arp_request`/`arp_reply` events (stock Zeek 6.x has no `arp.log`). Both ARP frames produce Stream entries with `source=arp` and `de:ad:be:ef:00:01` present (as `src_mac` in REQUEST, `dst_mac` in REPLY). |
+| C.9 | F-DHCP-DORA | pass | `2f1501f` | Passes via existing conn-log path — no DHCP-specific hook needed. Two conn entries (broadcast flow + unicast flow); both contain `ca:fe:ba:be:00:42`. The "no L3 yet" entry has `src_ip=0.0.0.0`, which is a truthy string and passes required-field validation cleanly. |
 
 ## D-series — resilience
 
@@ -85,18 +85,32 @@ collapse this class of bug.
   current choice is consistent and unambiguous with a wire MAC, so B.6
   passes as-specified. Revisit if downstream consumers need to
   distinguish "field absent" from "field empty by design."
-- **conn-log is the only ingest path.** The bridge hooks only
-  `Conn::log_policy`. F-BROADCAST and F-DHCP-related fixtures get partial
-  coverage via the UDP entries Zeek synthesizes into conn.log; ARP-only
-  and gratuitous-ARP frames produce no entry. C.8 and any future
-  arp.log / dhcp.log-specific assertion will require a second hook.
-- **First protocol/service signals observed.** The B.7 runs incidentally
-  produced the first non-TCP and non-empty-service Stream entries:
-  `proto=udp` with `service=dhcp` (F-BROADCAST), `proto=udp` with empty
-  `service` (F-MULTICAST mDNS/LLMNR), and `proto=icmp` (F-MULTICAST IPv6
-  NS — Zeek classifies ICMPv6 NS as `icmp`, not `icmpv6`). These weren't
-  asserted on but are useful priors for whichever test exercises
-  `service`-population next.
+- **Multi-source ingest with discriminator.** As of `2f1501f` the bridge
+  fans in from two Zeek sources: `Conn::log_policy` for conn-log records
+  and raw `arp_request` / `arp_reply` events for ARP. Every Stream
+  entry carries a `source` field (`"conn"` | `"arp"`) and a uniform
+  keyset; consumers read the same fields regardless of source and
+  branch on `source` rather than checking field presence.
+- **Per-source required-field validation.** Conn records still require
+  `ts + uid + src_ip + dst_ip + proto` (the `a52bcbf` contract,
+  preserved). ARP records require `ts + (src_mac || dst_mac) +
+  operation`. Anything missing drops noisily with a `[bridge]` stderr
+  line.
+- **Network time via `zeek.invoke("network_time")`.** There is no
+  `zeek.network_time()` shortcut on the ZeekJS global. Runtime
+  introspection (Zeek 6.x) shows `zeek` exposes: `ATTR_LOG`,
+  `__zeek_javascript_files`, `as`, `event`, `flatten`, `global_vars`,
+  `hook`, `invoke`, `on`, `print`, `select_fields`. Future bridge code
+  that needs Zeek built-ins should go through `invoke`.
+- **`proto` vocabulary widened to include `arp`.** Conn-log uses
+  `tcp`/`udp`/`icmp`; ARP entries set `proto="arp"`. Downstream
+  classifiers that switch on `proto` need an `arp` arm.
+- **First protocol/service signals observed across runs.** The B.7 and
+  F-MINIMAL re-runs incidentally produced: `proto=udp` with
+  `service=dhcp` (F-BROADCAST, F-DHCP-DORA), `proto=udp` with empty
+  `service` (F-MULTICAST mDNS/LLMNR), `proto=icmp` (F-MULTICAST IPv6
+  NS — Zeek classifies ICMPv6 NS as `icmp`, not `icmpv6`),
+  `service=http` (F-MINIMAL's GET payload), and `proto=arp` (C.8).
 
 ## Gaps
 
