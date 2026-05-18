@@ -59,6 +59,20 @@ function emit(source, f) {
     );
     return;
   }
+  // Known gap (see D.14 in spikes/zeek-channels/docs/test-status.md):
+  // this .catch() only fires for per-command rejections of xAdds that
+  // were already in flight when the failure occurred (e.g. an
+  // ECONNRESET after the bytes hit the socket). It does NOT cover the
+  // node-redis@4 offlineQueue -- xAdds issued while the client is
+  // disconnected go into a queue and sit there until reconnection. If
+  // the client gives up reconnecting OR client.quit() is called before
+  // it reconnects, those queued commands drop silently without
+  // rejecting their promises, so this .catch() never fires for them.
+  // Under sustained redis loss the bridge silently loses ~99% of data;
+  // only the small set of in-flight writes at the moment of failure
+  // surface an error. Fix requires a bounded retry-strategy + explicit
+  // offlineQueue flush-and-reject on quit (see node-redis socket
+  // options reconnectStrategy and disableOfflineQueue).
   client
     .xAdd(STREAM_KEY, "*", {
       source,

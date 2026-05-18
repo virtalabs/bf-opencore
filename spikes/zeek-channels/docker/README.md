@@ -74,11 +74,28 @@ docker compose down -v        # -v also drops the named/anonymous volumes
 - **Node redis client version.** Pinned to `^4.7.0`. Older 3.x lacks
   promise-based `xAdd`.
 
+## D.14 — Redis down mid-stream
+
+Orchestration script under `docker/run-d14-redis-kill.sh`. Requires
+the `arp-flood.pcap` fixture (generate via
+`fixtures/arp_flood.py`). The script brings up redis, runs zeek
+against the flood in the background, SIGKILLs redis once the bridge
+has connected, and asserts three things: zeek exited cleanly, the
+kill landed mid-burst, and **no silent loss** (every dropped xAdd
+either landed on the stream or surfaced as `[bridge] xAdd failed`).
+
+The third assertion currently FAILS against bridge `2f1501f`: under
+sustained redis loss the node-redis@4 offlineQueue silently drops
+~99% of queued commands. See `docs/test-status.md` (row D.14, and
+the **OPEN** entry under "Bugs surfaced") and the comment in
+`bridge/send-to-redis.js` near the `.catch()` for the failure
+mechanism and the fix shape.
+
 ## Next steps (not yet built)
 
-- B-series fidelity tests (MAC round-trip): assert against pcaps with
-  known source/dest MACs after extending the bridge payload (already
-  emits `src_mac` / `dst_mac`).
-- D-series resilience tests: take Redis offline mid-replay, verify the
-  bridge surfaces the error rather than swallowing it silently.
+- B-series fidelity tests (MAC round-trip): **done** at `a22da90` —
+  see `docs/test-status.md`.
+- D-series resilience tests: D.14 wired up (currently failing — see
+  above). D.13/D.15/D.16 still need the capture-required `F-SUSTAINED`
+  fixture (see `fixtures/sustained-load.capture-notes.md`).
 - The pytest harness that drives this compose programmatically.

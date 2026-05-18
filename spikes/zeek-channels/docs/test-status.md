@@ -46,7 +46,10 @@ promote `not run` to `pass` based on indirect evidence — re-run the test.
 
 | Test | Fixture | Status | Verified | Notes |
 |---|---|---|---|---|
-| D.* | — | spec missing | — | Master plan called out D as "Redis offline mid-replay surfaces the error, not swallows it" (per `docker/README.md` Next steps). Individual D.N test IDs are not reconstructable from the sidecars. |
+| D.14 | F-ARP-FLOOD | **fail** | `2f1501f` | Redis down mid-stream. Test passes b/c (zeek exits 0, kill landed mid-burst) but fails a (no-silent-loss): with FRAME_COUNT=10000, only ~4 xAdds surface a `[bridge] xAdd failed` log line; the other ~9996 go to node-redis@4's offlineQueue and drop silently when the client is closed without reconnecting. Bridge needs a bounded retry-strategy + offlineQueue flush-and-reject on quit. Run via `docker/run-d14-redis-kill.sh`. Synthesis fixture documented under "Deliberate exception from F-SUSTAINED" in `arp-flood.ground-truth.md`. |
+| D.13 | — | spec missing | — | Redis down at startup. Reconstructable from `sustained-load.capture-notes.md`. Requires F-SUSTAINED (capture-required) — arp-flood is not a substitute. |
+| D.15 | — | spec missing | — | Zeek restart leaves bridge healthy. Same constraint: needs F-SUSTAINED. |
+| D.16 | — | spec missing | — | Slow consumer doesn't crash producer. Same constraint: needs F-SUSTAINED. |
 
 ## E-series — visibility / metrics
 
@@ -70,6 +73,7 @@ Cross-reference for which test runs surfaced which bridge fixes:
 | `2e4ee21` | A.1/A.2/A.3 first run | Bridge accessed `id$orig_h` flat; needed nested `rec.id.orig_h`. |
 | `a52bcbf` | A.1/A.2/A.3 follow-up | Bridge silently wrote empty entries when required fields were missing; now validates and drops loudly. |
 | `a22da90` | B.4/B.5 first run | Bridge accessed `id$orig_l2_addr` nested; mac-logging actually puts MACs flat on `Conn::Info` — mirror image of `2e4ee21`. |
+| **OPEN** | D.14 first run | Bridge silently drops queued xAdds when redis becomes unreachable. `.catch()` only handles per-command rejections of *in-flight* xAdds (e.g. ECONNRESET); xAdds issued while disconnected sit in node-redis@4's offlineQueue and drop without rejecting their promises when `client.quit()` runs. Under sustained redis loss, ~99% of data is lost without any error log. Fix not yet shipped — see comment in `bridge/send-to-redis.js` near the `.catch()` call. |
 
 Pattern worth tracking: every new fixture has surfaced a field-shape
 assumption the bridge got wrong. A canonical conn-log schema (or even a
@@ -115,9 +119,12 @@ collapse this class of bug.
 ## Gaps
 
 The master test plan is gone. The numbering above has holes — A.1
-(only in docker README), B.1–B.3, C.1–C.7, C.10+, all D.*, E.1–E.16,
-E.19+, F.1–F.19, F.21+. Each hole is a test that existed in the
-original plan but has neither a sidecar nor a reconstructable record.
+(only in docker README), B.1–B.3, C.1–C.7, C.10+, D.1–D.12,
+E.1–E.16, E.19+, F.1–F.19, F.21+. Each hole is a test that existed in
+the original plan but has neither a sidecar nor a reconstructable
+record. The D-series was partially reconstructed from
+`sustained-load.capture-notes.md`, which named D.13/D.14/D.15/D.16
+specifically.
 
 Two ways out (decision pending):
 
