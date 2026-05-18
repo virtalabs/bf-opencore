@@ -1,13 +1,17 @@
-"""Tests for the ``zeek_ingest`` management command and the sidecar module."""
+"""Tests for the archived HL7 sidecar module.
+
+The live ``zeek_ingest`` management command now drives the conn.log + arp.log
+sidecar (``blueflow.zeek.sidecar``); this module is preserved for the HL7
+correlation/aggregation logic only. Two former tests that invoked
+``call_command("zeek_ingest", ...)`` were dropped on the pivot — they
+asserted the management command's HL7-specific behavior, which the command
+no longer has.
+"""
 
 import json
 from pathlib import Path
 
-import pytest
-from django.core.management import call_command
-
-from blueflow import models
-from blueflow.zeek.sidecar import payloads_from_logdir
+from blueflow.zeek.hl7.sidecar import payloads_from_logdir
 
 
 def _write_logs(tmp_path: Path, hl7_lines: list[dict], conn_lines: list[dict]) -> Path:
@@ -89,35 +93,3 @@ def test_payloads_synthetic_mac_handles_ipv6_source(tmp_path: Path) -> None:
 
     assert len(payloads) == 1
     assert payloads[0]["mac_address"] == "02:00:1e:03:d7:e1"
-
-
-@pytest.mark.django_db
-def test_zeek_ingest_creates_asset(tmp_path: Path) -> None:
-    """Management command creates an Asset on first ingest."""
-    logdir = _write_logs(tmp_path, [HL7_ENTRY], [CONN_ENTRY])
-
-    call_command("zeek_ingest", logdir=str(logdir))
-
-    assert models.Asset.objects.count() == 1
-    asset = models.Asset.objects.get()
-    assert str(asset.mac_address) == "00:11:22:33:44:55"
-    assert str(asset.ip_address) == "10.0.0.155"
-    assert asset.name == "Infuse-O-Matic"
-    assert asset.serial_number == "DEV-001"
-    assert asset.open_ports_tcp == [2575]
-
-
-@pytest.mark.django_db
-def test_zeek_ingest_merges_open_ports_on_update(tmp_path: Path) -> None:
-    """Re-ingest with a new port merges into existing asset, not duplicates."""
-    logdir = _write_logs(tmp_path, [HL7_ENTRY], [CONN_ENTRY])
-    call_command("zeek_ingest", logdir=str(logdir))
-
-    second_hl7 = {**HL7_ENTRY, "id.resp_p": 8080, "uid": "CdefZZ"}
-    second_conn = {**CONN_ENTRY, "uid": "CdefZZ", "id.resp_p": 8080}
-    _write_logs(tmp_path, [second_hl7], [second_conn])
-    call_command("zeek_ingest", logdir=str(logdir))
-
-    assert models.Asset.objects.count() == 1
-    asset = models.Asset.objects.get()
-    assert asset.open_ports_tcp == [2575, 8080]

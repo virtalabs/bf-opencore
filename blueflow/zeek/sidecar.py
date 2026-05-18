@@ -1,19 +1,20 @@
-"""Zeek log processing for Asset ingest.
+"""Zeek log processing for Asset ingest (conn.log + arp.log).
 
-Reads Zeek JSON logs (hl7.log + conn.log), correlates entries by connection
-UID, and aggregates them into per-device payloads compatible with
-``AssetUpsertSerializer``.
+Reads stock Zeek conn.log plus the arp.log produced by
+``blueflow/zeek/scripts/arp_extract.zeek``, aggregates per-device
+payloads, and emits ``AssetUpsertSerializer``-shaped dicts.
 
 Two consumers:
 
-- ``blueflow.management.commands.zeek_ingest`` calls ``payloads_from_logdir``
-  in-process and upserts via the ORM.
-- The docker test harness (``docker/``) runs this module as a CLI script
-  (``python3 sidecar.py <logdir> --url <bf>``) to push payloads over HTTP
-  to a running BlueFlow (or stub server). This path is preserved for the
-  end-to-end pipeline test.
+- ``blueflow.management.commands.zeek_ingest`` calls
+  ``payloads_from_logdir`` in-process and upserts via the ORM.
+- The docker test harness (``docker/``) runs this module as a CLI
+  script (``python3 sidecar.py <logdir> --url <bf>``) to push payloads
+  over HTTP to a running BlueFlow (or stub server).
 
-Promoted from spike #111 (frozen at tag ``zeek-hl7-spike-frozen``).
+The HL7-specific predecessor (sending_app -> name, equipment_id ->
+serial_number, hl7_* external_keys) lives at
+``blueflow.zeek.hl7.sidecar``.
 """
 
 import argparse
@@ -24,28 +25,19 @@ import sys
 import urllib.request
 from pathlib import Path
 
-SCALAR_FIELDS = (
-    ("name", "sending_app"),
-    ("serial_number", "equipment_id"),
-    ("sending_facility", "sending_facility"),
-    ("receiving_app", "receiving_app"),
-    ("hl7_version", "hl7_version"),
-)
+BROADCAST_MAC = "ff:ff:ff:ff:ff:ff"
+ZERO_MAC = "00:00:00:00:00:00"
 
 
 def mac_from_ip(ip: str) -> str:
-    """Synthesize a locally-administered MAC from a source IP.
+    """Synthesize a locally-administered MAC from an IP.
 
-    Used only when Zeek runs against pcap files (pcap replay carries no L2).
-    Live capture populates ``conn.log`` ``orig_l2_addr`` / ``resp_l2_addr``
-    with real MACs and this fallback is not exercised. The 02:00 prefix
-    marks the MAC as locally administered, avoiding collision with real
-    OUI-assigned MACs. Deterministic so re-runs upsert the same asset.
-
-    IPv4 inputs map directly to the 4-byte packed form (preserves the
-    readable ``02:00:c0:a8:38:01`` style for ``192.168.56.1``). IPv6 and
-    other non-v4 strings hash to a stable 4-byte suffix so the contract
-    holds for any input Zeek can emit.
+    Only used when Zeek runs against a pcap that lacks L2 headers (e.g.
+    loopback replay) and conn.log therefore has no
+    orig_l2_addr/resp_l2_addr. Live capture and Ethernet-framed pcaps
+    populate real MACs and skip this path. The 02:00 prefix marks the
+    MAC as locally administered. Deterministic so re-runs upsert the
+    same asset.
     """
     try:
         addr = ipaddress.ip_address(ip)
@@ -73,90 +65,107 @@ def load_log(path: Path) -> list[dict]:
     return entries
 
 
-def correlate(hl7_entries: list[dict], conn_entries: list[dict]) -> list[dict]:
-    """Join hl7 entries with conn entries on ``uid`` to enrich with L2."""
-    conn_by_uid = {e["uid"]: e for e in conn_entries}
-    for entry in hl7_entries:
-        conn = conn_by_uid.get(entry.get("uid"))
-        if conn:
-            for field in ("orig_l2_addr", "resp_l2_addr"):
-                if field in conn:
-                    entry[field] = conn[field]
-    return hl7_entries
+def _is_device_mac(mac: str) -> bool:
+    """Return True if mac names a real endpoint (not broadcast / multicast / zero)."""
+    if not mac:
+        return False
+    normalized = mac.lower()
+    if normalized == ZERO_MAC:
+        return False
+    try:
+        first = int(normalized.split(":", 1)[0], 16)
+    except ValueError:
+        return False
+    # IEEE I/G bit (lsb of first octet) set => multicast or broadcast.
+    return (first & 1) == 0
 
 
-def _init_device(mac: str, orig_h: str) -> dict:
-    """Create a new device accumulator."""
-    return {
-        "mac_address": mac or mac_from_ip(orig_h),
-        "ip_address": orig_h,
-        "name": "",
-        "serial_number": "",
-        "open_ports_tcp": set(),
-        "message_types": set(),
-        "sending_facility": "",
-        "receiving_app": "",
-        "hl7_version": "",
-    }
+def _is_routable_ip(ip: str) -> bool:
+    """Return True if ip is something we'd record on an Asset row."""
+    if not ip:
+        return False
+    try:
+        addr = ipaddress.ip_address(ip)
+    except ValueError:
+        return False
+    return not (addr.is_unspecified or addr.is_multicast or addr.is_reserved)
 
 
-def _build_payload(dev: dict) -> dict:
-    """Convert a device accumulator into an upsert payload."""
-    payload = {
-        "mac_address": dev["mac_address"],
-        "ip_address": dev["ip_address"],
-        "name": dev["name"],
-        "open_ports_tcp": sorted(dev["open_ports_tcp"]),
-        "external_keys": {
-            "hl7_sending_facility": dev["sending_facility"],
-            "hl7_receiving_app": dev["receiving_app"],
-            "hl7_message_types": sorted(dev["message_types"]),
-            "hl7_version": dev["hl7_version"],
-        },
-    }
-    if dev["serial_number"]:
-        payload["serial_number"] = dev["serial_number"]
-    return payload
+def _observe(
+    devices: dict[str, dict],
+    mac: str,
+    ip: str,
+    port: int | None = None,
+) -> None:
+    """Record one endpoint observation, merging into an existing device row."""
+    if _is_device_mac(mac):
+        key = mac.lower()
+    elif not mac and _is_routable_ip(ip):
+        # No MAC at all (pcap without L2 headers) -> synthesize from IP.
+        # A *present* broadcast/multicast MAC means the L2 dst was not a
+        # device (e.g. UDP to ff:ff:ff:ff:ff:ff), so falling back to the
+        # IP would fabricate a phantom Asset for the broadcast IP itself.
+        key = mac_from_ip(ip)
+    else:
+        return
+
+    dev = devices.setdefault(
+        key,
+        {"mac_address": key, "ip_address": "", "open_ports_tcp": set()},
+    )
+    if not dev["ip_address"] and _is_routable_ip(ip):
+        dev["ip_address"] = ip
+    if port is not None:
+        dev["open_ports_tcp"].add(int(port))
 
 
-def aggregate(entries: list[dict]) -> list[dict]:
-    """Group entries by device, produce one upsert payload per device."""
+def aggregate(conn_entries: list[dict], arp_entries: list[dict]) -> list[dict]:
+    """Build per-device upsert payloads from conn.log + arp.log entries."""
     devices: dict[str, dict] = {}
 
-    for entry in entries:
-        orig_h = entry.get("id.orig_h", "")
+    for entry in conn_entries:
+        proto = (entry.get("proto") or "").lower()
         resp_p = entry.get("id.resp_p")
-        mac = entry.get("orig_l2_addr", "")
-        device_key = mac or orig_h
+        # Originator: real endpoint, but its source port is ephemeral noise.
+        _observe(
+            devices,
+            entry.get("orig_l2_addr", ""),
+            entry.get("id.orig_h", ""),
+            port=None,
+        )
+        # Responder: id.resp_p IS its open port (only meaningful for TCP).
+        _observe(
+            devices,
+            entry.get("resp_l2_addr", ""),
+            entry.get("id.resp_h", ""),
+            port=int(resp_p) if proto == "tcp" and resp_p is not None else None,
+        )
 
-        if not device_key:
-            continue
-
-        if device_key not in devices:
-            devices[device_key] = _init_device(mac, orig_h)
-
-        dev = devices[device_key]
-
-        for dev_field, entry_field in SCALAR_FIELDS:
-            if not dev[dev_field] and entry.get(entry_field):
-                dev[dev_field] = entry[entry_field]
-
-        if resp_p is not None:
-            dev["open_ports_tcp"].add(int(resp_p))
-        if entry.get("message_type"):
-            dev["message_types"].add(entry["message_type"])
+    # ARP: src side only. Request-dst is broadcast (not a device); reply-dst
+    # is the original querier, already seen as the src of its own request.
+    for entry in arp_entries:
+        _observe(devices, entry.get("src_mac", ""), entry.get("src_ip", ""))
 
     return [_build_payload(dev) for dev in devices.values()]
 
 
+def _build_payload(dev: dict) -> dict:
+    payload = {
+        "mac_address": dev["mac_address"],
+        "open_ports_tcp": sorted(dev["open_ports_tcp"]),
+    }
+    if dev["ip_address"]:
+        payload["ip_address"] = dev["ip_address"]
+    return payload
+
+
 def payloads_from_logdir(logdir: Path) -> list[dict]:
-    """Top-level: load + correlate + aggregate, return upsert payloads."""
-    hl7_entries = load_log(logdir / "hl7.log")
-    if not hl7_entries:
-        return []
+    """Top-level: load + aggregate, return upsert payloads."""
     conn_entries = load_log(logdir / "conn.log")
-    enriched = correlate(hl7_entries, conn_entries)
-    return aggregate(enriched)
+    arp_entries = load_log(logdir / "arp.log")
+    if not conn_entries and not arp_entries:
+        return []
+    return aggregate(conn_entries, arp_entries)
 
 
 def push(payload: dict, base_url: str, token: str | None) -> int:
@@ -173,7 +182,7 @@ def push(payload: dict, base_url: str, token: str | None) -> int:
         return resp.status
 
 
-def main():
+def main() -> None:
     """CLI entry point used by the docker harness."""
     parser = argparse.ArgumentParser(description="Zeek log sidecar for BlueFlow")
     parser.add_argument("logdir", type=Path, help="Zeek JSON log directory")
@@ -190,7 +199,7 @@ def main():
 
     payloads = payloads_from_logdir(args.logdir)
     if not payloads:
-        print("No HL7 log entries found.")  # noqa: T201
+        print("No conn.log or arp.log entries found.")  # noqa: T201
         sys.exit(0)
 
     print(f"Aggregated into {len(payloads)} asset(s).\n")  # noqa: T201

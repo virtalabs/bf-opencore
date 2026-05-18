@@ -1,9 +1,13 @@
 """Ingest Zeek logs as Asset records.
 
-Reads Zeek JSON logs from a directory, aggregates per-device payloads, and
-upserts Assets keyed on MAC address. Mirrors the merge semantics of
-``PUT /api/assets/upsert/`` (see ``blueflow/views/asset.py``) so an asset
-seen by both Zeek and the HTTP upsert path stays a single row.
+Reads conn.log + arp.log (JSON-mode) from a directory, aggregates
+per-device payloads keyed on MAC, and upserts Assets. Mirrors the merge
+semantics of ``PUT /api/assets/upsert/`` (see ``blueflow/views/asset.py``)
+so an asset seen by both Zeek and the HTTP upsert path stays a single
+row.
+
+The archived HL7-specific sidecar (sending_app -> name, etc.) lives at
+``blueflow.zeek.hl7.sidecar`` and is no longer driven by this command.
 
 Usage:
     python manage.py zeek_ingest --logdir /path/to/zeek/logs/
@@ -22,14 +26,14 @@ from blueflow.zeek.sidecar import payloads_from_logdir
 class Command(BaseCommand):
     """Upsert Assets from a directory of Zeek JSON logs."""
 
-    help = "Upsert Assets from a directory of Zeek JSON logs (hl7.log + conn.log)."
+    help = "Upsert Assets from a directory of Zeek JSON logs (conn.log + arp.log)."
 
     def add_arguments(self, parser):
         parser.add_argument(
             "--logdir",
             type=str,
             required=True,
-            help="Directory containing Zeek JSON logs (hl7.log, conn.log).",
+            help="Directory containing Zeek JSON logs (conn.log, arp.log).",
         )
 
     def handle(self, *args, **options) -> None:  # noqa: ARG002
@@ -40,7 +44,9 @@ class Command(BaseCommand):
 
         payloads = payloads_from_logdir(logdir)
         if not payloads:
-            self.stdout.write("No HL7 entries found; nothing to ingest.")
+            self.stdout.write(
+                "No conn.log or arp.log entries found; nothing to ingest."
+            )
             return
 
         Asset = apps.get_model("blueflow", "Asset")
