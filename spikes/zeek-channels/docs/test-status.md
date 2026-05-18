@@ -30,10 +30,10 @@ promote `not run` to `pass` based on indirect evidence — re-run the test.
 |---|---|---|---|---|
 | B.4 | F-IPV4-TCP | pass | `a22da90` | `00:11:22:33:44:55` round-trips byte-exact (case, colons, no truncation). |
 | B.5 | F-IPV4-TCP | pass | `a22da90` | Both src and dst MACs present on the single entry. |
-| B.6 | F-LOOPBACK | not run | — | DLT_NULL pcap; empty-L2 fields must be distinguishable from `00:00:00:00:00:00`. |
-| B.7 | F-BROADCAST-MAC | not run | — | Broadcast slice: `ff:ff:ff:ff:ff:ff` round-trips verbatim. |
-| B.7 | F-MULTICAST-MAC | not run | — | Multicast slice: `01:00:5e:*` and `33:33:*` round-trip verbatim. |
-| B.7 | F-LOCAL-ADMIN | not run | — | Locally-administered slice: `02:1a:2b:3c:4d:5e` round-trips with the LA bit intact. |
+| B.6 | F-LOOPBACK | pass | `a22da90` | DLT_NULL pcap produces a conn-log entry with `src_mac=""` and `dst_mac=""`. Empty string is in the sidecar's accepted-sentinel list and is distinct from `00:00:00:00:00:00`. Sidecar *recommends* `null` over empty string for downstream filtering ergonomics — see "Bridge conventions" below. |
+| B.7 | F-BROADCAST-MAC | pass | `a22da90` | `ff:ff:ff:ff:ff:ff` verbatim in dst_mac of the DHCP-DISCOVER conn entry. The gratuitous-ARP frame produces no conn record (bridge only hooks `Conn::log_policy`), so the broadcast assertion is satisfied solely via the DHCP path. |
+| B.7 | F-MULTICAST-MAC | pass | `a22da90` | All three dst MACs verbatim across three conn entries: `01:00:5e:00:00:fb` (mDNS, udp), `01:00:5e:00:00:fc` (LLMNR, udp), `33:33:00:00:00:01` (IPv6 NS, icmp). |
+| B.7 | F-LOCAL-ADMIN | pass | `a22da90` | `02:1a:2b:3c:4d:5e` verbatim — locally-administered bit (bit-1 of first byte) preserved, not rewritten, not flagged. |
 
 ## C-series — non-conn-log L2 sources
 
@@ -75,6 +75,28 @@ Pattern worth tracking: every new fixture has surfaced a field-shape
 assumption the bridge got wrong. A canonical conn-log schema (or even a
 small JSON Schema) co-owned by the bridge and the Django consumer would
 collapse this class of bug.
+
+## Bridge conventions established by these runs
+
+- **Missing-MAC sentinel = empty string `""`.** The bridge emits `""` for
+  `orig_l2_addr` / `resp_l2_addr` when they aren't populated (e.g.,
+  DLT_NULL pcaps, or runs without `mac-logging` loaded). The F-LOOPBACK
+  sidecar recommends `null` for downstream filter ergonomics; the
+  current choice is consistent and unambiguous with a wire MAC, so B.6
+  passes as-specified. Revisit if downstream consumers need to
+  distinguish "field absent" from "field empty by design."
+- **conn-log is the only ingest path.** The bridge hooks only
+  `Conn::log_policy`. F-BROADCAST and F-DHCP-related fixtures get partial
+  coverage via the UDP entries Zeek synthesizes into conn.log; ARP-only
+  and gratuitous-ARP frames produce no entry. C.8 and any future
+  arp.log / dhcp.log-specific assertion will require a second hook.
+- **First protocol/service signals observed.** The B.7 runs incidentally
+  produced the first non-TCP and non-empty-service Stream entries:
+  `proto=udp` with `service=dhcp` (F-BROADCAST), `proto=udp` with empty
+  `service` (F-MULTICAST mDNS/LLMNR), and `proto=icmp` (F-MULTICAST IPv6
+  NS — Zeek classifies ICMPv6 NS as `icmp`, not `icmpv6`). These weren't
+  asserted on but are useful priors for whichever test exercises
+  `service`-population next.
 
 ## Gaps
 
