@@ -11,11 +11,17 @@ single Docker pull gives you the full ingest path.
 ## Build
 
 The build context MUST be the repo root so the Dockerfile can `COPY`
-from `blueflow/zeek/`:
+from `blueflow/zeek/`. For local-only iteration on the current host
+architecture:
 
 ```bash
-docker build -f docker/zeek/Dockerfile -t virtalabsinc/zeek-probe:latest .
+docker build -f docker/zeek/Dockerfile -t virtalabsinc/zeek-probe:dev .
 ```
+
+For anything intended to ship (`:latest` or a SHA-tagged release), use
+the multi-arch flow under "Push to DockerHub" below — a plain
+`docker build` only produces a single-arch image and will silently
+break ARM pullers.
 
 ## Environment
 
@@ -72,11 +78,44 @@ exits 0.
 
 ## Push to DockerHub
 
+The image is published as a multi-arch manifest (linux/amd64 +
+linux/arm64). Building and pushing both architectures requires the
+`docker-container` buildx driver — the default `desktop-linux` /
+`docker` driver cannot produce manifest lists and will silently emit a
+single-arch image.
+
+One-time setup of a multi-arch builder (if `docker buildx ls` does not
+already show one):
+
 ```bash
-docker tag virtalabsinc/zeek-probe:latest virtalabsinc/zeek-probe:$(git rev-parse --short HEAD)
-docker push virtalabsinc/zeek-probe:latest
-docker push virtalabsinc/zeek-probe:$(git rev-parse --short HEAD)
+docker buildx create --name multiarch --driver docker-container --use
+docker buildx inspect --bootstrap
 ```
+
+Build + push both tags in one shot from the repo root:
+
+```bash
+SHA=$(git rev-parse --short HEAD)
+docker buildx build \
+  --builder multiarch \
+  --platform linux/amd64,linux/arm64 \
+  -f docker/zeek/Dockerfile \
+  -t virtalabsinc/zeek-probe:latest \
+  -t virtalabsinc/zeek-probe:"$SHA" \
+  --push \
+  .
+```
+
+`--push` uploads the manifest list directly to the registry; the local
+image store never holds the multi-arch result. Verify the result:
+
+```bash
+docker buildx imagetools inspect virtalabsinc/zeek-probe:latest
+```
+
+You should see one manifest entry per platform plus a couple of
+`unknown/unknown` entries — those are SBOM/provenance attestations
+buildx attaches by default and are safe to ignore.
 
 (`virtalabsinc` is the DockerHub org for Virta Laboratories images. The
 GitHub org is `virtalabs` without the `inc` — don't confuse them.)
