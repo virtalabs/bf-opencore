@@ -22,6 +22,7 @@ import hashlib
 import ipaddress
 import json
 import sys
+import urllib.error
 import urllib.request
 from pathlib import Path
 
@@ -204,12 +205,24 @@ def main() -> None:
 
     print(f"Aggregated into {len(payloads)} asset(s).\n")  # noqa: T201
 
+    failures = 0
     for payload in payloads:
         if args.url:
-            status_code = push(payload, args.url, args.token)
-            print(f"PUT {payload['mac_address']} -> {status_code}")  # noqa: T201
+            try:
+                status_code = push(payload, args.url, args.token)
+            except (urllib.error.HTTPError, urllib.error.URLError) as exc:
+                failures += 1
+                print(  # noqa: T201
+                    f"PUT {payload['mac_address']} failed: {exc}",
+                    file=sys.stderr,
+                )
+            else:
+                print(f"PUT {payload['mac_address']} -> {status_code}")  # noqa: T201
         else:
             print(json.dumps(payload, indent=2))  # noqa: T201
+
+    if failures:
+        sys.exit(1)
 
 
 if __name__ == "__main__":
