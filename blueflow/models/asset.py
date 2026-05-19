@@ -759,6 +759,31 @@ class Asset(models.Model):
     def __str__(self):
         return f"{self.id}:{self.display_name}:{self.ip_address}"
 
+    def update_usage(self, timestamp):
+        """Record a usage observation for this asset at the given timestamp.
+
+        Looks up (or creates) the Usage row for this asset on
+        timestamp.weekday(), then increments the matching hour_NN column —
+        unless an observation has already been counted for the same
+        Usage.USAGE_WINDOW_MINUTES window, in which case this is a no-op.
+        """
+        # TODO(taylorcochran): timestamp is server-derived (timezone.now()) at
+        #   the call site today. Switch to network-derived time from the
+        #   upserted asset payload once scanners reliably provide it.
+        from .usage import Usage
+
+        window_start = Usage.floor_to_window(timestamp)
+        usage, _ = Usage.objects.get_or_create(
+            asset=self,
+            day_of_week=timestamp.weekday(),
+        )
+        if usage.last_window_started_at == window_start:
+            return
+        hour_field = f"hour_{timestamp.hour:02d}"
+        setattr(usage, hour_field, getattr(usage, hour_field) + 1)
+        usage.last_window_started_at = window_start
+        usage.save()
+
     def todict(self):
         """Return concrete fields as a dictionary for diffing in update_or_create.
 

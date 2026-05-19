@@ -1,15 +1,36 @@
-"""Tests for the Asset.usage serializer field (contract-level stub).
+"""Tests for the Asset usage tracking via the Usage FK model.
 
-The usage field is a 7-element array indexed by Python's datetime.weekday()
-convention: 0=Monday, 1=Tuesday, 2=Wednesday, 3=Thursday, 4=Friday,
-5=Saturday, 6=Sunday.
+Each Asset can have up to 7 Usage rows (one per weekday). Each row holds 24
+integer hour columns (hour_00..hour_23) and a last_window_started_at
+timestamp used for Usage.USAGE_WINDOW_MINUTES-deduped increments.
+
+The wire contract on AssetSerializer.usage is a Monday-first 7-element array
+of {str(hour) -> count} maps with zero-count hours stripped.
 """
+
+import datetime
+from unittest import mock
 
 from rest_framework import status
 
 from blueflow import models
 
 DAYS_IN_WEEK = 7
+
+
+def _fixed(year, month, day, hour, minute):
+    return datetime.datetime(
+<<<<<<< Updated upstream
+        year, month, day, hour, minute, tzinfo=datetime.UTC,
+=======
+        year,
+        month,
+        day,
+        hour,
+        minute,
+        tzinfo=datetime.UTC,
+>>>>>>> Stashed changes
+    )
 
 
 def test_asset_response_includes_usage_field(auth_client):
@@ -24,11 +45,212 @@ def test_asset_response_includes_usage_field(auth_client):
     assert len(body["usage"]) == DAYS_IN_WEEK
 
 
-def test_asset_usage_stub_emits_empty_hour_dicts(auth_client):
-    """Stub usage returns an empty hour dict at every weekday index."""
+def test_asset_with_no_usage_rows_emits_empty_hour_dicts(auth_client):
+    """An asset with no Usage rows serializes 7 empty hour dicts."""
     asset = models.Asset.objects.create(hostname="usage-empty.example.com")
     response = auth_client.get(f"/api/assets/{asset.id}/")
-    assert response.status_code == status.HTTP_200_OK
     body = response.json()
     for index, hours in enumerate(body["usage"]):
-        assert hours == {}, f"index {index} should be empty in stub (got {hours!r})"
+        assert hours == {}, f"index {index} should be empty (got {hours!r})"
+
+
+def test_usage_default_day_of_week_is_monday():
+    """A bare Usage() (no day_of_week supplied) defaults to Monday."""
+    asset = models.Asset.objects.create(hostname="usage-default.example.com")
+    usage = models.Usage(asset=asset)
+    assert usage.day_of_week == models.DayOfWeek.MONDAY == 0
+
+
+def test_usage_window_constant_is_five_minutes():
+    """The dedup window constant lives on Usage and is 5 minutes."""
+    assert models.Usage.USAGE_WINDOW_MINUTES == 5  # noqa: PLR2004
+
+
+def test_upsert_creates_usage_row_with_correct_hour(auth_client):
+    """A single upsert creates one Usage row for the current weekday."""
+    # 2026-05-19 is a Tuesday (weekday=1)
+    with mock.patch(
+        "blueflow.views.asset.timezone.now",
+        return_value=_fixed(2026, 5, 19, 14, 0),
+    ):
+        response = auth_client.put(
+            "/api/assets/upsert/",
+            data={"mac_address": "aa:bb:cc:dd:ee:01"},
+            format="json",
+        )
+    assert response.status_code == status.HTTP_201_CREATED
+    asset = models.Asset.objects.get(mac_address="aa:bb:cc:dd:ee:01")
+    rows = list(asset.usage.all())
+    assert len(rows) == 1
+    assert rows[0].day_of_week == 1
+    assert rows[0].hour_14 == 1
+
+
+def test_two_upserts_within_same_5min_window_count_as_one(auth_client):
+    """14:01 and 14:02 share the 14:00-14:05 window → counts as 1."""
+    mac = "aa:bb:cc:dd:ee:02"
+    with mock.patch(
+        "blueflow.views.asset.timezone.now",
+        return_value=_fixed(2026, 5, 19, 14, 1),
+    ):
+        auth_client.put("/api/assets/upsert/", data={"mac_address": mac}, format="json")
+    with mock.patch(
+        "blueflow.views.asset.timezone.now",
+        return_value=_fixed(2026, 5, 19, 14, 2),
+    ):
+        response = auth_client.put(
+<<<<<<< Updated upstream
+            "/api/assets/upsert/", data={"mac_address": mac}, format="json",
+=======
+            "/api/assets/upsert/",
+            data={"mac_address": mac},
+            format="json",
+>>>>>>> Stashed changes
+        )
+    assert response.json()["usage"][1] == {"14": 1}
+
+
+def test_upserts_in_different_5min_windows_increment_separately(auth_client):
+    """14:01 and 14:06 cross a 5-min boundary → counts as 2 in the same hour."""
+    mac = "aa:bb:cc:dd:ee:03"
+    with mock.patch(
+        "blueflow.views.asset.timezone.now",
+        return_value=_fixed(2026, 5, 19, 14, 1),
+    ):
+        auth_client.put("/api/assets/upsert/", data={"mac_address": mac}, format="json")
+    with mock.patch(
+        "blueflow.views.asset.timezone.now",
+        return_value=_fixed(2026, 5, 19, 14, 6),
+    ):
+        response = auth_client.put(
+<<<<<<< Updated upstream
+            "/api/assets/upsert/", data={"mac_address": mac}, format="json",
+=======
+            "/api/assets/upsert/",
+            data={"mac_address": mac},
+            format="json",
+>>>>>>> Stashed changes
+        )
+    assert response.json()["usage"][1] == {"14": 2}
+
+
+def test_upsert_at_exact_window_boundary_increments(auth_client):
+    """14:04:59 and 14:05:00 fall in different windows → counts as 2."""
+    mac = "aa:bb:cc:dd:ee:04"
+    with mock.patch(
+        "blueflow.views.asset.timezone.now",
+        return_value=datetime.datetime(
+<<<<<<< Updated upstream
+            2026, 5, 19, 14, 4, 59, tzinfo=datetime.UTC,
+=======
+            2026,
+            5,
+            19,
+            14,
+            4,
+            59,
+            tzinfo=datetime.UTC,
+>>>>>>> Stashed changes
+        ),
+    ):
+        auth_client.put("/api/assets/upsert/", data={"mac_address": mac}, format="json")
+    with mock.patch(
+        "blueflow.views.asset.timezone.now",
+        return_value=_fixed(2026, 5, 19, 14, 5),
+    ):
+        response = auth_client.put(
+<<<<<<< Updated upstream
+            "/api/assets/upsert/", data={"mac_address": mac}, format="json",
+=======
+            "/api/assets/upsert/",
+            data={"mac_address": mac},
+            format="json",
+>>>>>>> Stashed changes
+        )
+    assert response.json()["usage"][1] == {"14": 2}
+
+
+def test_upserts_across_midnight_land_in_different_weekday_rows(auth_client):
+    """23:58 Tuesday and 00:03 Wednesday produce two Usage rows."""
+    mac = "aa:bb:cc:dd:ee:05"
+    with mock.patch(
+        "blueflow.views.asset.timezone.now",
+        return_value=_fixed(2026, 5, 19, 23, 58),  # Tuesday
+    ):
+        auth_client.put("/api/assets/upsert/", data={"mac_address": mac}, format="json")
+    with mock.patch(
+        "blueflow.views.asset.timezone.now",
+        return_value=_fixed(2026, 5, 20, 0, 3),  # Wednesday
+    ):
+        response = auth_client.put(
+<<<<<<< Updated upstream
+            "/api/assets/upsert/", data={"mac_address": mac}, format="json",
+=======
+            "/api/assets/upsert/",
+            data={"mac_address": mac},
+            format="json",
+>>>>>>> Stashed changes
+        )
+    asset = models.Asset.objects.get(mac_address=mac)
+    rows = {u.day_of_week: u for u in asset.usage.all()}
+    assert rows[1].hour_23 == 1
+    assert rows[2].hour_00 == 1
+    usage = response.json()["usage"]
+    assert usage[1] == {"23": 1}
+    assert usage[2] == {"0": 1}
+
+
+def test_weekday_index_zero_is_monday(auth_client):
+    """2026-05-18 is a Monday — Usage row has day_of_week=0."""
+    with mock.patch(
+        "blueflow.views.asset.timezone.now",
+        return_value=_fixed(2026, 5, 18, 10, 0),  # Monday
+    ):
+        auth_client.put(
+            "/api/assets/upsert/",
+            data={"mac_address": "aa:bb:cc:dd:ee:06"},
+            format="json",
+        )
+    asset = models.Asset.objects.get(mac_address="aa:bb:cc:dd:ee:06")
+    row = asset.usage.get()
+    assert row.day_of_week == 0
+
+
+def test_get_response_omits_zero_count_hours(auth_client):
+    """Hours with zero observations are stripped from the response."""
+    asset = models.Asset.objects.create(hostname="usage-strip.example.com")
+    models.Usage.objects.create(
+<<<<<<< Updated upstream
+        asset=asset, day_of_week=0, hour_09=0, hour_10=3,
+=======
+        asset=asset,
+        day_of_week=0,
+        hour_09=0,
+        hour_10=3,
+>>>>>>> Stashed changes
+    )
+    body = auth_client.get(f"/api/assets/{asset.id}/").json()
+    assert body["usage"][0] == {"10": 3}
+
+
+def test_at_most_one_usage_row_per_asset_per_weekday(auth_client):
+    """Repeated upserts on the same weekday reuse the same Usage row."""
+    mac = "aa:bb:cc:dd:ee:07"
+    for minute in (0, 6, 12):
+        with mock.patch(
+            "blueflow.views.asset.timezone.now",
+            return_value=_fixed(2026, 5, 19, 14, minute),
+        ):
+            auth_client.put(
+<<<<<<< Updated upstream
+                "/api/assets/upsert/", data={"mac_address": mac}, format="json",
+=======
+                "/api/assets/upsert/",
+                data={"mac_address": mac},
+                format="json",
+>>>>>>> Stashed changes
+            )
+    asset = models.Asset.objects.get(mac_address=mac)
+    rows = list(asset.usage.all())
+    assert len(rows) == 1
+    assert rows[0].hour_14 == 3  # noqa: PLR2004
