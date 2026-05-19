@@ -9,6 +9,7 @@ from .network import Cidr, Network, SavedSearch
 from .network_endpoint import EndpointSuggestion, NetworkEndpoint
 from .scan import Scan
 from .tag import AssetTag, Tag
+from .usage import DayOfWeek, Usage
 from .viper import ViperWebhookJob
 from .vulnerability import AssetVulnerability, Vulnerability
 
@@ -23,6 +24,7 @@ __all__ = [
     "AssetVulnerability",
     "Attachment",
     "Cidr",
+    "DayOfWeek",
     "EndpointSuggestion",
     "Group",
     "Network",
@@ -30,6 +32,7 @@ __all__ = [
     "SavedSearch",
     "Scan",
     "Tag",
+    "Usage",
     "ViperWebhookJob",
     "Vulnerability",
 ]

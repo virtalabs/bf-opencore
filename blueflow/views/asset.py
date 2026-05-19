@@ -130,12 +130,12 @@ _USAGE_FIELD_SCHEMA = {
     },
     "example": [
         {"9": 1, "10": 12, "11": 8, "14": 3, "15": 5},  # 0 = Monday
-        {"9": 1, "10": 8, "11": 15},                    # 1 = Tuesday
-        {"9": 2, "14": 5},                              # 2 = Wednesday
-        {"10": 6, "11": 9, "13": 4},                    # 3 = Thursday
-        {"9": 1, "13": 2},                              # 4 = Friday
-        {},                                             # 5 = Saturday
-        {},                                             # 6 = Sunday
+        {"9": 1, "10": 8, "11": 15},  # 1 = Tuesday
+        {"9": 2, "14": 5},  # 2 = Wednesday
+        {"10": 6, "11": 9, "13": 4},  # 3 = Thursday
+        {"9": 1, "13": 2},  # 4 = Friday
+        {},  # 5 = Saturday
+        {},  # 6 = Sunday
     ],
 }
 
@@ -171,9 +171,7 @@ class AssetSerializer(serializers.HyperlinkedModelSerializer):
             "maps. Index is 0-based with Monday first — 0=Monday, 1=Tuesday, "
             "2=Wednesday, 3=Thursday, 4=Friday, 5=Saturday, 6=Sunday. Hour keys "
             "are JSON-string-coerced integers 0-23; counts are non-negative; "
-            "hours with zero observations are omitted from the response. Stub "
-            "today — backing model and aggregation logic to be implemented in "
-            "a follow-up."
+            "hours with zero observations are omitted from the response."
         ),
     )
 
@@ -220,8 +218,15 @@ class AssetSerializer(serializers.HyperlinkedModelSerializer):
         return sorted(set(ports_list))
 
     @extend_schema_field(_USAGE_FIELD_SCHEMA)
-    def get_usage(self, _obj):
-        return [{} for _ in range(7)]
+    def get_usage(self, obj):
+        days = [{} for _ in range(7)]
+        for usage in obj.usage.all():
+            bucket = days[usage.day_of_week]
+            for hour in range(24):
+                count = getattr(usage, f"hour_{hour:02d}")
+                if count > 0:
+                    bucket[str(hour)] = count
+        return days
 
 
 class HistoricalAssetSerializer(serializers.HyperlinkedModelSerializer):
@@ -960,6 +965,8 @@ class AssetViewSet(
                 open_ports_tcp=new_ports,
                 **validated,
             )
+
+        asset.update_usage(timezone.now())
 
         # Record history change reason from scanner metadata
         last_seen = request.data.get("last_seen") or timezone.now()
