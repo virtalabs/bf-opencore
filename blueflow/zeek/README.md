@@ -102,6 +102,12 @@ conn/arp data. See `hl7/` for the prior implementation.
 
 ## Docker harness
 
-The integration harness in top-level `docker/zeek/` currently runs the
-HL7 pipeline. Rewiring it to drive conn + arp is the next change on
-this branch.
+The top-level `docker/zeek/` bundles this conn+ARP sidecar and
+`scripts/arp_extract.zeek` into a standalone probe image
+(`virtalabsinc/zeek-probe`) — see `docker/zeek/README.md` for build
+and run instructions, and `docker/zeek-test/` for the end-to-end
+compose harness that drives the probe against a real BlueFlow.
+
+The earlier HL7 integration harness has been archived to
+`docker/_hl7-harness/`; it is preserved for reference and is not
+wired into the current pipeline.

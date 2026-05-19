@@ -27,6 +27,13 @@ PUSH_INTERVAL_SECONDS="${PUSH_INTERVAL_SECONDS:-60}"
 BLUEFLOW_TOKEN="${BLUEFLOW_TOKEN:-}"
 ZEEK_LOG_DIR="${ZEEK_LOG_DIR:-/var/log/zeek}"
 
+# Guard the push loop: a non-numeric or zero interval would either
+# fail the `sleep` immediately or busy-loop the API with pushes.
+if ! [[ "$PUSH_INTERVAL_SECONDS" =~ ^[0-9]+$ ]] || [ "$PUSH_INTERVAL_SECONDS" -lt 1 ]; then
+    echo "[zeek-probe] FAIL: PUSH_INTERVAL_SECONDS must be a positive integer (got '$PUSH_INTERVAL_SECONDS')" >&2
+    exit 1
+fi
+
 echo "[zeek-probe] interface=$ZEEK_INTERFACE upstream=$BLUEFLOW_URL push_interval=${PUSH_INTERVAL_SECONDS}s log_dir=$ZEEK_LOG_DIR"
 
 mkdir -p "$ZEEK_LOG_DIR"
