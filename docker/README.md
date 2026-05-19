@@ -7,6 +7,7 @@ Container assets for BlueFlow.
 ```text
 docker/
   zeek/                # Standalone Zeek probe image (virtalabsinc/zeek-probe)
+  zeek-test/           # E2E compose harness (BlueFlow + probe + traffic generator)
   _hl7-harness/        # Archived HL7 integration test harness (preserved, not maintained)
 ```
 

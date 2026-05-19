@@ -6,9 +6,9 @@ RUN apt-get update \
     && apt-get install -y --no-install-recommends python3 g++ iproute2 \
     && rm -rf /var/lib/apt/lists/*
 
-COPY blueflow/zeek/scripts/ /scripts/
-COPY blueflow/zeek/sidecar.py /app/sidecar.py
-COPY docker/zeek/entrypoint.sh /entrypoint.sh
+COPY blueflow/zeek/hl7/scripts/ /scripts/
+COPY blueflow/zeek/hl7/sidecar.py /app/sidecar.py
+COPY docker/_hl7-harness/zeek-hl7/entrypoint.sh /entrypoint.sh
 RUN chmod +x /entrypoint.sh
 RUN mkdir -p /work /logs /shared
 
