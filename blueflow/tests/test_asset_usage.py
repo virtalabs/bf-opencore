@@ -20,16 +20,12 @@ DAYS_IN_WEEK = 7
 
 def _fixed(year, month, day, hour, minute):
     return datetime.datetime(
-<<<<<<< Updated upstream
-        year, month, day, hour, minute, tzinfo=datetime.UTC,
-=======
         year,
         month,
         day,
         hour,
         minute,
         tzinfo=datetime.UTC,
->>>>>>> Stashed changes
     )
 
 
@@ -99,13 +95,9 @@ def test_two_upserts_within_same_5min_window_count_as_one(auth_client):
         return_value=_fixed(2026, 5, 19, 14, 2),
     ):
         response = auth_client.put(
-<<<<<<< Updated upstream
-            "/api/assets/upsert/", data={"mac_address": mac}, format="json",
-=======
             "/api/assets/upsert/",
             data={"mac_address": mac},
             format="json",
->>>>>>> Stashed changes
         )
     assert response.json()["usage"][1] == {"14": 1}
 
@@ -123,13 +115,9 @@ def test_upserts_in_different_5min_windows_increment_separately(auth_client):
         return_value=_fixed(2026, 5, 19, 14, 6),
     ):
         response = auth_client.put(
-<<<<<<< Updated upstream
-            "/api/assets/upsert/", data={"mac_address": mac}, format="json",
-=======
             "/api/assets/upsert/",
             data={"mac_address": mac},
             format="json",
->>>>>>> Stashed changes
         )
     assert response.json()["usage"][1] == {"14": 2}
 
@@ -140,9 +128,6 @@ def test_upsert_at_exact_window_boundary_increments(auth_client):
     with mock.patch(
         "blueflow.views.asset.timezone.now",
         return_value=datetime.datetime(
-<<<<<<< Updated upstream
-            2026, 5, 19, 14, 4, 59, tzinfo=datetime.UTC,
-=======
             2026,
             5,
             19,
@@ -150,7 +135,6 @@ def test_upsert_at_exact_window_boundary_increments(auth_client):
             4,
             59,
             tzinfo=datetime.UTC,
->>>>>>> Stashed changes
         ),
     ):
         auth_client.put("/api/assets/upsert/", data={"mac_address": mac}, format="json")
@@ -159,13 +143,9 @@ def test_upsert_at_exact_window_boundary_increments(auth_client):
         return_value=_fixed(2026, 5, 19, 14, 5),
     ):
         response = auth_client.put(
-<<<<<<< Updated upstream
-            "/api/assets/upsert/", data={"mac_address": mac}, format="json",
-=======
             "/api/assets/upsert/",
             data={"mac_address": mac},
             format="json",
->>>>>>> Stashed changes
         )
     assert response.json()["usage"][1] == {"14": 2}
 
@@ -183,13 +163,9 @@ def test_upserts_across_midnight_land_in_different_weekday_rows(auth_client):
         return_value=_fixed(2026, 5, 20, 0, 3),  # Wednesday
     ):
         response = auth_client.put(
-<<<<<<< Updated upstream
-            "/api/assets/upsert/", data={"mac_address": mac}, format="json",
-=======
             "/api/assets/upsert/",
             data={"mac_address": mac},
             format="json",
->>>>>>> Stashed changes
         )
     asset = models.Asset.objects.get(mac_address=mac)
     rows = {u.day_of_week: u for u in asset.usage.all()}
@@ -220,14 +196,10 @@ def test_get_response_omits_zero_count_hours(auth_client):
     """Hours with zero observations are stripped from the response."""
     asset = models.Asset.objects.create(hostname="usage-strip.example.com")
     models.Usage.objects.create(
-<<<<<<< Updated upstream
-        asset=asset, day_of_week=0, hour_09=0, hour_10=3,
-=======
         asset=asset,
         day_of_week=0,
         hour_09=0,
         hour_10=3,
->>>>>>> Stashed changes
     )
     body = auth_client.get(f"/api/assets/{asset.id}/").json()
     assert body["usage"][0] == {"10": 3}
@@ -242,13 +214,9 @@ def test_at_most_one_usage_row_per_asset_per_weekday(auth_client):
             return_value=_fixed(2026, 5, 19, 14, minute),
         ):
             auth_client.put(
-<<<<<<< Updated upstream
-                "/api/assets/upsert/", data={"mac_address": mac}, format="json",
-=======
                 "/api/assets/upsert/",
                 data={"mac_address": mac},
                 format="json",
->>>>>>> Stashed changes
             )
     asset = models.Asset.objects.get(mac_address=mac)
     rows = list(asset.usage.all())
