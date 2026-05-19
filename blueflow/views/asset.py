@@ -966,6 +966,9 @@ class AssetViewSet(
                 **validated,
             )
 
+        # TODO(taylorcochran): timestamp is server-derived (timezone.now()) at
+        #   the call site today. Switch to network-derived time from the
+        #   upserted asset payload once scanners reliably provide it.
         asset.update_usage(timezone.now())
 
         # Record history change reason from scanner metadata
