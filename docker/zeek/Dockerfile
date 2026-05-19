@@ -17,7 +17,7 @@ LABEL org.opencontainers.image.title="zeek-probe" \
       org.opencontainers.image.vendor="Virta Laboratories, Inc."
 
 RUN apt-get update \
-    && apt-get install -y --no-install-recommends python3 \
+    && apt-get install -y --no-install-recommends python3 libcap2-bin \
     && rm -rf /var/lib/apt/lists/*
 
 # Bundle the Zeek-side log policy and the Python sidecar. Both come from
@@ -28,10 +28,19 @@ COPY blueflow/zeek/sidecar.py /opt/blueflow-zeek/sidecar.py
 COPY docker/zeek/entrypoint.sh /entrypoint.sh
 RUN chmod +x /entrypoint.sh
 
-# Zeek writes its logs into CWD. Use a dedicated dir so the layout is
-# predictable for the entrypoint loop and for anyone exec-ing into the
-# container to debug.
-RUN mkdir -p /var/log/zeek
+# Drop root for the runtime. Zeek itself needs CAP_NET_RAW + CAP_NET_ADMIN
+# for live capture on the host interface; we grant those via file caps on
+# the zeek binary so the kernel re-applies them when entrypoint.sh execs
+# zeek, regardless of the calling UID. The Python sidecar only makes HTTP
+# PUTs (urllib) and needs no caps.
+RUN groupadd --system zeekprobe \
+    && useradd --system --gid zeekprobe --home-dir /var/log/zeek \
+               --shell /usr/sbin/nologin zeekprobe \
+    && setcap cap_net_raw,cap_net_admin+eip /usr/local/zeek/bin/zeek \
+    && mkdir -p /var/log/zeek \
+    && chown -R zeekprobe:zeekprobe /var/log/zeek /opt/blueflow-zeek
+
 WORKDIR /var/log/zeek
+USER zeekprobe
 
 ENTRYPOINT ["/entrypoint.sh"]
