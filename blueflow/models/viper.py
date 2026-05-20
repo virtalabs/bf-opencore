@@ -2,6 +2,7 @@ import math
 import uuid
 from collections.abc import Generator
 from dataclasses import asdict, dataclass
+from typing import ClassVar
 
 from django.apps import apps
 from django.conf import settings
@@ -13,9 +14,6 @@ from blueflow.models import Asset
 class ViperWebhookJob(models.Model):
     """Persisted record of an incoming Viper webhook request."""
 
-    class Meta:
-        ordering = ["-created_at"]
-
     class Status(models.TextChoices):
         PENDING = "pending"
         STARTED = "started"
@@ -24,7 +22,8 @@ class ViperWebhookJob(models.Model):
 
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     created_at = models.DateTimeField(auto_now_add=True)
-    callback = models.URLField()
+    # callback = models.URLField() # noqa: ERA001
+    callback = models.CharField(blank=False, null=False)
     since = models.DateTimeField()
     before = models.DateTimeField(null=True, blank=True)
     request_body = models.JSONField()
@@ -33,6 +32,12 @@ class ViperWebhookJob(models.Model):
         choices=Status.choices,
         default=Status.PENDING,
     )
+
+    class Meta:
+        ordering: ClassVar = ["-created_at"]
+
+    def __str__(self) -> str:
+        return f"{self.id}"
 
 
 @dataclass
@@ -75,7 +80,9 @@ class ViperAsset:
         self.model = asset.model
         self.serial_number = asset.serial_number
         self.udi = asset.udi
-        self.network_segment = ""  # TODO(taylorcochran): get network segment from asset.network_qset()
+        self.network_segment = (
+            ""  # TODO(taylorcochran): get network segment from asset.network_qset()
+        )
         self.cpe = ""  # TODO(taylorcochran): get cpe from asset.cpe_qset()
         self.role = ""
         self.upstream_api = ""
@@ -125,8 +132,7 @@ class ViperWebhookResponse:
         return base
 
     def _gen_page(self, page: int) -> str:
-        """Generate a page URL based on the page number, page size, and last sync time.
-        """  # noqa: D200
+        """Generate a page URL for on the page number, page size, and last sync time."""
         params = f"page={page}&page_size={self.page_size}&since={self.since}"
         if self.before:
             params += f"&before={self.before}"
@@ -170,7 +176,8 @@ class ViperWebhookResponseList:
         page = 1
         for i in range(0, len(assets), request.page_size):
             if page > request.max_pages:
-                raise ValueError(f"Max pages exceeded: {request.max_pages}")
+                err = f"Max pages exceeded: {request.max_pages}"
+                raise ValueError(err)
             assets_chunk = [ViperAsset(a) for a in assets[i : i + request.page_size]]
             response = ViperWebhookResponse(
                 items=assets_chunk,
