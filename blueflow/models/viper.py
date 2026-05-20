@@ -2,6 +2,7 @@ import math
 import uuid
 from collections.abc import Generator
 from dataclasses import asdict, dataclass
+from datetime import datetime
 from typing import ClassVar
 
 from django.apps import apps
@@ -9,6 +10,13 @@ from django.conf import settings
 from django.db import models
 
 from blueflow.models import Asset
+
+
+def _to_iso(value: datetime | str | None) -> str | None:
+    """Coerce a datetime to ISO-8601; pass strings/None through unchanged."""
+    if isinstance(value, datetime):
+        return value.isoformat()
+    return value
 
 
 class ViperWebhookJob(models.Model):
@@ -45,14 +53,17 @@ class ViperWebhookRequest:
     """Data for a viper webhook."""
 
     callback: str
-    since: str  # iso8601
-    before: str | None  # iso8601
+    since: datetime | str  # iso8601 on the wire; DRF hands us a datetime
+    before: datetime | str | None  # iso8601 on the wire; DRF hands us a datetime
     max_pages: int
     page_size: int
 
     def to_dict(self):
         """Return a JSON-serializable dict (for json.dumps or requests)."""
-        return asdict(self)
+        base = asdict(self)
+        base["since"] = _to_iso(self.since)
+        base["before"] = _to_iso(self.before)
+        return base
 
 
 @dataclass
@@ -117,9 +128,9 @@ class ViperWebhookResponse:
     page_size: int
     total: int
     total_pages: int
-    since: str
+    since: datetime | str
     request_id: str = ""
-    before: str | None = None
+    before: datetime | str | None = None
     # settings?
     webhook_path: str = "/api/viper/webhook/"
 
@@ -129,6 +140,8 @@ class ViperWebhookResponse:
         base["items"] = [item.to_dict() for item in self.items]
         base["next_page"] = self.next_page
         base["previous_page"] = self.previous_page
+        base["since"] = _to_iso(self.since)
+        base["before"] = _to_iso(self.before)
         return base
 
     def _gen_page(self, page: int) -> str:
