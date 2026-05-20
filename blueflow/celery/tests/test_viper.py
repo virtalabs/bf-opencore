@@ -123,13 +123,14 @@ def test_viper_asset_optional_fields_default_empty(celery_app, setup_assets):
 
 @pytest.fixture
 def viper_request() -> ViperWebhookRequest:
-      return ViperWebhookRequest(
-            callback="https://example.com/viper/webhook/",
-            since="2026-01-01T00:00:00Z",
-            before="2026-01-02T00:00:00Z",
-            max_pages=1,
-            page_size=10,
+    return ViperWebhookRequest(
+        callback="https://example.com/viper/webhook/",
+        since="2026-01-01T00:00:00Z",
+        before="2026-01-02T00:00:00Z",
+        max_pages=1,
+        page_size=10,
     )
+
 
 def _viper_job(request: ViperWebhookRequest) -> ViperWebhookJob:
     return ViperWebhookJob.objects.create(
@@ -167,3 +168,42 @@ def test_viper_webhook_status_error(celery_app, viper_request):
     job.refresh_from_db()
     assert job.status == ViperWebhookJob.Status.ERROR
 
+
+@pytest.mark.django_db
+def test_viper_webhook_includes_assets_without_last_pinged(celery_app):
+    """Regression for #158.
+
+    TapirXL's ``PUT /api/assets/upsert/`` never stamps ``last_pinged``. Before
+    the fix, the webhook filtered on ``last_pinged__gte`` and returned an empty
+    queryset on the first sync, so no POST was made to Viper. After the fix,
+    the filter uses ``modified`` (auto-stamped on every save), so newly upserted
+    assets with ``last_pinged=NULL`` are still forwarded.
+    """
+    Asset = apps.get_model("blueflow", "Asset")
+    Asset.objects.create(
+        hostname="tapirxl-upserted-host",
+        mac_address="00:11:22:33:44:55",
+        last_pinged=None,
+    )
+
+    request_id = str(uuid.uuid4())
+    with patch("blueflow.celery.tasks.requests.post") as mock_post:
+        viper_webhook.apply(
+            args=[
+                ViperWebhookRequest(
+                    callback="https://example.com/viper/webhook/",
+                    since="1800-01-01T00:00:00Z",
+                    before=None,
+                    max_pages=1,
+                    page_size=10,
+                ).to_dict(),
+                request_id,
+            ]
+        )
+
+    assert mock_post.call_count == 1, (
+        "Asset with last_pinged=None was not forwarded to Viper"
+    )
+    payload = mock_post.call_args.kwargs["json"]
+    assert payload["total"] == 1
+    assert len(payload["items"]) == 1

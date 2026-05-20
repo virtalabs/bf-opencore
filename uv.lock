@@ -51,6 +51,7 @@ dependencies = [
     { name = "dj-database-url" },
     { name = "django" },
     { name = "django-celery-beat" },
+    { name = "django-extensions" },
     { name = "django-filter" },
     { name = "django-jsx" },
     { name = "django-netfields" },
@@ -96,6 +97,7 @@ requires-dist = [
     { name = "dj-database-url" },
     { name = "django", specifier = ">=5.2,<5.3" },
     { name = "django-celery-beat" },
+    { name = "django-extensions", specifier = ">=4.1" },
     { name = "django-filter" },
     { name = "django-jsx" },
     { name = "django-netfields" },
@@ -342,6 +344,18 @@ dependencies = [
 sdist = { url = "https://files.pythonhosted.org/packages/aa/11/0c8b412869b4fda72828572068312b10aafe7ccef7b41af3633af31f9d4b/django_celery_beat-2.8.1.tar.gz", hash = "sha256:dfad0201c0ac50c91a34700ef8fa0a10ee098cc7f3375fe5debed79f2204f80a", size = 175802 }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/61/e5/3a0167044773dee989b498e9a851fc1663bea9ab879f1179f7b8a827ac10/django_celery_beat-2.8.1-py3-none-any.whl", hash = "sha256:da2b1c6939495c05a551717509d6e3b79444e114a027f7b77bf3727c2a39d171", size = 104833 },
+]
+
+[[package]]
+name = "django-extensions"
+version = "4.1"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "django" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/6d/b3/ed0f54ed706ec0b54fd251cc0364a249c6cd6c6ec97f04dc34be5e929eac/django_extensions-4.1.tar.gz", hash = "sha256:7b70a4d28e9b840f44694e3f7feb54f55d495f8b3fa6c5c0e5e12bcb2aa3cdeb", size = 283078 }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/64/96/d967ca440d6a8e3861120f51985d8e5aec79b9a8bdda16041206adfe7adc/django_extensions-4.1-py3-none-any.whl", hash = "sha256:0699a7af28f2523bf8db309a80278519362cd4b6e1fd0a8cd4bf063e1e023336", size = 232980 },
 ]
 
 [[package]]

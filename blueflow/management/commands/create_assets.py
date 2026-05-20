@@ -23,7 +23,6 @@ def make_assets(data: dict) -> Generator[dict, None, None]:
             "udi": asset["udi"],
             "tag_number": asset["tag_number"],
             "category": asset["category"],
-            "date_added": asset["date_added"],
             "owner": asset["owner"],
             "os": asset["os"],
             "app_sw_version": asset["app_sw_version"],
