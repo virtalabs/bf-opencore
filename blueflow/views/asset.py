@@ -489,8 +489,24 @@ class AssetViewSet(
     #   counterintuitive... but it's the way it is.  (Assiduous use of
     #   inspect.getmro() reveals that this is indeed the case.)
 
-    # A model does have objects...
-    queryset = Asset.objects.all()
+    # Known N+1 problems on the list endpoint.
+    #
+    # AssetSerializer fans out additional queries per-asset for several
+    # related fields. Each of these scales linearly with page size and,
+    # combined with HugeLimitOffsetPagination's 1,000,000 default limit,
+    # can produce pathological query counts on /api/assets/.
+    #
+    # Fields currently causing per-asset fan-out (review for removal from
+    # the list response or for prefetch_related):
+    #   - asset_tags             (nested AssetTagSerializer, many=True;
+    #                             reverse FK to AssetTag through-model)
+    #   - asset_vulnerabilities  (nested MiniAssetVulnerabilitySerializer,
+    #                             many=True; reverse FK to AssetVulnerability
+    #                             through-model)
+    #
+    # Only `usage` is currently prefetched (see test_asset_list_usage_does_
+    # not_n_plus_one). The remaining relations above are unaddressed.
+    queryset = Asset.objects.prefetch_related("usage")
     serializer_class = AssetSerializer
 
     # Documentation on search filters:

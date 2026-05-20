@@ -11,6 +11,8 @@ of {str(hour) -> count} maps with zero-count hours stripped.
 import datetime
 from unittest import mock
 
+from django.db import connection
+from django.test.utils import CaptureQueriesContext
 from rest_framework import status
 
 from blueflow import models
@@ -222,3 +224,41 @@ def test_at_most_one_usage_row_per_asset_per_weekday(auth_client):
     rows = list(asset.usage.all())
     assert len(rows) == 1
     assert rows[0].hour_14 == 3  # noqa: PLR2004
+
+
+def _seed_assets_with_usage(prefix, count):
+    for i in range(count):
+        asset = models.Asset.objects.create(hostname=f"{prefix}-{i}.example.com")
+        models.Usage.objects.create(asset=asset, day_of_week=0, hour_10=1)
+
+
+def _count_usage_queries(captured):
+    return sum(1 for q in captured.captured_queries if "blueflow_usage" in q["sql"])
+
+
+def test_asset_list_usage_does_not_n_plus_one(auth_client):
+    """Listing N assets fires a constant number of usage queries (prefetch active).
+
+    Scope: this test only guards the Usage FK prefetch. AssetSerializer has
+    additional, separate N+1 problems (notably the nested asset_tags and
+    asset_vulnerabilities serializers) that are still unfixed. Asserting on
+    the total query count would entangle this regression test with those
+    pre-existing fan-outs, so we filter captured queries to the
+    blueflow_usage table and assert only that the usage-specific count is
+    flat across page sizes. When the other relations get prefetched, add
+    sibling tests rather than broadening this one.
+    """
+    _seed_assets_with_usage("nplus1-base", 1)
+    with CaptureQueriesContext(connection) as baseline:
+        auth_client.get("/api/assets/")
+
+    _seed_assets_with_usage("nplus1-scaled", 9)
+    with CaptureQueriesContext(connection) as scaled:
+        auth_client.get("/api/assets/")
+
+    baseline_usage = _count_usage_queries(baseline)
+    scaled_usage = _count_usage_queries(scaled)
+    assert scaled_usage == baseline_usage, (
+        f"N+1 regression on Asset.usage: 1 asset → {baseline_usage} usage queries, "
+        f"10 assets → {scaled_usage} usage queries"
+    )
