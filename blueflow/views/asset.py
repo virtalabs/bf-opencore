@@ -310,8 +310,8 @@ class ChangeLogAssetSerializer(
 class AssetFilter(django_filters.rest_framework.FilterSet):
     """FilterSet."""
 
-    date_range = django_filters.DateRangeFilter(field_name="date_added")
-    datetime_range = django_filters.DateTimeFromToRangeFilter(field_name="date_added")
+    date_range = django_filters.DateRangeFilter(field_name="created")
+    datetime_range = django_filters.DateTimeFromToRangeFilter(field_name="created")
     network = django_filters.NumberFilter(method="filter_network")
     no_network = drf_filters.BooleanFilter(method="filter_no_network")
     unassessed = drf_filters.BooleanFilter(method="filter_unassessed")
@@ -559,7 +559,7 @@ class AssetViewSet(
             "serial_number",
             "tag_number",
             "category",
-            "date_added",
+            "created",
             # TODO(taylorcochran): Add risk score filters
             "udi",
         ]

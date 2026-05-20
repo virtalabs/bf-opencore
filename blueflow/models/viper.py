@@ -167,10 +167,10 @@ class ViperWebhookResponseList:
         request_id: str = "",
     ) -> Generator[ViperWebhookResponse, None, None]:
         Asset = apps.get_model("blueflow", "Asset")
-        assets = Asset.objects.filter(last_pinged__gte=request.since)
+        assets = Asset.objects.filter(modified__gte=request.since)
         if request.before:
-            assets = assets.filter(last_pinged__lte=request.before)
-        assets = assets.order_by("last_pinged").all()
+            assets = assets.filter(modified__lte=request.before)
+        assets = assets.order_by("modified").all()
         total = assets.count()
         total_pages = math.ceil(total / request.page_size)
         page = 1

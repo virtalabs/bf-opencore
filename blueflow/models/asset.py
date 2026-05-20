@@ -15,7 +15,7 @@ from django.apps import apps
 from django.core.exceptions import ValidationError
 from django.db import models
 from django.db.models import Count, Max, Q
-from django.utils import timezone
+from django_extensions.db.models import TimeStampedModel
 from netfields import InetAddressField, MACAddressField
 from simple_history.models import HistoricalRecords
 
@@ -38,8 +38,15 @@ def validate_tcp_port_range(ports: list[int]) -> None:
         raise ValidationError(msg)
 
 
-class Asset(models.Model):
-    """Holds our Assets."""
+class Asset(TimeStampedModel):
+    """Holds our Assets.
+
+    Inherits ``created`` and ``modified`` from ``TimeStampedModel``. ``modified``
+    is the sync anchor used by the Viper webhook — it updates on every save,
+    including TapirXL upserts. ``last_pinged`` is reserved for the network
+    layer and is only set when the asset is observed on the wire (ping,
+    fingerprint), so it is not safe to use as a "recently changed" filter.
+    """
 
     name = models.CharField(max_length=126, blank=True, null=True)
     hostname = models.TextField(null=True, unique=True)
@@ -57,7 +64,6 @@ class Asset(models.Model):
     tag_number = models.TextField(blank=True, null=True)
     category = models.TextField(blank=True, null=True)
 
-    date_added = models.DateTimeField(default=timezone.now)
     owner = models.TextField(blank=True, null=True)
     os = models.TextField(blank=True, null=True, verbose_name="Operating System")
     app_sw_version = models.TextField(
