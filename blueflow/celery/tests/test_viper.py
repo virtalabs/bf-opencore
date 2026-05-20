@@ -1,3 +1,5 @@
+import datetime
+import json
 import math
 import uuid
 from unittest.mock import patch
@@ -167,6 +169,40 @@ def test_viper_webhook_status_error(celery_app, viper_request):
     assert result.failed()
     job.refresh_from_db()
     assert job.status == ViperWebhookJob.Status.ERROR
+
+
+def test_webhook_payload_is_json_serializable(celery_app, setup_assets):
+    """Regression for #159.
+
+    ``ViperWebhookSerializer`` declares ``since``/``before`` as ``DateTimeField``,
+    so DRF feeds ``datetime`` objects into ``ViperWebhookRequest``. Both
+    ``to_dict()`` outputs must survive ``json.dumps`` (the request payload that
+    Celery serializes, and the response body that ``requests.post(json=...)``
+    serializes) — otherwise the task crashes with ``TypeError``.
+    """
+    since = datetime.datetime(2024, 1, 1, tzinfo=datetime.UTC)
+    before = datetime.datetime(2030, 1, 1, tzinfo=datetime.UTC)
+    request = ViperWebhookRequest(
+        callback="https://example.com/viper/webhook/",
+        since=since,
+        before=before,
+        max_pages=100,
+        page_size=10,
+    )
+
+    # Request payload (Celery serializes this on .delay()).
+    request_payload = request.to_dict()
+    round_tripped = json.loads(json.dumps(request_payload))
+    assert round_tripped["since"] == since.isoformat()
+    assert round_tripped["before"] == before.isoformat()
+
+    # Response payload (requests.post serializes this).
+    with patch("blueflow.celery.tasks.requests.post") as mock_post:
+        viper_webhook.apply(args=[request_payload, str(uuid.uuid4())])
+
+    assert mock_post.call_count >= 1
+    for call in mock_post.call_args_list:
+        json.dumps(call.kwargs["json"])  # would raise TypeError on a datetime
 
 
 @pytest.mark.django_db
