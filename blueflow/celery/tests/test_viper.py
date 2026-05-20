@@ -69,6 +69,7 @@ def test_viper_webhook_output_with_all_assets(celery_app, setup_assets):
         )
         assert mock_post.call_count == total_pages
         assert mock_post.call_args[0][0] == "https://example.com/viper/webhook/"
+        sent_item_ids: list[int] = []
         for i, call in enumerate(mock_post.call_args_list):
             payload = call.kwargs["json"]
             assert payload["page"] == 1 + i
@@ -76,6 +77,7 @@ def test_viper_webhook_output_with_all_assets(celery_app, setup_assets):
             assert payload["total"] == total_assets
             assert payload["total_pages"] == total_pages
             assert payload["request_id"] == request_id
+            sent_item_ids.extend(item["id"] for item in payload["items"])
 
             # urls should only be none at the first and last pages, respectively
             args = [
@@ -98,6 +100,9 @@ def test_viper_webhook_output_with_all_assets(celery_app, setup_assets):
                 _assert_page_query(_next, args, not_args)
             else:
                 assert _next is None
+
+        assert len(sent_item_ids) == total_assets
+        assert len(set(sent_item_ids)) == total_assets
 
 
 def test_viper_asset_optional_fields_default_empty(celery_app, setup_assets):

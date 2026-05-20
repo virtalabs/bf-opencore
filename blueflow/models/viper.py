@@ -171,10 +171,10 @@ class ViperWebhookResponseList:
         if request.before:
             assets = assets.filter(modified__lte=request.before)
         assets = assets.order_by("modified").all()
-        total = assets.count()
+        total = len(assets)
         total_pages = math.ceil(total / request.page_size)
         page = 1
-        for i in range(0, len(assets), request.page_size):
+        for i in range(0, total, request.page_size):
             if page > request.max_pages:
                 err = f"Max pages exceeded: {request.max_pages}"
                 raise ValueError(err)
