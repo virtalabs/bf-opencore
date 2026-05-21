@@ -152,34 +152,34 @@ def test_upsert_without_hostname_does_not_check_conflicts(
 # direct scanner code) gets blocked.
 
 
-def test_db_rejects_duplicate_hostname(db) -> None:  # noqa: ARG001
+def test_db_rejects_duplicate_hostname(db) -> None:
     """The unique index on Asset.hostname blocks duplicates at the DB layer."""
     models.Asset.objects.create(hostname="foo.example")
     with pytest.raises(IntegrityError), transaction.atomic():
         models.Asset.objects.create(hostname="foo.example")
 
 
-def test_db_allows_multiple_null_hostnames(db) -> None:  # noqa: ARG001
+def test_db_allows_multiple_null_hostnames(db) -> None:
     """Postgres treats NULLs as distinct in unique indexes; NULL rows coexist."""
     a = models.Asset.objects.create(hostname=None)
     b = models.Asset.objects.create(hostname=None)
     assert a.id != b.id
 
 
-def test_db_rejects_empty_hostname_on_insert(db) -> None:  # noqa: ARG001
+def test_db_rejects_empty_hostname_on_insert(db) -> None:
     """The CheckConstraint blocks empty-string hostnames at insert time."""
     with pytest.raises(IntegrityError), transaction.atomic():
         models.Asset.objects.create(hostname="")
 
 
-def test_db_rejects_empty_hostname_on_update(db) -> None:  # noqa: ARG001
+def test_db_rejects_empty_hostname_on_update(db) -> None:
     """CheckConstraint also catches UPDATEs (e.g. QuerySet.update bypassing save)."""
     asset = models.Asset.objects.create(hostname="foo.example")
     with pytest.raises(IntegrityError), transaction.atomic():
         models.Asset.objects.filter(pk=asset.pk).update(hostname="")
 
 
-def test_db_constraint_error_includes_constraint_name(db) -> None:  # noqa: ARG001
+def test_db_constraint_error_includes_constraint_name(db) -> None:
     """The constraint name is part of the public contract; renames must update tests."""
     with pytest.raises(IntegrityError) as exc_info, transaction.atomic():
         models.Asset.objects.create(hostname="")

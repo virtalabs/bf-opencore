@@ -99,8 +99,13 @@ ignore = [
 ]
 
 [tool.ruff.lint.per-file-ignores]
-"**/tests/**" = ["S101"]
-"tests/**" = ["S101"]
+# S101: assert is fine in tests.
+# ARG001: pytest fixtures are declared via argument list; the body doesn't
+#         read them (they run for side effects like configuring celery or
+#         loading fixture data), so ruff's "unused argument" check is a
+#         false positive in test contexts.
+"**/tests/**" = ["S101", "ARG001"]
+"tests/**" = ["S101", "ARG001"]
 "conftest.py" = ["S101"]
 "harness/**" = ["T201", "S603", "S607", "PLR0913"]
 
