@@ -1073,7 +1073,7 @@ def test_asset_date_range(
         assert res.data["count"] == num_assets
 
 
-def test_external_key_non_connector(db) -> None:
+def test_external_key_non_connector() -> None:
     """Test that external_keys JSON field accepts arbitrary key-value pairs."""
     foobar = models.Asset.objects.create(name="Foobar")
     foobar.external_keys = {"ECN": "12345"}
