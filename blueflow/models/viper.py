@@ -194,7 +194,9 @@ class ViperWebhookResponseList:
         request_id: str = "",
     ) -> Generator[ViperWebhookResponse, None, None]:
         Asset = apps.get_model("blueflow", "Asset")
-        assets = Asset.objects.filter(modified__gte=request.since)
+        assets = Asset.objects.filter(modified__gte=request.since).prefetch_related(
+            "usage",
+        )
         if request.before:
             assets = assets.filter(modified__lte=request.before)
         assets = assets.order_by("modified").all()
