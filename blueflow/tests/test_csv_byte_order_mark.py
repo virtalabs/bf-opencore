@@ -44,7 +44,7 @@ def test_tempfile_auto_bom():
     assert csv[1:] == csv_orig
 
 
-def test_process_csv_without_bom(setup_db):  # noqa: ARG001
+def test_process_csv_without_bom(setup_db):
     """We can import from a CSV file that doesn't contains the BOM mark."""
     Asset.objects.create(
         manufacturer="Foo",
@@ -74,7 +74,7 @@ def test_process_csv_without_bom(setup_db):  # noqa: ARG001
     assert asset.manufacturer == "Bar"
 
 
-def test_process_csv_with_bom(setup_db):  # noqa: ARG001
+def test_process_csv_with_bom(setup_db):
     """We can import from a CSV file that contains the BOM mark."""
     Asset.objects.create(
         manufacturer="Foo",

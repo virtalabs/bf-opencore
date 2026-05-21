@@ -98,7 +98,7 @@ def test_upsert_token_auth(token_auth_client: APIClient) -> None:
 
 
 @pytest.mark.skip(reason="Blueflow uses AllowAny; auth enforced by consuming product")
-def test_upsert_unauth_403(db: None, enable_core_switch: None) -> None:  # noqa: ARG001
+def test_upsert_unauth_403(db: None, enable_core_switch: None) -> None:
     """PUT unauthenticated would assert 403 if IsAuthenticated were enforced."""
     client = APIClient()
     response = client.put(
@@ -170,7 +170,7 @@ def test_get_asset_after_upsert_404(asset_edit_client: APIClient) -> None:
 
 
 @pytest.mark.skip(reason="Blueflow uses AllowAny; auth enforced by consuming product")
-def test_get_asset_after_upsert_unauth_403(db: None, enable_core_switch: None) -> None:  # noqa: ARG001
+def test_get_asset_after_upsert_unauth_403(db: None, enable_core_switch: None) -> None:
     """GET without auth would assert 403 if IsAuthenticated were enforced."""
     asset = models.Asset.objects.create(mac_address="aa:bb:cc:dd:ee:ff")
     client = APIClient()
@@ -278,9 +278,7 @@ def test_upsert_modern_field_names(asset_edit_client: APIClient) -> None:
 
 def test_upsert_no_deprecation_header(asset_edit_client: APIClient) -> None:
     """PUT response does not include Deprecation header."""
-    response = _put_upsert(
-        asset_edit_client, {"mac_address": "11:22:33:44:55:66"}
-    )
+    response = _put_upsert(asset_edit_client, {"mac_address": "11:22:33:44:55:66"})
     assert response.status_code == status.HTTP_201_CREATED
     assert "Deprecation" not in response
     assert "Link" not in response
@@ -332,7 +330,10 @@ def test_upsert_open_ports_normalized(asset_edit_client: APIClient) -> None:
     """PUT with duplicate/unsorted ports stores them deduplicated and sorted."""
     response = _put_upsert(
         asset_edit_client,
-        {"mac_address": "11:22:33:44:55:66", "open_ports_tcp": [443, 80, 443, 8080, 80]},
+        {
+            "mac_address": "11:22:33:44:55:66",
+            "open_ports_tcp": [443, 80, 443, 8080, 80],
+        },
     )
     assert response.status_code == status.HTTP_201_CREATED
     assert response.data["open_ports_tcp"] == [80, 443, 8080]
