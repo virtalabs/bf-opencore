@@ -66,57 +66,61 @@ class ViperWebhookRequest:
         return base
 
 
+def _project_usage(asset: Asset) -> list[dict[str, int]]:
+    """Project an asset's Usage rows into Viper's utilization shape.
+
+    Monday-first length-7 list of {str(hour): count} dicts; zero-count hours
+    stripped. Mirrors ``AssetSerializer.get_usage`` so both integrations agree
+    on the wire shape.
+    """
+    days: list[dict[str, int]] = [{} for _ in range(7)]
+    for usage in asset.usage.all():
+        bucket = days[usage.day_of_week]
+        for hour in range(24):
+            count = getattr(usage, f"hour_{hour:02d}")
+            if count > 0:
+                bucket[str(hour)] = count
+    return days
+
+
 @dataclass
 class ViperAsset:
     """Data for a viper asset."""
 
-    id: int
+    ip: str
     network_segment: str
     cpe: str
     role: str
-    upstream_api: str  # asset endpoint url: {BASE_URL}/api/assets/{id}/
+    upstream_api: str
     hostname: str
     mac_address: str
     serial_number: str
     location: dict[str, str]
     status: str
-    vendorID: str  # noqa: N815
+    vendor_id: str
+    utilization: list[dict[str, int]]
 
     def __init__(self, asset: Asset):
-        self.id = asset.id
-        self.name = asset.name
-        self.ip_address = asset.ip_address
-        self.mac_address = str(asset.mac_address)
-        self.vendor = asset.manufacturer
-        self.model = asset.model
-        self.serial_number = asset.serial_number
-        self.udi = asset.udi
+        self.ip = str(asset.ip_address) if asset.ip_address else ""
         self.network_segment = (
             ""  # TODO(taylorcochran): get network segment from asset.network_qset()
         )
         self.cpe = ""  # TODO(taylorcochran): get cpe from asset.cpe_qset()
-        self.role = ""
-        self.upstream_api = ""
+        self.role = str(asset.category) if asset.category else ""
+        self.upstream_api = f"{settings.BASE_URL}/api/assets/{asset.id}/"
         self.hostname = asset.hostname or ""
         # Coerce to str so payload is JSON-serializable
         # (Asset uses netaddr.EUI / InetAddress)
         self.mac_address = str(asset.mac_address) if asset.mac_address else ""
         self.serial_number = asset.serial_number or ""
-        self.location = {}  # TODO(taylorcochran): custom fields?
-        self.status = "active"  # TODO(taylorcochran): how do we want to determine this?
-        self.vendorID = str(asset.nic_vendor)
+        self.location = {"facility": "", "building": "", "floor": "", "room": ""}
+        self.status = "Active"
+        self.vendor_id = str(asset.nic_vendor) if asset.nic_vendor else ""
+        self.utilization = _project_usage(asset)
 
     def to_dict(self):
         """Return a JSON-serializable dict (for json.dumps or requests)."""
-        # there are differences between python's concept of Optional and
-        # a potentially optional key in a restful blob
-        # exclude optional keys when their values are falsey
-        base = asdict(self)
-        optional = ["cpe", "role"]
-        for key in optional:
-            if not base[key]:
-                del base[key]
-        return base
+        return asdict(self)
 
 
 @dataclass
@@ -126,7 +130,7 @@ class ViperWebhookResponse:
     items: list[ViperAsset]
     page: int
     page_size: int
-    total: int
+    total_count: int
     total_pages: int
     since: datetime | str
     request_id: str = ""
@@ -134,42 +138,52 @@ class ViperWebhookResponse:
     # settings?
     webhook_path: str = "/api/viper/webhook/"
 
+    # Keys held on the dataclass for internal use (URL generation, retry
+    # bookkeeping) but stripped before the payload goes on the wire to Viper.
+    _INTERNAL_KEYS: ClassVar[tuple[str, ...]] = (
+        "since",
+        "before",
+        "request_id",
+        "webhook_path",
+    )
+
     def to_dict(self):
         """Return a JSON-serializable dict (for json.dumps or requests)."""
         base = asdict(self)
+        for key in self._INTERNAL_KEYS:
+            base.pop(key, None)
         base["items"] = [item.to_dict() for item in self.items]
-        base["next_page"] = self.next_page
-        base["previous_page"] = self.previous_page
-        base["since"] = _to_iso(self.since)
-        base["before"] = _to_iso(self.before)
+        base["next"] = self.next
+        base["previous"] = self.previous
         return base
 
     def _gen_page(self, page: int) -> str:
         """Generate a page URL for on the page number, page size, and last sync time."""
-        params = f"page={page}&page_size={self.page_size}&since={self.since}"
+        since = _to_iso(self.since)
+        params = f"page={page}&page_size={self.page_size}&since={since}"
         if self.before:
-            params += f"&before={self.before}"
+            params += f"&before={_to_iso(self.before)}"
         return f"{settings.BASE_URL}{self.webhook_path}?{params}"
 
     @property
-    def next_page(self) -> str | None:
+    def next(self) -> str | None:
         """Return the URL to the next page."""
         if self.page >= self.total_pages:
             return None
-        if hasattr(self, "_next_page"):
-            return self._next_page
-        self._next_page = self._gen_page(self.page + 1)
-        return self._next_page
+        if hasattr(self, "_next"):
+            return self._next
+        self._next = self._gen_page(self.page + 1)
+        return self._next
 
     @property
-    def previous_page(self) -> str | None:
+    def previous(self) -> str | None:
         """Return the URL to the previous page."""
         if self.page <= 1:
             return None
-        if hasattr(self, "_previous_page"):
-            return self._previous_page
-        self._previous_page = self._gen_page(self.page - 1)
-        return self._previous_page
+        if hasattr(self, "_previous"):
+            return self._previous
+        self._previous = self._gen_page(self.page - 1)
+        return self._previous
 
 
 @dataclass
@@ -184,8 +198,8 @@ class ViperWebhookResponseList:
         if request.before:
             assets = assets.filter(modified__lte=request.before)
         assets = assets.order_by("modified").all()
-        total = assets.count()
-        total_pages = math.ceil(total / request.page_size)
+        total_count = assets.count()
+        total_pages = math.ceil(total_count / request.page_size)
         page = 1
         for i in range(0, len(assets), request.page_size):
             if page > request.max_pages:
@@ -196,7 +210,7 @@ class ViperWebhookResponseList:
                 items=assets_chunk,
                 page=page,
                 page_size=request.page_size,
-                total=total,
+                total_count=total_count,
                 total_pages=total_pages,
                 since=request.since,
                 before=request.before,
