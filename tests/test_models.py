@@ -1,7 +1,7 @@
 """Tests for blueflow models (mirrors blueflow/models)."""
 
 
-def test_asset_model(db):
+def test_asset_model():
     """Smoke test: Asset can be created."""
     from blueflow.models import Asset
 
@@ -9,7 +9,7 @@ def test_asset_model(db):
     assert asset.pk is not None
     assert Asset.objects.filter(pk=asset.pk).exists()
 
-def test_tag_model(db):
+def test_tag_model():
     """Smoke test: Tag model exists and has expected attributes."""
     from blueflow.models import Tag
 

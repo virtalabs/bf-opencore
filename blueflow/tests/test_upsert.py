@@ -98,7 +98,7 @@ def test_upsert_token_auth(token_auth_client: APIClient) -> None:
 
 
 @pytest.mark.skip(reason="Blueflow uses AllowAny; auth enforced by consuming product")
-def test_upsert_unauth_403(db: None, enable_core_switch: None) -> None:
+def test_upsert_unauth_403(enable_core_switch: None) -> None:
     """PUT unauthenticated would assert 403 if IsAuthenticated were enforced."""
     client = APIClient()
     response = client.put(
@@ -170,7 +170,7 @@ def test_get_asset_after_upsert_404(asset_edit_client: APIClient) -> None:
 
 
 @pytest.mark.skip(reason="Blueflow uses AllowAny; auth enforced by consuming product")
-def test_get_asset_after_upsert_unauth_403(db: None, enable_core_switch: None) -> None:
+def test_get_asset_after_upsert_unauth_403(enable_core_switch: None) -> None:
     """GET without auth would assert 403 if IsAuthenticated were enforced."""
     asset = models.Asset.objects.create(mac_address="aa:bb:cc:dd:ee:ff")
     client = APIClient()
