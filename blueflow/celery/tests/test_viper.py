@@ -74,9 +74,9 @@ def test_viper_webhook_output_with_all_assets(celery_app, setup_assets):
         for i, call in enumerate(mock_post.call_args_list):
             payload = call.kwargs["json"]
             assert payload["page"] == 1 + i
-            assert payload["page_size"] == page_size
-            assert payload["total_count"] == total_assets
-            assert payload["total_pages"] == total_pages
+            assert payload["pageSize"] == page_size
+            assert payload["totalCount"] == total_assets
+            assert payload["totalPages"] == total_pages
             # request_id, since, before are internal — not on the wire
             assert "request_id" not in payload
             assert "since" not in payload
@@ -105,13 +105,8 @@ def test_viper_webhook_output_with_all_assets(celery_app, setup_assets):
                 assert _next is None
 
 
-def test_viper_asset_optional_fields_always_present(celery_app, setup_assets):
-    """Per Viper docs, cpe/role aren't nullable — they always ship as strings.
-
-    cpe is always ``""`` until BlueFlow has a CPE source; role mirrors
-    ``asset.category`` (string, possibly empty). Both keys must be present
-    on every item.
-    """
+def test_viper_asset_wire_shape_uses_camel_case(celery_app, setup_assets):
+    """integrationUpload items use camelCase keys per Viper OpenAPI."""
     with patch("blueflow.celery.tasks.requests.post") as mock_post:
         viper_webhook.apply(
             args=[
@@ -126,9 +121,13 @@ def test_viper_asset_optional_fields_always_present(celery_app, setup_assets):
             ]
         )
     for call in mock_post.call_args_list:
-        for item in call.kwargs["json"]["items"]:
-            assert item["cpe"] == ""
-            assert isinstance(item["role"], str)
+        body = call.kwargs["json"]
+        assert "pageSize" in body
+        assert "totalCount" in body
+        for item in body["items"]:
+            assert "upstreamApi" in item
+            assert "vendorId" in item
+            assert "upstream_api" not in item
 
 
 @pytest.fixture
@@ -249,5 +248,5 @@ def test_viper_webhook_includes_assets_without_last_pinged(celery_app):
         "Asset with last_pinged=None was not forwarded to Viper"
     )
     payload = mock_post.call_args.kwargs["json"]
-    assert payload["total_count"] == 1
+    assert payload["totalCount"] == 1
     assert len(payload["items"]) == 1

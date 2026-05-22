@@ -63,10 +63,6 @@ def _vrl_transform(record: dict) -> dict:
 
     Mirrors the strict outbound shape of ``configs/upload-vector.vrl``:
     only declared fields are included; any unmapped source key is dropped.
-
-    Note: ``app_sw_version`` is included here (``version`` in the source) to
-    accurately mirror the VRL, even though ``AssetUpsertSerializer`` does not
-    yet declare it — the serializer silently drops unknown fields.
     """
     out: dict = {}
 
@@ -165,6 +161,26 @@ def test_vrl_transform_golden_categorised_records(record: dict) -> None:
 # ---------------------------------------------------------------------------
 
 
+def test_device_class_alias_persisted_through_upsert(asset_edit_client) -> None:
+    """Raw TapirXL device_class field maps to category when Vector is bypassed."""
+    from blueflow import models
+
+    resp = asset_edit_client.put(
+        "/api/assets/upsert/",
+        json.dumps(
+            {
+                "mac_address": "DE:AD:BE:EF:00:01",
+                "ip_address": "10.10.10.99",
+                "device_class": "patient_monitor",
+            }
+        ),
+        content_type="application/json",
+    )
+    assert resp.status_code == 201
+    asset = models.Asset.objects.get(mac_address="de:ad:be:ef:00:01")
+    assert asset.category == "patient_monitor"
+
+
 def test_device_class_persisted_through_upsert(asset_edit_client) -> None:
     """category from VRL transform survives PUT /api/assets/upsert/ → Asset.category."""
     from blueflow import models
@@ -191,6 +207,35 @@ def test_device_class_persisted_through_upsert(asset_edit_client) -> None:
     assert resp.status_code == 201
     asset = models.Asset.objects.get(mac_address="00:09:fb:bd:75:6d")
     assert asset.category == "patient_monitor"
+
+
+def test_version_persisted_through_upsert(asset_edit_client) -> None:
+    """app_sw_version from VRL transform survives PUT /api/assets/upsert/ → Asset.app_sw_version."""
+    from blueflow import models
+
+    payload = _vrl_transform(
+        {
+            "mac_address": "AA:BB:CC:DD:EE:FF",
+            "ip_address": "10.0.0.1",
+            "hostname": None,
+            "vendor": None,
+            "product": None,
+            "version": "1.2.3",
+            "device_class": None,
+            "open_ports": [],
+            "confidence": None,
+        }
+    )
+    assert payload.get("app_sw_version") == "1.2.3"
+
+    resp = asset_edit_client.put(
+        "/api/assets/upsert/",
+        json.dumps(payload),
+        content_type="application/json",
+    )
+    assert resp.status_code == 201
+    asset = models.Asset.objects.get(mac_address="aa:bb:cc:dd:ee:ff")
+    assert asset.app_sw_version == "1.2.3"
 
 
 # ---------------------------------------------------------------------------
@@ -248,13 +293,20 @@ def test_golden_device_class_propagates_to_viper_role(
         for call in mock_post.call_args_list
         for item in call.kwargs["json"]["items"]
     ]
-    role_by_ip: dict[str, str] = {item["ip"]: item["role"] for item in all_items}
+    role_by_ip: dict[str, str | None] = {
+        item["ip"]: item.get("role") for item in all_items
+    }
 
     # Phase 3 — assert role == device_class for every golden record
     for record in records:
         ip = record["ip_address"]
-        expected = record["device_class"] or ""
+        expected = record["device_class"]
         assert ip in role_by_ip, f"{ip} missing from Viper output"
-        assert role_by_ip[ip] == expected, (
-            f"{ip}: expected role={expected!r}, got role={role_by_ip[ip]!r}"
-        )
+        if expected:
+            assert role_by_ip[ip] == expected, (
+                f"{ip}: expected role={expected!r}, got role={role_by_ip[ip]!r}"
+            )
+        else:
+            assert role_by_ip[ip] is None, (
+                f"{ip}: expected role omitted, got role={role_by_ip[ip]!r}"
+            )

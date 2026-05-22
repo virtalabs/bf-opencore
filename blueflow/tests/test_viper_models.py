@@ -35,10 +35,10 @@ def _make_asset(**overrides) -> models.Asset:
 
 
 def test_viper_asset_to_dict_includes_required_keys():
-    """Viper's OpenAPI marks ip, upstream_api, vendor_id as required."""
+    """Viper's OpenAPI marks ip, upstreamApi, vendorId as required."""
     asset = _make_asset()
     payload = ViperAsset(asset).to_dict()
-    for key in ("ip", "upstream_api", "vendor_id"):
+    for key in ("ip", "upstreamApi", "vendorId"):
         assert key in payload, f"required key {key!r} missing from payload"
 
 
@@ -63,19 +63,34 @@ def test_viper_asset_role_is_populated_from_category():
     assert payload["role"] == "infusion-pump"
 
 
-def test_viper_asset_role_is_empty_string_when_category_unset():
-    """Role falls back to empty string (not pruned) when no category."""
+def test_viper_asset_role_omitted_when_category_unset():
+    """Role is omitted when no category (Viper rejects empty strings)."""
     asset = _make_asset(category=None)
     payload = ViperAsset(asset).to_dict()
-    assert payload["role"] == ""
+    assert "role" not in payload
+
+
+def test_viper_asset_vendor_id_maps_manufacturer():
+    """vendorId is Asset.manufacturer (TapirXL vendor), not nic_vendor or PK."""
+    asset = _make_asset(manufacturer="Philips", nic_vendor="Some OUI Org")
+    payload = ViperAsset(asset).to_dict()
+    assert payload["vendorId"] == "Philips"
+    assert payload["vendorId"] != "Some OUI Org"
+
+
+def test_viper_asset_vendor_id_empty_when_manufacturer_unset():
+    """vendorId is present but empty when manufacturer is null."""
+    asset = _make_asset(manufacturer=None, nic_vendor="Some OUI Org")
+    payload = ViperAsset(asset).to_dict()
+    assert payload["vendorId"] == ""
 
 
 def test_viper_asset_upstream_api_uses_base_url_and_asset_id():
-    """upstream_api points back at the asset's BlueFlow detail URL."""
+    """upstreamApi points back at the asset's BlueFlow detail URL."""
     asset = _make_asset()
     payload = ViperAsset(asset).to_dict()
     expected = f"{settings.BASE_URL}/api/assets/{asset.id}/"
-    assert payload["upstream_api"] == expected
+    assert payload["upstreamApi"] == expected
 
 
 def test_viper_asset_ip_comes_from_asset_ip_address():
@@ -92,21 +107,24 @@ def test_viper_asset_ip_is_empty_string_when_no_address():
     assert payload["ip"] == ""
 
 
-def test_viper_asset_location_has_four_string_keys():
-    """Location is the {facility, building, floor, room} object, not {}."""
+def test_viper_asset_location_omitted_when_all_empty():
+    """Blank location quadrants are omitted from the wire payload."""
     asset = _make_asset()
     payload = ViperAsset(asset).to_dict()
-    location = payload["location"]
-    assert set(location.keys()) == {"facility", "building", "floor", "room"}
-    for value in location.values():
-        assert value == ""
+    assert "location" not in payload
 
 
-def test_viper_asset_cpe_is_present_even_when_empty():
-    """Cpe stays in the payload as '' (not nullable per Viper docs)."""
+def test_viper_asset_cpe_omitted_when_empty():
+    """Invalid/empty cpe is omitted; Viper assigns UNKNOWN_CPE on ingest."""
     asset = _make_asset()
     payload = ViperAsset(asset).to_dict()
-    assert payload["cpe"] == ""
+    assert "cpe" not in payload
+
+
+def test_viper_asset_mac_address_is_camel_case():
+    asset = _make_asset(mac_address="00:11:22:33:44:55")
+    payload = ViperAsset(asset).to_dict()
+    assert payload["macAddress"] == "00:11:22:33:44:55"
 
 
 def test_viper_asset_utilization_is_length_seven_list():
@@ -177,12 +195,13 @@ def _make_response(**overrides) -> ViperWebhookResponse:
 
 
 def test_response_uses_total_count_key_not_total():
-    """Wrapper renames: total → total_count."""
+    """Wrapper emits totalCount (camelCase) for Viper integrationUpload."""
     response = _make_response(total_count=SAMPLE_TOTAL_COUNT)
     payload = response.to_dict()
-    assert "total_count" in payload
-    assert payload["total_count"] == SAMPLE_TOTAL_COUNT
+    assert "totalCount" in payload
+    assert payload["totalCount"] == SAMPLE_TOTAL_COUNT
     assert "total" not in payload
+    assert "total_count" not in payload
 
 
 def test_response_uses_next_and_previous_keys_not_page_suffixed():

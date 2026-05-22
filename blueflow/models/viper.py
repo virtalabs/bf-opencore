@@ -115,12 +115,39 @@ class ViperAsset:
         self.serial_number = asset.serial_number or ""
         self.location = {"facility": "", "building": "", "floor": "", "room": ""}
         self.status = "Active"
-        self.vendor_id = str(asset.nic_vendor) if asset.nic_vendor else ""
+        self.vendor_id = str(asset.manufacturer or "")
         self.utilization = _project_usage(asset)
 
-    def to_dict(self):
-        """Return a JSON-serializable dict (for json.dumps or requests)."""
-        return asdict(self)
+    def to_dict(self) -> dict:
+        """Return a JSON-serializable dict for Viper integrationUpload.
+
+        Uses camelCase keys per Viper's ``assetInputSchema``.  ``role`` is
+        omitted when ``Asset.category`` is unset — Viper treats empty strings
+        as invalid (``.min(1)``) and stores null.  ``vendorId`` is
+        ``Asset.manufacturer`` (TapirXL ``vendor`` → BlueFlow manufacturer).
+        """
+        out: dict = {
+            "ip": self.ip,
+            "upstreamApi": self.upstream_api,
+            "vendorId": self.vendor_id,
+            "status": self.status,
+            "utilization": self.utilization,
+        }
+        if self.hostname:
+            out["hostname"] = self.hostname
+        if self.mac_address:
+            out["macAddress"] = self.mac_address
+        if self.serial_number:
+            out["serialNumber"] = self.serial_number
+        if self.network_segment:
+            out["networkSegment"] = self.network_segment
+        if self.cpe:
+            out["cpe"] = self.cpe
+        if self.role:
+            out["role"] = self.role
+        if any(self.location.values()):
+            out["location"] = self.location
+        return out
 
 
 @dataclass
@@ -147,15 +174,17 @@ class ViperWebhookResponse:
         "webhook_path",
     )
 
-    def to_dict(self):
+    def to_dict(self) -> dict:
         """Return a JSON-serializable dict (for json.dumps or requests)."""
-        base = asdict(self)
-        for key in self._INTERNAL_KEYS:
-            base.pop(key, None)
-        base["items"] = [item.to_dict() for item in self.items]
-        base["next"] = self.next
-        base["previous"] = self.previous
-        return base
+        return {
+            "items": [item.to_dict() for item in self.items],
+            "page": self.page,
+            "pageSize": self.page_size,
+            "totalCount": self.total_count,
+            "totalPages": self.total_pages,
+            "next": self.next,
+            "previous": self.previous,
+        }
 
     def _gen_page(self, page: int) -> str:
         """Generate a page URL for on the page number, page size, and last sync time."""
