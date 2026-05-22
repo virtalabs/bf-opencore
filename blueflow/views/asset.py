@@ -103,12 +103,25 @@ class AssetUpsertSerializer(serializers.Serializer):
         required=False, allow_blank=True, allow_null=True
     )
     os = serializers.CharField(required=False, allow_blank=True, allow_null=True)
+    app_sw_version = serializers.CharField(
+        required=False, allow_blank=True, allow_null=True
+    )
     category = serializers.CharField(required=False, allow_blank=True, allow_null=True)
+    device_class = serializers.CharField(
+        required=False, allow_blank=True, allow_null=True
+    )
     external_keys = serializers.JSONField(required=False, allow_null=True)
     open_ports_tcp = serializers.ListField(
         child=serializers.IntegerField(min_value=1, max_value=TCP_PORT_MAX),
         required=False,
     )
+
+    def validate(self, attrs: dict) -> dict:
+        """Map TapirXL ``device_class`` to ``category`` when Vector is bypassed."""
+        device_class = attrs.pop("device_class", None)
+        if device_class and not attrs.get("category"):
+            attrs["category"] = device_class
+        return attrs
 
     def validate_open_ports_tcp(self, ports_list: list[int]) -> list[int]:
         """Deduplicate and sort ports."""
