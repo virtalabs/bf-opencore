@@ -21,7 +21,7 @@ class Task(BaseTask):
     def on_failure(self, exc, task_id, args, kwargs, einfo):
         logger.error("[!!] %s failed: %s", task_id, exc)
 
-def _send_viper_payload(viper_data: ViperWebhookJob, request_id: str) -> None:
+def _send_viper_payload(viper_data: ViperWebhookRequest, request_id: str) -> None:
     """Send viper payload, logging partial errors.
 
     We may want to consider logging partial errors and attempting to
