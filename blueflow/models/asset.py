@@ -242,7 +242,7 @@ class Asset(TimeStampedModel):
         # If Asset now has either IP or MAC it's identified!
         # else, Uh oh, we don't have what's needed to identify
         has_ip_or_mac = bool(self.ip_address) or bool(self.mac_address)
-        return has_man_and_prod or has_ip_or_mac
+        return has_man_and_prod and has_ip_or_mac
 
     def scan_qset(self):
         """Return queryset for all scans of the asset.
@@ -367,7 +367,7 @@ class Asset(TimeStampedModel):
         unless an observation has already been counted for the same
         Usage.USAGE_WINDOW_MINUTES window, in which case this is a no-op.
         """
-        Usage = apps.get_model("Usage")
+        Usage = apps.get_model("blueflow", "Usage")
 
         window_start = Usage.floor_to_window(timestamp)
         usage, _ = Usage.objects.get_or_create(

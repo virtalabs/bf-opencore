@@ -99,7 +99,7 @@ class ViperAsset:
     status: str
     vendor_id: str
     utilization: list[dict[str, int]]
-    model: str
+    product: str
 
     def __init__(self, asset: Asset):
         self.ip = str(asset.ip_address) if asset.ip_address else ""
@@ -167,8 +167,8 @@ class ViperAsset:
                 # TODO(taylorcochran): figure out what version cass wants
                 "2.3",  # version
                 "h",  # 'part' # h for now but: https://en.wikipedia.org/wiki/Common_Platform_Enumeration#part
-                self.vendor_id,  # vendor
-                self.product,  # product # do we want something different ?
+                self.vendor_id or unknown,  # vendor
+                self.product or unknown,  # product # do we want something different ?
                 "-",
                 unknown,  # version of product?
                 unknown,  # point release / minor versions
