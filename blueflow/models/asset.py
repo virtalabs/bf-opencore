@@ -125,6 +125,38 @@ class Asset(TimeStampedModel):
         super().save(*args, **kwargs)
 
     @property
+    def cpe(self) -> str:
+        """Builds the cpe string from the asset dataclass.
+
+        Cached after first build. Lots of this data is mocked atm, we'll need
+        to get specifics from Cassidy for the demo.
+        """
+        if _cpe := getattr(self, "_cpe", None):
+            return _cpe
+        unknown = "*"
+        cpe = ":".join(
+            [
+                "cpe",  # always the same
+                # TODO(taylorcochran): figure out what version cass wants
+                "2.3",  # version
+                "h",  # 'part' # h for now but: https://en.wikipedia.org/wiki/Common_Platform_Enumeration#part
+                self.manufacturer or unknown,  # vendor
+                self.product or unknown,  # product # do we want something different ?
+                "-",
+                unknown,  # version of product?
+                unknown,  # point release / minor versions
+                unknown,  # any additional information beyond version for id
+                unknown,  # lang is empty for now
+                # en-US -- https://datatracker.ietf.org/doc/html/rfc5646
+                unknown,  # "edition" i.e. MS desktop vs MS Server etc
+                unknown,  # 'target' wiki ex: `windows_2003` & `ipod_touch`
+                unknown,  # 'target_hw', but really the cpu architecture type
+            ]
+        )
+        self._cpe = cpe
+        return self._cpe
+
+    @property
     def last_updated(self):
         """Most recent update.  Utilize django-simple-history."""
         # NOTE: The aggregate returns a dict on the form

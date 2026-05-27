@@ -187,6 +187,7 @@ class AssetSerializer(serializers.HyperlinkedModelSerializer):
             "hours with zero observations are omitted from the response."
         ),
     )
+    cpe = serializers.CharField(allow_blank=False, allow_null=False)
 
     class Meta:
         """Wire this serializer to a model."""
@@ -206,6 +207,7 @@ class AssetSerializer(serializers.HyperlinkedModelSerializer):
             "asset_tags",
             "asset_vulnerabilities",
             "usage",
+            "cpe",
         )
 
         fields = asset_fields + computed_fields
