@@ -24,7 +24,7 @@ from unittest.mock import patch
 
 import pytest
 
-from blueflow.models.viper import ViperWebhookRequest, ViperWebhookResponseList
+from blueflow.models.viper import ViperWebhookRequest
 
 # ---------------------------------------------------------------------------
 # Golden data
@@ -78,7 +78,7 @@ def _vrl_transform(record: dict) -> dict:
 
     if record.get("product") is not None:
         slug = record["product"]
-        out["model"] = _PRODUCT_DISPLAY.get(slug, slug)
+        out["product"] = _PRODUCT_DISPLAY.get(slug, slug)
 
     if record.get("version") is not None:
         out["app_sw_version"] = record["version"]
@@ -182,7 +182,7 @@ def test_device_class_alias_persisted_through_upsert(asset_edit_client) -> None:
 
 
 def test_device_class_persisted_through_upsert(asset_edit_client) -> None:
-    """category from VRL transform survives PUT /api/assets/upsert/ → Asset.category."""
+    """Category from VRL transform survives PUT /api/assets/upsert/ → Asset.category."""
     from blueflow import models
 
     payload = _vrl_transform(
@@ -238,6 +238,166 @@ def test_version_persisted_through_upsert(asset_edit_client) -> None:
     assert asset.app_sw_version == "1.2.3"
 
 
+_GEHEALTHCARE_RECORDS: list[dict] = [
+    {
+        "hostname": "BRIGHTSPEED01",
+        "ip_address": "10.40.2.20",
+        "mac_address": "00:10:18:AA:BB:01",
+        "vendor": "gehealthcare",
+        "product": "brightspeed_elite_select",
+        "version": "11.2.0",
+        "device_class": "CT",
+        "open_ports": [5355],
+        "confidence": "HIGH",
+    },
+    {
+        "hostname": "PACS-CENTRICITY-001",
+        "ip_address": "10.40.2.10",
+        "mac_address": "00:1A:2B:3C:51:10",
+        "vendor": "gehealthcare",
+        "product": "centricity_pacs_iw",
+        "version": None,
+        "device_class": "pacs",
+        "open_ports": [5355],
+        "confidence": "HIGH",
+    },
+]
+
+
+def test_upsert_then_get_gehealthcare_records(asset_edit_client) -> None:
+    """Upsert two raw TapirXL GE Healthcare records and confirm they round-trip via GET."""
+    records = _GEHEALTHCARE_RECORDS
+
+    for record in records:
+        resp = asset_edit_client.put(
+            "/api/assets/upsert/",
+            json.dumps(_vrl_transform(record)),
+            content_type="application/json",
+        )
+        assert resp.status_code == 201, (
+            f"Upsert failed for {record['hostname']}: {resp.data}"
+        )
+
+    list_resp = asset_edit_client.get("/api/assets/")
+    assert list_resp.status_code == 200
+    by_mac = {a["mac_address"]: a for a in list_resp.data["results"]}
+
+    for record in records:
+        mac = record["mac_address"].lower()
+        assert mac in by_mac, f"{record['hostname']} ({mac}) not in list response"
+        asset = by_mac[mac]
+        assert asset["hostname"] == record["hostname"]
+        assert asset["ip_address"] == record["ip_address"]
+        assert asset["manufacturer"] == record["vendor"]
+        assert asset["product"] == record["product"]
+        assert asset["category"] == record["device_class"]
+        assert asset["app_sw_version"] == record["version"]
+
+
+def test_viper_payload_for_gehealthcare_records(asset_edit_client, celery_app) -> None:
+    """Upsert two raw TapirXL GE Healthcare records and assert exactly what Viper receives."""
+    from django.conf import settings
+
+    from blueflow.models import Asset
+
+    records = _GEHEALTHCARE_RECORDS
+
+    for record in records:
+        resp = asset_edit_client.put(
+            "/api/assets/upsert/",
+            json.dumps(_vrl_transform(record)),
+            content_type="application/json",
+        )
+        assert resp.status_code == 201, (
+            f"Upsert failed for {record['hostname']}: {resp.data}"
+        )
+
+    with patch("blueflow.celery.tasks.requests.post") as mock_post:
+        from blueflow.celery.tasks import viper_webhook
+
+        viper_webhook.apply(
+            args=[
+                ViperWebhookRequest(
+                    callback="https://viper.example.com/integration/",
+                    since="1800-01-01T00:00:00Z",
+                    before=None,
+                    max_pages=100,
+                    page_size=100,
+                ).to_dict(),
+                str(uuid.uuid4()),
+            ]
+        )
+
+    # Both records fit one page → exactly one outbound POST.
+    assert mock_post.call_count == 1
+    call = mock_post.call_args
+    assert call.args[0] == "https://viper.example.com/integration/"
+    assert call.kwargs["headers"] == {"Content-Type": "application/json"}
+
+    body = call.kwargs["json"]
+    assert body["page"] == 1
+    assert body["pageSize"] == 100
+    assert body["totalCount"] == 2
+    assert body["totalPages"] == 1
+    assert body["next"] is None
+    assert body["previous"] is None
+
+    items_by_ip = {item["ip"]: item for item in body["items"]}
+    assert set(items_by_ip) == {"10.40.2.20", "10.40.2.10"}
+
+    asset_ids = {str(a.ip_address): a.id for a in Asset.objects.all()}
+
+    # utilization is time-sensitive (upsert calls Asset.update_usage which writes
+    # the current weekday/hour bucket). Strip it off for the structural assertions
+    # below and validate its shape separately.
+    def _check_utilization(util: list) -> None:
+        assert isinstance(util, list)
+        assert len(util) == 7
+        for day in util:
+            assert isinstance(day, dict)
+            for hour, count in day.items():
+                assert hour.isdigit() and 0 <= int(hour) <= 23
+                assert isinstance(count, int) and count >= 1
+
+    # BRIGHTSPEED01 — CT scanner. role=CT, product reaches Viper via CPE only.
+    bs = items_by_ip["10.40.2.20"]
+    _check_utilization(bs.pop("utilization"))
+    assert bs == {
+        "ip": "10.40.2.20",
+        "upstreamApi": f"{settings.BASE_URL}/api/assets/{asset_ids['10.40.2.20']}/",
+        "vendorId": "gehealthcare",
+        "status": "Active",
+        "hostname": "BRIGHTSPEED01",
+        "macAddress": "00:10:18:aa:bb:01",
+        "role": "CT",
+        "cpe": "cpe:2.3:h:gehealthcare:brightspeed_elite_select:-:*:*:*:*:*:*:*",
+    }
+
+    # PACS-CENTRICITY-001 — PACS, role propagates verbatim.
+    pacs = items_by_ip["10.40.2.10"]
+    _check_utilization(pacs.pop("utilization"))
+    assert pacs == {
+        "ip": "10.40.2.10",
+        "upstreamApi": f"{settings.BASE_URL}/api/assets/{asset_ids['10.40.2.10']}/",
+        "vendorId": "gehealthcare",
+        "status": "Active",
+        "hostname": "PACS-CENTRICITY-001",
+        "macAddress": "00:1a:2b:3c:51:10",
+        "role": "pacs",
+        "cpe": "cpe:2.3:h:gehealthcare:centricity_pacs_iw:-:*:*:*:*:*:*:*",
+    }
+
+    # Pin the genuinely silent drop: software version is unreachable from Viper.
+    # (`product` is not its own key but does reach Viper embedded in `cpe` above.)
+    for item in body["items"]:
+        assert "product" not in item, (
+            "product surfaced as its own key — viper.py:to_dict was extended; "
+            "verify Viper's schema accepts it and update this assertion."
+        )
+        assert "appSwVersion" not in item
+        assert "version" not in item
+
+
 # ---------------------------------------------------------------------------
 # Layer 3: full pipeline regression
 # ---------------------------------------------------------------------------
@@ -283,7 +443,7 @@ def test_golden_device_class_propagates_to_viper_role(
                     max_pages=100,
                     page_size=100,
                 ).to_dict(),
-                    str(uuid.uuid4()),
+                str(uuid.uuid4()),
             ]
         )
 
