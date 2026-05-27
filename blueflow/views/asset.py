@@ -430,7 +430,7 @@ class AssetFilter(django_filters.rest_framework.FilterSet):
                 "exact",
                 "isnull",
             ],
-            "model": [
+            "product": [
                 "istartswith",
                 "icontains",
                 "iregex",
@@ -445,7 +445,6 @@ class AssetFilter(django_filters.rest_framework.FilterSet):
             "asset_custom_fields__value_text": ["istartswith"],
             "asset_vulnerabilities__date_remediated": ["isnull"],
             "asset_vulnerabilities__date_ignored": ["isnull"],
-            # TODO(taylorcochran): Add asset_risk_factors filters
         }
         filter_overrides = {  # noqa: RUF012
             netfields.InetAddressField: {
