@@ -72,8 +72,8 @@ def _vrl_transform(record: dict) -> dict:
     if record.get("hostname") is not None:
         out["hostname"] = record["hostname"]
 
-    if record.get("vendor") is not None:
-        slug = record["vendor"]
+    if record.get("manufacturer") is not None:
+        slug = record["manufacturer"]
         out["manufacturer"] = _VENDOR_DISPLAY.get(slug, slug)
 
     if record.get("product") is not None:
@@ -113,7 +113,7 @@ def test_vrl_transform_maps_device_class_to_category() -> None:
         "mac_address": "00:09:FB:BD:75:6D",
         "ip_address": "10.10.10.21",
         "hostname": "MX700-bed12",
-        "vendor": "philips",
+        "manufacturer": "philips",
         "product": "intellivue_mx700",
         "version": None,
         "device_class": "patient_monitor",
@@ -243,7 +243,7 @@ _GEHEALTHCARE_RECORDS: list[dict] = [
         "hostname": "BRIGHTSPEED01",
         "ip_address": "10.40.2.20",
         "mac_address": "00:10:18:AA:BB:01",
-        "vendor": "gehealthcare",
+        "manufacturer": "gehealthcare",
         "product": "brightspeed_elite_select",
         "version": "11.2.0",
         "device_class": "CT",
@@ -254,7 +254,7 @@ _GEHEALTHCARE_RECORDS: list[dict] = [
         "hostname": "PACS-CENTRICITY-001",
         "ip_address": "10.40.2.10",
         "mac_address": "00:1A:2B:3C:51:10",
-        "vendor": "gehealthcare",
+        "manufacturer": "gehealthcare",
         "product": "centricity_pacs_iw",
         "version": None,
         "device_class": "pacs",
@@ -288,7 +288,7 @@ def test_upsert_then_get_gehealthcare_records(asset_edit_client) -> None:
         asset = by_mac[mac]
         assert asset["hostname"] == record["hostname"]
         assert asset["ip_address"] == record["ip_address"]
-        assert asset["manufacturer"] == record["vendor"]
+        assert asset["manufacturer"] == record["manufacturer"]
         assert asset["product"] == record["product"]
         assert asset["category"] == record["device_class"]
         assert asset["app_sw_version"] == record["version"]
@@ -359,13 +359,15 @@ def test_viper_payload_for_gehealthcare_records(asset_edit_client, celery_app) -
                 assert hour.isdigit() and 0 <= int(hour) <= 23
                 assert isinstance(count, int) and count >= 1
 
+    # id's are the pk's, which are currently incremented integers
+    lastID = Asset.objects.last().id
     # BRIGHTSPEED01 — CT scanner. role=CT, product reaches Viper via CPE only.
     bs = items_by_ip["10.40.2.20"]
     _check_utilization(bs.pop("utilization"))
     assert bs == {
         "ip": "10.40.2.20",
         "upstreamApi": f"{settings.BASE_URL}/api/assets/{asset_ids['10.40.2.20']}/",
-        "vendorId": "gehealthcare",
+        "vendorId": lastID - 1,
         "status": "Active",
         "hostname": "BRIGHTSPEED01",
         "macAddress": "00:10:18:aa:bb:01",
@@ -379,7 +381,7 @@ def test_viper_payload_for_gehealthcare_records(asset_edit_client, celery_app) -
     assert pacs == {
         "ip": "10.40.2.10",
         "upstreamApi": f"{settings.BASE_URL}/api/assets/{asset_ids['10.40.2.10']}/",
-        "vendorId": "gehealthcare",
+        "vendorId": lastID,
         "status": "Active",
         "hostname": "PACS-CENTRICITY-001",
         "macAddress": "00:1a:2b:3c:51:10",
