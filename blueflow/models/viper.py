@@ -99,6 +99,7 @@ class ViperAsset:
     status: str
     vendor_id: str
     utilization: list[dict[str, int]]
+    model: str
 
     def __init__(self, asset: Asset):
         self.ip = str(asset.ip_address) if asset.ip_address else ""
@@ -117,6 +118,7 @@ class ViperAsset:
         self.status = "Active"
         self.vendor_id = str(asset.manufacturer or "")
         self.utilization = _project_usage(asset)
+        self.model = str(asset.model) if asset.model else ""
 
     def to_dict(self) -> dict:
         """Return a JSON-serializable dict for Viper integrationUpload.
@@ -166,7 +168,7 @@ class ViperAsset:
                 "1",  # version
                 "h",  # 'part' # h for now but: https://en.wikipedia.org/wiki/Common_Platform_Enumeration#part
                 self.vendor_id,  # vendor
-                self.vendor_id,  # product # do we want something different ?
+                self.model,  # product # do we want something different ?
                 unknown,  # version of product?
                 unknown,  # point release / minor versions
                 unknown,  # any additional information beyond version for id
