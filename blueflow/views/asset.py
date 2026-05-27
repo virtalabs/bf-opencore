@@ -188,6 +188,7 @@ class AssetSerializer(serializers.HyperlinkedModelSerializer):
         ),
     )
     cpe = serializers.CharField(allow_blank=False, allow_null=False)
+    manufacturer = serializers.CharField()
 
     class Meta:
         """Wire this serializer to a model."""

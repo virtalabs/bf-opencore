@@ -99,15 +99,15 @@ class ViperAsset:
     status: str
     vendor_id: str  # bf id
     vendor: str  # manu name
-    utilization: list[dict[str, int]]
     product: str
+    utilization: list[dict[str, int]]
 
     def __init__(self, asset: Asset):
         self.ip = str(asset.ip_address) if asset.ip_address else ""
         self.network_segment = (
-            ""  # TODO(taylorcochran): get network segment from asset.network_qset()
+            ""
         )
-        self._cpe = ""  # TODO(taylorcochran): get cpe from asset.cpe_qset()
+        self._cpe = ""
         self.role = str(asset.category) if asset.category else ""
         self.upstream_api = f"{settings.BASE_URL}/api/assets/{asset.id}/"
         self.hostname = asset.hostname or ""
@@ -130,6 +130,7 @@ class ViperAsset:
         raw = str(asset.model)
         fixed = raw.replace(" ", "_").lower()
         self.product = fixed
+        self.utilization = _project_usage(asset)
 
     def to_dict(self) -> dict:
         """Return a JSON-serializable dict for Viper integrationUpload.
