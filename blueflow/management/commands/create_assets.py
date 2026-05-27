@@ -18,7 +18,7 @@ def make_assets(data: dict) -> Generator[dict, None, None]:
             "mac_address": asset["mac_address"],
             "nic_vendor": asset["nic_vendor"],
             "manufacturer": asset["manufacturer"],
-            "model": asset["model"],
+            "product": asset["product"],
             "serial_number": asset["serial_number"],
             "udi": asset["udi"],
             "tag_number": asset["tag_number"],

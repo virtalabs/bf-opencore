@@ -535,7 +535,7 @@ class AssetViewSet(
         "ip_address",
         "mac_address",
         "manufacturer",
-        "model",
+        "product",
         "name",
         "nic_vendor",
         "os",
@@ -565,14 +565,13 @@ class AssetViewSet(
             "mac_address",
             "nic_vendor",
             "manufacturer",
-            "model",
+            "product",
             "os",
             "app_sw_version",
             "serial_number",
             "tag_number",
             "category",
             "created",
-            # TODO(taylorcochran): Add risk score filters
             "udi",
         ]
         context = super().get_renderer_context()
