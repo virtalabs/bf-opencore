@@ -83,6 +83,10 @@ def _project_usage(asset: Asset) -> list[dict[str, int]]:
     return days
 
 
+Utilization = list[dict[str, int]]
+Location = dict[str, str]
+
+
 @dataclass
 class ViperAsset:
     """Data for a viper asset."""
@@ -95,10 +99,10 @@ class ViperAsset:
     hostname: str
     mac_address: str
     serial_number: str
-    location: dict[str, str]
+    location: Location
     status: str
     vendor_id: str
-    utilization: list[dict[str, int]]
+    utilization: Utilization
 
     def __init__(self, asset: Asset):
         self.ip = str(asset.ip_address) if asset.ip_address else ""
@@ -118,7 +122,7 @@ class ViperAsset:
         self.vendor_id = str(asset.manufacturer or "")
         self.utilization = _project_usage(asset)
 
-    def to_dict(self) -> dict:
+    def to_dict(self) -> dict[str, str | Utilization | Location]:
         """Return a JSON-serializable dict for Viper integrationUpload.
 
         Uses camelCase keys per Viper's ``assetInputSchema``.  ``role`` is

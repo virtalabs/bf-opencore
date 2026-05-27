@@ -430,7 +430,7 @@ class AssetFilter(django_filters.rest_framework.FilterSet):
                 "exact",
                 "isnull",
             ],
-            "model": [
+            "product": [
                 "istartswith",
                 "icontains",
                 "iregex",
@@ -536,7 +536,7 @@ class AssetViewSet(
         "ip_address",
         "mac_address",
         "manufacturer",
-        "model",
+        "product",
         "name",
         "nic_vendor",
         "os",
@@ -566,7 +566,7 @@ class AssetViewSet(
             "mac_address",
             "nic_vendor",
             "manufacturer",
-            "model",
+            "product",
             "os",
             "app_sw_version",
             "serial_number",
