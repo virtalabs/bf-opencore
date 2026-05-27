@@ -169,6 +169,41 @@ def test_get_asset_after_upsert_404(asset_edit_client: APIClient) -> None:
     assert response.status_code == status.HTTP_404_NOT_FOUND
 
 
+def test_cpe_matches_expected_after_upsert_and_get(
+    asset_edit_client: APIClient,
+) -> None:
+    """Upsert a BRIGHTSPEED-style payload; GET returns the expected CPE string.
+
+    Mirrors ``test_viper_asset_cpe_matches_expected_for_actual_json_payload``
+    in ``test_viper_models.py`` but validates the BlueFlow side: the CPE the
+    ``Asset.cpe`` property builds is the one surfaced by the AssetSerializer
+    on GET after an upsert. Only manufacturer/product slots are populated;
+    everything else is the model's stubbed ``*``/``-``.
+    """
+    payload = {
+        "mac_address": "00:10:18:AA:BB:01",
+        "ip_address": "10.40.2.20",
+        "hostname": "BRIGHTSPEED01",
+        "manufacturer": "gehealthcare",
+        "product": "brightspeed_elite_select",
+        "app_sw_version": "11.2.0",
+        "device_class": "CT",
+        "open_ports_tcp": [5355],
+    }
+    expected_cpe = "cpe:2.3:h:gehealthcare:brightspeed_elite_select:-:*:*:*:*:*:*:*"
+
+    upsert_response = _put_upsert(asset_edit_client, payload)
+    assert upsert_response.status_code == status.HTTP_201_CREATED
+    assert upsert_response.data["cpe"] == expected_cpe
+
+    asset_id = upsert_response.data["id"]
+    get_response = asset_edit_client.get(f"/api/assets/{asset_id}/")
+    assert get_response.status_code == status.HTTP_200_OK
+    assert get_response.data["cpe"] == expected_cpe
+    assert get_response.data["manufacturer"] == "gehealthcare"
+    assert get_response.data["product"] == "brightspeed_elite_select"
+
+
 @pytest.mark.skip(reason="Blueflow uses AllowAny; auth enforced by consuming product")
 def test_get_asset_after_upsert_unauth_403(enable_core_switch: None) -> None:
     """GET without auth would assert 403 if IsAuthenticated were enforced."""
