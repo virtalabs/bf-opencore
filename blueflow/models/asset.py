@@ -58,7 +58,7 @@ class Asset(TimeStampedModel):
     )
     nic_vendor = models.TextField(blank=True, null=True, verbose_name="NIC vendor")
     manufacturer = models.TextField(blank=True, null=True)
-    model = models.TextField(blank=True, null=True)
+    product = models.TextField(blank=True, null=True)
     serial_number = models.TextField(blank=True, null=True)
     udi = models.TextField(blank=True, null=True, verbose_name="UDI")
     tag_number = models.TextField(blank=True, null=True)
@@ -152,8 +152,8 @@ class Asset(TimeStampedModel):
         elif self.hostname:
             d_name = self.hostname
         elif self.manufacturer:
-            if self.model:
-                d_name = f"{self.manufacturer}-{self.model}-{self.id}"
+            if self.product:
+                d_name = f"{self.manufacturer}-{self.product}-{self.id}"
             else:
                 d_name = f"{self.manufacturer}-{self.id}"
         elif self.nic_vendor:
@@ -192,7 +192,9 @@ class Asset(TimeStampedModel):
         if ports != self.open_ports_tcp:
             added = set(ports) - set(self.open_ports_tcp)
             # The new list of ports is larger
-            assert added != set()
+            if added == set():
+                msg = "The new list of ports must always be larger"
+                raise ValueError(msg)
             logger.debug("Added new TCP ports %s", added)
             self.open_ports_tcp = ports
             return True
@@ -229,24 +231,18 @@ class Asset(TimeStampedModel):
         return network_qset
 
     @property
-    def is_identified(self):
+    def is_identified(self) -> bool:
         """Determine if asset is identified.
 
         In order to be "identified" we need to know both manufacturer
         and model.  In addition, we need to know either MAC or IP address.
         """
-        # Asset needs BOTH manufacturer & model
-        if not self.manufacturer:
-            return False
-        if not self.model:
-            return False
+        # Asset needs BOTH manufacturer & product
+        has_man_and_prod = bool(self.manufacturer) and bool(self.product)
         # If Asset now has either IP or MAC it's identified!
-        if self.ip_address:
-            return True
-        if self.mac_address:
-            return True
-        # Uh oh, we don't have what's needed to identify
-        return False
+        # else, Uh oh, we don't have what's needed to identify
+        has_ip_or_mac = bool(self.ip_address) or bool(self.mac_address)
+        return has_man_and_prod or has_ip_or_mac
 
     def scan_qset(self):
         """Return queryset for all scans of the asset.
@@ -285,7 +281,7 @@ class Asset(TimeStampedModel):
             disjuncts.append(Q(mac_address__gte=min_mac, mac_address__lte=max_mac))
 
         if self.manufacturer is not None:
-            disjuncts.append(Q(manufacturer=self.manufacturer, model=self.model))
+            disjuncts.append(Q(manufacturer=self.manufacturer, product=self.product))
 
         if self.nic_vendor is not None:
             disjuncts.append(Q(nic_vendor=self.nic_vendor))
@@ -371,7 +367,7 @@ class Asset(TimeStampedModel):
         unless an observation has already been counted for the same
         Usage.USAGE_WINDOW_MINUTES window, in which case this is a no-op.
         """
-        from .usage import Usage
+        Usage = apps.get_model("Usage")
 
         window_start = Usage.floor_to_window(timestamp)
         usage, _ = Usage.objects.get_or_create(
@@ -432,7 +428,7 @@ class Asset(TimeStampedModel):
 
         # is any of these version numbers greater than ours?
         if asset_ver_ok:
-            for ver in vcounts.keys():
+            for ver in vcounts:
                 if packaging.version.parse(ver) > packaging.version.parse(
                     self.app_sw_version
                 ):
