@@ -45,7 +45,7 @@ def _send_viper_payload(viper_data: ViperWebhookRequest, request_id: str) -> str
         if response.status_code >= 400:
             return json.dumps(response.json, indent=4)
         response.raise_for_status()
-        viper_responses.append(response)
+        viper_responses.append(response.json)
     return json.dumps(viper_responses, indent=4)
 
 
