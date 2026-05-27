@@ -89,7 +89,7 @@ class ViperAsset:
 
     ip: str
     network_segment: str
-    cpe: str
+    _cpe: str
     role: str
     upstream_api: str
     hostname: str
@@ -118,7 +118,7 @@ class ViperAsset:
         self.status = "Active"
         self.vendor_id = str(asset.manufacturer or "")
         self.utilization = _project_usage(asset)
-        self.model = str(asset.model) if asset.model else ""
+        self.product = str(asset.product) if asset.product else ""
 
     def to_dict(self) -> dict:
         """Return a JSON-serializable dict for Viper integrationUpload.
@@ -165,10 +165,10 @@ class ViperAsset:
             [
                 "cpe",  # always the same
                 # TODO(taylorcochran): figure out what version cass wants
-                "1",  # version
-                "h",  # 'part' # h for now but: https://en.wikipedia.org/wiki/Common_Platform_Enumeration#part
+                "2.3",  # version
+                "a",  # 'part' # h for now but: https://en.wikipedia.org/wiki/Common_Platform_Enumeration#part
                 self.vendor_id,  # vendor
-                self.model,  # product # do we want something different ?
+                self.product,  # product # do we want something different ?
                 unknown,  # version of product?
                 unknown,  # point release / minor versions
                 unknown,  # any additional information beyond version for id

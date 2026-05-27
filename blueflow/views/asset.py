@@ -98,7 +98,7 @@ class AssetUpsertSerializer(serializers.Serializer):
     manufacturer = serializers.CharField(
         required=False, allow_blank=True, allow_null=True
     )
-    model = serializers.CharField(required=False, allow_blank=True, allow_null=True)
+    product = serializers.CharField(required=False, allow_blank=True, allow_null=True)
     serial_number = serializers.CharField(
         required=False, allow_blank=True, allow_null=True
     )

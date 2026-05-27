@@ -71,7 +71,7 @@ def test_viper_asset_role_omitted_when_category_unset():
 
 
 def test_viper_asset_vendor_id_maps_manufacturer():
-    """vendorId is Asset.manufacturer (TapirXL vendor), not nic_vendor or PK."""
+    """VendorId is Asset.manufacturer (TapirXL vendor), not nic_vendor or PK."""
     asset = _make_asset(manufacturer="Philips", nic_vendor="Some OUI Org")
     payload = ViperAsset(asset).to_dict()
     assert payload["vendorId"] == "Philips"
@@ -79,14 +79,14 @@ def test_viper_asset_vendor_id_maps_manufacturer():
 
 
 def test_viper_asset_vendor_id_empty_when_manufacturer_unset():
-    """vendorId is present but empty when manufacturer is null."""
+    """VendorId is present but empty when manufacturer is null."""
     asset = _make_asset(manufacturer=None, nic_vendor="Some OUI Org")
     payload = ViperAsset(asset).to_dict()
     assert payload["vendorId"] == ""
 
 
 def test_viper_asset_upstream_api_uses_base_url_and_asset_id():
-    """upstreamApi points back at the asset's BlueFlow detail URL."""
+    """UpstreamApi points back at the asset's BlueFlow detail URL."""
     asset = _make_asset()
     payload = ViperAsset(asset).to_dict()
     expected = f"{settings.BASE_URL}/api/assets/{asset.id}/"
@@ -119,6 +119,37 @@ def test_viper_asset_cpe_omitted_when_empty():
     asset = _make_asset()
     payload = ViperAsset(asset).to_dict()
     assert "cpe" not in payload
+
+
+def test_viper_asset_cpe_matches_expected_for_actual_json_payload():
+    """Confirm the CPE produced from the ~/Desktop/actual.json shape.
+
+    The payload uses TapirXL-style names (vendor/product/version); they map to
+    the BlueFlow Asset fields manufacturer/model/app_sw_version.
+    """
+    payload = {
+        "hostname": "BRIGHTSPEED01",
+        "ip_address": "10.40.2.20",
+        "mac_address": "00:10:18:AA:BB:01",
+        "vendor": "gehealthcare",
+        "product": "brightspeed_elite_select",
+        "version": "11.2.0",
+        "device_class": "CT",
+        "open_ports": [5355],
+        "confidence": "HIGH",
+    }
+    asset = _make_asset(
+        hostname=payload["hostname"],
+        ip_address=payload["ip_address"],
+        mac_address=payload["mac_address"],
+        manufacturer=payload["vendor"],
+        model=payload["product"],
+        app_sw_version=payload["version"],
+        category=payload["device_class"],
+        open_ports_tcp=payload["open_ports"],
+    )
+    expected = "cpe:2.3:a:gehealthcare:centricity_pacs_iw:5.0:*:*:*:*:*:*:*"
+    assert ViperAsset(asset).cpe == expected
 
 
 def test_viper_asset_mac_address_is_camel_case():
