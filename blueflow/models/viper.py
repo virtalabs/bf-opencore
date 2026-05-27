@@ -166,13 +166,15 @@ class ViperAsset:
                 "cpe",  # always the same
                 # TODO(taylorcochran): figure out what version cass wants
                 "2.3",  # version
-                "a",  # 'part' # h for now but: https://en.wikipedia.org/wiki/Common_Platform_Enumeration#part
+                "h",  # 'part' # h for now but: https://en.wikipedia.org/wiki/Common_Platform_Enumeration#part
                 self.vendor_id,  # vendor
                 self.product,  # product # do we want something different ?
+                "-",
                 unknown,  # version of product?
                 unknown,  # point release / minor versions
                 unknown,  # any additional information beyond version for id
-                "en-US",  # https://datatracker.ietf.org/doc/html/rfc5646
+                unknown,  # lang is empty for now
+                # en-US -- https://datatracker.ietf.org/doc/html/rfc5646
                 unknown,  # "edition" i.e. MS desktop vs MS Server etc
                 unknown,  # 'target' wiki ex: `windows_2003` & `ipod_touch`
                 unknown,  # 'target_hw', but really the cpu architecture type

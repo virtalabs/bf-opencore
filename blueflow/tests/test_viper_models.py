@@ -148,7 +148,7 @@ def test_viper_asset_cpe_matches_expected_for_actual_json_payload():
         category=payload["device_class"],
         open_ports_tcp=payload["open_ports"],
     )
-    expected = "cpe:2.3:a:gehealthcare:centricity_pacs_iw:5.0:*:*:*:*:*:*:*"
+    expected = "cpe:2.3:h:gehealthcare:brightspeed_elite_select:-:*:*:*:*:*:*:*"
     assert ViperAsset(asset).cpe == expected
 
 
