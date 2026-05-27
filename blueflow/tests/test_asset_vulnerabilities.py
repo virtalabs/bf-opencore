@@ -13,7 +13,7 @@ def test_get_asset_vulnerabilities(auth_client, asset_vulnerabilities):
     This route should return the AssetVulnerabilities that are
     associated with the asset with the specified ID.
     """
-    (asset, vulnerability_red, _vulnerability_green) = asset_vulnerabilities
+    (asset, vulnerability_red, vulnerability_green) = asset_vulnerabilities
     response = auth_client.get(f"/api/assetvulnerabilities/?asset={asset.id}")
     asset_vulnerabilities = response.data["results"]
     assert len(asset_vulnerabilities) == 2  # noqa: PLR2004
@@ -34,12 +34,12 @@ def test_get_asset_vulnerabilities_model(auth_client, asset_vulnerabilities):
     This route should return the AssetVulnerabilities that are
     associated with assets that have a model that start with <string>.
     """
-    (asset, vulnerability_red, _vulnerability_green) = asset_vulnerabilities
-    asset.model = "best-model"
+    (asset, vulnerability_red, vulnerability_green) = asset_vulnerabilities
+    asset.product = "best-model"
     asset.save()
     a = models.Asset.objects.get(id=asset.id)
-    assert a.model == asset.model
-    assert a.model == "best-model"
+    assert a.product == asset.product
+    assert a.product == "best-model"
     response = auth_client.get(
         "/api/assetvulnerabilities/?asset__model__iexact={}".format("best-model")
     )
