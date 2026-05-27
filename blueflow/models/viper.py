@@ -105,7 +105,7 @@ class ViperAsset:
         self.network_segment = (
             ""  # TODO(taylorcochran): get network segment from asset.network_qset()
         )
-        self.cpe = ""  # TODO(taylorcochran): get cpe from asset.cpe_qset()
+        self._cpe = ""  # TODO(taylorcochran): get cpe from asset.cpe_qset()
         self.role = str(asset.category) if asset.category else ""
         self.upstream_api = f"{settings.BASE_URL}/api/assets/{asset.id}/"
         self.hostname = asset.hostname or ""
@@ -148,6 +148,32 @@ class ViperAsset:
         if any(self.location.values()):
             out["location"] = self.location
         return out
+
+    @property
+    def cpe(self) -> str:
+        """Builds the cpe string from the asset dataclass.
+
+        Cached after first build. Lots of this data is mocked atm, we'll need
+        to get specifics from Cassidy for the demo.
+        """
+        unknown = "*"
+        return ":".join(
+            [
+                "cpe",  # always the same
+                # TODO(taylorcochran): figure out what version cass wants
+                "1",  # version
+                "h",  # 'part' # h for now but: https://en.wikipedia.org/wiki/Common_Platform_Enumeration#part
+                self.vendor_id,  # vendor
+                self.vendor_id,  # product # do we want something different ?
+                unknown,  # version of product?
+                unknown,  # point release / minor versions
+                unknown,  # any additional information beyond version for id
+                "en-US",  # https://datatracker.ietf.org/doc/html/rfc5646
+                unknown,  # "edition" i.e. MS desktop vs MS Server etc
+                unknown,  # 'target' wiki ex: `windows_2003` & `ipod_touch`
+                unknown,  # 'target_hw', but really the cpu architecture type
+            ]
+        )
 
 
 @dataclass
