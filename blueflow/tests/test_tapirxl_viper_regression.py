@@ -123,7 +123,7 @@ def test_vrl_transform_maps_device_class_to_category() -> None:
     out = _vrl_transform(record)
     assert out["category"] == "patient_monitor"
     assert out["manufacturer"] == "Philips"
-    assert out["model"] == "IntelliVue MX700"
+    assert out["product"] == "IntelliVue MX700"
     assert out["open_ports_tcp"] == [3702]
     assert "app_sw_version" not in out
 
