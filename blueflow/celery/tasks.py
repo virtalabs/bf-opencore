@@ -21,16 +21,20 @@ class Task(BaseTask):
     def on_failure(self, exc, task_id, args, kwargs, einfo):
         logger.error("[!!] %s failed: %s", task_id, exc)
 
-def _send_viper_payload(viper_data: ViperWebhookRequest, request_id: str) -> None:
+
+def _send_viper_payload(viper_data: ViperWebhookRequest, request_id: str) -> str:
     """Send viper payload, logging partial errors.
 
     We may want to consider logging partial errors and attempting to
     send the remaining data anyway.
     Wrapping each post in its own celery task would be simple enough.
     """
+    import json
+
     response_list = ViperWebhookResponseList.from_request(
         viper_data, request_id=request_id
     )
+    viper_responses = []
     for response in response_list:
         as_dict = response.to_dict()
         response = requests.post(
@@ -38,7 +42,12 @@ def _send_viper_payload(viper_data: ViperWebhookRequest, request_id: str) -> Non
             json=as_dict,
             headers={"Content-Type": "application/json"},
         )
+        if response.status_code >= 400:
+            return json.dumps(response.json, indent=4)
         response.raise_for_status()
+        viper_responses.append(response)
+    return json.dumps(viper_responses, indent=4)
+
 
 @celery_app.task(base=Task)
 def viper_webhook(data: dict, request_id: str = ""):
@@ -46,13 +55,18 @@ def viper_webhook(data: dict, request_id: str = ""):
     viper_data = ViperWebhookRequest(**data)
     logger.info("Processing viper webhook: %s", viper_data)
     if request_id:
-        ViperWebhookJob.objects.filter(pk=request_id).update(status=ViperWebhookJob.Status.STARTED)
+        ViperWebhookJob.objects.filter(pk=request_id).update(
+            status=ViperWebhookJob.Status.STARTED
+        )
     try:
         _send_viper_payload(viper_data, request_id)
     except Exception:
         if request_id:
-            ViperWebhookJob.objects.filter(pk=request_id).update(status=ViperWebhookJob.Status.ERROR)
+            ViperWebhookJob.objects.filter(pk=request_id).update(
+                status=ViperWebhookJob.Status.ERROR
+            )
         raise
     if request_id:
-        ViperWebhookJob.objects.filter(pk=request_id).update(status=ViperWebhookJob.Status.FINISHED)
-
+        ViperWebhookJob.objects.filter(pk=request_id).update(
+            status=ViperWebhookJob.Status.FINISHED
+        )
