@@ -156,8 +156,10 @@ class ViperAsset:
         Cached after first build. Lots of this data is mocked atm, we'll need
         to get specifics from Cassidy for the demo.
         """
+        if self._cpe:
+            return self._cpe
         unknown = "*"
-        return ":".join(
+        self._cpe = ":".join(
             [
                 "cpe",  # always the same
                 # TODO(taylorcochran): figure out what version cass wants
@@ -174,6 +176,7 @@ class ViperAsset:
                 unknown,  # 'target_hw', but really the cpu architecture type
             ]
         )
+        return self._cpe
 
 
 @dataclass
