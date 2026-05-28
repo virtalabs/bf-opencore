@@ -58,7 +58,7 @@ class Asset(TimeStampedModel):
     )
     nic_vendor = models.TextField(blank=True, null=True, verbose_name="NIC vendor")
     manufacturer = models.TextField(blank=True, null=True)
-    product = models.TextField(blank=True, null=True)
+    model = models.TextField(blank=True, null=True)
     serial_number = models.TextField(blank=True, null=True)
     udi = models.TextField(blank=True, null=True, verbose_name="UDI")
     tag_number = models.TextField(blank=True, null=True)
