@@ -21,7 +21,7 @@ from blueflow.models.viper import ViperWebhookRequest
 class ViperWebhookSerializer(serializers.Serializer):
     """Serializer for the Viper webhook."""
 
-    callback = serializers.URLField()
+    callback = serializers.CharField()
     since = serializers.DateTimeField()
     before = serializers.DateTimeField(required=False, default=None)
     max_pages = serializers.IntegerField()
