@@ -141,7 +141,7 @@ class Asset(TimeStampedModel):
                 "2.3",  # version
                 "h",  # 'part' # h for now but: https://en.wikipedia.org/wiki/Common_Platform_Enumeration#part
                 self.manufacturer or unknown,  # vendor
-                self.product or unknown,  # product # do we want something different ?
+                self.vendor or unknown,  # product # do we want something different ?
                 "-",
                 unknown,  # version of product?
                 unknown,  # point release / minor versions
@@ -184,8 +184,8 @@ class Asset(TimeStampedModel):
         elif self.hostname:
             d_name = self.hostname
         elif self.manufacturer:
-            if self.product:
-                d_name = f"{self.manufacturer}-{self.product}-{self.id}"
+            if self.vendor:
+                d_name = f"{self.manufacturer}-{self.vendor}-{self.id}"
             else:
                 d_name = f"{self.manufacturer}-{self.id}"
         elif self.nic_vendor:
@@ -270,7 +270,7 @@ class Asset(TimeStampedModel):
         and model.  In addition, we need to know either MAC or IP address.
         """
         # Asset needs BOTH manufacturer & product
-        has_man_and_prod = bool(self.manufacturer) and bool(self.product)
+        has_man_and_prod = bool(self.manufacturer) and bool(self.vendor)
         # If Asset now has either IP or MAC it's identified!
         # else, Uh oh, we don't have what's needed to identify
         has_ip_or_mac = bool(self.ip_address) or bool(self.mac_address)
@@ -313,7 +313,7 @@ class Asset(TimeStampedModel):
             disjuncts.append(Q(mac_address__gte=min_mac, mac_address__lte=max_mac))
 
         if self.manufacturer is not None:
-            disjuncts.append(Q(manufacturer=self.manufacturer, product=self.product))
+            disjuncts.append(Q(manufacturer=self.manufacturer, product=self.vendor))
 
         if self.nic_vendor is not None:
             disjuncts.append(Q(nic_vendor=self.nic_vendor))
