@@ -1,4 +1,5 @@
 import logging
+from typing import Any
 
 import requests
 from celery import Task as BaseTask
@@ -37,36 +38,39 @@ def _send_viper_payload(viper_data: ViperWebhookRequest, request_id: str) -> str
     viper_responses = []
     for response in response_list:
         as_dict = response.to_dict()
-        response = requests.post(
+        v_res = requests.post(
             viper_data.callback,
             json=as_dict,
             headers={"Content-Type": "application/json"},
         )
-        if response.status_code >= 400:
-            return json.dumps(response.json(), indent=4)
-        response.raise_for_status()
-        viper_responses.append(response.json())
+        if v_res.status_code >= 400:
+            return json.dumps(v_res.json(), indent=4)
+        v_res.raise_for_status()
+        viper_responses.append(v_res.json())
     return json.dumps(viper_responses, indent=4)
 
 
 @celery_app.task(base=Task)
-def viper_webhook(data: dict, request_id: str = ""):
+def viper_webhook(data: dict[str, Any], request_id: str = "") -> str:
     """Process a viper webhook."""
     viper_data = ViperWebhookRequest(**data)
     logger.info("Processing viper webhook: %s", viper_data)
     if request_id:
-        ViperWebhookJob.objects.filter(pk=request_id).update(
+        _ = ViperWebhookJob.objects.filter(pk=request_id).update(
             status=ViperWebhookJob.Status.STARTED
         )
     try:
-        _send_viper_payload(viper_data, request_id)
-    except Exception:
+        res = _send_viper_payload(viper_data, request_id)
+        logger.info("Job completed with respons: %", res)
         if request_id:
-            ViperWebhookJob.objects.filter(pk=request_id).update(
+            _ = ViperWebhookJob.objects.filter(pk=request_id).update(
+                status=ViperWebhookJob.Status.FINISHED
+            )
+        return res
+    except Exception as e:
+        if request_id:
+            _ = ViperWebhookJob.objects.filter(pk=request_id).update(
                 status=ViperWebhookJob.Status.ERROR
             )
-        raise
-    if request_id:
-        ViperWebhookJob.objects.filter(pk=request_id).update(
-            status=ViperWebhookJob.Status.FINISHED
-        )
+        logger.warning("Job failed with err: %", str(e))
+        return str(e)
