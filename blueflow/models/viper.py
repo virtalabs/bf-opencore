@@ -97,7 +97,8 @@ class ViperAsset:
     serial_number: str
     location: dict[str, str]
     status: str
-    vendor_id: str
+    vendor_id: str  # bf id
+    vendor: str  # manu name
     utilization: list[dict[str, int]]
     product: str
 
@@ -119,8 +120,16 @@ class ViperAsset:
         if not asset.id:
             raise ValueError("How did we get an asset with no id?")
         self.vendor_id = str(asset.id)
+        raw_manu = str(asset.manufacturer)
+        fixed_manu = raw_manu.replace(" ", "").lower()
+        self.vendor = fixed_manu
         self.utilization = _project_usage(asset)
-        self.product = str(asset.product) if asset.product else ""
+        if not asset.model:
+            raise ValueError("How did we end up with an asset that has no model???")
+        # TODO(taylorcochran): maybe a serializer cleaner thingy?
+        raw = str(asset.model)
+        fixed = raw.replace(" ", "_").lower()
+        self.product = fixed
 
     def to_dict(self) -> dict:
         """Return a JSON-serializable dict for Viper integrationUpload.
@@ -169,7 +178,7 @@ class ViperAsset:
                 # TODO(taylorcochran): figure out what version cass wants
                 "2.3",  # version
                 "h",  # 'part' # h for now but: https://en.wikipedia.org/wiki/Common_Platform_Enumeration#part
-                self.vendor_id or unknown,  # vendor
+                self.vendor or unknown,  # vendor
                 self.product or unknown,  # product # do we want something different ?
                 "-",
                 unknown,  # version of product?
