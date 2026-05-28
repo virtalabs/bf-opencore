@@ -116,7 +116,9 @@ class ViperAsset:
         self.serial_number = asset.serial_number or ""
         self.location = {"facility": "", "building": "", "floor": "", "room": ""}
         self.status = "Active"
-        self.vendor_id = str(asset.id or "NO_ID_FOUND")
+        if not asset.id:
+            raise ValueError("How did we get an asset with no id?")
+        self.vendor_id = str(asset.id)
         self.utilization = _project_usage(asset)
         self.product = str(asset.product) if asset.product else ""
 
