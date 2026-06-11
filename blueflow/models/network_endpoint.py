@@ -74,16 +74,21 @@ class NetworkEndpoint(models.Model):
             ("mac_address", "ipv6_address"),
         )
 
-    def __hash__(self):
+    def __hash__(self) -> int:
         """Hash this model."""
         # combination of Model type and PK is unique
+        if self.pk is None:
+            msg = "Django consideres an unsaved instance to be unhashable"
+            raise ValueError(msg)
         return hash((self.__class__, self.pk))
 
-    def __eq__(self, other):
+    def __eq__(self, other) -> bool:
         """Equal if both NetworkEndpoint and primary key is equal."""
-        return isinstance(other, self.__class__) and self.pk == other.pk
+        return isinstance(other, self.__class__) and (
+            self is other or self.pk == other.pk
+        )
 
-    def __str__(self):
+    def __str__(self) -> str:
         return (
             f"Netflow endpoint with MAC {self.mac_address} "
             f"and IP {(self.ipv4_address, self.ipv6_address)}"
