@@ -4,23 +4,9 @@ from collections.abc import Iterable
 from enum import Enum, auto
 
 from .disable_signals import DisableSignals
-from .fieldmap import FieldMap
 from .func import NullUnlessChanged
 from .ipset import ipset_from_network
 from .quarters import prev_quarter_start, quarter_start
-
-
-class password(str):  # pylint: disable=invalid-name  # noqa: N801
-    """Class/type for passwords.
-
-    Works exactly like a regular Python 'str'; is used in the frontend
-    (if desired) to indicate that a field is a password and as such
-    should not be displayed.
-    """
-
-
-class FileWrapper(str):
-    """File wrapper for use with file uploads."""
 
 
 def iterable(arg):
@@ -48,12 +34,9 @@ class Created(Enum):
 __all__ = [
     "Created",
     "DisableSignals",
-    "FieldMap",
-    "FileWrapper",
     "NullUnlessChanged",
     "ipset_from_network",
     "iterable",
-    "password",
     "prev_quarter_start",
     "quarter_start",
 ]
