@@ -18,8 +18,6 @@ from rest_framework import serializers, status, viewsets
 from rest_framework.decorators import action
 from rest_framework.request import Request
 from rest_framework.response import Response
-from rest_framework.settings import api_settings
-from rest_framework_csv import renderers as drf_csv_renderers
 from simple_history import utils as hist_utils
 from waffle.mixins import WaffleSwitchMixin
 
@@ -493,11 +491,6 @@ class AssetViewSet(
     """
 
     waffle_switch = "core"
-
-    renderer_classes = (
-        *api_settings.DEFAULT_RENDERER_CLASSES,
-        drf_csv_renderers.PaginatedCSVRenderer,
-    )
 
     # NOTE: Order of mixins/base class is important!  Mixins that override
     #   methods *must come first* in order to properly override.  This is

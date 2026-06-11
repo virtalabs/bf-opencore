@@ -58,7 +58,6 @@ dependencies = [
     { name = "django-simple-history" },
     { name = "django-waffle" },
     { name = "djangorestframework" },
-    { name = "djangorestframework-csv" },
     { name = "drf-spectacular" },
     { name = "netaddr" },
     { name = "psycopg", extra = ["binary"] },
@@ -106,7 +105,6 @@ requires-dist = [
     { name = "django-test-migrations", marker = "extra == 'dev'" },
     { name = "django-waffle", specifier = ">=4.0" },
     { name = "djangorestframework", specifier = ">=3.16,<3.17" },
-    { name = "djangorestframework-csv", specifier = ">=3.0" },
     { name = "drf-spectacular", specifier = "<=0.29" },
     { name = "freezegun", marker = "extra == 'dev'", specifier = ">=1.0,<3" },
     { name = "gunicorn", marker = "extra == 'prod'", specifier = ">=23.0" },
@@ -478,18 +476,6 @@ dependencies = [
 sdist = { url = "https://files.pythonhosted.org/packages/8a/95/5376fe618646fde6899b3cdc85fd959716bb67542e273a76a80d9f326f27/djangorestframework-3.16.1.tar.gz", hash = "sha256:166809528b1aced0a17dc66c24492af18049f2c9420dbd0be29422029cfc3ff7", size = 1089735 }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/b0/ce/bf8b9d3f415be4ac5588545b5fcdbbb841977db1c1d923f7568eeabe1689/djangorestframework-3.16.1-py3-none-any.whl", hash = "sha256:33a59f47fb9c85ede792cbf88bde71893bcda0667bc573f784649521f1102cec", size = 1080442 },
-]
-
-[[package]]
-name = "djangorestframework-csv"
-version = "3.0.2"
-source = { registry = "https://pypi.org/simple" }
-dependencies = [
-    { name = "djangorestframework" },
-]
-sdist = { url = "https://files.pythonhosted.org/packages/3c/5d/d2862d98a1eaca0d05d0e2d0a4278fbcd8ff8353460edfb18c1d9969036b/djangorestframework-csv-3.0.2.tar.gz", hash = "sha256:b269b692feda1971e1342f395a21d339c6a16d2961ff64357a9a6188f27af10f", size = 32039 }
-wheels = [
-    { url = "https://files.pythonhosted.org/packages/e0/de/d063e4e0e0a7225a2a2b8e76fa690b12a9deb0c5c60f73afe0cffe9da38a/djangorestframework_csv-3.0.2-py3-none-any.whl", hash = "sha256:d1bcfbaaeaa5145af6bb0985a36a5bbf2f853d9961c722f69c7b0c9c3bcc269a", size = 49681 },
 ]
 
 [[package]]
