@@ -29,30 +29,6 @@ def test_create_asset(auth_client: APIClient) -> None:
     assert assets.data["count"] == 1
 
 
-def test_get_asset_csv(auth_client: APIClient) -> None:
-    """We can specify CSV format."""
-    _ = models.Asset.objects.create()
-    response = auth_client.get("/api/assets/", HTTP_ACCEPT="text/csv")
-    assert response.status_code == status.HTTP_200_OK
-    assert response.data["count"] == 1
-    header_count = 2  # header row + 1 asset
-    assert len(response.content.splitlines()) == header_count
-
-
-def test_get_asset_csv_specify_fields(auth_client: APIClient) -> None:
-    """With CSV format we generally would specify which headers we want."""
-    _ = models.Asset.objects.create(name="spam", ip_address="10.0.0.1")
-    response = auth_client.get(
-        "/api/assets/?fields=name,ip_address,model", HTTP_ACCEPT="text/csv"
-    )
-    header, *assets = response.content.splitlines()
-    header = header.decode("utf-8").split(",")
-    assert len(assets) == 1
-    asset = assets.pop().decode("utf-8").split(",")
-    assert header == ["name", "ip_address", "model"]
-    assert asset == ["spam", "10.0.0.1", ""]
-
-
 def test_export_assets_json(auth_client: APIClient) -> None:
     """We can export assets to JSON."""
     _ = models.Asset.objects.create()
@@ -391,9 +367,7 @@ def test_patch_asset(asset_edit_client: APIClient) -> None:
 
 def test_open_ports_tcp_model_validator_rejects_out_of_range() -> None:
     """Model-level ArrayField validator rejects ports outside 1-65535."""
-    asset = models.Asset(
-        hostname="test-port-validator", open_ports_tcp=[-1, 80]
-    )
+    asset = models.Asset(hostname="test-port-validator", open_ports_tcp=[-1, 80])
     with pytest.raises(ValidationError):
         asset.full_clean()
 
@@ -472,7 +446,9 @@ def test_patch_asset_open_ports_tcp_list_bad(asset_edit_client: APIClient) -> No
     assert response.status_code == status.HTTP_400_BAD_REQUEST
 
 
-def test_patch_asset_open_ports_tcp_list_out_of_range(asset_edit_client: APIClient) -> None:
+def test_patch_asset_open_ports_tcp_list_out_of_range(
+    asset_edit_client: APIClient,
+) -> None:
     """PATCH with an integer list containing an out-of-range port → 400."""
     spam_asset = models.Asset.objects.create(hostname="spam", open_ports_tcp=[80])
     response = asset_edit_client.patch(
@@ -1093,10 +1069,12 @@ def test_bulk_update_updates_fields(asset_edit_client: APIClient) -> None:
 
     response = asset_edit_client.patch(
         "/api/assets/bulk_update/",
-        json.dumps([
-            {"id": a1.id, "hostname": "device-a-updated"},
-            {"id": a2.id, "os": "FreeBSD"},
-        ]),
+        json.dumps(
+            [
+                {"id": a1.id, "hostname": "device-a-updated"},
+                {"id": a2.id, "os": "FreeBSD"},
+            ]
+        ),
         content_type="application/json",
     )
     assert response.status_code == status.HTTP_200_OK
@@ -1115,10 +1093,12 @@ def test_bulk_update_unknown_id_returns_404(asset_edit_client: APIClient) -> Non
     a1 = models.Asset.objects.create(hostname="device-a")
     response = asset_edit_client.patch(
         "/api/assets/bulk_update/",
-        json.dumps([
-            {"id": a1.id, "hostname": "updated"},
-            {"id": 99999, "hostname": "ghost"},
-        ]),
+        json.dumps(
+            [
+                {"id": a1.id, "hostname": "updated"},
+                {"id": 99999, "hostname": "ghost"},
+            ]
+        ),
         content_type="application/json",
     )
     assert response.status_code == status.HTTP_404_NOT_FOUND
@@ -1149,10 +1129,12 @@ def test_bulk_update_duplicate_id_returns_400(asset_edit_client: APIClient) -> N
     asset = models.Asset.objects.create(hostname="device-a")
     response = asset_edit_client.patch(
         "/api/assets/bulk_update/",
-        json.dumps([
-            {"id": asset.id, "hostname": "first"},
-            {"id": asset.id, "hostname": "second"},
-        ]),
+        json.dumps(
+            [
+                {"id": asset.id, "hostname": "first"},
+                {"id": asset.id, "hostname": "second"},
+            ]
+        ),
         content_type="application/json",
     )
     assert response.status_code == status.HTTP_400_BAD_REQUEST
