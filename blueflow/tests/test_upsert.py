@@ -16,13 +16,22 @@ from blueflow import models
 # Full scanner payload — used for contract tests
 SCANNER_FULL_PAYLOAD = {
     "ip_address": "10.0.0.155",
-    "open_ports_tcp": [2575],
+    "services": [{"port": 2575, "protocol": "tcp"}],
     "mac_address": "00:03:b1:b5:b6:48",
     "name": "Infuse-O-Matic Peach B+",
     "provenance": "HL7 PRT-16",
     "last_seen": "2019-01-02T12:37:22.938687-08:00",
     "client_id": "mymachine.example.com",
 }
+
+
+def _service_pairs(asset: "models.Asset") -> set[tuple[int, str]]:
+    """``{(port, protocol), ...}`` for an asset's through-table rows."""
+    return set(
+        asset.port_protocols.values_list(
+            "port_protocol__port", "port_protocol__protocol"
+        )
+    )
 
 
 def _put_upsert(client: APIClient, payload: dict) -> object:
@@ -40,13 +49,14 @@ def _put_upsert(client: APIClient, payload: dict) -> object:
 
 
 def test_upsert_create_full_payload(asset_edit_client: APIClient) -> None:
-    """PUT full scanner payload, assert 201, verify ip_address, name, open_ports_tcp."""
+    """PUT full scanner payload, assert 201, verify ip_address, name, services."""
     response = _put_upsert(asset_edit_client, SCANNER_FULL_PAYLOAD)
     assert response.status_code == status.HTTP_201_CREATED
     assert response.data["ip_address"] == "10.0.0.155"
     assert response.data["name"] == "Infuse-O-Matic Peach B+"
-    assert response.data["open_ports_tcp"] == [2575]
     assert models.Asset.objects.count() == 1
+    asset = models.Asset.objects.get()
+    assert _service_pairs(asset) == {(2575, "tcp")}
 
 
 def test_upsert_update_by_mac(asset_edit_client: APIClient) -> None:
@@ -125,24 +135,51 @@ def test_upsert_unknown_fields_dropped(asset_edit_client: APIClient) -> None:
     assert not hasattr(asset, "connect_port_tcp")
 
 
-def test_upsert_open_ports_merge(asset_edit_client: APIClient) -> None:
-    """PUT with open_ports_tcp merges with existing ports."""
+def test_upsert_services_merge(asset_edit_client: APIClient) -> None:
+    """Two upserts union their services; overlapping pairs stay one row."""
     payload1 = {
         "mac_address": "11:22:33:44:55:66",
-        "open_ports_tcp": [80, 443],
+        "services": [
+            {"port": 80, "protocol": "tcp"},
+            {"port": 443, "protocol": "tcp"},
+        ],
     }
     response1 = _put_upsert(asset_edit_client, payload1)
     assert response1.status_code == status.HTTP_201_CREATED
-    assert set(response1.data["open_ports_tcp"]) == {80, 443}
 
-    # Second PUT adds new ports, keeps existing
     payload2 = {
         "mac_address": "11:22:33:44:55:66",
-        "open_ports_tcp": [443, 8080],
+        "services": [
+            {"port": 443, "protocol": "tcp"},
+            {"port": 8080, "protocol": "tcp"},
+        ],
     }
     response2 = _put_upsert(asset_edit_client, payload2)
     assert response2.status_code == status.HTTP_200_OK
-    assert set(response2.data["open_ports_tcp"]) == {80, 443, 8080}
+
+    asset = models.Asset.objects.get(mac_address="11:22:33:44:55:66")
+    assert _service_pairs(asset) == {
+        (80, "tcp"),
+        (443, "tcp"),
+        (8080, "tcp"),
+    }
+
+
+def test_upsert_services_tcp_and_udp_coexist(asset_edit_client: APIClient) -> None:
+    """The same port on TCP and UDP are two separate rows (e.g. DNS on 53)."""
+    response = _put_upsert(
+        asset_edit_client,
+        {
+            "mac_address": "11:22:33:44:55:66",
+            "services": [
+                {"port": 53, "protocol": "tcp"},
+                {"port": 53, "protocol": "udp"},
+            ],
+        },
+    )
+    assert response.status_code == status.HTTP_201_CREATED
+    asset = models.Asset.objects.get(mac_address="11:22:33:44:55:66")
+    assert _service_pairs(asset) == {(53, "tcp"), (53, "udp")}
 
 
 # ---------------------------------------------------------------------------
@@ -188,7 +225,7 @@ def test_cpe_matches_expected_after_upsert_and_get(
         "product": "brightspeed_elite_select",
         "app_sw_version": "11.2.0",
         "device_class": "CT",
-        "open_ports_tcp": [5355],
+        "services": [{"port": 5355, "protocol": "tcp"}],
     }
     expected_cpe = "cpe:2.3:h:gehealthcare:brightspeed_elite_select:-:*:*:*:*:*:*:*"
 
@@ -344,31 +381,56 @@ def test_upsert_null_mac_400(asset_edit_client: APIClient) -> None:
 
 
 def test_upsert_invalid_port_400(asset_edit_client: APIClient) -> None:
-    """PUT with out-of-range port in open_ports_tcp returns 400."""
+    """PUT with out-of-range port in services returns 400."""
     response = _put_upsert(
         asset_edit_client,
-        {"mac_address": "11:22:33:44:55:66", "open_ports_tcp": [70000]},
+        {
+            "mac_address": "11:22:33:44:55:66",
+            "services": [{"port": 70000, "protocol": "tcp"}],
+        },
     )
     assert response.status_code == status.HTTP_400_BAD_REQUEST
 
 
 def test_upsert_non_numeric_port_400(asset_edit_client: APIClient) -> None:
-    """PUT with non-integer in open_ports_tcp returns 400."""
-    response = _put_upsert(
-        asset_edit_client,
-        {"mac_address": "11:22:33:44:55:66", "open_ports_tcp": ["abc"]},
-    )
-    assert response.status_code == status.HTTP_400_BAD_REQUEST
-
-
-def test_upsert_open_ports_normalized(asset_edit_client: APIClient) -> None:
-    """PUT with duplicate/unsorted ports stores them deduplicated and sorted."""
+    """PUT with non-integer port in services returns 400."""
     response = _put_upsert(
         asset_edit_client,
         {
             "mac_address": "11:22:33:44:55:66",
-            "open_ports_tcp": [443, 80, 443, 8080, 80],
+            "services": [{"port": "abc", "protocol": "tcp"}],
+        },
+    )
+    assert response.status_code == status.HTTP_400_BAD_REQUEST
+
+
+def test_upsert_invalid_protocol_400(asset_edit_client: APIClient) -> None:
+    """PUT with unsupported protocol returns 400."""
+    response = _put_upsert(
+        asset_edit_client,
+        {
+            "mac_address": "11:22:33:44:55:66",
+            "services": [{"port": 80, "protocol": "sctp"}],
+        },
+    )
+    assert response.status_code == status.HTTP_400_BAD_REQUEST
+
+
+def test_upsert_services_deduped(asset_edit_client: APIClient) -> None:
+    """PUT with duplicate ``(port, protocol)`` pairs stores each pair once."""
+    response = _put_upsert(
+        asset_edit_client,
+        {
+            "mac_address": "11:22:33:44:55:66",
+            "services": [
+                {"port": 80, "protocol": "tcp"},
+                {"port": 443, "protocol": "tcp"},
+                {"port": 80, "protocol": "tcp"},
+                {"port": 8080, "protocol": "tcp"},
+                {"port": 443, "protocol": "tcp"},
+            ],
         },
     )
     assert response.status_code == status.HTTP_201_CREATED
-    assert response.data["open_ports_tcp"] == [80, 443, 8080]
+    asset = models.Asset.objects.get(mac_address="11:22:33:44:55:66")
+    assert _service_pairs(asset) == {(80, "tcp"), (443, "tcp"), (8080, "tcp")}
