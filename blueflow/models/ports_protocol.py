@@ -25,10 +25,12 @@ class PortProtocol(models.Model):
         return f"{self.port}: {self.protocol}"
 
 
-class AssetPortPortocols(models.Model):
+class AssetPortPortocol(models.Model):
     """Maps an asset to any number of port_protocols."""
 
-    asset = models.ForeignKey(asset.Asset, on_delete=models.CASCADE)
+    asset = models.ForeignKey(
+        asset.Asset, related_name="port_protocols", on_delete=models.CASCADE
+    )
     port_protocol = models.ForeignKey(PortProtocol, on_delete=models.CASCADE)
 
     def __str__(self) -> str:
