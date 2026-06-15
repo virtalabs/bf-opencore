@@ -23,7 +23,6 @@ from blueflow.utils import NullUnlessChanged
 
 from . import constants
 from .asset_custom_field import AssetCustomField, AssetCustomFieldName
-from .asset_manager import AssetManager, AssetQuerySet
 from .group import AssetGroup, Group
 from .tag import AssetTag, Tag
 from .vulnerability import AssetVulnerability, Vulnerability
@@ -86,10 +85,6 @@ class Asset(TimeStampedModel):
         AssetCustomFieldName, through=AssetCustomField
     )
     history = HistoricalRecords()
-
-    # Our manager is a meld of AssetManager and the methods from AssetQuerySet
-    # https://docs.djangoproject.com/en/2.0/topics/db/managers/#from-queryset
-    objects = AssetManager.from_queryset(AssetQuerySet)()
 
     class Meta:
         constraints = (
@@ -194,6 +189,21 @@ class Asset(TimeStampedModel):
         else:
             d_name = f"Asset-{self.id}"
         return d_name
+
+    @property
+    def services(self) -> dict[int, list[str]]:
+        """A list of services associated with this asset.
+
+        Assumes you'd prefetched as needed
+        """
+        services = {}
+        for pp in self.port_protocols.all():
+            port = int(pp.port_protocol.port)
+            protocol = str(pp.port_protocol.protocol)
+            _list: list[str] = services.setdefault(port, [])
+            _list.append(protocol)
+            services[port] = _list
+        return services
 
     @display_name.setter
     def display_name(self, value):

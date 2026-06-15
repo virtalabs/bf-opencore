@@ -512,7 +512,9 @@ class AssetViewSet(
     #
     # Only `usage` is currently prefetched (see test_asset_list_usage_does_
     # not_n_plus_one). The remaining relations above are unaddressed.
-    queryset = models.Asset.objects.prefetch_related("usage")
+    queryset = models.Asset.objects.prefetch_related("usage").prefetch_related(
+        "port_protocols__port_protocol"
+    )
     serializer_class = AssetSerializer
 
     # Documentation on search filters:
