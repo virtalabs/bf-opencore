@@ -7,7 +7,6 @@ http://pytest-django.readthedocs.io/en/latest/helpers.html
 import json
 
 import pytest
-from django.core.exceptions import ValidationError
 from freezegun import freeze_time
 from rest_framework import status
 from rest_framework.test import APIClient
@@ -143,23 +142,6 @@ def test_api_create_get_asset(
     assert assets.data["count"] == 1
     asset = assets.data["results"].pop()
     assert asset["hostname"] == "nospam"
-
-
-def test_api_create_asset_open_ports(asset_edit_client: APIClient) -> None:
-    """Create an asset with authorized client.
-
-    As if from http://localhost:8000/inventory/add/.
-    """
-    client = asset_edit_client
-    post_data = {"open_ports_tcp": "8000 80,443, 80"}
-    response = client.post(
-        "/api/assets/", json.dumps(post_data), content_type="application/json"
-    )
-    assert response.status_code == status.HTTP_201_CREATED
-    assets = client.get("/api/assets/")
-    assert assets.data["count"] == 1
-    asset = assets.data["results"].pop()
-    assert asset["open_ports_tcp"] == [80, 443, 8000]
 
 
 def test_api_create_patch_asset(
@@ -363,174 +345,6 @@ def test_patch_asset(asset_edit_client: APIClient) -> None:
     # hostname has changed.
     spam_asset = models.Asset.objects.get(id=spam_asset.id)
     assert spam_asset.hostname == "nospam"
-
-
-def test_open_ports_tcp_model_validator_rejects_out_of_range() -> None:
-    """Model-level ArrayField validator rejects ports outside 1-65535."""
-    asset = models.Asset(hostname="test-port-validator", open_ports_tcp=[-1, 80])
-    with pytest.raises(ValidationError):
-        asset.full_clean()
-
-
-def test_patch_asset_open_ports_tcp_string(asset_edit_client: APIClient) -> None:
-    """Patching ports with a string of integers.
-
-    We try to be helpful, and sort the resulting list & make it unique.
-    """
-    client = asset_edit_client
-    spam_asset = models.Asset.objects.create(hostname="spam")
-    # Verify that hostname is what we set it to
-    assert spam_asset.hostname == "spam"
-    assert spam_asset.open_ports_tcp == []
-    # Send PATCH request
-    # Port list is entered by a slob who uses inconsistent separators,
-    # not ordered, and repeated values!
-    port_string = "8000 80,443, 80"
-    response = client.patch(
-        f"/api/assets/{spam_asset.id}/",
-        json.dumps({"open_ports_tcp": port_string}),
-        content_type="application/json",
-    )
-    assert response.status_code == status.HTTP_200_OK
-    # Query for the new version of spam_asset, verify that the list of
-    # ports is correct.
-    spam_asset = models.Asset.objects.get(id=spam_asset.id)
-    # But no fear, the stored list of ports is unique and sorted.
-    assert spam_asset.open_ports_tcp == [80, 443, 8000]
-
-
-def test_patch_asset_open_ports_tcp_list(asset_edit_client: APIClient) -> None:
-    """Patching ports with a string of integers.
-
-    We try to be helpful, and sort the resulting list & make it unique.
-    """
-    client = asset_edit_client
-    spam_asset = models.Asset.objects.create(hostname="spam")
-    # Verify that hostname is what we set it to
-    assert spam_asset.hostname == "spam"
-    assert spam_asset.open_ports_tcp == []
-    # Send PATCH request
-    # Port list is entered by a slob who has repeated values and isn't ordered.
-    port_list = [8000, 80, 443, 80]
-    response = client.patch(
-        f"/api/assets/{spam_asset.id}/",
-        json.dumps({"open_ports_tcp": port_list}),
-        content_type="application/json",
-    )
-    assert response.status_code == status.HTTP_200_OK
-    # Query for the new version of spam_asset, verify that the list of
-    # ports is correct.
-    spam_asset = models.Asset.objects.get(id=spam_asset.id)
-    # But no fear, the stored list of ports is unique and sorted.
-    assert spam_asset.open_ports_tcp == [80, 443, 8000]
-
-
-def test_patch_asset_open_ports_tcp_list_bad(asset_edit_client: APIClient) -> None:
-    """Patching ports with a string of integers.
-
-    We try to be helpful, and sort the resulting list & make it unique.
-    """
-    client = asset_edit_client
-    spam_asset = models.Asset.objects.create(hostname="spam")
-    # Verify that hostname is what we set it to
-    assert spam_asset.hostname == "spam"
-    assert spam_asset.open_ports_tcp == []
-    # Send PATCH request
-    # Port list has a bad value
-    port_list = [80, 443, "foo"]
-    response = client.patch(
-        f"/api/assets/{spam_asset.id}/",
-        json.dumps({"open_ports_tcp": port_list}),
-        content_type="application/json",
-    )
-    assert response.status_code == status.HTTP_400_BAD_REQUEST
-
-
-def test_patch_asset_open_ports_tcp_list_out_of_range(
-    asset_edit_client: APIClient,
-) -> None:
-    """PATCH with an integer list containing an out-of-range port → 400."""
-    spam_asset = models.Asset.objects.create(hostname="spam", open_ports_tcp=[80])
-    response = asset_edit_client.patch(
-        f"/api/assets/{spam_asset.id}/",
-        json.dumps({"open_ports_tcp": [65536, 80]}),
-        content_type="application/json",
-    )
-    assert response.status_code == status.HTTP_400_BAD_REQUEST
-    spam_asset.refresh_from_db()
-    assert spam_asset.open_ports_tcp == [80]
-
-
-def test_patch_asset_open_ports_tcp_bad(asset_edit_client: APIClient) -> None:
-    """Patching ports with a string of integers... but they are bad."""
-    client = asset_edit_client
-    spam_asset = models.Asset.objects.create(hostname="spam")
-    # Verify that hostname is what we set it to
-    assert spam_asset.hostname == "spam"
-    assert spam_asset.open_ports_tcp == []
-    # Send PATCH request with bad port
-    port_string = "80,443, 66000"
-    response = client.patch(
-        f"/api/assets/{spam_asset.id}/",
-        json.dumps({"open_ports_tcp": port_string}),
-        content_type="application/json",
-    )
-    assert response.status_code == status.HTTP_400_BAD_REQUEST
-    # Query for the new version of spam_asset, verify that the list of
-    # ports is correct.
-    spam_asset = models.Asset.objects.get(id=spam_asset.id)
-    # Port list is unchanged
-    assert spam_asset.open_ports_tcp == []
-
-
-def test_patch_asset_open_ports_tcp_null(asset_edit_client: APIClient) -> None:
-    """Patching ports with Null sets the port list to empty.
-
-    We try to be helpful, and sort the resulting list & make it unique.
-    """
-    client = asset_edit_client
-    spam_asset = models.Asset.objects.create(hostname="spam", open_ports_tcp=[80, 443])
-    # Verify that hostname is what we set it to
-    assert spam_asset.open_ports_tcp == [80, 443]
-    # Send PATCH request
-    # Empty port string
-    port_string = None
-    response = client.patch(
-        f"/api/assets/{spam_asset.id}/",
-        json.dumps({"open_ports_tcp": port_string}),
-        content_type="application/json",
-    )
-    assert response.status_code == status.HTTP_200_OK
-    # Query for the new version of spam_asset, verify that the list of
-    # ports is correct.
-    spam_asset = models.Asset.objects.get(id=spam_asset.id)
-    # Port list is empty
-    assert spam_asset.open_ports_tcp == []
-
-
-def test_patch_asset_open_ports_tcp_empty(asset_edit_client: APIClient) -> None:
-    """Patching with empty string sets the port list to empty.
-
-    We try to be helpful, and sort the resulting list & make it unique.
-    """
-    client = asset_edit_client
-    spam_asset = models.Asset.objects.create(hostname="spam", open_ports_tcp=[80, 443])
-    # Verify that hostname is what we set it to
-    assert spam_asset.open_ports_tcp == [80, 443]
-    # Send PATCH request
-    # Empty port string
-    port_string = ""
-    response = client.patch(
-        f"/api/assets/{spam_asset.id}/",
-        json.dumps({"open_ports_tcp": port_string}),
-        content_type="application/json",
-    )
-    assert response.status_code == status.HTTP_200_OK
-    # Query for the new version of spam_asset, verify that the list of
-    # ports is correct.
-    spam_asset = models.Asset.objects.get(id=spam_asset.id)
-    # Port list is empty
-    assert spam_asset.open_ports_tcp == []
 
 
 def test_set_name_empty(asset_edit_client: APIClient) -> None:
@@ -931,7 +745,7 @@ def test_upsert_many_fields(asset_edit_client: APIClient) -> None:
         json.dumps(
             {
                 "ip_address": "10.0.0.155",
-                "open_ports_tcp": [2575],
+                "services": [{"port": 2575, "protocol": "tcp"}],
                 "mac_address": "00:03:b1:b5:b6:48",
                 "name": "Hospira Plum A+",
             }
@@ -956,45 +770,6 @@ def test_upsert_bad_key_ignored(asset_edit_client: APIClient) -> None:
     )
     assert response.status_code == status.HTTP_201_CREATED
     assert models.Asset.objects.count() == 1
-
-
-def test_upsert_open_ports_tcp_out_of_range(asset_edit_client: APIClient) -> None:
-    """PUT with out-of-range port → 400, no asset created."""
-    response = asset_edit_client.put(
-        "/api/assets/upsert/",
-        json.dumps({"mac_address": "11:22:33:44:55:66", "open_ports_tcp": [0, 80]}),
-        content_type="application/json",
-    )
-    assert response.status_code == status.HTTP_400_BAD_REQUEST
-    assert models.Asset.objects.count() == 0
-
-
-def test_upsert_open_ports_tcp_above_max(asset_edit_client: APIClient) -> None:
-    """PUT with port above 65535 → 400, no asset created."""
-    response = asset_edit_client.put(
-        "/api/assets/upsert/",
-        json.dumps({"mac_address": "11:22:33:44:55:66", "open_ports_tcp": [65536, 80]}),
-        content_type="application/json",
-    )
-    assert response.status_code == status.HTTP_400_BAD_REQUEST
-    assert models.Asset.objects.count() == 0
-
-
-def test_upsert_open_ports_tcp_dedup_sort(asset_edit_client: APIClient) -> None:
-    """PUT with duplicate, unsorted ports → stored deduplicated and sorted."""
-    response = asset_edit_client.put(
-        "/api/assets/upsert/",
-        json.dumps(
-            {
-                "mac_address": "11:22:33:44:55:66",
-                "open_ports_tcp": [8000, 80, 443, 80],
-            }
-        ),
-        content_type="application/json",
-    )
-    assert response.status_code == status.HTTP_201_CREATED
-    asset = models.Asset.objects.get()
-    assert asset.open_ports_tcp == [80, 443, 8000]
 
 
 @pytest.mark.parametrize(

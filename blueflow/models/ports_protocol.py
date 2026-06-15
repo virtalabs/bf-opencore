@@ -3,7 +3,7 @@ import typing
 from django.core import validators
 from django.db import models
 
-from . import asset, constants
+from . import constants
 
 
 class PortProtocol(models.Model):
@@ -42,7 +42,7 @@ class AssetPortProtocol(models.Model):
     """Maps an asset to any number of port_protocols."""
 
     asset = models.ForeignKey(
-        asset.Asset, related_name="port_protocols", on_delete=models.CASCADE
+        "blueflow.Asset", related_name="port_protocols", on_delete=models.CASCADE
     )
     port_protocol = models.ForeignKey(PortProtocol, on_delete=models.CASCADE)
 

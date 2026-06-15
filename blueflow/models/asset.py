@@ -8,11 +8,9 @@ from collections import Counter
 from functools import reduce
 from operator import or_
 
-import django.contrib.postgres.fields as pg_fields
 import netaddr
 import packaging.version
 from django.apps import apps
-from django.core.exceptions import ValidationError
 from django.db import models
 from django.db.models import Count, Max, Q
 from django_extensions.db.models import TimeStampedModel
@@ -21,17 +19,13 @@ from simple_history.models import HistoricalRecords
 
 from blueflow.utils import NullUnlessChanged
 
-from . import asset_custom_field, constants, group, tag, vulnerability
+from . import asset_custom_field, group, ports_protocol, tag, vulnerability
 
 logger = logging.getLogger(__name__)
 
 
 def validate_tcp_port_range(ports: list[int]) -> None:
-    if not all(constants.PORT_MIN <= p <= constants.PORT_MAX for p in ports):
-        msg = (
-            f"All TCP ports must be in range {constants.PORT_MIN}-{constants.PORT_MAX}."
-        )
-        raise ValidationError(msg)
+    """Retained as an import target for historical migrations only."""
 
 
 class Asset(TimeStampedModel):
@@ -67,12 +61,6 @@ class Asset(TimeStampedModel):
     )
     last_scanned = models.DateTimeField(blank=True, null=True)
     last_pinged = models.DateTimeField(blank=True, null=True)
-    open_ports_tcp = pg_fields.ArrayField(
-        models.IntegerField(),
-        default=list,
-        verbose_name="Open TCP ports",
-        validators=[validate_tcp_port_range],
-    )
     external_keys = models.JSONField(blank=True, null=True)
     groups = models.ManyToManyField(group.Group, through=group.AssetGroup)
     tags = models.ManyToManyField(tag.Tag, through=tag.AssetTag)
@@ -214,28 +202,20 @@ class Asset(TimeStampedModel):
         logger.info("Setting asset name for id=%s to %s", self.id, value)
         self.name = value
 
-    def open_ports_tcp_add(self, newports: str | list[int]) -> bool:
-        """Add one or many ports to the list of open TCP ports.
+    def add_service(self, port: int, protocol: str) -> bool:
+        """Idempotently link this asset to a ``(port, protocol)`` observation.
 
-         'newports' may be an integer (possibly as string) or list of integers.
-
-        Maintains self.open_ports_tcp as a sorted list with no duplicates.
-
-        Returns True if any ports were added to the set, False otherwise.
+        The shared ``PortProtocol`` lookup row is created on first use; the
+        per-asset through row is created on first reference. Returns True if a
+        new link was created, False if it already existed.
         """
-        port_list = [int(newports)] if isinstance(newports, str) else newports
-        unique = {int(p) for p in port_list}
-        ports: list[int] = sorted(set.union(set(self.open_ports_tcp), unique))
-        if ports != self.open_ports_tcp:
-            added = set(ports) - set(self.open_ports_tcp)
-            # The new list of ports is larger
-            if added == set():
-                msg = "The new list of ports must always be larger"
-                raise ValueError(msg)
-            logger.debug("Added new TCP ports %s", added)
-            self.open_ports_tcp = ports
-            return True
-        return False
+        port_protocol, _ = ports_protocol.PortProtocol.objects.get_or_create(
+            port=port, protocol=protocol
+        )
+        _, created = ports_protocol.AssetPortProtocol.objects.get_or_create(
+            asset=self, port_protocol=port_protocol
+        )
+        return created
 
     def network_qset(self):
         """Return queryset for all networks the asset belongs to.
