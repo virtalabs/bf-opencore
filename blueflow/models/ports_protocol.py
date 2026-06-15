@@ -13,8 +13,8 @@ class PortProtocol(models.Model):
     """
 
     class Protocols(models.TextChoices):
-        tcp = "TCP"
-        udp = "UDP"
+        TCP = "tcp"
+        UDP = "udp"
 
     # https://en.wikipedia.org/wiki/List_of_TCP_and_UDP_port_numbers
     port = models.PositiveSmallIntegerField(
@@ -24,7 +24,7 @@ class PortProtocol(models.Model):
         ]
     )
     protocol = models.CharField(
-        choices=Protocols, default=Protocols.tcp, blank=False, null=False
+        choices=Protocols.choices, default=Protocols.TCP, blank=False, null=False
     )
 
     class Meta:
