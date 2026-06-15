@@ -71,6 +71,18 @@ class MiniAssetVulnerabilitySerializer(serializers.HyperlinkedModelSerializer):
         )
 
 
+class AssetServiceSerializer(serializers.Serializer):
+    """A single ``(port, protocol)`` observation on an asset.
+
+    Wire shape matches the topology schema's ``services[]`` element.
+    """
+
+    port = serializers.IntegerField(
+        min_value=models.PORT_MIN, max_value=models.PORT_MAX
+    )
+    protocol = serializers.ChoiceField(choices=models.PortProtocol.Protocols.choices)
+
+
 class AssetUpsertSerializer(serializers.Serializer):
     """Input serializer for PUT /api/assets/upsert/.
 
@@ -100,12 +112,7 @@ class AssetUpsertSerializer(serializers.Serializer):
         required=False, allow_blank=True, allow_null=True
     )
     external_keys = serializers.JSONField(required=False, allow_null=True)
-    open_ports_tcp = serializers.ListField(
-        child=serializers.IntegerField(
-            min_value=models.PORT_MIN, max_value=models.PORT_MAX
-        ),
-        required=False,
-    )
+    services = AssetServiceSerializer(many=True, required=False)
 
     def validate(self, attrs: dict) -> dict:
         """Map TapirXL ``device_class`` to ``category`` when Vector is bypassed."""
@@ -114,9 +121,19 @@ class AssetUpsertSerializer(serializers.Serializer):
             attrs["category"] = device_class
         return attrs
 
-    def validate_open_ports_tcp(self, ports_list: list[int]) -> list[int]:
-        """Deduplicate and sort ports."""
-        return sorted(set(ports_list))
+    def validate_services(
+        self, services: list[dict[str, int | str]]
+    ) -> list[dict[str, int | str]]:
+        """Deduplicate ``(port, protocol)`` pairs."""
+        seen: set[tuple[int, str]] = set()
+        deduped: list[dict[str, int | str]] = []
+        for s in services:
+            key = (s["port"], s["protocol"])
+            if key in seen:
+                continue
+            seen.add(key)
+            deduped.append(s)
+        return deduped
 
 
 # Usage field schema. Index follows Python's datetime.weekday() / ISO 8601:
@@ -970,24 +987,26 @@ class AssetViewSet(
                 )
 
         created = False
-        try:
-            mac_address = validated.pop("mac_address")
-            new_ports = validated.pop("open_ports_tcp", [])
-            asset = models.Asset.objects.get(mac_address=mac_address)
-            if new_ports:
-                merged = sorted(set(asset.open_ports_tcp) | set(new_ports))
-                if merged != asset.open_ports_tcp:
-                    validated["open_ports_tcp"] = merged
-            for k, v in validated.items():
-                setattr(asset, k, v)
-            asset.save()
-        except models.Asset.DoesNotExist:
-            created = True
-            asset = models.Asset.objects.create(
-                mac_address=mac_address,
-                open_ports_tcp=new_ports,
-                **validated,
-            )
+        mac_address = validated.pop("mac_address")
+        new_services = validated.pop("services", [])
+        with transaction.atomic():
+            try:
+                asset = models.Asset.objects.get(mac_address=mac_address)
+                for k, v in validated.items():
+                    setattr(asset, k, v)
+                asset.save()
+            except models.Asset.DoesNotExist:
+                created = True
+                asset = models.Asset.objects.create(
+                    mac_address=mac_address, **validated
+                )
+            for service in new_services:
+                port_protocol, _ = models.PortProtocol.objects.get_or_create(
+                    port=service["port"], protocol=service["protocol"]
+                )
+                models.AssetPortProtocol.objects.get_or_create(
+                    asset=asset, port_protocol=port_protocol
+                )
 
         # TODO(taylorcochran): timestamp is server-derived (timezone.now()) at
         #   the call site today. Switch to network-derived time from the
