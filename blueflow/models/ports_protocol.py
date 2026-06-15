@@ -1,3 +1,6 @@
+import typing
+
+from django.core import validators
 from django.db import models
 
 from . import asset, constants
@@ -14,12 +17,22 @@ class PortProtocol(models.Model):
         udp = "UDP"
 
     # https://en.wikipedia.org/wiki/List_of_TCP_and_UDP_port_numbers
-    port = models.IntegerField(
-        min_value=constants.PORT_MIN, max_value=constants.PORT_MAX, unique=True
+    port = models.PositiveSmallIntegerField(
+        validators=[
+            validators.MinValueValidator(constants.PORT_MIN),
+            validators.MaxValueValidator(constants.PORT_MAX),
+        ]
     )
     protocol = models.CharField(
         choices=Protocols, default=Protocols.tcp, blank=False, null=False
     )
+
+    class Meta:
+        constraints: typing.ClassVar = [
+            models.UniqueConstraint(
+                fields=("port", "protocol"), name="unique_port_protocol"
+            )
+        ]
 
     def __str__(self) -> str:
         return f"{self.port}: {self.protocol}"
