@@ -189,7 +189,6 @@ class AssetSerializer(serializers.HyperlinkedModelSerializer):
             "hours with zero observations are omitted from the response."
         ),
     )
-    cpe = serializers.CharField(allow_blank=False, allow_null=False)
     manufacturer = serializers.CharField()
 
     class Meta:

@@ -64,6 +64,7 @@ def test_upsert_update_by_mac(asset_edit_client: APIClient) -> None:
     """PUT twice same MAC, assert 200 on second, verify field update."""
     payload1 = {
         "mac_address": "11:22:33:44:55:66",
+        "manufacturer": "Acme",
         "ip_address": "10.0.0.1",
         "name": "Original Name",
     }
@@ -72,6 +73,7 @@ def test_upsert_update_by_mac(asset_edit_client: APIClient) -> None:
 
     payload2 = {
         "mac_address": "11:22:33:44:55:66",
+        "manufacturer": "Acme",
         "ip_address": "10.0.0.2",
         "name": "Updated Name",
     }
@@ -83,8 +85,11 @@ def test_upsert_update_by_mac(asset_edit_client: APIClient) -> None:
 
 
 def test_upsert_minimal(asset_edit_client: APIClient) -> None:
-    """PUT only mac_address, assert 201."""
-    response = _put_upsert(asset_edit_client, {"mac_address": "00:03:b1:b5:b6:48"})
+    """PUT mac_address + manufacturer (the required minimum), assert 201."""
+    response = _put_upsert(
+        asset_edit_client,
+        {"mac_address": "00:03:b1:b5:b6:48", "manufacturer": "Acme"},
+    )
     assert response.status_code == status.HTTP_201_CREATED
     assert response.data["mac_address"] == "00:03:b1:b5:b6:48"
     assert models.Asset.objects.count() == 1
@@ -125,6 +130,7 @@ def test_upsert_unknown_fields_dropped(asset_edit_client: APIClient) -> None:
     """connect_port_tcp and ipv6_address are silently dropped."""
     payload = {
         "mac_address": "11:22:33:44:55:66",
+        "manufacturer": "Acme",
         "ipv6_address": "::1",
         "connect_port_tcp": "9999",
     }
@@ -292,7 +298,11 @@ def test_upsert_nic_vendor_from_mac(asset_edit_client: APIClient) -> None:
     """PUT with registered OUI MAC, assert nic_vendor auto-populated from netaddr."""
     response = _put_upsert(
         asset_edit_client,
-        {"mac_address": "00:03:b1:b5:b6:48", "name": "Medical device"},
+        {
+            "mac_address": "00:03:b1:b5:b6:48",
+            "manufacturer": "Acme",
+            "name": "Medical device",
+        },
     )
     assert response.status_code == status.HTTP_201_CREATED
     # OUI 00:03:b1 is registered; vendor may be Hospira, ICU Medical, etc.
@@ -309,7 +319,11 @@ def test_upsert_nic_vendor_from_mac(asset_edit_client: APIClient) -> None:
 
 def test_upsert_put_idempotency(asset_edit_client: APIClient) -> None:
     """PUT same payload 3 times, assert only 1 asset exists."""
-    payload = {"mac_address": "11:22:33:44:55:66", "ip_address": "10.0.0.1"}
+    payload = {
+        "mac_address": "11:22:33:44:55:66",
+        "manufacturer": "Acme",
+        "ip_address": "10.0.0.1",
+    }
     response1 = _put_upsert(asset_edit_client, payload)
     assert response1.status_code == status.HTTP_201_CREATED
 
@@ -328,6 +342,7 @@ def test_upsert_legacy_field_names_ignored(
     """PUT with legacy field names — they are ignored, not coerced."""
     payload = {
         "mac_address": "11:22:33:44:55:66",
+        "manufacturer": "Acme",
         "ipv4_address": "10.0.0.1",
         "identifier": "Legacy Device",
     }
@@ -343,6 +358,7 @@ def test_upsert_modern_field_names(asset_edit_client: APIClient) -> None:
     """PUT with canonical field names (ip_address, name) works directly."""
     payload = {
         "mac_address": "11:22:33:44:55:66",
+        "manufacturer": "Acme",
         "ip_address": "10.0.0.1",
         "name": "Modern Device",
     }
@@ -354,7 +370,10 @@ def test_upsert_modern_field_names(asset_edit_client: APIClient) -> None:
 
 def test_upsert_no_deprecation_header(asset_edit_client: APIClient) -> None:
     """PUT response does not include Deprecation header."""
-    response = _put_upsert(asset_edit_client, {"mac_address": "11:22:33:44:55:66"})
+    response = _put_upsert(
+        asset_edit_client,
+        {"mac_address": "11:22:33:44:55:66", "manufacturer": "Acme"},
+    )
     assert response.status_code == status.HTTP_201_CREATED
     assert "Deprecation" not in response
     assert "Link" not in response
