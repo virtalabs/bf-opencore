@@ -42,7 +42,7 @@ def test_api_create_asset(asset_edit_client: APIClient) -> None:
     client = asset_edit_client
     response = client.post(
         "/api/assets/",
-        json.dumps({"hostname": "nospam"}),
+        json.dumps({"hostname": "nospam", "manufacturer": "Acme"}),
         content_type="application/json",
     )
     assert response.status_code == status.HTTP_201_CREATED
@@ -57,7 +57,7 @@ def test_api_create_asset_maconly(asset_edit_client: APIClient) -> None:
     client = asset_edit_client
     response = client.post(
         "/api/assets/",
-        json.dumps({"mac_address": "1"}),
+        json.dumps({"mac_address": "1", "manufacturer": "Acme"}),
         content_type="application/json",
     )
     assert response.status_code == status.HTTP_201_CREATED
@@ -72,7 +72,7 @@ def test_api_create_asset_addinventory_maconly(asset_edit_client: APIClient) -> 
     client = asset_edit_client
     response = client.post(
         "/api/assets/",
-        json.dumps({"mac_address": "1", "ip_address": None}),
+        json.dumps({"mac_address": "1", "manufacturer": "Acme", "ip_address": None}),
         content_type="application/json",
     )
     assert response.status_code == status.HTTP_201_CREATED
@@ -119,7 +119,7 @@ def test_api_create_asset_unauthorized(auth_client: APIClient) -> None:
     client = auth_client
     response = client.post(
         "/api/assets/",
-        json.dumps({"hostname": "nospam"}),
+        json.dumps({"hostname": "nospam", "manufacturer": "Acme"}),
         content_type="application/json",
     )
     assert response.status_code == status.HTTP_403_FORBIDDEN
@@ -134,7 +134,7 @@ def test_api_create_get_asset(
     """Create an asset, read with less-authorized client."""
     response = asset_edit_client.post(
         "/api/assets/",
-        json.dumps({"hostname": "nospam"}),
+        json.dumps({"hostname": "nospam", "manufacturer": "Acme"}),
         content_type="application/json",
     )
     assert response.status_code == status.HTTP_201_CREATED
@@ -150,7 +150,7 @@ def test_api_create_patch_asset(
     """Create an asset, then patch."""
     response = asset_edit_client.post(
         "/api/assets/",
-        json.dumps({"hostname": "nospam"}),
+        json.dumps({"hostname": "nospam", "manufacturer": "Acme"}),
         content_type="application/json",
     )
     assert response.status_code == status.HTTP_201_CREATED
@@ -174,7 +174,7 @@ def test_api_create_asset_displayname(asset_edit_client: APIClient) -> None:
     client = asset_edit_client
     response = client.post(
         "/api/assets/",
-        json.dumps({"display_name": "foobar"}),
+        json.dumps({"display_name": "foobar", "manufacturer": "Acme"}),
         content_type="application/json",
     )
     assert response.status_code == status.HTTP_201_CREATED
@@ -194,7 +194,9 @@ def test_api_create_asset_displayname_name(asset_edit_client: APIClient) -> None
     client = asset_edit_client
     response = client.post(
         "/api/assets/",
-        json.dumps({"name": "foobaz", "display_name": "foobar"}),
+        json.dumps(
+            {"name": "foobaz", "display_name": "foobar", "manufacturer": "Acme"}
+        ),
         content_type="application/json",
     )
     assert response.status_code == status.HTTP_201_CREATED
@@ -211,7 +213,9 @@ def test_api_create_asset_displayname_name_2(asset_edit_client: APIClient) -> No
     client = asset_edit_client
     response = client.post(
         "/api/assets/",
-        json.dumps({"display_name": "foobar", "name": "foobaz"}),
+        json.dumps(
+            {"display_name": "foobar", "name": "foobaz", "manufacturer": "Acme"}
+        ),
         content_type="application/json",
     )
     assert response.status_code == status.HTTP_201_CREATED
@@ -223,7 +227,9 @@ def test_api_update_asset_displayname(asset_edit_client: APIClient) -> None:
     """Create an asset, update display_name later."""
     client = asset_edit_client
     response = client.post(
-        "/api/assets/", json.dumps({"name": "nospam"}), content_type="application/json"
+        "/api/assets/",
+        json.dumps({"name": "nospam", "manufacturer": "Acme"}),
+        content_type="application/json",
     )
     assert response.data["name"] == "nospam"
     assert response.data["display_name"] == "nospam"
@@ -605,7 +611,7 @@ def test_api_create_asset_mac_autofill_nic(asset_edit_client: APIClient) -> None
     client = asset_edit_client
     response = client.post(
         "/api/assets/",
-        json.dumps({"mac_address": "34:36:3b:c4:7d:ec"}),
+        json.dumps({"mac_address": "34:36:3b:c4:7d:ec", "manufacturer": "Acme"}),
         content_type="application/json",
     )
     assert response.status_code == status.HTTP_201_CREATED
@@ -624,6 +630,7 @@ def test_api_create_asset_mac_reject_nic(asset_edit_client: APIClient) -> None:
         json.dumps(
             {
                 "mac_address": "34:36:3b:c4:7d:ec",
+                "manufacturer": "Acme",
                 "nic_vendor": "Appletown USA",
             }
         ),
@@ -645,6 +652,7 @@ def test_upsert_create(asset_edit_client: APIClient) -> None:
         json.dumps(
             {
                 "mac_address": macaddr,
+                "manufacturer": "Acme",
             }
         ),
         content_type="application/json",
@@ -666,6 +674,7 @@ def test_upsert_update(asset_edit_client: APIClient) -> None:
         json.dumps(
             {
                 "mac_address": "11:22:33:44:55:66",
+                "manufacturer": "Acme",
                 "ip_address": "10.0.0.1",
             }
         ),
@@ -702,6 +711,7 @@ def test_upsert_no_mac_address_duplicate(asset_edit_client: APIClient) -> None:
         json.dumps(
             {
                 "mac_address": "11:22:33:44:55:66",
+                "manufacturer": "Acme",
                 "ip_address": "10.0.0.1",
             }
         ),
@@ -712,6 +722,7 @@ def test_upsert_no_mac_address_duplicate(asset_edit_client: APIClient) -> None:
         "/api/assets/upsert/",
         json.dumps(
             {
+                "manufacturer": "Acme",
                 "ip_address": "10.0.0.1",
             }
         ),
@@ -728,6 +739,7 @@ def test_upsert_unknown_fields_ignored(asset_edit_client: APIClient) -> None:
         json.dumps(
             {
                 "mac_address": "11:22:33:44:55:66",
+                "manufacturer": "Acme",
                 "ipv6_address": "0:0:0:0:0:ffff:a00:1",
                 "connect_port_tcp": "2575",
             }
@@ -745,6 +757,7 @@ def test_upsert_many_fields(asset_edit_client: APIClient) -> None:
         json.dumps(
             {
                 "ip_address": "10.0.0.155",
+                "manufacturer": "Hospira",
                 "services": [{"port": 2575, "protocol": "tcp"}],
                 "mac_address": "00:03:b1:b5:b6:48",
                 "name": "Hospira Plum A+",
@@ -763,6 +776,7 @@ def test_upsert_bad_key_ignored(asset_edit_client: APIClient) -> None:
         json.dumps(
             {
                 "mac_address": "11:22:33:44:55:66",
+                "manufacturer": "Acme",
                 "ipv12345_address": "10.0.0.1",
             }
         ),
