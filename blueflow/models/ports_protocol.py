@@ -24,7 +24,11 @@ class PortProtocol(models.Model):
         ]
     )
     protocol = models.CharField(
-        choices=Protocols.choices, default=Protocols.TCP, blank=False, null=False
+        max_length=3,
+        choices=Protocols.choices,
+        default=Protocols.TCP,
+        blank=False,
+        null=False,
     )
 
     class Meta:
@@ -45,6 +49,14 @@ class AssetPortProtocol(models.Model):
         "blueflow.Asset", related_name="port_protocols", on_delete=models.CASCADE
     )
     port_protocol = models.ForeignKey(PortProtocol, on_delete=models.CASCADE)
+
+    class Meta:
+        constraints: typing.ClassVar = [
+            models.UniqueConstraint(
+                fields=("asset", "port_protocol"),
+                name="unique_asset_port_protocol",
+            )
+        ]
 
     def __str__(self) -> str:
         return f"{self.asset}: {self.port_protocol}"
