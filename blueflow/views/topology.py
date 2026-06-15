@@ -14,6 +14,8 @@ from rest_framework import serializers
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
+from blueflow.models import constants
+
 
 class TopologyInterfaceSerializer(serializers.Serializer):
     """A network interface observed on a device."""
@@ -35,7 +37,9 @@ class TopologyInterfaceSerializer(serializers.Serializer):
 class TopologyServiceSerializer(serializers.Serializer):
     """A port/protocol pair observed receiving traffic on an asset."""
 
-    port = serializers.IntegerField(min_value=1, max_value=65535)
+    port = serializers.IntegerField(
+        min_value=constants.PORT_MIN, max_value=constants.PORT_MAX
+    )
     protocol = serializers.ChoiceField(choices=["tcp", "udp"])
 
 
@@ -53,7 +57,9 @@ class TopologyConnectionSerializer(serializers.Serializer):
 
     src_asset_id = serializers.CharField()
     dst_asset_id = serializers.CharField()
-    dst_port = serializers.IntegerField(min_value=1, max_value=65535)
+    dst_port = serializers.IntegerField(
+        min_value=constants.PORT_MIN, max_value=constants.PORT_MAX
+    )
     protocol = serializers.ChoiceField(choices=["tcp", "udp"])
     direction = serializers.ChoiceField(choices=["unidirectional", "bidirectional"])
 
