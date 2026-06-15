@@ -1,6 +1,6 @@
 from django.db import models
 
-from . import constants
+from . import asset, constants
 
 
 class PortProtocol(models.Model):
@@ -15,7 +15,7 @@ class PortProtocol(models.Model):
 
     # https://en.wikipedia.org/wiki/List_of_TCP_and_UDP_port_numbers
     port = models.IntegerField(
-        min_value=constants.PORT_MIN, max_value=constants.PORT_MAX
+        min_value=constants.PORT_MIN, max_value=constants.PORT_MAX, unique=True
     )
     protocol = models.CharField(
         choices=Protocols, default=Protocols.tcp, blank=False, null=False
@@ -23,3 +23,13 @@ class PortProtocol(models.Model):
 
     def __str__(self) -> str:
         return f"{self.port}: {self.protocol}"
+
+
+class AssetPortPortocols(models.Model):
+    """Maps an asset to any number of port_protocols."""
+
+    asset = models.ForeignKey(asset.Asset, on_delete=models.CASCADE)
+    port_protocol = models.ForeignKey(PortProtocol, on_delete=models.CASCADE)
+
+    def __str__(self) -> str:
+        return f"{self.asset}: {self.port_protocol}"
