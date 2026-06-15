@@ -21,18 +21,9 @@ from rest_framework.response import Response
 from simple_history import utils as hist_utils
 from waffle.mixins import WaffleSwitchMixin
 
-from blueflow.models import (
-    TCP_PORT_MAX,
-    Asset,
-    AssetCustomField,
-    AssetCustomFieldName,
-    AssetTag,
-    AssetVulnerability,
-    Tag,
-)
+from blueflow import models
 
-from .assettag import AssetTagSerializer
-from .utils import ChangeReasonMixin, PaginateRelationsMixin
+from . import assettag, utils
 
 logger = logging.getLogger(__name__)
 
@@ -68,7 +59,7 @@ class MiniAssetVulnerabilitySerializer(serializers.HyperlinkedModelSerializer):
     class Meta:
         """Wire this serializer to a model."""
 
-        model = AssetVulnerability
+        model = models.AssetVulnerability
         fields = (
             "id",
             "vulnerability_id",
@@ -110,7 +101,9 @@ class AssetUpsertSerializer(serializers.Serializer):
     )
     external_keys = serializers.JSONField(required=False, allow_null=True)
     open_ports_tcp = serializers.ListField(
-        child=serializers.IntegerField(min_value=1, max_value=TCP_PORT_MAX),
+        child=serializers.IntegerField(
+            min_value=models.PORT_MIN, max_value=models.PORT_MAX
+        ),
         required=False,
     )
 
@@ -161,7 +154,7 @@ class AssetSerializer(serializers.HyperlinkedModelSerializer):
     tags_url = serializers.HyperlinkedIdentityField(view_name="blueflow:asset-tags")
     scans_url = serializers.HyperlinkedIdentityField(view_name="blueflow:asset-scans")
 
-    asset_tags = AssetTagSerializer(read_only=True, many=True)
+    asset_tags = assettag.AssetTagSerializer(read_only=True, many=True)
     asset_vulnerabilities = MiniAssetVulnerabilitySerializer(read_only=True, many=True)
 
     display_name = serializers.CharField(
@@ -169,7 +162,9 @@ class AssetSerializer(serializers.HyperlinkedModelSerializer):
     )
 
     open_ports_tcp = serializers.ListField(
-        child=serializers.IntegerField(min_value=1, max_value=TCP_PORT_MAX),
+        child=serializers.IntegerField(
+            min_value=models.PORT_MIN, max_value=models.PORT_MAX
+        ),
         required=False,
         default=list,
     )
@@ -191,7 +186,7 @@ class AssetSerializer(serializers.HyperlinkedModelSerializer):
     class Meta:
         """Wire this serializer to a model."""
 
-        model = Asset
+        model = models.Asset
 
         # Fields defined in the schema
         asset_fields = tuple(f.name for f in model._meta.fields)  # noqa: SLF001
@@ -254,7 +249,7 @@ class HistoricalAssetSerializer(serializers.HyperlinkedModelSerializer):
     class Meta:
         """Wire this serializer to a model."""
 
-        model = Asset.history.model
+        model = models.Asset.history.model
         # Fields that are unique to the historical model (Should maybe
         # compute these too?  It could be done with a set difference...)
         historical_fields = (
@@ -316,7 +311,7 @@ class ChangeLogAssetSerializer(
     class Meta:
         """Wire this serializer to a model."""
 
-        model = Asset.history.model
+        model = models.Asset.history.model
         changed_fields = AssetSerializer.Meta.asset_fields
         fields = changed_fields + HistoricalAssetSerializer.Meta.historical_fields
 
@@ -398,7 +393,7 @@ class AssetFilter(django_filters.rest_framework.FilterSet):
     class Meta:
         """Wire this filter to a model."""
 
-        model = Asset
+        model = models.Asset
 
         # The first lookup in each field will be used as the default by
         # autocomplete.py.  "icontains" is usually a good choice.
@@ -458,7 +453,10 @@ class AssetFilter(django_filters.rest_framework.FilterSet):
 
 
 class AssetViewSet(
-    WaffleSwitchMixin, ChangeReasonMixin, PaginateRelationsMixin, viewsets.ModelViewSet
+    WaffleSwitchMixin,
+    utils.ChangeReasonMixin,
+    utils.PaginateRelationsMixin,
+    viewsets.ModelViewSet,
 ):
     """API endpoint for an Asset (representing a networked device).
 
@@ -514,7 +512,7 @@ class AssetViewSet(
     #
     # Only `usage` is currently prefetched (see test_asset_list_usage_does_
     # not_n_plus_one). The remaining relations above are unaddressed.
-    queryset = Asset.objects.prefetch_related("usage")
+    queryset = models.Asset.objects.prefetch_related("usage")
     serializer_class = AssetSerializer
 
     # Documentation on search filters:
@@ -620,7 +618,7 @@ class AssetViewSet(
         include_relations = relations.lower()[:1] in ["", "1", "t"]
 
         fields = []
-        for f in Asset._meta.get_fields():  # noqa: SLF001
+        for f in models.Asset._meta.get_fields():  # noqa: SLF001
             if f.is_relation and not include_relations:
                 continue
             if hasattr(f, "deconstruct"):
@@ -644,9 +642,9 @@ class AssetViewSet(
                 }
             )
 
-        for f in AssetCustomFieldName.objects.all():
+        for f in models.AssetCustomFieldName.objects.all():
             name = f.field_name
-            cfv = AssetCustomField.objects.filter(asset_id=pk, field=f).first()
+            cfv = models.AssetCustomField.objects.filter(asset_id=pk, field=f).first()
             fields.append(
                 {
                     "name": name,
@@ -769,14 +767,14 @@ class AssetViewSet(
                     }
                 )
             try:
-                tag = Tag.objects.get(pk=tag_id)
+                tag = models.Tag.objects.get(pk=tag_id)
             except d_ex.ObjectDoesNotExist as err:
                 raise serializers.ValidationError(
                     {
                         "tag_id": [f"Tag does not exist: id={tag_id}"],
                     }
                 ) from err
-            asset_tag = AssetTag(asset=asset, tag=tag, provenance="API")
+            asset_tag = models.AssetTag(asset=asset, tag=tag, provenance="API")
             try:
                 asset_tag.save()
                 response_status = status.HTTP_201_CREATED
@@ -787,7 +785,7 @@ class AssetViewSet(
                     asset_tag,
                 )
             except IntegrityError:
-                asset_tag = AssetTag.objects.get(asset=asset, tag=tag)
+                asset_tag = models.AssetTag.objects.get(asset=asset, tag=tag)
                 response_status = status.HTTP_200_OK
                 logger.debug(
                     "Asset-tag link between %s and %s already existed: %s",
@@ -891,7 +889,7 @@ class AssetViewSet(
             )
 
         # Phase 1: normalise and validate every item before touching the DB.
-        validated: list[tuple[Asset, AssetSerializer]] = []
+        validated: list[tuple[models.Asset, AssetSerializer]] = []
         seen_ids: set[int] = set()
         for item in request.data:
             asset_id = item.get("id")
@@ -908,8 +906,8 @@ class AssetViewSet(
             seen_ids.add(asset_id)
 
             try:
-                asset = Asset.objects.get(pk=asset_id)
-            except Asset.DoesNotExist:
+                asset = models.Asset.objects.get(pk=asset_id)
+            except models.Asset.DoesNotExist:
                 return Response(
                     {"detail": f"Asset with id={asset_id} not found."},
                     status=status.HTTP_404_NOT_FOUND,
@@ -954,7 +952,7 @@ class AssetViewSet(
         proposed_hostname = validated.get("hostname")
         if proposed_hostname:
             conflict = (
-                Asset.objects.filter(hostname=proposed_hostname)
+                models.Asset.objects.filter(hostname=proposed_hostname)
                 .exclude(mac_address=validated["mac_address"])
                 .first()
             )
@@ -973,7 +971,7 @@ class AssetViewSet(
         try:
             mac_address = validated.pop("mac_address")
             new_ports = validated.pop("open_ports_tcp", [])
-            asset = Asset.objects.get(mac_address=mac_address)
+            asset = models.Asset.objects.get(mac_address=mac_address)
             if new_ports:
                 merged = sorted(set(asset.open_ports_tcp) | set(new_ports))
                 if merged != asset.open_ports_tcp:
@@ -981,9 +979,9 @@ class AssetViewSet(
             for k, v in validated.items():
                 setattr(asset, k, v)
             asset.save()
-        except Asset.DoesNotExist:
+        except models.Asset.DoesNotExist:
             created = True
-            asset = Asset.objects.create(
+            asset = models.Asset.objects.create(
                 mac_address=mac_address,
                 open_ports_tcp=new_ports,
                 **validated,

@@ -1,0 +1,2 @@
+PORT_MIN = 1
+PORT_MAX = 65535

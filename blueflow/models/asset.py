@@ -21,6 +21,7 @@ from simple_history.models import HistoricalRecords
 
 from blueflow.utils import NullUnlessChanged
 
+from . import constants
 from .asset_custom_field import AssetCustomField, AssetCustomFieldName
 from .asset_manager import AssetManager, AssetQuerySet
 from .group import AssetGroup, Group
@@ -29,12 +30,12 @@ from .vulnerability import AssetVulnerability, Vulnerability
 
 logger = logging.getLogger(__name__)
 
-TCP_PORT_MAX = 65535
-
 
 def validate_tcp_port_range(ports: list[int]) -> None:
-    if not all(1 <= p <= TCP_PORT_MAX for p in ports):
-        msg = f"All TCP ports must be in range 1-{TCP_PORT_MAX}."
+    if not all(constants.PORT_MIN <= p <= constants.PORT_MAX for p in ports):
+        msg = (
+            f"All TCP ports must be in range {constants.PORT_MIN}-{constants.PORT_MAX}."
+        )
         raise ValidationError(msg)
 
 
@@ -204,7 +205,7 @@ class Asset(TimeStampedModel):
         logger.info("Setting asset name for id=%s to %s", self.id, value)
         self.name = value
 
-    def open_ports_tcp_add(self, newports):
+    def open_ports_tcp_add(self, newports: str | list[int]) -> bool:
         """Add one or many ports to the list of open TCP ports.
 
          'newports' may be an integer (possibly as string) or list of integers.
@@ -213,14 +214,9 @@ class Asset(TimeStampedModel):
 
         Returns True if any ports were added to the set, False otherwise.
         """
-        try:
-            # Newports might be a single port as a string
-            newports = [int(newports)]
-        except TypeError:
-            # Looks like it wasn't
-            pass
-        newports = {int(p) for p in newports}
-        ports = sorted(set.union(set(self.open_ports_tcp), newports))
+        port_list = [int(newports)] if isinstance(newports, str) else newports
+        unique = {int(p) for p in port_list}
+        ports: list[int] = sorted(set.union(set(self.open_ports_tcp), unique))
         if ports != self.open_ports_tcp:
             added = set(ports) - set(self.open_ports_tcp)
             # The new list of ports is larger
@@ -292,7 +288,7 @@ class Asset(TimeStampedModel):
         """
         return self.tags.all()
 
-    def similar_qset(self, exclude_self=True):
+    def similar_qset(self, *, exclude_self=True):
         """Return queryset for all assets similar to this one.
 
         Two assets are "similar" if they:
@@ -331,7 +327,7 @@ class Asset(TimeStampedModel):
         """Return queryset for history of asset."""
         return self.history.all()
 
-    def field_history_rqset(self, field_name, newest_first=True):
+    def field_history_rqset(self, field_name, *, newest_first=True):
         """Return RAW queryset for history of some asset field.
 
         Will return only the rows where the field changed.
@@ -354,7 +350,7 @@ class Asset(TimeStampedModel):
         # Validate/sanitize field.
         # NOTE: the get_field might cause a FieldDoesNotExist Django
         #       Exception.  The caller must be prepared to handle this.
-        db_field = self.history.model._meta.get_field(field_name)
+        db_field = self.history.model._meta.get_field(field_name)  # noqa: SLF001
         sanitized_field_name = db_field.name
         qset = self.history.order_by("history_date")
         history = [qset[0]]
