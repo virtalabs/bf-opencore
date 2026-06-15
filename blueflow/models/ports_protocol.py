@@ -25,7 +25,7 @@ class PortProtocol(models.Model):
         return f"{self.port}: {self.protocol}"
 
 
-class AssetPortPortocol(models.Model):
+class AssetPortProtocol(models.Model):
     """Maps an asset to any number of port_protocols."""
 
     asset = models.ForeignKey(
