@@ -4,7 +4,7 @@ from .alert import Alert
 from .asset import Asset
 from .asset_custom_field import AssetCustomField, AssetCustomFieldName
 from .attachment import Attachment
-from .constants import PORT_MAX, PORT_MIN
+from .constants import PORT_MAX, PORT_MIN, PROTOCOL_MAX_LENGTH
 from .group import AssetGroup, Group
 from .network import Cidr, Network, SavedSearch
 from .network_endpoint import EndpointSuggestion, NetworkEndpoint
@@ -18,6 +18,7 @@ from .vulnerability import AssetVulnerability, Vulnerability
 __all__ = [
     "PORT_MAX",
     "PORT_MIN",
+    "PROTOCOL_MAX_LENGTH",
     "Alert",
     "Asset",
     "AssetCustomField",

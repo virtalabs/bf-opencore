@@ -2,6 +2,7 @@ import typing
 
 from django.core import validators
 from django.db import models
+from django.db.models import Q
 
 from . import constants
 
@@ -9,12 +10,9 @@ from . import constants
 class PortProtocol(models.Model):
     """A mapping of Ports <-> protocol.
 
-    Currently a port can only have one protocol as described by the textchoices.
+    ``protocol`` is a free-form string (e.g. ``tcp``, ``udp``, ``sctp``,
+    ``udplite``); callers are responsible for picking sensible values.
     """
-
-    class Protocols(models.TextChoices):
-        TCP = "tcp"
-        UDP = "udp"
 
     # https://en.wikipedia.org/wiki/List_of_TCP_and_UDP_port_numbers
     port = models.PositiveSmallIntegerField(
@@ -23,19 +21,17 @@ class PortProtocol(models.Model):
             validators.MaxValueValidator(constants.PORT_MAX),
         ]
     )
-    protocol = models.CharField(
-        max_length=3,
-        choices=Protocols.choices,
-        default=Protocols.TCP,
-        blank=False,
-        null=False,
-    )
+    protocol = models.CharField(max_length=constants.PROTOCOL_MAX_LENGTH)
 
     class Meta:
         constraints: typing.ClassVar = [
             models.UniqueConstraint(
                 fields=("port", "protocol"), name="unique_port_protocol"
-            )
+            ),
+            models.CheckConstraint(
+                condition=~Q(protocol=""),
+                name="port_protocol_protocol_not_empty",
+            ),
         ]
 
     def __str__(self) -> str:

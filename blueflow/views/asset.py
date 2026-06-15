@@ -80,7 +80,11 @@ class AssetServiceSerializer(serializers.Serializer):
     port = serializers.IntegerField(
         min_value=models.PORT_MIN, max_value=models.PORT_MAX
     )
-    protocol = serializers.ChoiceField(choices=models.PortProtocol.Protocols.choices)
+    protocol = serializers.CharField(
+        min_length=1,
+        max_length=models.PROTOCOL_MAX_LENGTH,
+        allow_blank=False,
+    )
 
 
 class AssetUpsertSerializer(serializers.Serializer):

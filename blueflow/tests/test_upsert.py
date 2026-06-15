@@ -456,13 +456,14 @@ def test_upsert_non_numeric_port_400(asset_edit_client: APIClient) -> None:
     assert response.status_code == status.HTTP_400_BAD_REQUEST
 
 
-def test_upsert_invalid_protocol_400(asset_edit_client: APIClient) -> None:
-    """PUT with unsupported protocol returns 400."""
+def test_upsert_empty_protocol_400(asset_edit_client: APIClient) -> None:
+    """PUT with empty-string protocol returns 400."""
     response = _put_upsert(
         asset_edit_client,
         {
             "mac_address": "11:22:33:44:55:66",
-            "services": [{"port": 80, "protocol": "sctp"}],
+            "manufacturer": "Acme",
+            "services": [{"port": 80, "protocol": ""}],
         },
     )
     assert response.status_code == status.HTTP_400_BAD_REQUEST
