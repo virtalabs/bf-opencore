@@ -21,11 +21,7 @@ from simple_history.models import HistoricalRecords
 
 from blueflow.utils import NullUnlessChanged
 
-from . import constants
-from .asset_custom_field import AssetCustomField, AssetCustomFieldName
-from .group import AssetGroup, Group
-from .tag import AssetTag, Tag
-from .vulnerability import AssetVulnerability, Vulnerability
+from . import asset_custom_field, constants, group, tag, vulnerability
 
 logger = logging.getLogger(__name__)
 
@@ -78,11 +74,14 @@ class Asset(TimeStampedModel):
         validators=[validate_tcp_port_range],
     )
     external_keys = models.JSONField(blank=True, null=True)
-    groups = models.ManyToManyField(Group, through=AssetGroup)
-    tags = models.ManyToManyField(Tag, through=AssetTag)
-    vulnerabilities = models.ManyToManyField(Vulnerability, through=AssetVulnerability)
+    groups = models.ManyToManyField(group.Group, through=group.AssetGroup)
+    tags = models.ManyToManyField(tag.Tag, through=tag.AssetTag)
+    vulnerabilities = models.ManyToManyField(
+        vulnerability.Vulnerability, through=vulnerability.AssetVulnerability
+    )
     custom_fields = models.ManyToManyField(
-        AssetCustomFieldName, through=AssetCustomField
+        asset_custom_field.AssetCustomFieldName,
+        through=asset_custom_field.AssetCustomField,
     )
     history = HistoricalRecords()
 
