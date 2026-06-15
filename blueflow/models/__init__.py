@@ -8,6 +8,7 @@ from .constants import PORT_MAX, PORT_MIN
 from .group import AssetGroup, Group
 from .network import Cidr, Network, SavedSearch
 from .network_endpoint import EndpointSuggestion, NetworkEndpoint
+from .ports_protocol import AssetPortProtocol, PortProtocol
 from .scan import Scan
 from .tag import AssetTag, Tag
 from .usage import DayOfWeek, Usage
@@ -22,6 +23,7 @@ __all__ = [
     "AssetCustomField",
     "AssetCustomFieldName",
     "AssetGroup",
+    "AssetPortProtocol",
     "AssetTag",
     "AssetVulnerability",
     "Attachment",
@@ -31,6 +33,7 @@ __all__ = [
     "Group",
     "Network",
     "NetworkEndpoint",
+    "PortProtocol",
     "SavedSearch",
     "Scan",
     "Tag",
