@@ -104,9 +104,9 @@ ignore = [
 #         read them (they run for side effects like configuring celery or
 #         loading fixture data), so ruff's "unused argument" check is a
 #         false positive in test contexts.
-"**/tests/**" = ["S101", "ARG001"]
-"tests/**" = ["S101", "ARG001"]
-"conftest.py" = ["S101"]
+"**/tests/**" = ["S101", "ARG001", "PLR2004"]
+"tests/**" = ["S101", "ARG001", "PLR2004"]
+"conftest.py" = ["S101", "PLR2004"]
 "harness/**" = ["T201", "S603", "S607", "PLR0913"]
 
 [tool.ruff.format]

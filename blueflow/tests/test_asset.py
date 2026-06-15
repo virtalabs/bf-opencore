@@ -867,7 +867,7 @@ def test_bulk_update_updates_fields(asset_edit_client: APIClient) -> None:
         content_type="application/json",
     )
     assert response.status_code == status.HTTP_200_OK
-    assert len(response.data) == 2  # noqa: PLR2004
+    assert len(response.data) == 2
 
     a1.refresh_from_db()
     a2.refresh_from_db()
@@ -943,3 +943,41 @@ def test_bulk_update_idempotent(asset_edit_client: APIClient) -> None:
     assert r1.status_code == status.HTTP_200_OK
     assert r2.status_code == status.HTTP_200_OK
     assert r1.data[0]["hostname"] == r2.data[0]["hostname"] == "updated"
+
+
+# ---------------------------------------------------------------------------
+# Section: PortProtocol / AssetPortProtocol model contract
+# ---------------------------------------------------------------------------
+
+
+def test_asset_add_service_idempotent(db: None) -> None:
+    """``add_service`` returns True on first call, False on repeat; no dupes."""
+    asset = models.Asset.objects.create(manufacturer="Acme")
+    assert asset.add_service(80, "tcp") is True
+    assert asset.add_service(80, "tcp") is False
+    assert asset.port_protocols.count() == 1
+
+
+def test_port_protocol_lookup_shared_across_assets(db: None) -> None:
+    """Two assets with the same ``(port, protocol)`` reference one lookup row."""
+    a1 = models.Asset.objects.create(manufacturer="Acme")
+    a2 = models.Asset.objects.create(manufacturer="Acme")
+    a1.add_service(80, "tcp")
+    a2.add_service(80, "tcp")
+    assert models.PortProtocol.objects.filter(port=80, protocol="tcp").count() == 1
+    assert models.AssetPortProtocol.objects.count() == 2
+
+
+def test_asset_delete_cascades_through_rows_keeps_lookup(
+    db: None,
+) -> None:
+    """Deleting an asset removes its through-rows; the shared lookup survives."""
+    a1 = models.Asset.objects.create(manufacturer="Acme")
+    a2 = models.Asset.objects.create(manufacturer="Acme")
+    a1.add_service(80, "tcp")
+    a2.add_service(80, "tcp")
+    assert models.AssetPortProtocol.objects.count() == 2
+
+    a1.delete()
+    assert models.AssetPortProtocol.objects.count() == 1
+    assert models.PortProtocol.objects.filter(port=80, protocol="tcp").exists()

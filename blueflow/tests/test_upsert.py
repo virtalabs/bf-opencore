@@ -174,6 +174,35 @@ def test_upsert_services_merge(asset_edit_client: APIClient) -> None:
     }
 
 
+def test_upsert_services_cross_protocol_merge(asset_edit_client: APIClient) -> None:
+    """A TCP-only asset gains UDP services on a follow-up upsert; both kept."""
+    response1 = _put_upsert(
+        asset_edit_client,
+        {
+            "mac_address": "11:22:33:44:55:66",
+            "manufacturer": "Acme",
+            "services": [{"port": 80, "protocol": "tcp"}],
+        },
+    )
+    assert response1.status_code == status.HTTP_201_CREATED
+
+    response2 = _put_upsert(
+        asset_edit_client,
+        {
+            "mac_address": "11:22:33:44:55:66",
+            "manufacturer": "Acme",
+            "services": [
+                {"port": 80, "protocol": "udp"},
+                {"port": 53, "protocol": "udp"},
+            ],
+        },
+    )
+    assert response2.status_code == status.HTTP_200_OK
+
+    asset = models.Asset.objects.get(mac_address="11:22:33:44:55:66")
+    assert _service_pairs(asset) == {(80, "tcp"), (80, "udp"), (53, "udp")}
+
+
 def test_upsert_services_tcp_and_udp_coexist(asset_edit_client: APIClient) -> None:
     """The same port on TCP and UDP are two separate rows (e.g. DNS on 53)."""
     response = _put_upsert(
