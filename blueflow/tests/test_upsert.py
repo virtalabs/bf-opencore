@@ -18,6 +18,7 @@ SCANNER_FULL_PAYLOAD = {
     "ip_address": "10.0.0.155",
     "services": [{"port": 2575, "protocol": "tcp"}],
     "mac_address": "00:03:b1:b5:b6:48",
+    "manufacturer": "Hospira",
     "name": "Infuse-O-Matic Peach B+",
     "provenance": "HL7 PRT-16",
     "last_seen": "2019-01-02T12:37:22.938687-08:00",
@@ -139,6 +140,7 @@ def test_upsert_services_merge(asset_edit_client: APIClient) -> None:
     """Two upserts union their services; overlapping pairs stay one row."""
     payload1 = {
         "mac_address": "11:22:33:44:55:66",
+        "manufacturer": "Acme",
         "services": [
             {"port": 80, "protocol": "tcp"},
             {"port": 443, "protocol": "tcp"},
@@ -149,6 +151,7 @@ def test_upsert_services_merge(asset_edit_client: APIClient) -> None:
 
     payload2 = {
         "mac_address": "11:22:33:44:55:66",
+        "manufacturer": "Acme",
         "services": [
             {"port": 443, "protocol": "tcp"},
             {"port": 8080, "protocol": "tcp"},
@@ -171,6 +174,7 @@ def test_upsert_services_tcp_and_udp_coexist(asset_edit_client: APIClient) -> No
         asset_edit_client,
         {
             "mac_address": "11:22:33:44:55:66",
+            "manufacturer": "Acme",
             "services": [
                 {"port": 53, "protocol": "tcp"},
                 {"port": 53, "protocol": "udp"},
@@ -422,6 +426,7 @@ def test_upsert_services_deduped(asset_edit_client: APIClient) -> None:
         asset_edit_client,
         {
             "mac_address": "11:22:33:44:55:66",
+            "manufacturer": "Acme",
             "services": [
                 {"port": 80, "protocol": "tcp"},
                 {"port": 443, "protocol": "tcp"},

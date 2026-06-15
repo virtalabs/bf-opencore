@@ -178,14 +178,6 @@ class AssetSerializer(serializers.HyperlinkedModelSerializer):
         max_length=126, allow_blank=True, allow_null=True, required=False
     )
 
-    open_ports_tcp = serializers.ListField(
-        child=serializers.IntegerField(
-            min_value=models.PORT_MIN, max_value=models.PORT_MAX
-        ),
-        required=False,
-        default=list,
-    )
-
     last_updated = serializers.DateTimeField(read_only=True, allow_null=True)
 
     usage = serializers.SerializerMethodField(
@@ -238,10 +230,6 @@ class AssetSerializer(serializers.HyperlinkedModelSerializer):
             msg = "mac_address must not be empty."
             raise serializers.ValidationError(msg)
         return mac_string
-
-    def validate_open_ports_tcp(self, ports_list: list[int]) -> list[int]:
-        """Deduplicate and sort ports."""
-        return sorted(set(ports_list))
 
     @extend_schema_field(_USAGE_FIELD_SCHEMA)
     def get_usage(self, obj):
@@ -1001,12 +989,7 @@ class AssetViewSet(
                     mac_address=mac_address, **validated
                 )
             for service in new_services:
-                port_protocol, _ = models.PortProtocol.objects.get_or_create(
-                    port=service["port"], protocol=service["protocol"]
-                )
-                models.AssetPortProtocol.objects.get_or_create(
-                    asset=asset, port_protocol=port_protocol
-                )
+                asset.add_service(service["port"], service["protocol"])
 
         # TODO(taylorcochran): timestamp is server-derived (timezone.now()) at
         #   the call site today. Switch to network-derived time from the
