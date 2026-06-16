@@ -41,7 +41,11 @@ class Asset(django_extensions.TimeStampedModel):
 
     name = models.CharField(max_length=126, blank=True, null=False, default="")
     hostname = models.CharField(
-        max_length=256, blank=True, null=False, unique=True, default=""
+        max_length=256,
+        blank=True,
+        null=False,
+        unique=True,
+        default="",
     )
     ip_address = netfields.InetAddressField(
         store_prefix_length=False,
@@ -64,7 +68,11 @@ class Asset(django_extensions.TimeStampedModel):
     model = models.CharField(max_length=256, blank=True, null=False, default="")
     serial_number = models.CharField(max_length=256, blank=True, null=False, default="")
     udi = models.CharField(
-        max_length=256, blank=True, null=False, verbose_name="UDI", default=""
+        max_length=256,
+        blank=True,
+        null=False,
+        verbose_name="UDI",
+        default="",
     )
     tag_number = models.CharField(max_length=256, blank=True, null=False, default="")
     category = models.CharField(max_length=256, blank=True, null=False, default="")

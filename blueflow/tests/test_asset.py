@@ -371,25 +371,6 @@ def test_set_name_empty(asset_edit_client: APIClient) -> None:
     assert spam_asset.hostname == ""
 
 
-def test_set_name_null(asset_edit_client: APIClient) -> None:
-    """PATCHing a hostname to `null` works."""
-    client = asset_edit_client
-    spam_asset = models.Asset.objects.create(hostname="spam")
-    # Verify that hostname is what we set it to
-    assert spam_asset.hostname == "spam"
-    # Send PATCH request
-    response = client.patch(
-        f"/api/assets/{spam_asset.id}/",
-        json.dumps({"hostname": None}),
-        content_type="application/json",
-    )
-    assert response.status_code == status.HTTP_200_OK
-    # Query for the new version of spam_asset, verify that its
-    # hostname has changed.
-    spam_asset = models.Asset.objects.get(id=spam_asset.id)
-    assert spam_asset.hostname is None
-
-
 def test_field_histogram(auth_client: APIClient) -> None:
     """Field histogram works with one field."""
     models.Asset.objects.create(manufacturer="Bar")

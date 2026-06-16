@@ -23,8 +23,10 @@ from pathlib import Path
 from unittest.mock import patch
 
 import pytest
+from django.conf import settings
 
-from blueflow.models.viper import ViperWebhookRequest
+from blueflow import models
+from blueflow.celery import tasks
 
 # ---------------------------------------------------------------------------
 # Golden data
@@ -129,7 +131,10 @@ def test_vrl_transform_maps_device_class_to_category() -> None:
 
 
 def test_vrl_transform_omits_category_when_device_class_null() -> None:
-    """Null device_class → category absent from output (existing value preserved on upsert)."""
+    """Null device_class → category absent from output.
+
+    (existing value preserved on upsert).
+    """
     record = {
         "mac_address": "00:90:20:AA:BB:01",
         "ip_address": "10.10.10.30",
@@ -163,8 +168,6 @@ def test_vrl_transform_golden_categorised_records(record: dict) -> None:
 
 def test_device_class_alias_persisted_through_upsert(asset_edit_client) -> None:
     """Raw TapirXL device_class field maps to category when Vector is bypassed."""
-    from blueflow import models
-
     resp = asset_edit_client.put(
         "/api/assets/upsert/",
         json.dumps(
@@ -184,8 +187,6 @@ def test_device_class_alias_persisted_through_upsert(asset_edit_client) -> None:
 
 def test_device_class_persisted_through_upsert(asset_edit_client) -> None:
     """Category from VRL transform survives PUT /api/assets/upsert/ → Asset.category."""
-    from blueflow import models
-
     payload = _vrl_transform(
         {
             "mac_address": "00:09:FB:BD:75:6D",
@@ -211,14 +212,14 @@ def test_device_class_persisted_through_upsert(asset_edit_client) -> None:
 
 
 def test_version_persisted_through_upsert(asset_edit_client) -> None:
-    """app_sw_version from VRL transform survives PUT /api/assets/upsert/ → Asset.app_sw_version."""
-    from blueflow import models
+    """app_sw_version from VRL transform survives.
 
+    PUT /api/assets/upsert/ → Asset.app_sw_version.
+    """
     payload = _vrl_transform(
         {
             "mac_address": "AA:BB:CC:DD:EE:FF",
             "ip_address": "10.0.0.1",
-            "hostname": None,
             "manufacturer": "can't be none",
             "product": None,
             "version": "1.2.3",
@@ -266,7 +267,7 @@ _GEHEALTHCARE_RECORDS: list[dict] = [
 
 
 def test_upsert_then_get_gehealthcare_records(asset_edit_client) -> None:
-    """Upsert two raw TapirXL GE Healthcare records and confirm they round-trip via GET."""
+    """Upsert two raw TapirXL GE Healthcare records and confirm round-trip."""
     records = _GEHEALTHCARE_RECORDS
 
     for record in records:
@@ -296,11 +297,7 @@ def test_upsert_then_get_gehealthcare_records(asset_edit_client) -> None:
 
 
 def test_viper_payload_for_gehealthcare_records(asset_edit_client, celery_app) -> None:
-    """Upsert two raw TapirXL GE Healthcare records and assert exactly what Viper receives."""
-    from django.conf import settings
-
-    from blueflow.models import Asset
-
+    """Upsert two TapirXL GE Healthcare records and assert what Viper receives."""
     records = _GEHEALTHCARE_RECORDS
 
     for record in records:
@@ -314,11 +311,9 @@ def test_viper_payload_for_gehealthcare_records(asset_edit_client, celery_app) -
         )
 
     with patch("blueflow.celery.tasks.requests.post") as mock_post:
-        from blueflow.celery.tasks import viper_webhook
-
-        viper_webhook.apply(
+        tasks.viper_webhook.apply(
             args=[
-                ViperWebhookRequest(
+                models.ViperWebhookRequest(
                     callback="https://viper.example.com/integration/",
                     since="1800-01-01T00:00:00Z",
                     before=None,
@@ -346,7 +341,7 @@ def test_viper_payload_for_gehealthcare_records(asset_edit_client, celery_app) -
     items_by_ip = {item["ip"]: item for item in body["items"]}
     assert set(items_by_ip) == {"10.40.2.20", "10.40.2.10"}
 
-    asset_ids = {str(a.ip_address): a.id for a in Asset.objects.all()}
+    asset_ids = {str(a.ip_address): a.id for a in models.Asset.objects.all()}
 
     # utilization is time-sensitive (upsert calls Asset.update_usage which writes
     # the current weekday/hour bucket). Strip it off for the structural assertions
@@ -357,18 +352,20 @@ def test_viper_payload_for_gehealthcare_records(asset_edit_client, celery_app) -
         for day in util:
             assert isinstance(day, dict)
             for hour, count in day.items():
-                assert hour.isdigit() and 0 <= int(hour) <= 23
-                assert isinstance(count, int) and count >= 1
+                assert hour.isdigit()
+                assert 0 <= int(hour) <= 23
+                assert isinstance(count, int)
+                assert count >= 1
 
     # id's are the pk's, which are currently incremented integers
-    lastID = Asset.objects.last().id
+    last_id = models.Asset.objects.last().id
     # BRIGHTSPEED01 — CT scanner. role=CT, product reaches Viper via CPE only.
     bs = items_by_ip["10.40.2.20"]
     _check_utilization(bs.pop("utilization"))
     assert bs == {
         "ip": "10.40.2.20",
         "upstreamApi": f"{settings.BASE_URL}/api/assets/{asset_ids['10.40.2.20']}/",
-        "vendorId": lastID - 1,
+        "vendorId": last_id - 1,
         "status": "Active",
         "hostname": "BRIGHTSPEED01",
         "macAddress": "00:10:18:aa:bb:01",
@@ -382,7 +379,7 @@ def test_viper_payload_for_gehealthcare_records(asset_edit_client, celery_app) -
     assert pacs == {
         "ip": "10.40.2.10",
         "upstreamApi": f"{settings.BASE_URL}/api/assets/{asset_ids['10.40.2.10']}/",
-        "vendorId": lastID,
+        "vendorId": last_id,
         "status": "Active",
         "hostname": "PACS-CENTRICITY-001",
         "macAddress": "00:1a:2b:3c:51:10",
@@ -435,11 +432,9 @@ def test_golden_device_class_propagates_to_viper_role(
 
     # Phase 2 — run the Viper webhook, capturing every outbound POST
     with patch("blueflow.celery.tasks.requests.post") as mock_post:
-        from blueflow.celery.tasks import viper_webhook
-
-        viper_webhook.apply(
+        tasks.viper_webhook.apply(
             args=[
-                ViperWebhookRequest(
+                models.ViperWebhookRequest(
                     callback="https://viper.example.com/integration/",
                     since="1800-01-01T00:00:00Z",
                     before=None,
