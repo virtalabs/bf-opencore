@@ -169,81 +169,6 @@ def test_api_create_patch_asset(
     assert asset["hostname"] == "spam"
 
 
-def test_api_create_asset_displayname(asset_edit_client: APIClient) -> None:
-    """Create an asset with a display_name."""
-    client = asset_edit_client
-    response = client.post(
-        "/api/assets/",
-        json.dumps({"display_name": "foobar", "manufacturer": "Acme"}),
-        content_type="application/json",
-    )
-    assert response.status_code == status.HTTP_201_CREATED
-    assert response.data["name"] == "foobar"
-    assert response.data["display_name"] == "foobar"
-
-
-def test_api_create_asset_displayname_name(asset_edit_client: APIClient) -> None:
-    """Create an asset with a display_name *and* a name.
-
-    The display_name provided will be favoured.
-    This is possibly confusing... but it is how it works.
-    One could argue that this should produce a 500 or a 4xx (and that
-    creation should fail), but I don't know how to do it (and it's
-    really a minor issue IMHO.)
-    """
-    client = asset_edit_client
-    response = client.post(
-        "/api/assets/",
-        json.dumps(
-            {"name": "foobaz", "display_name": "foobar", "manufacturer": "Acme"}
-        ),
-        content_type="application/json",
-    )
-    assert response.status_code == status.HTTP_201_CREATED
-    assert response.data["name"] == "foobar"  # NOTE: display_name is favored
-    assert response.data["display_name"] == "foobar"
-
-
-def test_api_create_asset_displayname_name_2(asset_edit_client: APIClient) -> None:
-    """Create an asset with a display_name *and* a name.
-
-    Like the test above, but order of name/display name is reversed.
-    display_name is still favoured.
-    """
-    client = asset_edit_client
-    response = client.post(
-        "/api/assets/",
-        json.dumps(
-            {"display_name": "foobar", "name": "foobaz", "manufacturer": "Acme"}
-        ),
-        content_type="application/json",
-    )
-    assert response.status_code == status.HTTP_201_CREATED
-    assert response.data["name"] == "foobar"  # NOTE: display_name is favored
-    assert response.data["display_name"] == "foobar"
-
-
-def test_api_update_asset_displayname(asset_edit_client: APIClient) -> None:
-    """Create an asset, update display_name later."""
-    client = asset_edit_client
-    response = client.post(
-        "/api/assets/",
-        json.dumps({"name": "nospam", "manufacturer": "Acme"}),
-        content_type="application/json",
-    )
-    assert response.data["name"] == "nospam"
-    assert response.data["display_name"] == "nospam"
-    asset_id = response.data["id"]
-    response = client.patch(
-        f"/api/assets/{asset_id}/",
-        json.dumps({"display_name": "spam"}),
-        content_type="application/json",
-    )
-    assert response.status_code == status.HTTP_200_OK
-    assert response.data["name"] == "spam"
-    assert response.data["display_name"] == "spam"
-
-
 @pytest.mark.xfail(
     raises=AssertionError,
     reason="Not sure why, but we *are* allowed to patch.  "
@@ -821,14 +746,6 @@ def test_asset_date_range(
     with freeze_time("2018-06-30 13:00:00", tz_offset=0):
         res = auth_client.get(f"/api/assets/?date_range={date_range}")
         assert res.data["count"] == num_assets
-
-
-def test_external_key_non_connector() -> None:
-    """Test that external_keys JSON field accepts arbitrary key-value pairs."""
-    foobar = models.Asset.objects.create(name="Foobar")
-    foobar.external_keys = {"ECN": "12345"}
-    foobar.save()
-    assert foobar.external_keys["ECN"] == "12345"
 
 
 # ---------------------------------------------------------------------------

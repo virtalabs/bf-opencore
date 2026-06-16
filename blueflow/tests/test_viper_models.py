@@ -143,7 +143,7 @@ def test_viper_asset_cpe_matches_expected_for_actual_json_payload():
         ip_address=payload["ip_address"],
         mac_address=payload["mac_address"],
         manufacturer=payload["vendor"],
-        product=payload["product"],
+        model=payload["product"],
         app_sw_version=payload["version"],
         category=payload["device_class"],
         open_ports_tcp=payload["open_ports"],
