@@ -45,32 +45,6 @@ class JSONChild(Func):
         super().__init__(expression, path=path)
 
 
-class MiniAssetVulnerabilitySerializer(serializers.HyperlinkedModelSerializer):
-    """Lightweight shallow AssetVulnerability serializer.
-
-    Exists so that we can show the status of AssetVulnerabilities, but not
-    their details, in serialized assets.
-    """
-
-    url = serializers.HyperlinkedIdentityField(
-        view_name="blueflow:assetvulnerability-detail"
-    )
-
-    class Meta:
-        """Wire this serializer to a model."""
-
-        model = models.AssetVulnerability
-        fields = (
-            "id",
-            "vulnerability_id",
-            "date_added",
-            "date_remediated",
-            "date_ignored",
-            "provenance",
-            "url",
-        )
-
-
 class AssetServiceSerializer(serializers.Serializer):
     """A single ``(port, protocol)`` observation on an asset.
 
@@ -176,8 +150,6 @@ class AssetSerializer(serializers.HyperlinkedModelSerializer):
     scans_url = serializers.HyperlinkedIdentityField(view_name="blueflow:asset-scans")
 
     asset_tags = assettag.AssetTagSerializer(read_only=True, many=True)
-    asset_vulnerabilities = MiniAssetVulnerabilitySerializer(read_only=True, many=True)
-
     display_name = serializers.CharField(
         max_length=126, allow_blank=True, allow_null=True, required=False
     )
@@ -211,7 +183,6 @@ class AssetSerializer(serializers.HyperlinkedModelSerializer):
             "display_name",
             "last_updated",
             "asset_tags",
-            "asset_vulnerabilities",
             "usage",
             "cpe",
         )
@@ -335,10 +306,6 @@ class AssetFilter(django_filters.rest_framework.FilterSet):
     assessed_factor = drf_filters.NumberFilter(method="filter_assessed_factor")
     group = django_filters.NumberFilter(field_name="groups")
     tag = django_filters.NumberFilter(field_name="tags")
-    vulnerability = django_filters.NumberFilter(field_name="vulnerabilities__id")
-    active_vulnerability = django_filters.NumberFilter(
-        method="filter_active_vulnerability"
-    )
 
     @staticmethod
     def filter_network(queryset: QuerySet, name: str, value: int) -> QuerySet:
@@ -359,20 +326,6 @@ class AssetFilter(django_filters.rest_framework.FilterSet):
             # assets that *do* belong to a network.  Oh well.
             return queryset
         return queryset.no_network()
-
-    @staticmethod
-    def filter_active_vulnerability(
-        queryset: QuerySet, name: str, value: int
-    ) -> QuerySet:
-        """Get assets with a vulnerability open."""
-        if name != "active_vulnerability":
-            _msg = f"Unexpected filter name: {name!r}"
-            raise ValueError(_msg)
-        return queryset.filter(
-            asset_vulnerabilities__vulnerability=value,
-            asset_vulnerabilities__date_remediated__isnull=True,
-            asset_vulnerabilities__date_ignored__isnull=True,
-        )
 
     @staticmethod
     def filter_unassessed(queryset: QuerySet, _name: str, _value: bool) -> QuerySet:  # noqa: FBT001
@@ -445,8 +398,6 @@ class AssetFilter(django_filters.rest_framework.FilterSet):
             "tag_number": ["icontains"],
             "udi": ["istartswith", "iexact"],
             "tags__name": ["istartswith"],
-            "asset_vulnerabilities__date_remediated": ["isnull"],
-            "asset_vulnerabilities__date_ignored": ["isnull"],
         }
         filter_overrides = {  # noqa: RUF012
             netfields.InetAddressField: {
@@ -512,9 +463,6 @@ class AssetViewSet(
     # the list response or for prefetch_related):
     #   - asset_tags             (nested AssetTagSerializer, many=True;
     #                             reverse FK to AssetTag through-model)
-    #   - asset_vulnerabilities  (nested MiniAssetVulnerabilitySerializer,
-    #                             many=True; reverse FK to AssetVulnerability
-    #                             through-model)
     #
     # Only `usage` is currently prefetched (see test_asset_list_usage_does_
     # not_n_plus_one). The remaining relations above are unaddressed.
@@ -532,7 +480,6 @@ class AssetViewSet(
     # then objects will be returned in the list only if all the provided terms
     # are matched, in other words, 'AND'.
     search_fields = (
-        # 'asset_vulnerabilities__vulnerability__synopsis',
         "hostname",
         "ip_address",
         "mac_address",
