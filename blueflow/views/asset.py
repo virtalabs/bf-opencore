@@ -445,8 +445,6 @@ class AssetFilter(django_filters.rest_framework.FilterSet):
             "tag_number": ["icontains"],
             "udi": ["istartswith", "iexact"],
             "tags__name": ["istartswith"],
-            "custom_fields__field_name": ["istartswith"],
-            "asset_custom_fields__value_text": ["istartswith"],
             "asset_vulnerabilities__date_remediated": ["isnull"],
             "asset_vulnerabilities__date_ignored": ["isnull"],
         }
@@ -548,8 +546,6 @@ class AssetViewSet(
         "tag_number",
         "tags__name",
         # The following field would enable search on custom field *name*
-        # 'custom_fields__field_name',
-        "asset_custom_fields__value_text",
         "udi",
     )
     filterset_class = AssetFilter
