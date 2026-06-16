@@ -35,6 +35,16 @@ def test_upsert_serializer_rejects_empty_hostname() -> None:
     assert "hostname" in serializer.errors
 
 
+def test_upsert_serializer_accepts_null_hostname() -> None:
+    """External callers (VRL/TapirXL) may send hostname=null; serializer must accept.
+
+    The model is nullable on purpose — see test_db_allows_multiple_null_hostnames
+    for why. The wire-level acceptance of `null` is part of the upsert contract.
+    """
+    serializer = AssetUpsertSerializer(data={"mac_address": MAC_A, "hostname": None})
+    assert serializer.is_valid(), serializer.errors
+
+
 def test_upsert_serializer_accepts_missing_hostname() -> None:
     """Omitting hostname entirely is also 'absent' and must pass validation."""
     serializer = AssetUpsertSerializer(data={"mac_address": MAC_A})
@@ -151,6 +161,20 @@ def test_db_rejects_duplicate_hostname() -> None:
     models.Asset.objects.create(hostname="foo.example")
     with pytest.raises(IntegrityError), transaction.atomic():
         models.Asset.objects.create(hostname="foo.example")
+
+
+def test_db_allows_multiple_null_hostnames() -> None:
+    """Load-bearing: NULL hostnames must coexist under the unique index.
+
+    Postgres treats every NULL as distinct in unique indexes, which is the
+    SOLE reason `hostname` is `null=True` despite the project's general
+    preference for non-nullable CharFields. If this test breaks, do NOT
+    change `unique=True` or `null=True` without rewriting the upsert
+    conflict-detection logic in AssetUpsertSerializer / the upsert action.
+    """
+    a = models.Asset.objects.create(hostname=None)
+    b = models.Asset.objects.create(hostname=None)
+    assert a.id != b.id
 
 
 def test_db_rejects_empty_hostname_on_insert() -> None:

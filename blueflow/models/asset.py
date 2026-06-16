@@ -40,12 +40,12 @@ class Asset(django_extensions.TimeStampedModel):
     UNKNOWN_CPE_VALUE: str = "*"
 
     name = models.CharField(max_length=126, blank=True, null=False, default="")
-    hostname = models.CharField(
+    # we want nullable for uniqueness
+    hostname = models.CharField(  # noqa: DJ001
         max_length=256,
-        blank=True,
-        null=False,
+        blank=False,
+        null=True,
         unique=True,
-        default="",
     )
     ip_address = netfields.InetAddressField(
         store_prefix_length=False,
