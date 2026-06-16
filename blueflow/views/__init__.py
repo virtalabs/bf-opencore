@@ -5,7 +5,6 @@ from .alert import AlertSerializer, AlertViewSet
 from .asset import AssetSerializer, AssetViewSet, HistoricalAssetSerializer
 from .assetgroup import AssetGroupSerializer, AssetGroupViewSet
 from .assettag import AssetTagSerializer, AssetTagViewSet
-from .assetvulnerability import AssetVulnerabilitySerializer, AssetVulnerabilityViewSet
 from .group import GroupSerializer, GroupViewSet
 from .network import CidrViewSet, NetworkSerializer, NetworkViewSet, SavedSearchViewSet
 from .periodic_task import (
@@ -21,7 +20,6 @@ from .tag import TagSerializer, TagViewSet
 from .topology import TopologySerializer, TopologyView
 from .user import UserSerializer, UserViewSet
 from .viper import ViperViewSet
-from .vulnerability import VulnerabilitySerializer, VulnerabilityViewSet
 
 __all__ = [
     "AlertSerializer",
@@ -32,8 +30,6 @@ __all__ = [
     "AssetTagSerializer",
     "AssetTagViewSet",
     "AssetViewSet",
-    "AssetVulnerabilitySerializer",
-    "AssetVulnerabilityViewSet",
     "CidrViewSet",
     "CrontabScheduleSerializer",
     "CrontabScheduleViewSet",
@@ -56,6 +52,4 @@ __all__ = [
     "UserSerializer",
     "UserViewSet",
     "ViperViewSet",
-    "VulnerabilitySerializer",
-    "VulnerabilityViewSet",
 ]
