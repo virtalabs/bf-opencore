@@ -38,42 +38,42 @@ class Asset(TimeStampedModel):
     fingerprint), so it is not safe to use as a "recently changed" filter.
     """
 
-    name = models.CharField(max_length=126, blank=False, null=True)
-    hostname = models.TextField(blank=False, null=True, unique=True)
+    name = models.CharField(max_length=126, blank=True, null=False)
+    hostname = models.TextField(blank=True, null=False, unique=True)
     ip_address = InetAddressField(
         store_prefix_length=False,
-        blank=False,
-        null=True,
+        blank=True,
+        null=False,
         verbose_name="IP address",
     )
     mac_address = MACAddressField(
-        blank=False,
-        null=True,
+        blank=True,
+        null=False,
         unique=True,
         verbose_name="MAC address",
     )
     oui_manufacturer = models.TextField(
-        blank=False,
-        null=True,
+        blank=True,
+        null=False,
         verbose_name="NIC vendor",
     )
-    manufacturer = models.TextField(blank=False, null=True)
-    model = models.TextField(blank=False, null=True)
-    serial_number = models.TextField(blank=False, null=True)
-    udi = models.TextField(blank=False, null=True, verbose_name="UDI")
-    tag_number = models.TextField(blank=False, null=True)
-    category = models.TextField(blank=False, null=True)
+    manufacturer = models.TextField(blank=True, null=False)
+    model = models.TextField(blank=True, null=False)
+    serial_number = models.TextField(blank=True, null=False)
+    udi = models.TextField(blank=True, null=False, verbose_name="UDI")
+    tag_number = models.TextField(blank=True, null=False)
+    category = models.TextField(blank=True, null=False)
 
-    owner = models.TextField(blank=False, null=True)
-    os = models.TextField(blank=False, null=True, verbose_name="Operating System")
+    owner = models.TextField(blank=True, null=False)
+    os = models.TextField(blank=True, null=False, verbose_name="Operating System")
     app_sw_version = models.TextField(
-        blank=False,
-        null=True,
+        blank=True,
+        null=False,
         verbose_name="Application software version",
     )
-    last_scanned = models.DateTimeField(blank=False, null=True)
-    last_pinged = models.DateTimeField(blank=False, null=True)
-    external_keys = models.JSONField(blank=False, null=True)
+    last_scanned = models.DateTimeField(blank=True, null=False)
+    last_pinged = models.DateTimeField(blank=True, null=False)
+    external_keys = models.JSONField(blank=True, null=False)
     groups = models.ManyToManyField(group.Group, through=group.AssetGroup)
     tags = models.ManyToManyField(tag.Tag, through=tag.AssetTag)
     vulnerabilities = models.ManyToManyField(
