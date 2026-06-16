@@ -71,8 +71,8 @@ def test_viper_asset_role_omitted_when_category_unset():
 
 
 def test_viper_asset_vendor_id_maps_manufacturer():
-    """VendorId is Asset.manufacturer (TapirXL vendor), not nic_vendor or PK."""
-    asset = _make_asset(manufacturer="Philips", nic_vendor="Some OUI Org")
+    """VendorId is Asset.manufacturer (TapirXL vendor), not oui_manufacturer or PK."""
+    asset = _make_asset(manufacturer="Philips", oui_manufacturer="Some OUI Org")
     payload = ViperAsset(asset).to_dict()
     assert payload["vendorId"] == "Philips"
     assert payload["vendorId"] != "Some OUI Org"
@@ -80,7 +80,7 @@ def test_viper_asset_vendor_id_maps_manufacturer():
 
 def test_viper_asset_vendor_id_empty_when_manufacturer_unset():
     """VendorId is present but empty when manufacturer is null."""
-    asset = _make_asset(manufacturer=None, nic_vendor="Some OUI Org")
+    asset = _make_asset(manufacturer=None, oui_manufacturer="Some OUI Org")
     payload = ViperAsset(asset).to_dict()
     assert payload["vendorId"] == ""
 

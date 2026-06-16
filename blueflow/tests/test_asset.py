@@ -604,7 +604,7 @@ def test_api_create_asset_mac_autofill_nic(asset_edit_client: APIClient) -> None
     assert assets.data["count"] == 1
     asset = assets.data["results"].pop()
     assert asset["mac_address"] == "34:36:3b:c4:7d:ec"
-    assert asset["nic_vendor"] == "Apple, Inc."
+    assert asset["oui_manufacturer"] == "Apple, Inc."
 
 
 def test_api_create_asset_mac_reject_nic(asset_edit_client: APIClient) -> None:
@@ -616,7 +616,7 @@ def test_api_create_asset_mac_reject_nic(asset_edit_client: APIClient) -> None:
             {
                 "mac_address": "34:36:3b:c4:7d:ec",
                 "manufacturer": "Acme",
-                "nic_vendor": "Appletown USA",
+                "oui_manufacturer": "Appletown USA",
             }
         ),
         content_type="application/json",
@@ -626,7 +626,7 @@ def test_api_create_asset_mac_reject_nic(asset_edit_client: APIClient) -> None:
     assert assets.data["count"] == 1
     asset = assets.data["results"].pop()
     assert asset["mac_address"] == "34:36:3b:c4:7d:ec"
-    assert asset["nic_vendor"] == "Apple, Inc."
+    assert asset["oui_manufacturer"] == "Apple, Inc."
 
 
 def test_upsert_create(asset_edit_client: APIClient) -> None:
@@ -644,7 +644,7 @@ def test_upsert_create(asset_edit_client: APIClient) -> None:
     )
     assert response.status_code == status.HTTP_201_CREATED
     assert response.data["mac_address"] == macaddr
-    assert response.data["nic_vendor"] is not None
+    assert response.data["oui_manufacturer"] is not None
     assert models.Asset.objects.count() == 1
     asset = models.Asset.objects.get()
     assert asset.mac_address == macaddr

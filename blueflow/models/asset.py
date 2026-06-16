@@ -162,7 +162,7 @@ class Asset(django_extensions.TimeStampedModel):
         return services
 
     def __str__(self) -> str:
-        return f"{self.id}:{self.display_name}:{self.ip_address}"
+        return f"{self.id}:{self.hostname}:{self.ip_address}"
 
     def save(self, *args: typing.Any, **kwargs: typing.Any):
         """Intercept save, automatically populating some fields."""

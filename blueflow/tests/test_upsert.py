@@ -323,8 +323,11 @@ def test_upsert_history_reason(asset_edit_client: APIClient) -> None:
     assert "2019-01-02" in reason
 
 
-def test_upsert_nic_vendor_from_mac(asset_edit_client: APIClient) -> None:
-    """PUT with registered OUI MAC, assert nic_vendor auto-populated from netaddr."""
+def test_upsert_oui_manufacturer_from_mac(asset_edit_client: APIClient) -> None:
+    """PUT with registered OUI MAC.
+
+    assert oui_manufacturer auto-populated from netaddr.
+    """
     response = _put_upsert(
         asset_edit_client,
         {
@@ -335,10 +338,10 @@ def test_upsert_nic_vendor_from_mac(asset_edit_client: APIClient) -> None:
     )
     assert response.status_code == status.HTTP_201_CREATED
     # OUI 00:03:b1 is registered; vendor may be Hospira, ICU Medical, etc.
-    assert response.data["nic_vendor"] is not None
-    assert len(response.data["nic_vendor"]) > 0
+    assert response.data["oui_manufacturer"] is not None
+    assert len(response.data["oui_manufacturer"]) > 0
     asset = models.Asset.objects.get()
-    assert asset.nic_vendor is not None
+    assert asset.oui_manufacturer is not None
 
 
 # ---------------------------------------------------------------------------
