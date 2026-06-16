@@ -38,34 +38,47 @@ class Asset(TimeStampedModel):
     fingerprint), so it is not safe to use as a "recently changed" filter.
     """
 
-    name = models.CharField(max_length=126, blank=True, null=True)
-    hostname = models.TextField(null=True, unique=True)
+    name = models.CharField(max_length=126, blank=False, null=True)
+    hostname = models.TextField(blank=False, null=True, unique=True)
     ip_address = InetAddressField(
-        store_prefix_length=False, blank=True, null=True, verbose_name="IP address"
+        store_prefix_length=False,
+        blank=False,
+        null=True,
+        verbose_name="IP address",
     )
     mac_address = MACAddressField(
-        blank=True, null=True, unique=True, verbose_name="MAC address"
+        blank=False,
+        null=True,
+        unique=True,
+        verbose_name="MAC address",
     )
-    nic_vendor = models.TextField(blank=True, null=True, verbose_name="NIC vendor")
-    manufacturer = models.TextField(blank=True, null=True)
-    model = models.TextField(blank=True, null=True)
-    serial_number = models.TextField(blank=True, null=True)
-    udi = models.TextField(blank=True, null=True, verbose_name="UDI")
-    tag_number = models.TextField(blank=True, null=True)
-    category = models.TextField(blank=True, null=True)
+    oui_manufacturer = models.TextField(
+        blank=False,
+        null=True,
+        verbose_name="NIC vendor",
+    )
+    manufacturer = models.TextField(blank=False, null=True)
+    model = models.TextField(blank=False, null=True)
+    serial_number = models.TextField(blank=False, null=True)
+    udi = models.TextField(blank=False, null=True, verbose_name="UDI")
+    tag_number = models.TextField(blank=False, null=True)
+    category = models.TextField(blank=False, null=True)
 
-    owner = models.TextField(blank=True, null=True)
-    os = models.TextField(blank=True, null=True, verbose_name="Operating System")
+    owner = models.TextField(blank=False, null=True)
+    os = models.TextField(blank=False, null=True, verbose_name="Operating System")
     app_sw_version = models.TextField(
-        blank=True, null=True, verbose_name="Application software version"
+        blank=False,
+        null=True,
+        verbose_name="Application software version",
     )
-    last_scanned = models.DateTimeField(blank=True, null=True)
-    last_pinged = models.DateTimeField(blank=True, null=True)
-    external_keys = models.JSONField(blank=True, null=True)
+    last_scanned = models.DateTimeField(blank=False, null=True)
+    last_pinged = models.DateTimeField(blank=False, null=True)
+    external_keys = models.JSONField(blank=False, null=True)
     groups = models.ManyToManyField(group.Group, through=group.AssetGroup)
     tags = models.ManyToManyField(tag.Tag, through=tag.AssetTag)
     vulnerabilities = models.ManyToManyField(
-        vulnerability.Vulnerability, through=vulnerability.AssetVulnerability
+        vulnerability.Vulnerability,
+        through=vulnerability.AssetVulnerability,
     )
     custom_fields = models.ManyToManyField(
         asset_custom_field.AssetCustomFieldName,
@@ -87,23 +100,23 @@ class Asset(TimeStampedModel):
             try:
                 eui = netaddr.EUI(self.mac_address)
                 reg = eui.oui.registration()
-                self.nic_vendor = reg.org.strip()
+                self.oui_manufacturer = reg.org.strip()
             except netaddr.core.AddrFormatError:
                 logger.warning("Bad MAC address on asset %s", self)
-                self.nic_vendor = None
+                self.oui_manufacturer = None
             except netaddr.core.NotRegisteredError:
                 logger.info(
                     "MAC address %s of asset %s lacks NIC vendor",
                     self.mac_address,
                     self,
                 )
-                self.nic_vendor = None
+                self.oui_manufacturer = None
             except AttributeError:  # no reg.org
                 logger.debug(
                     "NIC vendor registry lacks org detail for MAC address %s",
                     self.mac_address,
                 )
-                self.nic_vendor = None
+                self.oui_manufacturer = None
 
         super().save(*args, **kwargs)
 
@@ -171,8 +184,8 @@ class Asset(TimeStampedModel):
                 d_name = f"{self.manufacturer}-{self.model}-{self.id}"
             else:
                 d_name = f"{self.manufacturer}-{self.id}"
-        elif self.nic_vendor:
-            d_name = f"{self.nic_vendor}-{self.id}"
+        elif self.oui_manufacturer:
+            d_name = f"{self.oui_manufacturer}-{self.id}"
         else:
             d_name = f"Asset-{self.id}"
         return d_name
@@ -300,8 +313,8 @@ class Asset(TimeStampedModel):
         if self.manufacturer is not None:
             disjuncts.append(Q(manufacturer=self.manufacturer, product=self.vendor))
 
-        if self.nic_vendor is not None:
-            disjuncts.append(Q(nic_vendor=self.nic_vendor))
+        if self.oui_manufacturer is not None:
+            disjuncts.append(Q(oui_manufacturer=self.oui_manufacturer))
 
         Asset = apps.get_model("blueflow", "Asset")
         if disjuncts:
