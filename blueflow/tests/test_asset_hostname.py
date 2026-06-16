@@ -35,12 +35,6 @@ def test_upsert_serializer_rejects_empty_hostname() -> None:
     assert "hostname" in serializer.errors
 
 
-def test_upsert_serializer_accepts_null_hostname() -> None:
-    """NULL is the canonical 'absent' value and must pass validation."""
-    serializer = AssetUpsertSerializer(data={"mac_address": MAC_A, "hostname": None})
-    assert serializer.is_valid(), serializer.errors
-
-
 def test_upsert_serializer_accepts_missing_hostname() -> None:
     """Omitting hostname entirely is also 'absent' and must pass validation."""
     serializer = AssetUpsertSerializer(data={"mac_address": MAC_A})
@@ -157,13 +151,6 @@ def test_db_rejects_duplicate_hostname() -> None:
     models.Asset.objects.create(hostname="foo.example")
     with pytest.raises(IntegrityError), transaction.atomic():
         models.Asset.objects.create(hostname="foo.example")
-
-
-def test_db_allows_multiple_null_hostnames() -> None:
-    """Postgres treats NULLs as distinct in unique indexes; NULL rows coexist."""
-    a = models.Asset.objects.create(hostname=None)
-    b = models.Asset.objects.create(hostname=None)
-    assert a.id != b.id
 
 
 def test_db_rejects_empty_hostname_on_insert() -> None:

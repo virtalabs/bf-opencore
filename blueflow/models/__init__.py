@@ -11,7 +11,7 @@ from .ports_protocol import AssetPortProtocol, PortProtocol
 from .scan import Scan
 from .tag import AssetTag, Tag
 from .usage import DayOfWeek, Usage
-from .viper import ViperWebhookJob
+from .viper import ViperWebhookJob, ViperWebhookRequest
 
 __all__ = [
     "PORT_MAX",
@@ -36,4 +36,5 @@ __all__ = [
     "Tag",
     "Usage",
     "ViperWebhookJob",
+    "ViperWebhookRequest",
 ]
