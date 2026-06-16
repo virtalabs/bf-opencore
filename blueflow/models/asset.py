@@ -3,32 +3,36 @@
 Note: AssetManager has been moved to its own file asset_manager.py.
 """
 
+import collections
+import functools
 import logging
-from collections import Counter
-from functools import reduce
-from operator import or_
+import operator
 
 import netaddr
+import netfields
 import packaging.version
 from django.apps import apps
 from django.db import models
-from django.db.models import Count, Max, Q
-from django_extensions.db.models import TimeStampedModel
-from netfields import InetAddressField, MACAddressField
-from simple_history.models import HistoricalRecords
+from django_extensions.db import models as django_extensions
+from simple_history import models as simple_history
 
-from blueflow.utils import NullUnlessChanged
-
-from . import asset_custom_field, group, ports_protocol, tag, vulnerability
+from blueflow import utils
+from blueflow.models import (
+    asset_custom_field,
+    group,
+    ports_protocol,
+    tag,
+    vulnerability,
+)
 
 logger = logging.getLogger(__name__)
 
 
-def validate_tcp_port_range(ports: list[int]) -> None:
+def validate_tcp_port_range(_: list[int]) -> None:
     """Retained as an import target for historical migrations only."""
 
 
-class Asset(TimeStampedModel):
+class Asset(django_extensions.TimeStampedModel):
     """Holds our Assets.
 
     Inherits ``created`` and ``modified`` from ``TimeStampedModel``. ``modified``
@@ -40,13 +44,13 @@ class Asset(TimeStampedModel):
 
     name = models.CharField(max_length=126, blank=True, null=False)
     hostname = models.TextField(blank=True, null=False, unique=True)
-    ip_address = InetAddressField(
+    ip_address = netfields.InetAddressField(
         store_prefix_length=False,
         blank=True,
         null=False,
         verbose_name="IP address",
     )
-    mac_address = MACAddressField(
+    mac_address = netfields.MACAddressField(
         blank=True,
         null=False,
         unique=True,
@@ -84,12 +88,12 @@ class Asset(TimeStampedModel):
         asset_custom_field.AssetCustomFieldName,
         through=asset_custom_field.AssetCustomField,
     )
-    history = HistoricalRecords()
+    history = simple_history.HistoricalRecords()
 
     class Meta:
         constraints = (
             models.CheckConstraint(
-                condition=Q(hostname__isnull=True) | ~Q(hostname=""),
+                condition=models.Q(hostname__isnull=True) | ~models.Q(hostname=""),
                 name="asset_hostname_not_empty_when_set",
             ),
         )
@@ -159,7 +163,7 @@ class Asset(TimeStampedModel):
         #   {'history_date__max':
         #    datetime.datetime(2017, 8, 4, 14, 43, 48, 473875, tzinfo=<UTC>)}
         # so we have to dig a little to get it robustly.
-        history_date__max_dict = self.history.aggregate(Max("history_date"))
+        history_date__max_dict = self.history.aggregate(models.Max("history_date"))
         last_updated = history_date__max_dict.get("history_date__max")
         return last_updated
 
@@ -308,17 +312,21 @@ class Asset(TimeStampedModel):
             mac_pfx = ":".join(f"{s:02x}" for s in octets[:3])
             min_mac = f"{mac_pfx}:00:00:00"
             max_mac = f"{mac_pfx}:ff:ff:ff"
-            disjuncts.append(Q(mac_address__gte=min_mac, mac_address__lte=max_mac))
+            disjuncts.append(
+                models.Q(mac_address__gte=min_mac, mac_address__lte=max_mac)
+            )
 
         if self.manufacturer is not None:
-            disjuncts.append(Q(manufacturer=self.manufacturer, product=self.vendor))
+            disjuncts.append(
+                models.Q(manufacturer=self.manufacturer, product=self.vendor)
+            )
 
         if self.oui_manufacturer is not None:
-            disjuncts.append(Q(oui_manufacturer=self.oui_manufacturer))
+            disjuncts.append(models.Q(oui_manufacturer=self.oui_manufacturer))
 
         Asset = apps.get_model("blueflow", "Asset")
         if disjuncts:
-            sim_qset = Asset.objects.filter(reduce(or_, disjuncts))
+            sim_qset = Asset.objects.filter(functools.reduce(operator.or_, disjuncts))
             if exclude_self:
                 sim_qset = sim_qset.exclude(id=self.id)
         else:
@@ -380,7 +388,7 @@ class Asset(TimeStampedModel):
             # since the previous row (in the history table.) but
             # identical to the original (e.g. 'name') iff it *has*
             # changed.
-            a_kwargs = {field + "__changed": NullUnlessChanged(field)}
+            a_kwargs = {field + "__changed": utils.NullUnlessChanged(field)}
             qset = qset.annotate(**a_kwargs)
         # Reverse chronological, i.e., newest-first.
         qset = qset.order_by("-history_date")
@@ -439,10 +447,10 @@ class Asset(TimeStampedModel):
             self.similar_qset()
             .filter(app_sw_version__isnull=False)
             .values("app_sw_version")
-            .annotate(count=Count("app_sw_version"))
+            .annotate(count=models.Count("app_sw_version"))
         )
 
-        vcounts = Counter({v["app_sw_version"]: v["count"] for v in vs})
+        vcounts = collections.Counter({v["app_sw_version"]: v["count"] for v in vs})
 
         # don't forget to count this asset's app_sw_version
         if self.app_sw_version:
