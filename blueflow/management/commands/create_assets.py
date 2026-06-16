@@ -9,14 +9,14 @@ from django.core.management.base import BaseCommand
 
 
 def make_assets(data: dict) -> Generator[dict, None, None]:
-    for id, asset in data.items():
+    for _id, asset in data.items():
         yield {
-            "id": id,
+            "id": _id,
             "name": asset["name"],
             "hostname": asset["hostname"],
             "ip_address": asset["ip_address"],
             "mac_address": asset["mac_address"],
-            "nic_vendor": asset["nic_vendor"],
+            "oui_manufacturer": asset["nic_vendor"],
             "manufacturer": asset["manufacturer"],
             "product": asset["product"],
             "serial_number": asset["serial_number"],
@@ -43,7 +43,7 @@ class Command(BaseCommand):
             "--filepath", type=str, required=True, help="The path to the json file"
         )
 
-    def handle(self, *args, **options) -> None:
+    def handle(self, *_, **options) -> None:
         Asset = apps.get_model("blueflow", "Asset")
         file_path = options.get("filepath")
         with Path(file_path).open(encoding="utf-8") as file:
