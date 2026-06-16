@@ -3,9 +3,15 @@
 All tests require PostgreSQL (set DATABASE_URL in test settings).
 """
 
-from collections import namedtuple
+import typing
 
 import pytest
+from django.test import override_settings
+from rest_framework.authtoken.models import Token
+from rest_framework.test import APIClient
+
+from blueflow import models
+from blueflow.tests.factories import make_user
 
 # ---------------------------------------------------------------------------
 # Role-scoped API clients (alias to auth_client when no per-resource perms)
@@ -47,12 +53,7 @@ def custom_field_edit_client(auth_client):
 
 @pytest.fixture
 def token_auth_client(db, enable_core_switch):
-    """Return API client authenticated via Token header, for testing Token-based authentication."""
-    from rest_framework.authtoken.models import Token
-    from rest_framework.test import APIClient
-
-    from blueflow.tests.factories import make_user
-
+    """Return API client authenticated via Token header."""
     user = make_user(username="scanner")
     token, _ = Token.objects.get_or_create(user=user)
     client = APIClient()
@@ -68,8 +69,6 @@ def token_auth_client(db, enable_core_switch):
 @pytest.fixture
 def media_root(tmp_path):
     """Use tmp_path for MEDIA_ROOT so attachment tests don't touch real filesystem."""
-    from django.test import override_settings
-
     media = tmp_path / "media"
     media.mkdir()
     with override_settings(MEDIA_ROOT=str(media)):
@@ -83,16 +82,12 @@ def cleandb(db):
     For example, the "location" custom field is added by a migration.  These
     tests assume starting without it.
     """
-    from blueflow import models
-
     models.AssetCustomFieldName.objects.all().delete()
 
 
 @pytest.fixture
 def cfield(cleandb):
     """Prepare fixtures: an asset, custom field names, and a custom field value."""
-    from blueflow import models
-
     asset = models.Asset.objects.create(hostname="foo.com")
     sparkly_field = models.AssetCustomFieldName.objects.create(field_name="sparkliness")
     shiny_field = models.AssetCustomFieldName.objects.create(field_name="shinyness")
@@ -101,7 +96,7 @@ def cfield(cleandb):
         asset=asset,
         value_text="rather dull",
     )
-    cfield_tuple = namedtuple(
+    cfield_tuple = typing.NamedTuple(
         "cfield_tuple",
         ["asset", "sparkly_field", "shiny_field", "custom_field"],
     )
@@ -109,33 +104,8 @@ def cfield(cleandb):
 
 
 @pytest.fixture
-def asset_vulnerabilities(db):
-    """Set up some database objects to test asset-vulnerability relations."""
-    from blueflow import models
-
-    asset = models.Asset.objects.create(hostname="foo.com")
-    asset_2 = models.Asset.objects.create(hostname="bar.com")
-    models.Vulnerability.objects.create(name="eggs")
-    vulnerability_spam = models.Vulnerability.objects.create(name="spam")
-    vulnerability_red = models.Vulnerability.objects.create(name="red")
-    vulnerability_green = models.Vulnerability.objects.create(name="green")
-    models.AssetVulnerability.objects.create(
-        vulnerability=vulnerability_red, asset=asset
-    )
-    models.AssetVulnerability.objects.create(
-        vulnerability=vulnerability_green, asset=asset
-    )
-    models.AssetVulnerability.objects.create(
-        vulnerability=vulnerability_spam, asset=asset_2
-    )
-    return (asset, vulnerability_red, vulnerability_green)
-
-
-@pytest.fixture
 def completables(db):
     """Sample assets and other items to be completed."""
-    from blueflow import models
-
     models.Asset.objects.create(mac_address="88:aa:bb:cc:dd:ee")
     models.Asset.objects.create(
         manufacturer="ACME Inc.", model="Instant Tunnel", serial_number="WILE-E-1234"
@@ -158,8 +128,6 @@ def completables(db):
 @pytest.fixture
 def complete_us(db):
     """Sample assets for autocomplete field tests."""
-    from blueflow import models
-
     mfmods = {
         "Foo": ["One", "Two", "Three"],
         "Bar": ["Four", "Five", "Six"],
@@ -176,8 +144,6 @@ def complete_us(db):
 @pytest.fixture
 def asset_groups(db):
     """Set up some assets and groups."""
-    from blueflow import models
-
     asset_a = models.Asset.objects.create(hostname="foo.com")
     asset_b = models.Asset.objects.create(hostname="bar.com")
     group_red = models.Group.objects.create(name="red")
@@ -186,7 +152,7 @@ def asset_groups(db):
     agra = models.AssetGroup.objects.create(group=group_red, asset=asset_a)
     agga = models.AssetGroup.objects.create(group=group_green, asset=asset_a)
     aggb = models.AssetGroup.objects.create(group=group_green, asset=asset_b)
-    ag = namedtuple("AssetGroups", "aa, ab, gr, gg, gy, agra, agga, aggb")
+    ag = typing.NamedTuple("AssetGroups", "aa, ab, gr, gg, gy, agra, agga, aggb")
     return ag(
         aa=asset_a,
         ab=asset_b,
