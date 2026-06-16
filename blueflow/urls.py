@@ -13,7 +13,6 @@ app_name = "blueflow"
 
 router = DefaultRouter()
 # Regular BlueFlow Models
-router.register(r"alerts", views.AlertViewSet)
 router.register(r"assets", views.AssetViewSet)
 router.register(r"assetgroups", views.AssetGroupViewSet)
 router.register(r"assettags", views.AssetTagViewSet)

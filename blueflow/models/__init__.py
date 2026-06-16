@@ -1,6 +1,5 @@
 """BlueFlow Models / Database schema definitions."""
 
-from .alert import Alert
 from .asset import Asset
 from .asset_custom_field import AssetCustomField, AssetCustomFieldName
 from .attachment import Attachment
@@ -18,7 +17,6 @@ __all__ = [
     "PORT_MAX",
     "PORT_MIN",
     "PROTOCOL_MAX_LENGTH",
-    "Alert",
     "Asset",
     "AssetCustomField",
     "AssetCustomFieldName",
