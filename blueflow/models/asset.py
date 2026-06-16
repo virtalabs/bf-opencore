@@ -38,6 +38,7 @@ class Asset(django_extensions.TimeStampedModel):
     """
 
     UNKNOWN_CPE_VALUE: str = "*"
+    UNKNOWN_OUI_MANUFACTURER: str = ""
 
     name = models.CharField(max_length=126, blank=True, null=False, default="")
     # we want nullable for uniqueness
@@ -173,20 +174,20 @@ class Asset(django_extensions.TimeStampedModel):
                 self.oui_manufacturer = reg.org.strip()
             except netaddr.core.AddrFormatError:
                 logger.warning("Bad MAC address on asset %s", self)
-                self.oui_manufacturer = None
+                self.oui_manufacturer = self.UNKNOWN_OUI_MANUFACTURER
             except netaddr.core.NotRegisteredError:
                 logger.info(
                     "MAC address %s of asset %s lacks NIC vendor",
                     self.mac_address,
                     self,
                 )
-                self.oui_manufacturer = None
+                self.oui_manufacturer = self.UNKNOWN_OUI_MANUFACTURER
             except AttributeError:
                 logger.debug(
                     "NIC vendor registry lacks org detail for MAC address %s",
                     self.mac_address,
                 )
-                self.oui_manufacturer = None
+                self.oui_manufacturer = self.UNKNOWN_OUI_MANUFACTURER
 
         super().save(*args, **kwargs)
 
