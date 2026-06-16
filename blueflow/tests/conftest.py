@@ -3,7 +3,7 @@
 All tests require PostgreSQL (set DATABASE_URL in test settings).
 """
 
-import typing
+from dataclasses import dataclass
 
 import pytest
 from django.test import override_settings
@@ -89,18 +89,13 @@ def cleandb(db):
 def cfield(cleandb):
     """Prepare fixtures: an asset, custom field names, and a custom field value."""
     asset = models.Asset.objects.create(hostname="foo.com")
-    sparkly_field = models.AssetCustomFieldName.objects.create(field_name="sparkliness")
+    _ = models.AssetCustomFieldName.objects.create(field_name="sparkliness")
     shiny_field = models.AssetCustomFieldName.objects.create(field_name="shinyness")
-    custom_field = models.AssetCustomField.objects.create(
+    _ = models.AssetCustomField.objects.create(
         field=shiny_field,
         asset=asset,
         value_text="rather dull",
     )
-    cfield_tuple = typing.NamedTuple(
-        "cfield_tuple",
-        ["asset", "sparkly_field", "shiny_field", "custom_field"],
-    )
-    return cfield_tuple(asset, sparkly_field, shiny_field, custom_field)
 
 
 @pytest.fixture
@@ -141,6 +136,23 @@ def complete_us(db):
     models.Asset.objects.bulk_create(assets)
 
 
+@dataclass(frozen=True)
+class AssetGroupsFixture:
+    """Bundle of two assets, three groups, and the three join rows linking them.
+
+    TODO(taylorcochran) replace this with model bakery
+    """
+
+    asset_a: models.Asset
+    asset_b: models.Asset
+    group_red: models.Group
+    group_green: models.Group
+    group_yellow: models.Group
+    link_red_a: models.AssetGroup
+    link_green_a: models.AssetGroup
+    link_green_b: models.AssetGroup
+
+
 @pytest.fixture
 def asset_groups(db):
     """Set up some assets and groups."""
@@ -149,19 +161,15 @@ def asset_groups(db):
     group_red = models.Group.objects.create(name="red")
     group_green = models.Group.objects.create(name="green")
     group_yellow = models.Group.objects.create(name="yellow")
-    agra = models.AssetGroup.objects.create(group=group_red, asset=asset_a)
-    agga = models.AssetGroup.objects.create(group=group_green, asset=asset_a)
-    aggb = models.AssetGroup.objects.create(group=group_green, asset=asset_b)
-    ag = typing.NamedTuple("AssetGroups", "aa, ab, gr, gg, gy, agra, agga, aggb")
-    return ag(
-        aa=asset_a,
-        ab=asset_b,
-        gr=group_red,
-        gg=group_green,
-        gy=group_yellow,
-        agra=agra,
-        agga=agga,
-        aggb=aggb,
+    return AssetGroupsFixture(
+        asset_a=asset_a,
+        asset_b=asset_b,
+        group_red=group_red,
+        group_green=group_green,
+        group_yellow=group_yellow,
+        link_red_a=models.AssetGroup.objects.create(group=group_red, asset=asset_a),
+        link_green_a=models.AssetGroup.objects.create(group=group_green, asset=asset_a),
+        link_green_b=models.AssetGroup.objects.create(group=group_green, asset=asset_b),
     )
 
 
