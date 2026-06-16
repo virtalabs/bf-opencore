@@ -7,7 +7,6 @@ from .models import (
     AssetCustomFieldName,
     AssetGroup,
     AssetTag,
-    AssetVulnerability,
     Attachment,
     Cidr,
     EndpointSuggestion,
@@ -18,7 +17,6 @@ from .models import (
     Scan,
     Tag,
     ViperWebhookJob,
-    Vulnerability,
 )
 
 
@@ -49,11 +47,6 @@ class AssetGroupAdmin(admin.ModelAdmin):
 
 @admin.register(AssetTag)
 class AssetTagAdmin(admin.ModelAdmin):
-    pass
-
-
-@admin.register(AssetVulnerability)
-class AssetVulnerabilityAdmin(admin.ModelAdmin):
     pass
 
 
@@ -115,8 +108,3 @@ class ViperWebhookJobAdmin(admin.ModelAdmin):
         "request_body",
         "status",
     )
-
-
-@admin.register(Vulnerability)
-class VulnerabilityAdmin(admin.ModelAdmin):
-    pass
