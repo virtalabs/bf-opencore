@@ -218,7 +218,7 @@ class AssetSerializer(serializers.HyperlinkedModelSerializer):
 
         fields = asset_fields + computed_fields
 
-        read_only_fields: ClassVar = ["nic_vendor"]
+        read_only_fields: ClassVar = ["oui_manufacturer"]
 
     def validate_ip_address(self, ip_string: str) -> str:
         """Reject empty IP address strings."""
@@ -410,7 +410,7 @@ class AssetFilter(django_filters.rest_framework.FilterSet):
         # https://docs.djangoproject.com/en/1.11/ref/models/querysets/#field-lookups
         fields = {  # noqa: RUF012
             "hostname": ["icontains"],
-            "nic_vendor": ["icontains"],
+            "oui_manufacturer": ["icontains"],
             "category": ["icontains", "exact"],
             # TODO(taylorcochran): Add risk score filters
             "id": ["in"],
@@ -541,7 +541,7 @@ class AssetViewSet(
         "manufacturer",
         "model",
         "name",
-        "nic_vendor",
+        "oui_manufacturer",
         "os",
         "owner",
         "serial_number",
@@ -567,7 +567,7 @@ class AssetViewSet(
             "owner",
             "ip_address",
             "mac_address",
-            "nic_vendor",
+            "oui_manufacturer",
             "manufacturer",
             "model",
             "os",
