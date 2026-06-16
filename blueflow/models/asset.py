@@ -14,12 +14,10 @@ from django_extensions.db import models as django_extensions
 from simple_history import models as simple_history
 
 from blueflow.models import (
-    asset_custom_field,
     group,
     ports_protocol,
     tag,
     usage,
-    vulnerability,
 )
 
 logger = logging.getLogger(__name__)
@@ -41,52 +39,59 @@ class Asset(django_extensions.TimeStampedModel):
 
     UNKNOWN_CPE_VALUE: str = "*"
 
-    name = models.CharField(max_length=126, blank=True, null=False)
-    hostname = models.TextField(blank=True, null=False, unique=True)
+    name = models.CharField(max_length=126, blank=True, null=False, default="")
+    hostname = models.CharField(
+        max_length=256, blank=True, null=False, unique=True, default=""
+    )
     ip_address = netfields.InetAddressField(
         store_prefix_length=False,
-        blank=True,
-        null=False,
+        null=True,
         verbose_name="IP address",
     )
     mac_address = netfields.MACAddressField(
-        blank=True,
-        null=False,
+        null=True,
         unique=True,
         verbose_name="MAC address",
     )
-    oui_manufacturer = models.TextField(
+    oui_manufacturer = models.CharField(
+        max_length=256,
         blank=True,
         null=False,
         verbose_name="NIC vendor",
+        default="",
     )
-    manufacturer = models.TextField(blank=True, null=False)
-    model = models.TextField(blank=True, null=False)
-    serial_number = models.TextField(blank=True, null=False)
-    udi = models.TextField(blank=True, null=False, verbose_name="UDI")
-    tag_number = models.TextField(blank=True, null=False)
-    category = models.TextField(blank=True, null=False)
+    manufacturer = models.CharField(max_length=256, blank=True, null=False, default="")
+    model = models.CharField(max_length=256, blank=True, null=False, default="")
+    serial_number = models.CharField(max_length=256, blank=True, null=False, default="")
+    udi = models.CharField(
+        max_length=256, blank=True, null=False, verbose_name="UDI", default=""
+    )
+    tag_number = models.CharField(max_length=256, blank=True, null=False, default="")
+    category = models.CharField(max_length=256, blank=True, null=False, default="")
 
-    owner = models.TextField(blank=True, null=False)
-    os = models.TextField(blank=True, null=False, verbose_name="Operating System")
-    app_sw_version = models.TextField(
+    owner = models.CharField(max_length=256, blank=True, null=False, default="")
+    os = models.CharField(
+        max_length=256,
+        blank=True,
+        null=False,
+        verbose_name="Operating System",
+        default="",
+    )
+    app_sw_version = models.CharField(
+        max_length=256,
         blank=True,
         null=False,
         verbose_name="Application software version",
+        default="",
     )
-    last_scanned = models.DateTimeField(blank=True, null=False)
-    last_pinged = models.DateTimeField(blank=True, null=False)
-    external_keys = models.JSONField(blank=True, null=False)
+    last_scanned = models.DateTimeField(
+        null=False, default=datetime.datetime.now(datetime.UTC)
+    )
+    last_pinged = models.DateTimeField(
+        null=False, default=datetime.datetime.now(datetime.UTC)
+    )
     groups = models.ManyToManyField(group.Group, through=group.AssetGroup)
     tags = models.ManyToManyField(tag.Tag, through=tag.AssetTag)
-    vulnerabilities = models.ManyToManyField(
-        vulnerability.Vulnerability,
-        through=vulnerability.AssetVulnerability,
-    )
-    custom_fields = models.ManyToManyField(
-        asset_custom_field.AssetCustomFieldName,
-        through=asset_custom_field.AssetCustomField,
-    )
     history = simple_history.HistoricalRecords()
 
     class Meta:
