@@ -13,7 +13,6 @@ from .scan import Scan
 from .tag import AssetTag, Tag
 from .usage import DayOfWeek, Usage
 from .viper import ViperWebhookJob
-from .vulnerability import AssetVulnerability, Vulnerability
 
 __all__ = [
     "PORT_MAX",
@@ -26,7 +25,6 @@ __all__ = [
     "AssetGroup",
     "AssetPortProtocol",
     "AssetTag",
-    "AssetVulnerability",
     "Attachment",
     "Cidr",
     "DayOfWeek",
@@ -40,5 +38,4 @@ __all__ = [
     "Tag",
     "Usage",
     "ViperWebhookJob",
-    "Vulnerability",
 ]
