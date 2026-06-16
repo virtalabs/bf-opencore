@@ -1,7 +1,5 @@
 """API Views."""
 
-# ViewSets
-from .alert import AlertSerializer, AlertViewSet
 from .asset import AssetSerializer, AssetViewSet, HistoricalAssetSerializer
 from .assetgroup import AssetGroupSerializer, AssetGroupViewSet
 from .assettag import AssetTagSerializer, AssetTagViewSet
@@ -22,8 +20,6 @@ from .user import UserSerializer, UserViewSet
 from .viper import ViperViewSet
 
 __all__ = [
-    "AlertSerializer",
-    "AlertViewSet",
     "AssetGroupSerializer",
     "AssetGroupViewSet",
     "AssetSerializer",
