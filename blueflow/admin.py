@@ -1,7 +1,6 @@
 from django.contrib import admin
 
 from .models import (
-    Alert,
     Asset,
     AssetCustomField,
     AssetCustomFieldName,
@@ -18,11 +17,6 @@ from .models import (
     Tag,
     ViperWebhookJob,
 )
-
-
-@admin.register(Alert)
-class AlertAdmin(admin.ModelAdmin):
-    pass
 
 
 @admin.register(Asset)
