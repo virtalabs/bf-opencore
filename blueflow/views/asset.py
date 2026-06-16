@@ -89,7 +89,6 @@ class AssetUpsertSerializer(serializers.Serializer):
     device_class = serializers.CharField(
         required=False, allow_blank=True, allow_null=True
     )
-    external_keys = serializers.JSONField(required=False, allow_null=True)
     services = AssetServiceSerializer(many=True, required=False)
 
     def validate(self, attrs: dict) -> dict:
@@ -150,9 +149,6 @@ class AssetSerializer(serializers.HyperlinkedModelSerializer):
     scans_url = serializers.HyperlinkedIdentityField(view_name="blueflow:asset-scans")
 
     asset_tags = assettag.AssetTagSerializer(read_only=True, many=True)
-    display_name = serializers.CharField(
-        max_length=126, allow_blank=True, allow_null=True, required=False
-    )
 
     last_updated = serializers.DateTimeField(read_only=True, allow_null=True)
 
@@ -180,7 +176,6 @@ class AssetSerializer(serializers.HyperlinkedModelSerializer):
             "url",
             "tags_url",
             "scans_url",
-            "display_name",
             "last_updated",
             "asset_tags",
             "usage",
@@ -505,7 +500,6 @@ class AssetViewSet(
         default_headers = [
             "id",
             "name",
-            "display_name",
             "hostname",
             "owner",
             "ip_address",

@@ -90,9 +90,6 @@ def _vrl_transform(record: dict) -> dict:
 
     out["open_ports_tcp"] = record["open_ports"]
 
-    if record.get("confidence") is not None:
-        out["external_keys"] = {"tapirxl_confidence": record["confidence"]}
-
     return out
 
 

@@ -261,7 +261,7 @@ def test_cpe_matches_expected_after_upsert_and_get(
         "ip_address": "10.40.2.20",
         "hostname": "BRIGHTSPEED01",
         "manufacturer": "gehealthcare",
-        "product": "brightspeed_elite_select",
+        "model": "brightspeed_elite_select",
         "app_sw_version": "11.2.0",
         "device_class": "CT",
         "services": [{"port": 5355, "protocol": "tcp"}],
