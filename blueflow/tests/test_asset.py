@@ -353,22 +353,26 @@ def test_patch_asset(asset_edit_client: APIClient) -> None:
     assert spam_asset.hostname == "nospam"
 
 
-def test_set_name_empty(asset_edit_client: APIClient) -> None:
-    """PATCHing a hostname to an empty string works."""
+def test_set_name_null(asset_edit_client: APIClient) -> None:
+    """PATCHing hostname to null clears it.
+
+    Required by the nullable-for-uniqueness contract.
+
+    See test_asset_hostname.test_db_allows_multiple_null_hostnames for why
+    the model is nullable. The API must let callers clear a hostname back
+    to NULL or the contract is one-way only.
+    """
     client = asset_edit_client
     spam_asset = models.Asset.objects.create(hostname="spam")
-    # Verify that hostname is what we set it to
     assert spam_asset.hostname == "spam"
-    # Send PATCH request
-    _ = client.patch(
+    response = client.patch(
         f"/api/assets/{spam_asset.id}/",
-        json.dumps({"hostname": ""}),
+        json.dumps({"hostname": None}),
         content_type="application/json",
     )
-    # Query for the new version of spam_asset, verify that its
-    # hostname has changed.
+    assert response.status_code == status.HTTP_200_OK
     spam_asset = models.Asset.objects.get(id=spam_asset.id)
-    assert spam_asset.hostname == ""
+    assert spam_asset.hostname is None
 
 
 def test_field_histogram(auth_client: APIClient) -> None:
