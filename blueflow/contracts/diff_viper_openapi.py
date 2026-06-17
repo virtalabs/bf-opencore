@@ -3,17 +3,97 @@
 from __future__ import annotations
 
 import argparse
+import json
 import shutil
 import subprocess
 import sys
+import tempfile
 from pathlib import Path
+from typing import Any
+
+_HTTP_METHODS = (
+    "get",
+    "post",
+    "put",
+    "patch",
+    "delete",
+    "head",
+    "options",
+    "trace",
+)
 
 
 def _oasdiff_bin() -> str:
     return shutil.which("oasdiff") or "oasdiff"
 
 
-def diff_viper_openapi(
+def _load_json(path: Path) -> dict[str, Any]:
+    return json.loads(path.read_text(encoding="utf-8"))
+
+
+def slice_openapi_for_operation(spec: dict[str, Any], operation: str) -> dict[str, Any]:
+    """Return a minimal OpenAPI spec containing only paths for *operation*."""
+    sliced_paths: dict[str, Any] = {}
+    for path, path_item in spec.get("paths", {}).items():
+        if not isinstance(path_item, dict):
+            continue
+        kept: dict[str, Any] = {}
+        for method in _HTTP_METHODS:
+            op = path_item.get(method)
+            if isinstance(op, dict) and op.get("operationId") == operation:
+                kept[method] = op
+        if kept:
+            if "parameters" in path_item:
+                kept["parameters"] = path_item["parameters"]
+            sliced_paths[path] = kept
+    if not sliced_paths:
+        msg = f"operationId {operation!r} not found in OpenAPI paths"
+        raise ValueError(msg)
+    out: dict[str, Any] = {
+        "openapi": spec.get("openapi", "3.0.0"),
+        "info": spec.get("info", {"title": "sliced", "version": "1"}),
+        "paths": sliced_paths,
+    }
+    if components := spec.get("components"):
+        out["components"] = components
+    return out
+
+
+def _is_oasdiff_cli_error(result: subprocess.CompletedProcess[str]) -> bool:
+    combined = f"{result.stdout or ''}{result.stderr or ''}"
+    lowered = combined.lower()
+    return "unknown flag" in lowered or combined.startswith("Usage:")
+
+
+def _run_oasdiff(
+    binary: str, subcommand: str, baseline_sliced: Path, live_sliced: Path
+) -> subprocess.CompletedProcess[str]:
+    args = [
+        binary,
+        subcommand,
+        str(baseline_sliced),
+        str(live_sliced),
+        "--format",
+        "text",
+    ]
+    if subcommand == "breaking":
+        args.extend(["--fail-on", "ERR"])
+    return subprocess.run(  # noqa: S603
+        args,
+        check=False,
+        capture_output=True,
+        text=True,
+    )
+
+
+def _emit_process_output(result: subprocess.CompletedProcess[str]) -> None:
+    if result.stdout:
+        sys.stdout.write(result.stdout)
+    if result.stderr:
+        sys.stderr.write(result.stderr)
+
+
+def diff_viper_openapi(  # noqa: PLR0911
     *,
     baseline: Path,
     live: Path,
@@ -24,6 +104,7 @@ def diff_viper_openapi(
 
     Returns 0 when there is no baseline (bootstrap), no breaking changes, or
     oasdiff reports only safe changes. Returns 1 when breaking changes exist.
+    Returns 2 when oasdiff fails to run.
     """
     if not baseline.is_file():
         sys.stdout.write(
@@ -37,54 +118,43 @@ def diff_viper_openapi(
         return 1
 
     binary = oasdiff or _oasdiff_bin()
-    op_filter = f"operationId:{operation}"
-    breaking = subprocess.run(  # noqa: S603
-        [
-            binary,
-            "breaking",
-            str(baseline),
-            str(live),
-            "--filter",
-            op_filter,
-            "--format",
-            "text",
-        ],
-        check=False,
-        capture_output=True,
-        text=True,
-    )
-    if breaking.stdout:
-        sys.stdout.write(breaking.stdout)
-    if breaking.stderr:
-        sys.stderr.write(breaking.stderr)
+    try:
+        baseline_spec = slice_openapi_for_operation(_load_json(baseline), operation)
+        live_spec = slice_openapi_for_operation(_load_json(live), operation)
+    except ValueError as exc:
+        sys.stderr.write(f"{exc}\n")
+        return 2
 
-    if breaking.returncode != 0:
-        sys.stderr.write(
-            "::warning::Breaking Viper OpenAPI changes detected "
-            f"for {operation}\n"
+    with tempfile.TemporaryDirectory(prefix="viper-openapi-") as tmp:
+        tmpdir = Path(tmp)
+        baseline_sliced = tmpdir / "baseline.json"
+        live_sliced = tmpdir / "live.json"
+        baseline_sliced.write_text(
+            json.dumps(baseline_spec, indent=2), encoding="utf-8"
         )
-        return 1
+        live_sliced.write_text(json.dumps(live_spec, indent=2), encoding="utf-8")
 
-    changelog = subprocess.run(  # noqa: S603
-        [
-            binary,
-            "changelog",
-            str(baseline),
-            str(live),
-            "--filter",
-            op_filter,
-            "--format",
-            "text",
-        ],
-        check=False,
-        capture_output=True,
-        text=True,
-    )
-    if changelog.stdout.strip():
-        sys.stdout.write("::notice::Non-breaking Viper OpenAPI changes:\n")
-        sys.stdout.write(changelog.stdout)
-    if changelog.stderr:
-        sys.stderr.write(changelog.stderr)
+        breaking = _run_oasdiff(binary, "breaking", baseline_sliced, live_sliced)
+        _emit_process_output(breaking)
+        if _is_oasdiff_cli_error(breaking):
+            sys.stderr.write("::error::oasdiff failed to run\n")
+            return 2
+        if breaking.returncode != 0:
+            sys.stderr.write(
+                "::warning::Breaking Viper OpenAPI changes detected "
+                f"for {operation}\n"
+            )
+            return 1
+
+        changelog = _run_oasdiff(binary, "changelog", baseline_sliced, live_sliced)
+        if changelog.stderr:
+            sys.stderr.write(changelog.stderr)
+        if _is_oasdiff_cli_error(changelog):
+            sys.stderr.write("::error::oasdiff changelog failed to run\n")
+            return 2
+        if changelog.stdout.strip():
+            sys.stdout.write("::notice::Non-breaking Viper OpenAPI changes:\n")
+            sys.stdout.write(changelog.stdout)
 
     sys.stdout.write("No breaking Viper OpenAPI changes detected\n")
     return 0
@@ -106,7 +176,7 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument(
         "--operation",
         default="integrationUpload",
-        help="operationId filter passed to oasdiff",
+        help="operationId to scope the diff",
     )
     parser.add_argument(
         "--oasdiff",

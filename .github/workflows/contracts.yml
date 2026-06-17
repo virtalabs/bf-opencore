@@ -126,7 +126,7 @@ jobs:
           steps.fetch_spec.outputs.skipped != 'true'
         run: |
           curl -fsSL \
-            "https://github.com/oasdiff/oasdiff/releases/download/v1.10.21/oasdiff_1.10.21_linux_amd64.tar.gz" \
+            "https://github.com/oasdiff/oasdiff/releases/download/v1.19.1/oasdiff_1.19.1_linux_amd64.tar.gz" \
             | tar xz -C /usr/local/bin oasdiff
 
       - name: Classify Viper OpenAPI drift
