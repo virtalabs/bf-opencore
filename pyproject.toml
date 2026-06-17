@@ -67,6 +67,10 @@ include = ["blueflow*", "project*", "harness*"]
 testpaths = ["tests", "blueflow/tests", "blueflow/zeek/hl7/tests"]
 addopts = "-ra"
 filterwarnings = ["ignore::DeprecationWarning"]
+markers = [
+    "contract: consumer-side contract conformance (gated in contracts.yml)",
+    "integration: requires external tools (oasdiff, network, etc.)",
+]
 
 [tool.pyright]
 venvPath = "."

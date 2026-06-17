@@ -1,0 +1,25 @@
+{
+  "openapi": "3.0.0",
+  "info": {"title": "t", "version": "1"},
+  "paths": {
+    "/integration": {
+      "post": {
+        "operationId": "integrationUpload",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["ip", "role"],
+                "properties": {
+                  "ip": {"type": "string"},
+                  "role": {"type": "string"}
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}
