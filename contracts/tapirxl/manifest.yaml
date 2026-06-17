@@ -1,0 +1,7 @@
+source: https://github.com/virtalabs/tapirxl
+upstream_ref: PROVISIONAL
+generated_from: blueflow/tests/fixtures/tapirxl_telemetry.jsonl
+generated_via: blueflow/tests/test_tapirxl_viper_regression.py::_vrl_transform
+fetched_at: "2026-06-17T00:00:00Z"
+sha256: 78a9030bdf970f83fc5a007d5a3432f9c44791f1a2e75b852aff70f214757822
+note: Provisional — replace with TapirXL-published golden outputs when available
