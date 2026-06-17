@@ -1,0 +1,8 @@
+{
+  "items": [{"ip": "10.40.2.20"}],
+  "page": 1,
+  "pageSize": 100,
+  "totalCount": 1,
+  "totalPages": 1,
+  "since": "1800-01-01T00:00:00Z"
+}

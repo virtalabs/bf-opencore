@@ -53,4 +53,4 @@ jobs:
       # detects the actual failure via check-run annotations.
       - name: Run tests
         continue-on-error: true
-        run: uv run pytest -n auto --tb=no -q --no-header -ra
+        run: uv run pytest -n auto -m "not contract" --tb=no -q --no-header -ra

@@ -2,7 +2,7 @@ name: Contracts
 
 on:
   push:
-    branches: [develop, main, spike/contract-ci]
+    branches: [develop, main]
   pull_request:
   schedule:
     - cron: "0 6 * * *"
@@ -24,16 +24,13 @@ concurrency:
 
 permissions:
   contents: read
+  actions: read
 
 jobs:
-  verify:
-    name: Verify TapirXL ingest contract
+  contracts:
+    name: Contract verification
     runs-on: ubuntu-latest
     timeout-minutes: 10
-    if: >-
-      github.event_name != 'workflow_dispatch' ||
-      inputs.job == 'all' ||
-      inputs.job == 'verify'
 
     services:
       postgres:
@@ -69,60 +66,23 @@ jobs:
       - name: Run migrations
         run: uv run python project/manage.py migrate --noinput
 
-      - name: Run TapirXL contract tests
+      - name: Verify TapirXL ingest contract
+        if: >-
+          github.event_name == 'push' ||
+          github.event_name == 'pull_request' ||
+          (github.event_name == 'workflow_dispatch' &&
+           (inputs.job == 'verify' || inputs.job == 'all'))
         timeout-minutes: 8
         run: >-
           uv run pytest blueflow/tests/test_contract_tapirxl_ingest.py
           -v --tb=short
 
-  drift:
-    # Scheduled, manual, or spike-branch push (temporary — remove before merge to develop).
-    name: Drift check — Viper payload vs live spec
-    runs-on: ubuntu-latest
-    timeout-minutes: 10
-    if: >-
-      github.event_name == 'schedule' ||
-      (github.event_name == 'workflow_dispatch' &&
-       (inputs.job == 'all' || inputs.job == 'drift')) ||
-      (github.event_name == 'push' &&
-       github.ref == 'refs/heads/spike/contract-ci')
-
-    services:
-      postgres:
-        image: postgres:16
-        env:
-          POSTGRES_USER: blueflow
-          POSTGRES_PASSWORD: blueflow
-          POSTGRES_DB: blueflow
-        ports:
-          - 5432:5432
-        options: >-
-          --health-cmd="pg_isready -U blueflow"
-          --health-interval=10s
-          --health-timeout=5s
-          --health-retries=5
-
-    env:
-      DATABASE_URL: postgresql://blueflow:blueflow@localhost:5432/blueflow
-      DJANGO_SETTINGS_MODULE: project.settings.test
-
-    steps:
-      - uses: actions/checkout@v6
-
-      - uses: astral-sh/setup-uv@v7
-
-      - uses: actions/setup-python@v6
-        with:
-          python-version: "3.12"
-
-      - name: Install dependencies
-        run: uv sync --all-extras
-
-      - name: Run migrations
-        run: uv run python project/manage.py migrate --noinput
-
       - name: Fetch Viper OpenAPI spec
         id: fetch_spec
+        if: >-
+          github.event_name == 'schedule' ||
+          (github.event_name == 'workflow_dispatch' &&
+           (inputs.job == 'drift' || inputs.job == 'all'))
         continue-on-error: true
         env:
           VIPER_OPENAPI_URL: ${{ vars.VIPER_OPENAPI_URL }}
@@ -144,8 +104,53 @@ jobs:
           fi
           echo "skipped=false" >> "$GITHUB_OUTPUT"
 
+      - name: Download previous Viper OpenAPI baseline
+        if: >-
+          (github.event_name == 'schedule' ||
+           (github.event_name == 'workflow_dispatch' &&
+            (inputs.job == 'drift' || inputs.job == 'all'))) &&
+          steps.fetch_spec.outputs.skipped != 'true'
+        continue-on-error: true
+        uses: dawidd6/action-download-artifact@v6
+        with:
+          workflow: contracts.yml
+          name: viper-openapi-baseline
+          path: /tmp/baseline
+          if_no_artifact_found: warn
+
+      - name: Install oasdiff
+        if: >-
+          (github.event_name == 'schedule' ||
+           (github.event_name == 'workflow_dispatch' &&
+            (inputs.job == 'drift' || inputs.job == 'all'))) &&
+          steps.fetch_spec.outputs.skipped != 'true'
+        run: |
+          curl -fsSL \
+            "https://github.com/oasdiff/oasdiff/releases/download/v1.10.21/oasdiff_1.10.21_linux_amd64.tar.gz" \
+            | tar xz -C /usr/local/bin oasdiff
+
+      - name: Classify Viper OpenAPI drift
+        if: >-
+          (github.event_name == 'schedule' ||
+           (github.event_name == 'workflow_dispatch' &&
+            (inputs.job == 'drift' || inputs.job == 'all'))) &&
+          steps.fetch_spec.outputs.skipped != 'true'
+        continue-on-error: true
+        run: |
+          if ! uv run python -m blueflow.contracts.diff_viper_openapi \
+            --baseline /tmp/baseline/openapi.json \
+            --live /tmp/viper_openapi.json \
+            --operation integrationUpload; then
+            echo "::warning::Viper OpenAPI drift classification reported breaking changes"
+            exit 1
+          fi
+
       - name: Validate Viper payload against live spec
-        if: steps.fetch_spec.outputs.skipped != 'true'
+        if: >-
+          (github.event_name == 'schedule' ||
+           (github.event_name == 'workflow_dispatch' &&
+            (inputs.job == 'drift' || inputs.job == 'all'))) &&
+          steps.fetch_spec.outputs.skipped != 'true'
         continue-on-error: true
         run: |
           uv run python project/manage.py emit_viper_sample --output /tmp/viper_sample.json
@@ -155,3 +160,23 @@ jobs:
             echo "::warning::BlueFlow Viper payload failed contract validation against live spec"
             exit 1
           fi
+
+      - name: Upload Viper OpenAPI baseline for next drift run
+        if: >-
+          (github.event_name == 'schedule' ||
+           (github.event_name == 'workflow_dispatch' &&
+            (inputs.job == 'drift' || inputs.job == 'all'))) &&
+          steps.fetch_spec.outputs.skipped != 'true'
+        run: mkdir -p /tmp/baseline-upload && cp /tmp/viper_openapi.json /tmp/baseline-upload/openapi.json
+
+      - name: Publish Viper OpenAPI baseline artifact
+        if: >-
+          (github.event_name == 'schedule' ||
+           (github.event_name == 'workflow_dispatch' &&
+            (inputs.job == 'drift' || inputs.job == 'all'))) &&
+          steps.fetch_spec.outputs.skipped != 'true'
+        uses: actions/upload-artifact@v4
+        with:
+          name: viper-openapi-baseline
+          path: /tmp/baseline-upload/openapi.json
+          retention-days: 90

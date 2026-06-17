@@ -8,8 +8,11 @@ from rest_framework import status
 
 from blueflow import models
 
+pytestmark = pytest.mark.contract
+
 _REPO_ROOT = Path(__file__).resolve().parents[2]
 _GOLDEN_OUTPUTS = _REPO_ROOT / "contracts" / "tapirxl" / "golden_outputs.jsonl"
+_TAPIRXL_FIXTURES = _REPO_ROOT / "contracts" / "fixtures" / "tapirxl"
 
 
 def _load_golden_outputs() -> list[dict]:
@@ -52,6 +55,37 @@ def test_tapirxl_golden_output_rejects_missing_identity(asset_edit_client) -> No
     resp = asset_edit_client.put(
         "/api/assets/upsert/",
         json.dumps({"hostname": "orphan-host", "ip_address": "10.0.0.1"}),
+        content_type="application/json",
+    )
+    assert resp.status_code == status.HTTP_400_BAD_REQUEST
+
+
+def test_tapirxl_golden_output_rejects_invalid_ip(asset_edit_client) -> None:
+    """Known-bad record with invalid ip_address is rejected."""
+    resp = asset_edit_client.put(
+        "/api/assets/upsert/",
+        json.dumps(
+            {
+                "mac_address": "00:11:22:33:44:66",
+                "manufacturer": "Acme",
+                "ip_address": "not-an-ip",
+            }
+        ),
+        content_type="application/json",
+    )
+    assert resp.status_code == status.HTTP_400_BAD_REQUEST
+
+
+def test_tapirxl_drill_fixture_rejects(asset_edit_client) -> None:
+    """Drill fixture without manufacturer is rejected."""
+    payload = json.loads(
+        (_TAPIRXL_FIXTURES / "break_missing_manufacturer.json").read_text(
+            encoding="utf-8"
+        )
+    )
+    resp = asset_edit_client.put(
+        "/api/assets/upsert/",
+        json.dumps(payload),
         content_type="application/json",
     )
     assert resp.status_code == status.HTTP_400_BAD_REQUEST
