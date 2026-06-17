@@ -76,14 +76,16 @@ jobs:
           -v --tb=short
 
   drift:
-    # Scheduled or manual drift only; never blocks PRs.
+    # Scheduled, manual, or spike-branch push (temporary — remove before merge to develop).
     name: Drift check — Viper payload vs live spec
     runs-on: ubuntu-latest
     timeout-minutes: 10
     if: >-
       github.event_name == 'schedule' ||
       (github.event_name == 'workflow_dispatch' &&
-       (inputs.job == 'all' || inputs.job == 'drift'))
+       (inputs.job == 'all' || inputs.job == 'drift')) ||
+      (github.event_name == 'push' &&
+       github.ref == 'refs/heads/spike/contract-ci')
 
     services:
       postgres:
