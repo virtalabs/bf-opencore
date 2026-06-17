@@ -27,6 +27,10 @@ def validate_tcp_port_range(_: list[int]) -> None:
     """Retained as an import target for historical migrations only."""
 
 
+def default_timestamp() -> datetime.datetime:
+    return datetime.datetime.now(datetime.UTC)
+
+
 class Asset(django_extensions.TimeStampedModel):
     """Holds our Assets.
 
@@ -40,7 +44,12 @@ class Asset(django_extensions.TimeStampedModel):
     UNKNOWN_CPE_VALUE: str = "*"
     UNKNOWN_OUI_MANUFACTURER: str = ""
 
-    name = models.CharField(max_length=126, blank=True, null=False, default="")
+    name = models.CharField(
+        max_length=126,
+        blank=True,
+        null=False,
+        default="",
+    )
     # we want nullable for uniqueness
     hostname = models.CharField(  # noqa: DJ001
         max_length=256,
@@ -65,9 +74,24 @@ class Asset(django_extensions.TimeStampedModel):
         verbose_name="NIC vendor",
         default="",
     )
-    manufacturer = models.CharField(max_length=256, blank=True, null=False, default="")
-    model = models.CharField(max_length=256, blank=True, null=False, default="")
-    serial_number = models.CharField(max_length=256, blank=True, null=False, default="")
+    manufacturer = models.CharField(
+        max_length=256,
+        blank=True,
+        null=False,
+        default="",
+    )
+    model = models.CharField(
+        max_length=256,
+        blank=True,
+        null=False,
+        default="",
+    )
+    serial_number = models.CharField(
+        max_length=256,
+        blank=True,
+        null=False,
+        default="",
+    )
     udi = models.CharField(
         max_length=256,
         blank=True,
@@ -75,9 +99,18 @@ class Asset(django_extensions.TimeStampedModel):
         verbose_name="UDI",
         default="",
     )
-    tag_number = models.CharField(max_length=256, blank=True, null=False, default="")
-    category = models.CharField(max_length=256, blank=True, null=False, default="")
-
+    tag_number = models.CharField(
+        max_length=256,
+        blank=True,
+        null=False,
+        default="",
+    )
+    category = models.CharField(
+        max_length=256,
+        blank=True,
+        null=False,
+        default="",
+    )
     owner = models.CharField(max_length=256, blank=True, null=False, default="")
     os = models.CharField(
         max_length=256,
@@ -94,13 +127,21 @@ class Asset(django_extensions.TimeStampedModel):
         default="",
     )
     last_scanned = models.DateTimeField(
-        null=False, default=datetime.datetime.now(datetime.UTC)
+        null=False,
+        default=default_timestamp,
     )
     last_pinged = models.DateTimeField(
-        null=False, default=datetime.datetime.now(datetime.UTC)
+        null=False,
+        default=default_timestamp,
     )
-    groups = models.ManyToManyField(group.Group, through=group.AssetGroup)
-    tags = models.ManyToManyField(tag.Tag, through=tag.AssetTag)
+    groups = models.ManyToManyField(
+        group.Group,
+        through=group.AssetGroup,
+    )
+    tags = models.ManyToManyField(
+        tag.Tag,
+        through=tag.AssetTag,
+    )
     history = simple_history.HistoricalRecords()
 
     class Meta:
