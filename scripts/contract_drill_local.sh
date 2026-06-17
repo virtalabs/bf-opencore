@@ -32,7 +32,12 @@ if command -v oasdiff >/dev/null 2>&1; then
     --operation integrationUpload; then
     fail "oasdiff should report breaking changes (exit 1)"
   else
-    pass "oasdiff detected breaking fixture drift"
+    rc=$?
+    if [ "$rc" -eq 2 ]; then
+      fail "oasdiff failed to run (exit 2)"
+    else
+      pass "oasdiff detected breaking fixture drift"
+    fi
   fi
 else
   skip "oasdiff not on PATH"
