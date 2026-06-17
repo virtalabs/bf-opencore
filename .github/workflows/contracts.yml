@@ -2,10 +2,21 @@ name: Contracts
 
 on:
   push:
-    branches: [develop, main]
+    branches: [develop, main, spike/contract-ci]
   pull_request:
   schedule:
     - cron: "0 6 * * *"
+  workflow_dispatch:
+    inputs:
+      job:
+        description: Which job(s) to run
+        required: true
+        default: all
+        type: choice
+        options:
+          - all
+          - verify
+          - drift
 
 concurrency:
   group: contracts-${{ github.workflow }}-${{ github.ref }}
@@ -19,6 +30,10 @@ jobs:
     name: Verify TapirXL ingest contract
     runs-on: ubuntu-latest
     timeout-minutes: 10
+    if: >-
+      github.event_name != 'workflow_dispatch' ||
+      inputs.job == 'all' ||
+      inputs.job == 'verify'
 
     services:
       postgres:
@@ -61,11 +76,14 @@ jobs:
           -v --tb=short
 
   drift:
+    # Scheduled or manual drift only; never blocks PRs.
     name: Drift check — Viper payload vs live spec
     runs-on: ubuntu-latest
     timeout-minutes: 10
-    # Scheduled only; never blocks PRs.
-    if: github.event_name == 'schedule'
+    if: >-
+      github.event_name == 'schedule' ||
+      (github.event_name == 'workflow_dispatch' &&
+       (inputs.job == 'all' || inputs.job == 'drift'))
 
     services:
       postgres:
