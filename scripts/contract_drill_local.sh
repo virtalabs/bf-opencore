@@ -51,7 +51,12 @@ if uv run python -m blueflow.contracts.check_viper_payload \
   --sample "$VIPER_FIXTURES/sample_page.json"; then
   fail "check_viper_payload should fail against breaking spec"
 else
-  pass "payload validation rejected non-conformant sample"
+  rc=$?
+  if [ "$rc" -ne 1 ]; then
+    fail "check_viper_payload unexpected exit $rc (expected 1)"
+  else
+    pass "payload validation rejected non-conformant sample"
+  fi
 fi
 
 echo ""
