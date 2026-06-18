@@ -59,10 +59,16 @@ uv pip install -e ".[dev]"
 - **`tests/`** (project-level): Smoke and functional tests for the minimal project (schema, URL wiring, migrations). This is the default `pytest` collection target.
 - **`blueflow/tests/`** (app-level): Integration and functional tests for the blueflow app.
 
-**Run all tests**
+**Run default tests** (excludes `@pytest.mark.contract`; see `contracts.yml` for contract lane)
 
 ```bash
 uv run pytest
+```
+
+**Run contract tests**
+
+```bash
+uv run pytest -m contract
 ```
 
 **Run only project-level tests**

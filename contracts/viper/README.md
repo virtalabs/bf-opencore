@@ -36,6 +36,7 @@ export VIPER_API_TOKEN=contract-test-token
 export DATABASE_URL=postgresql://blueflow:blueflow@localhost:5432/blueflow
 export DJANGO_SETTINGS_MODULE=project.settings.test
 
+# Default pytest skips @pytest.mark.contract; -m contract is required.
 uv run pytest blueflow/tests/test_contract_viper_wire.py -m contract -v
 
 docker rm -f viper-prism

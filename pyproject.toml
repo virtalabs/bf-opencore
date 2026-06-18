@@ -64,10 +64,10 @@ include = ["blueflow*", "project*", "harness*"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests", "blueflow/tests", "blueflow/zeek/hl7/tests"]
-addopts = "-ra"
+addopts = "-ra -m 'not contract'"
 filterwarnings = ["ignore::DeprecationWarning"]
 markers = [
-    "contract: consumer-side contract conformance (gated in contracts.yml)",
+    "contract: excluded from default pytest; run with -m contract (see contracts.yml)",
     "integration: requires external tools (oasdiff, network, etc.)",
 ]
 
