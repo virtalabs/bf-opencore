@@ -37,15 +37,12 @@ start_prism() {
   docker run --rm -d --name "$PRISM_CONTAINER" -p 4010:4010 \
     -v "$SLICED_SPEC:/spec/openapi.json:ro" \
     stoplight/prism:4 mock -h 0.0.0.0 /spec/openapi.json
-  for i in $(seq 1 30); do
-    if curl -sf http://127.0.0.1:4010/ >/dev/null 2>&1; then
-      export VIPER_PRISM_BASE_URL=http://127.0.0.1:4010
-      export VIPER_API_TOKEN="${VIPER_API_TOKEN:-contract-test-token}"
-      STARTED_PRISM=true
-      return 0
-    fi
-    sleep 1
-  done
+  if ./scripts/wait_for_prism.sh http://127.0.0.1:4010/ "$PRISM_CONTAINER" 60; then
+    export VIPER_PRISM_BASE_URL=http://127.0.0.1:4010
+    export VIPER_API_TOKEN="${VIPER_API_TOKEN:-contract-test-token}"
+    STARTED_PRISM=true
+    return 0
+  fi
   return 1
 }
 
