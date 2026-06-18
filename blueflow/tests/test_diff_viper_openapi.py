@@ -141,6 +141,36 @@ def test_diff_returns_two_on_malformed_baseline_json(tmp_path) -> None:
     assert diff_viper_openapi(baseline=baseline, live=live) == 2
 
 
+def test_diff_returns_two_when_oasdiff_missing(tmp_path) -> None:
+    baseline = tmp_path / "baseline.json"
+    live = tmp_path / "live.json"
+    spec = json.dumps(
+        {
+            "openapi": "3.0.0",
+            "paths": {
+                "/integration": {
+                    "post": {"operationId": "integrationUpload", "responses": {}}
+                }
+            },
+        }
+    )
+    baseline.write_text(spec, encoding="utf-8")
+    live.write_text(spec, encoding="utf-8")
+
+    with patch(
+        "blueflow.contracts.diff_viper_openapi.subprocess.run",
+        side_effect=FileNotFoundError(2, "No such file"),
+    ):
+        assert (
+            diff_viper_openapi(
+                baseline=baseline,
+                live=live,
+                oasdiff="/nonexistent/oasdiff",
+            )
+            == 2
+        )
+
+
 @pytest.mark.integration
 def test_diff_integration_with_oasdiff_binary() -> None:
     if shutil.which("oasdiff") is None:
