@@ -11,39 +11,12 @@ from typing import Any
 import jsonschema
 from jsonschema import RefResolver
 
+_HTTP_METHODS = ("post", "put", "patch")
+_DEFAULT_OPERATION_ID = "integrationUpload"
+
 
 def _load_json(path: Path) -> Any:
     return json.loads(path.read_text(encoding="utf-8"))
-
-
-def _find_integration_upload_schema(spec: dict[str, Any]) -> dict[str, Any]:
-    """Return the JSON Schema for a single integrationUpload page item."""
-    paths = spec.get("paths", {})
-    for path_item in paths.values():
-        for method in ("post", "put", "patch"):
-            operation = path_item.get(method)
-            if not isinstance(operation, dict):
-                continue
-            op_id = operation.get("operationId", "")
-            if op_id == "integrationUpload" or "integration" in op_id.lower():
-                request_body = operation.get("requestBody", {})
-                content = request_body.get("content", {})
-                media = content.get("application/json", {})
-                schema = media.get("schema")
-                if isinstance(schema, dict):
-                    if "$ref" in schema:
-                        return _resolve_ref(spec, schema["$ref"])
-                    items = schema.get("properties", {}).get("items", {})
-                    if "$ref" in items:
-                        return _resolve_ref(spec, items["$ref"])
-                    item_items = items.get("items")
-                    if isinstance(item_items, dict):
-                        if "$ref" in item_items:
-                            return _resolve_ref(spec, item_items["$ref"])
-                        return item_items
-                    return schema
-    msg = "integrationUpload request item schema not found in OpenAPI spec"
-    raise ValueError(msg)
 
 
 def _resolve_ref(spec: dict[str, Any], ref: str) -> dict[str, Any]:
@@ -51,17 +24,84 @@ def _resolve_ref(spec: dict[str, Any], ref: str) -> dict[str, Any]:
         msg = f"Unsupported $ref (expected local): {ref}"
         raise ValueError(msg)
     node: Any = spec
-    for part in ref.lstrip("#/").split("/"):
-        node = node[part]
+    try:
+        for part in ref.lstrip("#/").split("/"):
+            node = node[part]
+    except KeyError as exc:
+        msg = f"$ref path not found: {ref}"
+        raise ValueError(msg) from exc
     if not isinstance(node, dict):
         msg = f"$ref did not resolve to an object: {ref}"
         raise TypeError(msg)
     return node
 
 
-def validate_viper_sample(*, spec: dict[str, Any], sample: dict[str, Any]) -> None:
+def _resolve_schema_node(
+    spec: dict[str, Any], schema: dict[str, Any]
+) -> dict[str, Any]:
+    if "$ref" in schema:
+        return _resolve_ref(spec, schema["$ref"])
+    return schema
+
+
+def _item_schema_from_request_schema(
+    spec: dict[str, Any], schema: dict[str, Any]
+) -> dict[str, Any]:
+    """Unwrap a request body schema to the JSON Schema for one page item."""
+    resolved = _resolve_schema_node(spec, schema)
+    items_prop = resolved.get("properties", {}).get("items")
+    if not isinstance(items_prop, dict):
+        return resolved
+
+    if "$ref" in items_prop:
+        items_prop = _resolve_ref(spec, items_prop["$ref"])
+
+    nested = items_prop.get("items")
+    if isinstance(nested, dict):
+        return _resolve_schema_node(spec, nested)
+
+    return resolved
+
+
+def _find_operation(spec: dict[str, Any], operation_id: str) -> dict[str, Any]:
+    for path_item in spec.get("paths", {}).values():
+        if not isinstance(path_item, dict):
+            continue
+        for method in _HTTP_METHODS:
+            operation = path_item.get(method)
+            if (
+                isinstance(operation, dict)
+                and operation.get("operationId") == operation_id
+            ):
+                return operation
+    msg = f"operationId {operation_id!r} not found in OpenAPI paths"
+    raise ValueError(msg)
+
+
+def find_integration_upload_item_schema(
+    spec: dict[str, Any],
+    operation_id: str = _DEFAULT_OPERATION_ID,
+) -> dict[str, Any]:
+    """Return the JSON Schema for a single integrationUpload page item."""
+    operation = _find_operation(spec, operation_id)
+    request_body = operation.get("requestBody", {})
+    content = request_body.get("content", {})
+    media = content.get("application/json", {})
+    schema = media.get("schema")
+    if not isinstance(schema, dict):
+        msg = f"{operation_id} request body schema not found in OpenAPI spec"
+        raise TypeError(msg)
+    return _item_schema_from_request_schema(spec, schema)
+
+
+def validate_viper_sample(
+    *,
+    spec: dict[str, Any],
+    sample: dict[str, Any],
+    operation_id: str = _DEFAULT_OPERATION_ID,
+) -> None:
     """Validate each item in a Viper page body against the integrationUpload schema."""
-    item_schema = _find_integration_upload_schema(spec)
+    item_schema = find_integration_upload_item_schema(spec, operation_id)
     resolver = RefResolver.from_schema(spec)
     items = sample.get("items", [])
     if not items:
