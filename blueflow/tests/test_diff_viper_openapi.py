@@ -15,6 +15,8 @@ from blueflow.contracts.diff_viper_openapi import (
     slice_openapi_for_operation,
 )
 
+pytestmark = pytest.mark.contract
+
 _REPO_ROOT = Path(__file__).resolve().parents[2]
 _VIPER_FIXTURES = _REPO_ROOT / "contracts" / "fixtures" / "viper"
 
@@ -129,6 +131,14 @@ def test_diff_returns_one_when_breaking_changes(tmp_path, capsys) -> None:
             == 1
         )
     assert "Breaking Viper OpenAPI changes" in capsys.readouterr().err
+
+
+def test_diff_returns_two_on_malformed_baseline_json(tmp_path) -> None:
+    baseline = tmp_path / "baseline.json"
+    live = tmp_path / "live.json"
+    baseline.write_text("{not json", encoding="utf-8")
+    live.write_text('{"openapi":"3.0.0","paths":{}}', encoding="utf-8")
+    assert diff_viper_openapi(baseline=baseline, live=live) == 2
 
 
 @pytest.mark.integration

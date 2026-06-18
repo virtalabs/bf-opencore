@@ -11,6 +11,7 @@ from django.core.management import call_command
 
 from blueflow.contracts.check_viper_payload import (
     find_integration_upload_item_schema,
+    main as check_viper_payload_main,
     validate_viper_sample,
 )
 
@@ -56,14 +57,6 @@ def test_find_integration_upload_item_schema_unknown_operation_raises() -> None:
         find_integration_upload_item_schema(spec, operation_id="missingOp")
 
 
-def test_emit_viper_sample_validates_against_verify_fixture(tmp_path) -> None:
-    output = tmp_path / "sample.json"
-    call_command("emit_viper_sample", output=str(output))
-    spec = _load_json(_VIPER_FIXTURES / "verify_openapi.json")
-    sample = _load_json(output)
-    validate_viper_sample(spec=spec, sample=sample)
-
-
 def test_validate_viper_sample_fails_on_missing_required_item_field() -> None:
     spec = {
         "openapi": "3.0.0",
@@ -89,3 +82,60 @@ def test_validate_viper_sample_fails_on_missing_required_item_field() -> None:
     sample = _load_json(_VIPER_FIXTURES / "sample_page_missing_field.json")
     with pytest.raises(jsonschema.ValidationError):
         validate_viper_sample(spec=spec, sample=sample)
+
+
+def test_emit_viper_sample_validates_against_verify_fixture(tmp_path) -> None:
+    output = tmp_path / "sample.json"
+    call_command("emit_viper_sample", output=str(output))
+    spec = _load_json(_VIPER_FIXTURES / "verify_openapi.json")
+    sample = _load_json(output)
+    validate_viper_sample(spec=spec, sample=sample)
+
+
+def test_check_viper_payload_main_malformed_spec_json(tmp_path) -> None:
+    bad_spec = tmp_path / "bad.json"
+    sample = tmp_path / "sample.json"
+    bad_spec.write_text("{not json", encoding="utf-8")
+    sample.write_text('{"items": [{"ip": "10.0.0.1"}]}', encoding="utf-8")
+    assert (
+        check_viper_payload_main(
+            ["--spec", str(bad_spec), "--sample", str(sample)]
+        )
+        == 1
+    )
+
+
+def test_check_viper_payload_main_invalid_ref(tmp_path) -> None:
+    spec = tmp_path / "spec.json"
+    sample = tmp_path / "sample.json"
+    spec.write_text(
+        json.dumps(
+            {
+                "openapi": "3.0.0",
+                "paths": {
+                    "/integration": {
+                        "post": {
+                            "operationId": "integrationUpload",
+                            "requestBody": {
+                                "content": {
+                                    "application/json": {
+                                        "schema": {
+                                            "$ref": "#/components/schemas/Missing"
+                                        }
+                                    }
+                                }
+                            },
+                        }
+                    }
+                },
+            }
+        ),
+        encoding="utf-8",
+    )
+    sample.write_text('{"items": [{"ip": "10.0.0.1"}]}', encoding="utf-8")
+    assert (
+        check_viper_payload_main(
+            ["--spec", str(spec), "--sample", str(sample)]
+        )
+        == 1
+    )
