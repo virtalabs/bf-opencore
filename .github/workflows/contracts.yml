@@ -66,7 +66,7 @@ jobs:
       - name: Run migrations
         run: uv run python project/manage.py migrate --noinput
 
-      - name: Verify TapirXL ingest contract
+      - name: Verify contract tests
         if: >-
           github.event_name == 'push' ||
           github.event_name == 'pull_request' ||
@@ -74,7 +74,11 @@ jobs:
            (inputs.job == 'verify' || inputs.job == 'all'))
         timeout-minutes: 8
         run: >-
-          uv run pytest blueflow/tests/test_contract_tapirxl_ingest.py
+          uv run pytest
+          blueflow/tests/test_contract_tapirxl_ingest.py
+          blueflow/tests/test_check_viper_payload.py
+          blueflow/tests/test_diff_viper_openapi.py
+          -m "contract and not integration"
           -v --tb=short
 
       - name: Fetch Viper OpenAPI spec

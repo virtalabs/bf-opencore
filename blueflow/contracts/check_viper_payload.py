@@ -122,11 +122,17 @@ def main(argv: list[str] | None = None) -> int:
         "--sample", required=True, type=Path, help="Path to emitted page body JSON"
     )
     args = parser.parse_args(argv)
-    spec = _load_json(args.spec)
-    sample = _load_json(args.sample)
     try:
+        spec = _load_json(args.spec)
+        sample = _load_json(args.sample)
         validate_viper_sample(spec=spec, sample=sample)
-    except (jsonschema.ValidationError, ValueError, TypeError) as exc:
+    except (
+        json.JSONDecodeError,
+        jsonschema.ValidationError,
+        ValueError,
+        TypeError,
+        KeyError,
+    ) as exc:
         sys.stderr.write(f"Contract validation failed: {exc}\n")
         return 1
     sys.stdout.write("Contract validation passed\n")

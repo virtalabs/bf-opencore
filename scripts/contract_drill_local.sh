@@ -17,7 +17,8 @@ echo "=== 1. Permanent negative contract tests ==="
 if uv run pytest \
   blueflow/tests/test_contract_tapirxl_ingest.py \
   blueflow/tests/test_check_viper_payload.py \
-  -m contract -q; then
+  blueflow/tests/test_diff_viper_openapi.py \
+  -m "contract and not integration" -q; then
   pass "permanent negative tests"
 else
   fail "permanent negative tests"

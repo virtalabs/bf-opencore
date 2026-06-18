@@ -119,8 +119,13 @@ def diff_viper_openapi(  # noqa: PLR0911
 
     binary = oasdiff or _oasdiff_bin()
     try:
-        baseline_spec = slice_openapi_for_operation(_load_json(baseline), operation)
+        baseline_spec = slice_openapi_for_operation(
+            _load_json(baseline), operation
+        )
         live_spec = slice_openapi_for_operation(_load_json(live), operation)
+    except json.JSONDecodeError as exc:
+        sys.stderr.write(f"Invalid OpenAPI JSON: {exc}\n")
+        return 2
     except ValueError as exc:
         sys.stderr.write(f"{exc}\n")
         return 2
