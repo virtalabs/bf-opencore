@@ -75,18 +75,12 @@ jobs:
 
       - name: Start Prism mock
         run: |
+          test -f /tmp/viper-sliced.json || { echo "Sliced spec missing" >&2; exit 1; }
           docker run -d --name viper-prism -p 4010:4010 \
             -v /tmp/viper-sliced.json:/spec/openapi.json:ro \
             stoplight/prism:4@sha256:08dc16243047a3263beca814b544a5be81e9ec25ca5757cdc4170c84f7431355 \
             mock -h 0.0.0.0 /spec/openapi.json
-          for i in $(seq 1 30); do
-            if curl -sf http://127.0.0.1:4010/ >/dev/null 2>&1; then
-              exit 0
-            fi
-            sleep 1
-          done
-          echo "Prism failed to start" >&2
-          exit 1
+          ./scripts/wait_for_prism.sh http://127.0.0.1:4010/ viper-prism 60
 
       - name: Verify contract tests
         timeout-minutes: 8
@@ -220,17 +214,13 @@ jobs:
           VIPER_API_TOKEN: ${{ secrets.VIPER_API_TOKEN }}
         run: |
           ./scripts/slice_viper_openapi.sh /tmp/viper_live.json /tmp/viper-sliced.json
+          test -f /tmp/viper-sliced.json || { echo "Sliced spec missing" >&2; exit 1; }
           docker rm -f viper-prism-drift 2>/dev/null || true
           docker run -d --name viper-prism-drift -p 4011:4010 \
             -v /tmp/viper-sliced.json:/spec/openapi.json:ro \
             stoplight/prism:4@sha256:08dc16243047a3263beca814b544a5be81e9ec25ca5757cdc4170c84f7431355 \
             mock -h 0.0.0.0 /spec/openapi.json
-          for i in $(seq 1 30); do
-            if curl -sf http://127.0.0.1:4011/ >/dev/null 2>&1; then
-              break
-            fi
-            sleep 1
-          done
+          ./scripts/wait_for_prism.sh http://127.0.0.1:4011/ viper-prism-drift 60
           export VIPER_PRISM_BASE_URL=http://127.0.0.1:4011
           export VIPER_API_TOKEN="${VIPER_API_TOKEN:-contract-test-token}"
           uv run python project/manage.py migrate --noinput
