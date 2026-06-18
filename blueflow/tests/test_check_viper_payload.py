@@ -62,3 +62,30 @@ def test_emit_viper_sample_validates_against_verify_fixture(tmp_path) -> None:
     spec = _load_json(_VIPER_FIXTURES / "verify_openapi.json")
     sample = _load_json(output)
     validate_viper_sample(spec=spec, sample=sample)
+
+
+def test_validate_viper_sample_fails_on_missing_required_item_field() -> None:
+    spec = {
+        "openapi": "3.0.0",
+        "paths": {
+            "/integration": {
+                "post": {
+                    "operationId": "integrationUpload",
+                    "requestBody": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "required": ["ip"],
+                                    "properties": {"ip": {"type": "string"}},
+                                }
+                            }
+                        }
+                    },
+                }
+            }
+        },
+    }
+    sample = _load_json(_VIPER_FIXTURES / "sample_page_missing_field.json")
+    with pytest.raises(jsonschema.ValidationError):
+        validate_viper_sample(spec=spec, sample=sample)

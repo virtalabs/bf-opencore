@@ -1,5 +1,5 @@
 {
-  "items": [{"ip": "10.40.2.20"}],
+  "items": [{"upstreamApi": "https://example.com/api/assets/1/"}],
   "page": 1,
   "pageSize": 100,
   "totalCount": 1,
