@@ -22,16 +22,17 @@ _HTTP_METHODS = (
     "trace",
 )
 
-
-def _oasdiff_bin() -> str:
-    return shutil.which("oasdiff") or "oasdiff"
+DEFAULT_OPERATION_ID = "assets-processIntegrationCreate"
 
 
-def _load_json(path: Path) -> dict[str, Any]:
+def load_spec(path: Path) -> dict[str, Any]:
     return json.loads(path.read_text(encoding="utf-8"))
 
 
-def slice_openapi_for_operation(spec: dict[str, Any], operation: str) -> dict[str, Any]:
+def slice_for_operation(
+    spec: dict[str, Any],
+    operation: str = DEFAULT_OPERATION_ID,
+) -> dict[str, Any]:
     """Return a minimal OpenAPI spec containing only paths for *operation*."""
     sliced_paths: dict[str, Any] = {}
     for path, path_item in spec.get("paths", {}).items():
@@ -57,6 +58,15 @@ def slice_openapi_for_operation(spec: dict[str, Any], operation: str) -> dict[st
     if components := spec.get("components"):
         out["components"] = components
     return out
+
+
+def slice_openapi_for_operation(spec: dict[str, Any], operation: str) -> dict[str, Any]:
+    """Return a minimal OpenAPI spec containing only paths for *operation*."""
+    return slice_for_operation(spec, operation)
+
+
+def _oasdiff_bin() -> str:
+    return shutil.which("oasdiff") or "oasdiff"
 
 
 def _is_oasdiff_cli_error(result: subprocess.CompletedProcess[str]) -> bool:
@@ -97,7 +107,7 @@ def diff_viper_openapi(  # noqa: PLR0911
     *,
     baseline: Path,
     live: Path,
-    operation: str = "integrationUpload",
+    operation: str = DEFAULT_OPERATION_ID,
     oasdiff: str | None = None,
 ) -> int:
     """Compare baseline vs live OpenAPI specs for breaking changes.
@@ -119,10 +129,8 @@ def diff_viper_openapi(  # noqa: PLR0911
 
     binary = oasdiff or _oasdiff_bin()
     try:
-        baseline_spec = slice_openapi_for_operation(
-            _load_json(baseline), operation
-        )
-        live_spec = slice_openapi_for_operation(_load_json(live), operation)
+        baseline_spec = slice_openapi_for_operation(load_spec(baseline), operation)
+        live_spec = slice_openapi_for_operation(load_spec(live), operation)
     except json.JSONDecodeError as exc:
         sys.stderr.write(f"Invalid OpenAPI JSON: {exc}\n")
         return 2
@@ -188,7 +196,7 @@ def main(argv: list[str] | None = None) -> int:
     )
     parser.add_argument(
         "--operation",
-        default="integrationUpload",
+        default=DEFAULT_OPERATION_ID,
         help="operationId to scope the diff",
     )
     parser.add_argument(

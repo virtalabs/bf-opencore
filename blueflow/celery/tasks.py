@@ -31,17 +31,22 @@ def _send_viper_payload(viper_data: ViperWebhookRequest, request_id: str) -> str
     Wrapping each post in its own celery task would be simple enough.
     """
     import json
+    import os
 
     response_list = ViperWebhookResponseList.from_request(
         viper_data, request_id=request_id
     )
     viper_responses = []
+    headers = {"Content-Type": "application/json"}
+    api_token = os.environ.get("VIPER_API_TOKEN")
+    if api_token:
+        headers["Authorization"] = f"Bearer {api_token}"
     for response in response_list:
         as_dict = response.to_dict()
         v_res = requests.post(
             viper_data.callback,
             json=as_dict,
-            headers={"Content-Type": "application/json"},
+            headers=headers,
         )
         if v_res.status_code >= 400:
             return json.dumps(v_res.json(), indent=4)
@@ -61,7 +66,7 @@ def viper_webhook(data: dict[str, Any], request_id: str = "") -> str:
         )
     try:
         res = _send_viper_payload(viper_data, request_id)
-        logger.info("Job completed with respons: %", res)
+        logger.info("Job completed with response: %s", res)
         if request_id:
             _ = ViperWebhookJob.objects.filter(pk=request_id).update(
                 status=ViperWebhookJob.Status.FINISHED
@@ -72,5 +77,5 @@ def viper_webhook(data: dict[str, Any], request_id: str = "") -> str:
             _ = ViperWebhookJob.objects.filter(pk=request_id).update(
                 status=ViperWebhookJob.Status.ERROR
             )
-        logger.warning("Job failed with err: %", str(e))
+        logger.warning("Job failed with err: %s", str(e))
         return str(e)
