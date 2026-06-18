@@ -9,7 +9,7 @@ from django.apps import apps
 from django.conf import settings
 from django.db import models
 
-from blueflow.models import Asset
+from blueflow.models import Asset, cpe
 
 
 def _to_iso(value: datetime | str | None) -> str | None:
@@ -104,9 +104,7 @@ class ViperAsset:
 
     def __init__(self, asset: Asset):
         self.ip = str(asset.ip_address) if asset.ip_address else ""
-        self.network_segment = (
-            ""
-        )
+        self.network_segment = ""
         self._cpe = ""
         self.role = str(asset.category) if asset.category else ""
         self.upstream_api = f"{settings.BASE_URL}/api/assets/{asset.id}/"
@@ -118,14 +116,16 @@ class ViperAsset:
         self.location = {"facility": "", "building": "", "floor": "", "room": ""}
         self.status = "Active"
         if not asset.id:
-            raise ValueError("How did we get an asset with no id?")
+            msg = "How did we get an asset with no id?"
+            raise ValueError(msg)
         self.vendor_id = str(asset.id)
         raw_manu = str(asset.manufacturer)
         fixed_manu = raw_manu.replace(" ", "").lower()
         self.vendor = fixed_manu
         self.utilization = _project_usage(asset)
         if not asset.model:
-            raise ValueError("How did we end up with an asset that has no model???")
+            msg = "How did we end up with an asset that has no model???"
+            raise ValueError(msg)
         # TODO(taylorcochran): maybe a serializer cleaner thingy?
         raw = str(asset.model)
         fixed = raw.replace(" ", "_").lower()
@@ -165,33 +165,13 @@ class ViperAsset:
 
     @property
     def cpe(self) -> str:
-        """Builds the cpe string from the asset dataclass.
+        """Build this DTO's CPE 2.3 string from its normalized vendor / product.
 
-        Cached after first build. Lots of this data is mocked atm, we'll need
-        to get specifics from Cassidy for the demo.
+        Delegates the format to :func:`blueflow.models.cpe.build_cpe` and caches
+        the result, since ``to_dict`` reads it more than once.
         """
-        if self._cpe:
-            return self._cpe
-        unknown = "*"
-        self._cpe = ":".join(
-            [
-                "cpe",  # always the same
-                # TODO(taylorcochran): figure out what version cass wants
-                "2.3",  # version
-                "h",  # 'part' # h for now but: https://en.wikipedia.org/wiki/Common_Platform_Enumeration#part
-                self.vendor or unknown,  # vendor
-                self.product or unknown,  # product # do we want something different ?
-                "-",
-                unknown,  # version of product?
-                unknown,  # point release / minor versions
-                unknown,  # any additional information beyond version for id
-                unknown,  # lang is empty for now
-                # en-US -- https://datatracker.ietf.org/doc/html/rfc5646
-                unknown,  # "edition" i.e. MS desktop vs MS Server etc
-                unknown,  # 'target' wiki ex: `windows_2003` & `ipod_touch`
-                unknown,  # 'target_hw', but really the cpu architecture type
-            ]
-        )
+        if not self._cpe:
+            self._cpe = cpe.build_cpe(self)
         return self._cpe
 
 
