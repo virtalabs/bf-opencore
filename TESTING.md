@@ -57,7 +57,7 @@ uv run pytest tests/
 uv run pytest blueflow/tests/
 ```
 
-**Run all tests** (both project and app):
+**Run default tests** (both project and app; excludes `@pytest.mark.contract`):
 
 ```bash
 uv run pytest tests/ blueflow/tests/
@@ -68,6 +68,16 @@ Or rely on the default `testpaths`:
 ```bash
 uv run pytest
 ```
+
+**Run consumer contract tests** (gated in `.github/workflows/contracts.yml`; needs Prism for Viper wire tests):
+
+```bash
+uv run pytest -m contract
+```
+
+To match CI verify (excludes oasdiff integration test): `uv run pytest -m "contract and not integration"`.
+
+Default pytest skips contract-marked tests even if you pass a contract file path — use `-m contract` with the path.
 
 **Run a single file:**
 
