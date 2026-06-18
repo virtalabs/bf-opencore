@@ -10,10 +10,7 @@ from unittest.mock import patch
 
 import pytest
 
-from blueflow.contracts.diff_viper_openapi import (
-    diff_viper_openapi,
-    slice_openapi_for_operation,
-)
+from blueflow.contracts.diff_viper_openapi import diff_viper_openapi, slice_for_operation
 
 pytestmark = pytest.mark.contract
 
@@ -40,7 +37,7 @@ def test_slice_openapi_for_operation_keeps_matching_path_only() -> None:
             "/other": {"get": {"operationId": "otherOp", "responses": {"200": {}}}},
         },
     }
-    sliced = slice_openapi_for_operation(spec, "integrationUpload")
+    sliced = slice_for_operation(spec, "integrationUpload")
     assert list(sliced["paths"]) == ["/integration"]
     assert "post" in sliced["paths"]["/integration"]
     assert "get" not in sliced["paths"]["/integration"]
@@ -71,6 +68,7 @@ def test_diff_returns_zero_when_no_breaking_changes(tmp_path) -> None:
             diff_viper_openapi(
                 baseline=baseline,
                 live=live,
+                operation="integrationUpload",
                 oasdiff="/usr/bin/oasdiff",
             )
             == 0
@@ -126,6 +124,7 @@ def test_diff_returns_one_when_breaking_changes(tmp_path, capsys) -> None:
             diff_viper_openapi(
                 baseline=baseline,
                 live=live,
+                operation="integrationUpload",
                 oasdiff="/usr/bin/oasdiff",
             )
             == 1
@@ -165,6 +164,7 @@ def test_diff_returns_two_when_oasdiff_missing(tmp_path) -> None:
             diff_viper_openapi(
                 baseline=baseline,
                 live=live,
+                operation="integrationUpload",
                 oasdiff="/nonexistent/oasdiff",
             )
             == 2
@@ -179,4 +179,4 @@ def test_diff_integration_with_oasdiff_binary() -> None:
     baseline = _VIPER_FIXTURES / "baseline_openapi.json"
     live = _VIPER_FIXTURES / "live_breaking_openapi.json"
 
-    assert diff_viper_openapi(baseline=baseline, live=live) == 1
+    assert diff_viper_openapi(baseline=baseline, live=live, operation="integrationUpload") == 1

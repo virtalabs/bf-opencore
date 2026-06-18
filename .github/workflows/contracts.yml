@@ -24,11 +24,15 @@ concurrency:
 
 permissions:
   contents: read
-  actions: read
 
 jobs:
-  contracts:
+  verify:
     name: Contract verification
+    if: >-
+      github.event_name == 'push' ||
+      github.event_name == 'pull_request' ||
+      (github.event_name == 'workflow_dispatch' &&
+       (inputs.job == 'verify' || inputs.job == 'all'))
     runs-on: ubuntu-latest
     timeout-minutes: 10
 
@@ -66,121 +70,216 @@ jobs:
       - name: Run migrations
         run: uv run python project/manage.py migrate --noinput
 
+      - name: Slice Viper OpenAPI for Prism
+        run: ./scripts/slice_viper_openapi.sh contracts/viper/openapi.json /tmp/viper-sliced.json
+
+      - name: Start Prism mock
+        run: |
+          docker run -d --name viper-prism -p 4010:4010 \
+            -v /tmp/viper-sliced.json:/spec/openapi.json:ro \
+            stoplight/prism:4@sha256:08dc16243047a3263beca814b544a5be81e9ec25ca5757cdc4170c84f7431355 \
+            mock -h 0.0.0.0 /spec/openapi.json
+          for i in $(seq 1 30); do
+            if curl -sf http://127.0.0.1:4010/ >/dev/null 2>&1; then
+              exit 0
+            fi
+            sleep 1
+          done
+          echo "Prism failed to start" >&2
+          exit 1
+
       - name: Verify contract tests
-        if: >-
-          github.event_name == 'push' ||
-          github.event_name == 'pull_request' ||
-          (github.event_name == 'workflow_dispatch' &&
-           (inputs.job == 'verify' || inputs.job == 'all'))
         timeout-minutes: 8
+        env:
+          VIPER_PRISM_BASE_URL: http://127.0.0.1:4010
+          VIPER_API_TOKEN: contract-test-token
         run: >-
           uv run pytest
           blueflow/tests/test_contract_tapirxl_ingest.py
-          blueflow/tests/test_check_viper_payload.py
+          blueflow/tests/test_contract_viper_wire.py
           blueflow/tests/test_diff_viper_openapi.py
           -m "contract and not integration"
           -v --tb=short
 
-      - name: Fetch Viper OpenAPI spec
+      - name: Stop Prism mock
+        if: always()
+        run: docker rm -f viper-prism 2>/dev/null || true
+
+  drift:
+    name: Viper OpenAPI drift
+    if: >-
+      github.event_name == 'schedule' ||
+      (github.event_name == 'workflow_dispatch' &&
+       (inputs.job == 'drift' || inputs.job == 'all'))
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: write
+      pull-requests: write
+
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: blueflow
+          POSTGRES_PASSWORD: blueflow
+          POSTGRES_DB: blueflow
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd="pg_isready -U blueflow"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=5
+
+    env:
+      PINNED_SPEC: contracts/viper/openapi.json
+      VIPER_OPENAPI_URL: ${{ vars.VIPER_OPENAPI_URL }}
+      DATABASE_URL: postgresql://blueflow:blueflow@localhost:5432/blueflow
+      DJANGO_SETTINGS_MODULE: project.settings.test
+
+    steps:
+      - uses: actions/checkout@v6
+
+      - uses: astral-sh/setup-uv@v7
+
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.12"
+
+      - name: Install dependencies
+        run: uv sync --all-extras
+
+      - name: Fetch live Viper OpenAPI spec
         id: fetch_spec
-        if: >-
-          github.event_name == 'schedule' ||
-          (github.event_name == 'workflow_dispatch' &&
-           (inputs.job == 'drift' || inputs.job == 'all'))
         continue-on-error: true
         env:
-          VIPER_OPENAPI_URL: ${{ vars.VIPER_OPENAPI_URL }}
           VIPER_API_TOKEN: ${{ secrets.VIPER_API_TOKEN }}
         run: |
-          if [ -z "$VIPER_OPENAPI_URL" ]; then
-            echo "VIPER_OPENAPI_URL not configured — skipping drift check"
-            echo "skipped=true" >> "$GITHUB_OUTPUT"
-            exit 0
-          fi
+          URL="${VIPER_OPENAPI_URL:-https://viper-xi.vercel.app/api/openapi.json}"
           AUTH_HEADER=()
           if [ -n "$VIPER_API_TOKEN" ]; then
             AUTH_HEADER=(-H "Authorization: Bearer ${VIPER_API_TOKEN}")
           fi
-          if ! curl -sf "${AUTH_HEADER[@]}" "$VIPER_OPENAPI_URL" -o /tmp/viper_openapi.json; then
-            echo "::warning::Failed to fetch Viper openapi.json from ${VIPER_OPENAPI_URL}"
+          if ! curl -sf "${AUTH_HEADER[@]}" "$URL" -o /tmp/viper_live.json; then
+            echo "::warning::Failed to fetch Viper openapi.json from ${URL}"
             echo "skipped=true" >> "$GITHUB_OUTPUT"
             exit 0
           fi
+          echo "source_url=${URL}" >> "$GITHUB_OUTPUT"
           echo "skipped=false" >> "$GITHUB_OUTPUT"
 
-      - name: Download previous Viper OpenAPI baseline
-        if: >-
-          (github.event_name == 'schedule' ||
-           (github.event_name == 'workflow_dispatch' &&
-            (inputs.job == 'drift' || inputs.job == 'all'))) &&
-          steps.fetch_spec.outputs.skipped != 'true'
-        continue-on-error: true
-        uses: dawidd6/action-download-artifact@v6
-        with:
-          workflow: contracts.yml
-          name: viper-openapi-baseline
-          path: /tmp/baseline
-          if_no_artifact_found: warn
+      - name: Check if live spec differs from pin
+        id: spec_changed
+        if: steps.fetch_spec.outputs.skipped != 'true'
+        run: |
+          if cmp -s "$PINNED_SPEC" /tmp/viper_live.json; then
+            echo "changed=false" >> "$GITHUB_OUTPUT"
+            echo "Live spec matches committed pin — no update needed"
+          else
+            echo "changed=true" >> "$GITHUB_OUTPUT"
+            echo "Live spec differs from committed pin"
+          fi
 
       - name: Install oasdiff
         if: >-
-          (github.event_name == 'schedule' ||
-           (github.event_name == 'workflow_dispatch' &&
-            (inputs.job == 'drift' || inputs.job == 'all'))) &&
-          steps.fetch_spec.outputs.skipped != 'true'
+          steps.fetch_spec.outputs.skipped != 'true' &&
+          steps.spec_changed.outputs.changed == 'true'
         run: |
           curl -fsSL \
             "https://github.com/oasdiff/oasdiff/releases/download/v1.19.1/oasdiff_1.19.1_linux_amd64.tar.gz" \
             | tar xz -C /usr/local/bin oasdiff
 
       - name: Classify Viper OpenAPI drift
+        id: classify_drift
         if: >-
-          (github.event_name == 'schedule' ||
-           (github.event_name == 'workflow_dispatch' &&
-            (inputs.job == 'drift' || inputs.job == 'all'))) &&
-          steps.fetch_spec.outputs.skipped != 'true'
+          steps.fetch_spec.outputs.skipped != 'true' &&
+          steps.spec_changed.outputs.changed == 'true'
         continue-on-error: true
         run: |
-          if ! uv run python -m blueflow.contracts.diff_viper_openapi \
-            --baseline /tmp/baseline/openapi.json \
-            --live /tmp/viper_openapi.json \
-            --operation integrationUpload; then
+          set +e
+          uv run python -m blueflow.contracts.diff_viper_openapi \
+            --baseline "$PINNED_SPEC" \
+            --live /tmp/viper_live.json \
+            --operation assets-processIntegrationCreate \
+            > /tmp/oasdiff_output.txt 2>&1
+          rc=$?
+          cat /tmp/oasdiff_output.txt
+          echo "exit_code=$rc" >> "$GITHUB_OUTPUT"
+          if [ "$rc" -eq 1 ]; then
             echo "::warning::Viper OpenAPI drift classification reported breaking changes"
-            exit 1
           fi
+          exit 0
 
-      - name: Validate Viper payload against live spec
+      - name: Validate payload against live spec via Prism
         if: >-
-          (github.event_name == 'schedule' ||
-           (github.event_name == 'workflow_dispatch' &&
-            (inputs.job == 'drift' || inputs.job == 'all'))) &&
-          steps.fetch_spec.outputs.skipped != 'true'
+          steps.fetch_spec.outputs.skipped != 'true' &&
+          steps.spec_changed.outputs.changed == 'true'
         continue-on-error: true
+        env:
+          VIPER_API_TOKEN: ${{ secrets.VIPER_API_TOKEN }}
         run: |
+          ./scripts/slice_viper_openapi.sh /tmp/viper_live.json /tmp/viper-sliced.json
+          docker rm -f viper-prism-drift 2>/dev/null || true
+          docker run -d --name viper-prism-drift -p 4011:4010 \
+            -v /tmp/viper-sliced.json:/spec/openapi.json:ro \
+            stoplight/prism:4@sha256:08dc16243047a3263beca814b544a5be81e9ec25ca5757cdc4170c84f7431355 \
+            mock -h 0.0.0.0 /spec/openapi.json
+          for i in $(seq 1 30); do
+            if curl -sf http://127.0.0.1:4011/ >/dev/null 2>&1; then
+              break
+            fi
+            sleep 1
+          done
+          export VIPER_PRISM_BASE_URL=http://127.0.0.1:4011
+          export VIPER_API_TOKEN="${VIPER_API_TOKEN:-contract-test-token}"
+          uv run python project/manage.py migrate --noinput
           uv run python project/manage.py emit_viper_sample --output /tmp/viper_sample.json
-          if ! uv run python -m blueflow.contracts.check_viper_payload \
-            --spec /tmp/viper_openapi.json \
-            --sample /tmp/viper_sample.json; then
-            echo "::warning::BlueFlow Viper payload failed contract validation against live spec"
+          if ! ./scripts/post_viper_sample_to_prism.sh /tmp/viper_sample.json; then
+            echo "::warning::BlueFlow Viper payload failed Prism validation against live spec"
+            docker rm -f viper-prism-drift 2>/dev/null || true
             exit 1
           fi
+          docker rm -f viper-prism-drift 2>/dev/null || true
 
-      - name: Upload Viper OpenAPI baseline for next drift run
+      - name: Update pinned OpenAPI spec
         if: >-
-          (github.event_name == 'schedule' ||
-           (github.event_name == 'workflow_dispatch' &&
-            (inputs.job == 'drift' || inputs.job == 'all'))) &&
-          steps.fetch_spec.outputs.skipped != 'true'
-        run: mkdir -p /tmp/baseline-upload && cp /tmp/viper_openapi.json /tmp/baseline-upload/openapi.json
+          steps.fetch_spec.outputs.skipped != 'true' &&
+          steps.spec_changed.outputs.changed == 'true'
+        run: cp /tmp/viper_live.json "$PINNED_SPEC"
 
-      - name: Publish Viper OpenAPI baseline artifact
+      - name: Prepare pull request body
         if: >-
-          (github.event_name == 'schedule' ||
-           (github.event_name == 'workflow_dispatch' &&
-            (inputs.job == 'drift' || inputs.job == 'all'))) &&
-          steps.fetch_spec.outputs.skipped != 'true'
-        uses: actions/upload-artifact@v4
+          steps.fetch_spec.outputs.skipped != 'true' &&
+          steps.spec_changed.outputs.changed == 'true'
+        env:
+          SOURCE_URL: ${{ steps.fetch_spec.outputs.source_url }}
+          OASDIFF_RC: ${{ steps.classify_drift.outputs.exit_code }}
+        run: |
+          {
+            echo "Scheduled drift check detected a change in the live Viper OpenAPI spec."
+            echo ""
+            echo "**Source:** ${SOURCE_URL}"
+            echo ""
+            echo "**oasdiff exit code:** ${OASDIFF_RC} (1 = breaking changes for assets-processIntegrationCreate)"
+            echo ""
+            echo "**oasdiff output:**"
+            echo '```'
+            cat /tmp/oasdiff_output.txt
+            echo '```'
+            echo ""
+            echo "_Automated by contracts.yml drift job._"
+          } > /tmp/pr_body.md
+
+      - name: Create pull request for pin update
+        if: >-
+          steps.fetch_spec.outputs.skipped != 'true' &&
+          steps.spec_changed.outputs.changed == 'true'
+        uses: peter-evans/create-pull-request@v7
         with:
-          name: viper-openapi-baseline
-          path: /tmp/baseline-upload/openapi.json
-          retention-days: 90
+          token: ${{ secrets.GITHUB_TOKEN }}
+          branch: bot/viper-openapi-${{ github.run_id }}
+          delete-branch: true
+          commit-message: "chore(contracts): update Viper OpenAPI pin"
+          title: "chore(contracts): update Viper OpenAPI pin"
+          body-path: /tmp/pr_body.md
