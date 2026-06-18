@@ -14,6 +14,7 @@ from django_extensions.db import models as django_extensions
 from simple_history import models as simple_history
 
 from blueflow.models import (
+    cpe,
     group,
     ports_protocol,
     tag,
@@ -41,7 +42,6 @@ class Asset(django_extensions.TimeStampedModel):
     fingerprint), so it is not safe to use as a "recently changed" filter.
     """
 
-    UNKNOWN_CPE_VALUE: str = "*"
     UNKNOWN_OUI_MANUFACTURER: str = ""
 
     name = models.CharField(
@@ -158,39 +158,12 @@ class Asset(django_extensions.TimeStampedModel):
 
     @property
     def cpe(self) -> str:
-        """Builds the cpe string from the asset dataclass.
+        """Build this asset's CPE 2.3 string from manufacturer / model.
 
-        Cached after first build. Lots of this data is mocked atm, we'll need
-        to get specifics from Cassidy for the demo.
+        Delegates to :func:`blueflow.models.cpe.build_cpe` so the CPE format is
+        defined in one place; most slots are still stubbed pending real data.
         """
-        cpe: str = ":".join(
-            [
-                "cpe",  # always the same
-                "2.3",  # version
-                "h",  # 'part' # h for now but: https://en.wikipedia.org/wiki/Common_Platform_Enumeration#part
-                str(self.manufacturer or self.UNKNOWN_CPE_VALUE),  # vendor
-                str(
-                    self.model or self.UNKNOWN_CPE_VALUE
-                ),  # product # do we want something different ?
-                "-",
-                # version of product?
-                self.UNKNOWN_CPE_VALUE,
-                # point release / minor versions
-                self.UNKNOWN_CPE_VALUE,
-                # any additional information beyond version for id
-                self.UNKNOWN_CPE_VALUE,
-                # lang is empty for now
-                self.UNKNOWN_CPE_VALUE,
-                # en-US -- https://datatracker.ietf.org/doc/html/rfc5646
-                # "edition" i.e. MS desktop vs MS Server etc
-                self.UNKNOWN_CPE_VALUE,
-                # 'target' wiki ex: `windows_2003` & `ipod_touch`
-                self.UNKNOWN_CPE_VALUE,
-                # 'target_hw', but really the cpu architecture type
-                self.UNKNOWN_CPE_VALUE,
-            ]
-        )
-        return cpe
+        return cpe.build_cpe(self)
 
     @property
     def services(self) -> dict[int, list[str]]:
