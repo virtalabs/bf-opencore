@@ -29,6 +29,7 @@ def make_assets(data: dict) -> Generator[dict, None, None]:
             "last_scanned": asset["last_scanned"],
             "last_pinged": asset["last_pinged"],
             "open_ports_tcp": asset["open_ports_tcp"],
+            "external_keys": asset["external_keys"],
         }
 
 
