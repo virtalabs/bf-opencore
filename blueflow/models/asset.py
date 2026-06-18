@@ -134,6 +134,10 @@ class Asset(django_extensions.TimeStampedModel):
         null=False,
         default=default_timestamp,
     )
+    external_keys = models.JSONField(
+        blank=True,
+        null=True,
+    )
     groups = models.ManyToManyField(
         group.Group,
         through=group.AssetGroup,

@@ -88,6 +88,9 @@ def _vrl_transform(record: dict) -> dict:
     if record.get("device_class") is not None:
         out["category"] = record["device_class"]
 
+    if record.get("confidence") is not None:
+        out["external_keys"] = {"tapirxl_confidence": record["confidence"]}
+
     out["open_ports_tcp"] = record["open_ports"]
 
     return out

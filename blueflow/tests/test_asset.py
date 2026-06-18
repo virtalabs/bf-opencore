@@ -575,6 +575,14 @@ def test_upsert_create(asset_edit_client: APIClient) -> None:
     assert asset.mac_address == macaddr
 
 
+def test_external_key_non_connector(db) -> None:
+    """Test that external_keys JSON field accepts arbitrary key-value pairs."""
+    foobar = models.Asset.objects.create(name="Foobar")
+    foobar.external_keys = {"ECN": "12345"}
+    foobar.save()
+    assert foobar.external_keys["ECN"] == "12345"
+
+
 def test_upsert_update(asset_edit_client: APIClient) -> None:
     """Update an existing asset via upsert endpoint."""
     # Create existing asset in database

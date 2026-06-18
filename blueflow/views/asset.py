@@ -89,6 +89,7 @@ class AssetUpsertSerializer(serializers.Serializer):
     device_class = serializers.CharField(
         required=False, allow_blank=True, allow_null=True
     )
+    external_keys = serializers.JSONField(required=False, allow_null=True)
     services = AssetServiceSerializer(many=True, required=False)
 
     def validate(self, attrs: dict) -> dict:
