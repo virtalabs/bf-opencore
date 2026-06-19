@@ -10,12 +10,17 @@ from unittest.mock import patch
 
 import pytest
 
-from blueflow.contracts.diff_viper_openapi import diff_viper_openapi, slice_for_operation
+from blueflow.contracts.diff_viper_openapi import (
+    DEFAULT_OPERATION_ID,
+    diff_viper_openapi,
+    slice_for_operation,
+)
 
 pytestmark = pytest.mark.contract
 
 _REPO_ROOT = Path(__file__).resolve().parents[2]
 _VIPER_FIXTURES = _REPO_ROOT / "contracts" / "fixtures" / "viper"
+_ASSETS_INTEGRATION_PATH = "/assets/integrationUpload/{token}"
 
 
 def test_diff_skips_when_baseline_missing(tmp_path, capsys) -> None:
@@ -51,8 +56,11 @@ def test_diff_returns_zero_when_no_breaking_changes(tmp_path) -> None:
             "openapi": "3.0.0",
             "info": {"title": "t", "version": "1"},
             "paths": {
-                "/integration": {
-                    "post": {"operationId": "integrationUpload", "responses": {}}
+                _ASSETS_INTEGRATION_PATH: {
+                    "post": {
+                        "operationId": DEFAULT_OPERATION_ID,
+                        "responses": {},
+                    }
                 }
             },
         }
@@ -68,7 +76,7 @@ def test_diff_returns_zero_when_no_breaking_changes(tmp_path) -> None:
             diff_viper_openapi(
                 baseline=baseline,
                 live=live,
-                operation="integrationUpload",
+                operation=DEFAULT_OPERATION_ID,
                 oasdiff="/usr/bin/oasdiff",
             )
             == 0
@@ -89,8 +97,11 @@ def test_diff_returns_one_when_breaking_changes(tmp_path, capsys) -> None:
             {
                 "openapi": "3.0.0",
                 "paths": {
-                    "/integration": {
-                        "post": {"operationId": "integrationUpload", "responses": {}}
+                    _ASSETS_INTEGRATION_PATH: {
+                        "post": {
+                            "operationId": DEFAULT_OPERATION_ID,
+                            "responses": {},
+                        }
                     }
                 },
             }
@@ -102,8 +113,11 @@ def test_diff_returns_one_when_breaking_changes(tmp_path, capsys) -> None:
             {
                 "openapi": "3.0.0",
                 "paths": {
-                    "/integration": {
-                        "post": {"operationId": "integrationUpload", "responses": {}}
+                    _ASSETS_INTEGRATION_PATH: {
+                        "post": {
+                            "operationId": DEFAULT_OPERATION_ID,
+                            "responses": {},
+                        }
                     }
                 },
             }
@@ -124,7 +138,7 @@ def test_diff_returns_one_when_breaking_changes(tmp_path, capsys) -> None:
             diff_viper_openapi(
                 baseline=baseline,
                 live=live,
-                operation="integrationUpload",
+                operation=DEFAULT_OPERATION_ID,
                 oasdiff="/usr/bin/oasdiff",
             )
             == 1
@@ -140,6 +154,13 @@ def test_diff_returns_two_on_malformed_baseline_json(tmp_path) -> None:
     assert diff_viper_openapi(baseline=baseline, live=live) == 2
 
 
+def test_diff_returns_two_when_live_missing(tmp_path) -> None:
+    baseline = tmp_path / "baseline.json"
+    live = tmp_path / "missing_live.json"
+    baseline.write_text('{"openapi":"3.0.0","paths":{}}', encoding="utf-8")
+    assert diff_viper_openapi(baseline=baseline, live=live) == 2
+
+
 def test_diff_returns_two_when_oasdiff_missing(tmp_path) -> None:
     baseline = tmp_path / "baseline.json"
     live = tmp_path / "live.json"
@@ -147,8 +168,11 @@ def test_diff_returns_two_when_oasdiff_missing(tmp_path) -> None:
         {
             "openapi": "3.0.0",
             "paths": {
-                "/integration": {
-                    "post": {"operationId": "integrationUpload", "responses": {}}
+                _ASSETS_INTEGRATION_PATH: {
+                    "post": {
+                        "operationId": DEFAULT_OPERATION_ID,
+                        "responses": {},
+                    }
                 }
             },
         }
@@ -164,7 +188,7 @@ def test_diff_returns_two_when_oasdiff_missing(tmp_path) -> None:
             diff_viper_openapi(
                 baseline=baseline,
                 live=live,
-                operation="integrationUpload",
+                operation=DEFAULT_OPERATION_ID,
                 oasdiff="/nonexistent/oasdiff",
             )
             == 2
@@ -179,4 +203,8 @@ def test_diff_integration_with_oasdiff_binary() -> None:
     baseline = _VIPER_FIXTURES / "baseline_openapi.json"
     live = _VIPER_FIXTURES / "live_breaking_openapi.json"
 
-    assert diff_viper_openapi(baseline=baseline, live=live, operation="integrationUpload") == 1
+    assert diff_viper_openapi(
+        baseline=baseline,
+        live=live,
+        operation=DEFAULT_OPERATION_ID,
+    ) == 1

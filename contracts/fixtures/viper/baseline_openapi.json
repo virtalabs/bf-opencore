@@ -2,9 +2,9 @@
   "openapi": "3.0.0",
   "info": {"title": "t", "version": "1"},
   "paths": {
-    "/integration": {
+    "/assets/integrationUpload/{token}": {
       "post": {
-        "operationId": "integrationUpload",
+        "operationId": "assets-processIntegrationCreate",
         "requestBody": {
           "content": {
             "application/json": {
