@@ -40,6 +40,7 @@ start_prism() {
   if ./scripts/wait_for_prism.sh http://127.0.0.1:4010/ "$PRISM_CONTAINER" 60; then
     export VIPER_PRISM_BASE_URL=http://127.0.0.1:4010
     export VIPER_API_TOKEN="${VIPER_API_TOKEN:-contract-test-token}"
+    export VIPER_CALLBACK_ALLOWED_HOSTS="${VIPER_CALLBACK_ALLOWED_HOSTS:-127.0.0.1}"
     STARTED_PRISM=true
     return 0
   fi

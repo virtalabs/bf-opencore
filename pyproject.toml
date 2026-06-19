@@ -63,7 +63,7 @@ where = ["."]
 include = ["blueflow*", "project*", "harness*"]
 
 [tool.pytest.ini_options]
-testpaths = ["tests", "blueflow/tests", "blueflow/zeek/hl7/tests"]
+testpaths = ["tests", "blueflow/tests", "blueflow/celery/tests", "blueflow/zeek/hl7/tests"]
 addopts = "-ra -m 'not contract'"
 filterwarnings = ["ignore::DeprecationWarning"]
 markers = [
