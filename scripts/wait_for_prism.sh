@@ -7,7 +7,7 @@ CONTAINER="${2:-viper-prism}"
 TIMEOUT="${3:-60}"
 
 for _ in $(seq 1 "$TIMEOUT"); do
-  code=$(curl -s -o /dev/null -w "%{http_code}" --connect-timeout 2 "$URL" 2>/dev/null || echo "000")
+  code=$(curl -s -o /dev/null -w "%{http_code}" --connect-timeout 2 "$URL" 2>/dev/null || true)
   if [ "$code" != "000" ]; then
     exit 0
   fi
