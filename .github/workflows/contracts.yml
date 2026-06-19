@@ -87,6 +87,7 @@ jobs:
         env:
           VIPER_PRISM_BASE_URL: http://127.0.0.1:4010
           VIPER_API_TOKEN: contract-test-token
+          VIPER_CALLBACK_ALLOWED_HOSTS: 127.0.0.1
         run: >-
           uv run pytest
           blueflow/tests/test_contract_tapirxl_ingest.py
@@ -202,6 +203,9 @@ jobs:
           echo "exit_code=$rc" >> "$GITHUB_OUTPUT"
           if [ "$rc" -eq 1 ]; then
             echo "::warning::Viper OpenAPI drift classification reported breaking changes"
+          elif [ "$rc" -ne 0 ]; then
+            echo "::error::Viper OpenAPI drift classification failed (exit ${rc})"
+            exit 1
           fi
           exit 0
 
@@ -235,13 +239,17 @@ jobs:
       - name: Update pinned OpenAPI spec
         if: >-
           steps.fetch_spec.outputs.skipped != 'true' &&
-          steps.spec_changed.outputs.changed == 'true'
+          steps.spec_changed.outputs.changed == 'true' &&
+          (steps.classify_drift.outputs.exit_code == '0' ||
+           steps.classify_drift.outputs.exit_code == '1')
         run: cp /tmp/viper_live.json "$PINNED_SPEC"
 
       - name: Prepare pull request body
         if: >-
           steps.fetch_spec.outputs.skipped != 'true' &&
-          steps.spec_changed.outputs.changed == 'true'
+          steps.spec_changed.outputs.changed == 'true' &&
+          (steps.classify_drift.outputs.exit_code == '0' ||
+           steps.classify_drift.outputs.exit_code == '1')
         env:
           SOURCE_URL: ${{ steps.fetch_spec.outputs.source_url }}
           OASDIFF_RC: ${{ steps.classify_drift.outputs.exit_code }}
@@ -264,7 +272,9 @@ jobs:
       - name: Create pull request for pin update
         if: >-
           steps.fetch_spec.outputs.skipped != 'true' &&
-          steps.spec_changed.outputs.changed == 'true'
+          steps.spec_changed.outputs.changed == 'true' &&
+          (steps.classify_drift.outputs.exit_code == '0' ||
+           steps.classify_drift.outputs.exit_code == '1')
         uses: peter-evans/create-pull-request@v7
         with:
           token: ${{ secrets.GITHUB_TOKEN }}

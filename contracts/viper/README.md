@@ -33,6 +33,7 @@ docker run --rm -d --name viper-prism -p 4010:4010 \
 
 export VIPER_PRISM_BASE_URL=http://127.0.0.1:4010
 export VIPER_API_TOKEN=contract-test-token
+export VIPER_CALLBACK_ALLOWED_HOSTS=127.0.0.1
 export DATABASE_URL=postgresql://blueflow:blueflow@localhost:5432/blueflow
 export DJANGO_SETTINGS_MODULE=project.settings.test
 
@@ -49,6 +50,8 @@ Or run `./scripts/contract_drill_local.sh` (slices pin, starts Prism when Docker
 | Variable | Used by |
 |----------|---------|
 | `VIPER_OPENAPI_URL` | Drift job fetch (optional repo variable; defaults to viper-xi URL) |
-| `VIPER_API_TOKEN` | Fetch auth (optional); Bearer header on outbound POSTs |
+| `VIPER_API_TOKEN` | Fetch auth (optional); Bearer header on outbound POSTs when callback host is allowlisted |
+| `VIPER_CALLBACK_ALLOWED_HOSTS` | Comma-separated callback hosts permitted to receive Bearer auth (required with `VIPER_API_TOKEN`). Hostname only — `127.0.0.1` does not match `localhost`; use `127.0.0.1` in `VIPER_PRISM_BASE_URL` and allowlist consistently. |
+| `VIPER_CALLBACK_TIMEOUT` | Outbound callback POST timeout in seconds (optional; default `30`) |
 | `VIPER_PRISM_BASE_URL` | Wire tests (e.g. `http://127.0.0.1:4010`) |
 | `VIPER_INTEGRATION_TOKEN` | Path param for callback URL (default: `contract-test-token`) |

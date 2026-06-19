@@ -9,7 +9,11 @@ from pathlib import Path
 import pytest
 import requests
 
-from blueflow.celery.tasks import _send_viper_payload, viper_webhook
+from blueflow.celery.tasks import (
+    _send_viper_payload,
+    viper_request_headers,
+    viper_webhook,
+)
 from blueflow.contracts.prism_viper import (
     DEFAULT_INTEGRATION_TOKEN,
     INTEGRATION_UPLOAD_PATH,
@@ -44,12 +48,10 @@ _GEHEALTHCARE_ASSETS: list[dict] = [
 ]
 
 
-def _viper_auth_headers() -> dict[str, str]:
-    headers = {"Content-Type": "application/json"}
-    token = os.environ.get("VIPER_API_TOKEN")
-    if token:
-        headers["Authorization"] = f"Bearer {token}"
-    return headers
+@pytest.fixture(autouse=True)
+def viper_callback_allowlist(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Allow Bearer auth to Prism on localhost when VIPER_API_TOKEN is set."""
+    monkeypatch.setenv("VIPER_CALLBACK_ALLOWED_HOSTS", "127.0.0.1")
 
 
 def _is_success_viper_send_result(result: str) -> bool:
@@ -140,7 +142,7 @@ def test_prism_rejects_missing_required_field(
     response = requests.post(
         viper_prism_callback_url,
         json=payload,
-        headers=_viper_auth_headers(),
+        headers=viper_request_headers(viper_prism_callback_url),
         timeout=10,
     )
     assert response.status_code >= 400

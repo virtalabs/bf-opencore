@@ -106,7 +106,7 @@ def test_viper_webhook_output_with_all_assets(celery_app, setup_assets):
 
 
 def test_viper_asset_wire_shape_uses_camel_case(celery_app, setup_assets):
-    """integrationUpload items use camelCase keys per Viper OpenAPI."""
+    """IntegrationUpload items use camelCase keys per Viper OpenAPI."""
     with patch("blueflow.celery.tasks.requests.post") as mock_post:
         viper_webhook.apply(
             args=[
