@@ -77,8 +77,7 @@ echo "=== 2. oasdiff breaking change (fixture) ==="
 if command -v oasdiff >/dev/null 2>&1; then
   if uv run python -m blueflow.contracts.diff_viper_openapi \
     --baseline "$VIPER_FIXTURES/baseline_openapi.json" \
-    --live "$VIPER_FIXTURES/live_breaking_openapi.json" \
-    --operation integrationUpload; then
+    --live "$VIPER_FIXTURES/live_breaking_openapi.json"; then
     fail "oasdiff should report breaking changes (exit 1)"
   else
     rc=$?

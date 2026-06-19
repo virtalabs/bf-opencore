@@ -29,6 +29,17 @@ def load_spec(path: Path) -> dict[str, Any]:
     return json.loads(path.read_text(encoding="utf-8"))
 
 
+def _find_operation_methods(
+    path_item: dict[str, Any], operation: str
+) -> dict[str, Any]:
+    return {
+        method: op
+        for method in _HTTP_METHODS
+        if isinstance(op := path_item.get(method), dict)
+        and op.get("operationId") == operation
+    }
+
+
 def slice_for_operation(
     spec: dict[str, Any],
     operation: str = DEFAULT_OPERATION_ID,
@@ -38,11 +49,7 @@ def slice_for_operation(
     for path, path_item in spec.get("paths", {}).items():
         if not isinstance(path_item, dict):
             continue
-        kept: dict[str, Any] = {}
-        for method in _HTTP_METHODS:
-            op = path_item.get(method)
-            if isinstance(op, dict) and op.get("operationId") == operation:
-                kept[method] = op
+        kept = _find_operation_methods(path_item, operation)
         if kept:
             if "parameters" in path_item:
                 kept["parameters"] = path_item["parameters"]
@@ -103,7 +110,41 @@ def _emit_process_output(result: subprocess.CompletedProcess[str]) -> None:
         sys.stderr.write(result.stderr)
 
 
-def diff_viper_openapi(  # noqa: PLR0911
+def _classify_with_oasdiff(
+    binary: str,
+    baseline_sliced: Path,
+    live_sliced: Path,
+    operation: str,
+) -> int:
+    try:
+        breaking = _run_oasdiff(binary, "breaking", baseline_sliced, live_sliced)
+        _emit_process_output(breaking)
+        if _is_oasdiff_cli_error(breaking):
+            sys.stderr.write("::error::oasdiff failed to run\n")
+            return 2
+        if breaking.returncode != 0:
+            sys.stderr.write(
+                "::warning::Breaking Viper OpenAPI changes detected "
+                f"for {operation}\n"
+            )
+            return 1
+
+        changelog = _run_oasdiff(binary, "changelog", baseline_sliced, live_sliced)
+        if changelog.stderr:
+            sys.stderr.write(changelog.stderr)
+        if _is_oasdiff_cli_error(changelog):
+            sys.stderr.write("::error::oasdiff changelog failed to run\n")
+            return 2
+        if changelog.stdout.strip():
+            sys.stdout.write("::notice::Non-breaking Viper OpenAPI changes:\n")
+            sys.stdout.write(changelog.stdout)
+    except FileNotFoundError:
+        sys.stderr.write(f"::error::oasdiff binary not found: {binary}\n")
+        return 2
+    return 0
+
+
+def diff_viper_openapi(
     *,
     baseline: Path,
     live: Path,
@@ -125,7 +166,7 @@ def diff_viper_openapi(  # noqa: PLR0911
 
     if not live.is_file():
         sys.stderr.write(f"Live OpenAPI spec not found: {live}\n")
-        return 1
+        return 2
 
     binary = oasdiff or _oasdiff_bin()
     try:
@@ -147,35 +188,11 @@ def diff_viper_openapi(  # noqa: PLR0911
         )
         live_sliced.write_text(json.dumps(live_spec, indent=2), encoding="utf-8")
 
-        try:
-            breaking = _run_oasdiff(
-                binary, "breaking", baseline_sliced, live_sliced
-            )
-            _emit_process_output(breaking)
-            if _is_oasdiff_cli_error(breaking):
-                sys.stderr.write("::error::oasdiff failed to run\n")
-                return 2
-            if breaking.returncode != 0:
-                sys.stderr.write(
-                    "::warning::Breaking Viper OpenAPI changes detected "
-                    f"for {operation}\n"
-                )
-                return 1
-
-            changelog = _run_oasdiff(
-                binary, "changelog", baseline_sliced, live_sliced
-            )
-            if changelog.stderr:
-                sys.stderr.write(changelog.stderr)
-            if _is_oasdiff_cli_error(changelog):
-                sys.stderr.write("::error::oasdiff changelog failed to run\n")
-                return 2
-            if changelog.stdout.strip():
-                sys.stdout.write("::notice::Non-breaking Viper OpenAPI changes:\n")
-                sys.stdout.write(changelog.stdout)
-        except FileNotFoundError:
-            sys.stderr.write(f"::error::oasdiff binary not found: {binary}\n")
-            return 2
+        result = _classify_with_oasdiff(
+            binary, baseline_sliced, live_sliced, operation
+        )
+        if result != 0:
+            return result
 
     sys.stdout.write("No breaking Viper OpenAPI changes detected\n")
     return 0
