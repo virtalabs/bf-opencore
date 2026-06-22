@@ -11,15 +11,11 @@ from waffle.mixins import WaffleSwitchMixin
 logger = logging.getLogger(__name__)
 
 
-class CrontabScheduleSerializer(serializers.HyperlinkedModelSerializer):
+class CrontabScheduleSerializer(serializers.ModelSerializer):
     """Serializer.
 
     Teaches the rest_framework (the ViewSet) which fields to expect.
     """
-
-    url = serializers.HyperlinkedIdentityField(
-        view_name="blueflow:crontabschedule-detail"
-    )
 
     # Human-readable name
     display_name = serializers.SerializerMethodField("do_display_name")
@@ -38,7 +34,6 @@ class CrontabScheduleSerializer(serializers.HyperlinkedModelSerializer):
             "day_of_week",
             "day_of_month",
             "month_of_year",
-            "url",
             "display_name",
         )
 
@@ -53,15 +48,11 @@ class CrontabScheduleViewSet(WaffleSwitchMixin, viewsets.ModelViewSet):
     serializer_class = CrontabScheduleSerializer
 
 
-class IntervalScheduleSerializer(serializers.HyperlinkedModelSerializer):
+class IntervalScheduleSerializer(serializers.ModelSerializer):
     """Serializer.
 
     Teaches the rest_framework (the ViewSet) which fields to expect.
     """
-
-    url = serializers.HyperlinkedIdentityField(
-        view_name="blueflow:intervalschedule-detail"
-    )
 
     # Human-readable name
     display_name = serializers.SerializerMethodField("do_display_name")
@@ -77,7 +68,6 @@ class IntervalScheduleSerializer(serializers.HyperlinkedModelSerializer):
             "id",
             "every",
             "period",
-            "url",
             "display_name",
         )
 

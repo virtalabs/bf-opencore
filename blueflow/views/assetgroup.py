@@ -14,14 +14,11 @@ from .group import GroupSerializer
 from .utils import HugeLimitOffsetPagination
 
 
-class AssetGroupSerializer(serializers.HyperlinkedModelSerializer):
+class AssetGroupSerializer(serializers.ModelSerializer):
     """Serializes AssetGroup objects."""
 
     # Few public methods; that's just how serializers work
 
-    url = serializers.HyperlinkedIdentityField(
-        view_name="blueflow:assetgroup-detail"
-    )
     group = GroupSerializer(read_only=True)
     asset_id = IntegerField()
     group_id = IntegerField()
@@ -36,7 +33,6 @@ class AssetGroupSerializer(serializers.HyperlinkedModelSerializer):
             "provenance",
             # Fields that are created (not stored directly in schema)
             "group",
-            "url",
         )
 
 

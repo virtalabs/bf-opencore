@@ -213,13 +213,10 @@ class AssetSerializer(serializers.HyperlinkedModelSerializer):
         return days
 
 
-class HistoricalAssetSerializer(serializers.HyperlinkedModelSerializer):
+class HistoricalAssetSerializer(serializers.ModelSerializer):
     """Serializes asset history."""
 
-    history_user = serializers.HyperlinkedRelatedField(
-        view_name="blueflow:user-detail",
-        read_only=True,
-    )
+    history_user = serializers.PrimaryKeyRelatedField(read_only=True)
 
     class Meta:
         """Wire this serializer to a model."""
