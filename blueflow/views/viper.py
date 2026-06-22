@@ -34,7 +34,8 @@ class ViperWebhookSerializer(serializers.Serializer):
     page_size = serializers.IntegerField()
 
 
-class ViperWebhookResponseSerilizer(serializers.Serializer): ...
+class ViperWebhookResponseSerilizer(serializers.Serializer):
+    request_id = serializers.CharField()
 
 
 class ViperViewSet(viewsets.ViewSet):
