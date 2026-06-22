@@ -6,16 +6,22 @@ query for a list of assets
 The "real" response is handled by a Celery task.
 """
 
-from rest_framework import serializers, status, viewsets
-from rest_framework.decorators import action
-from rest_framework.parsers import JSONParser
-from rest_framework.permissions import AllowAny
-from rest_framework.request import Request
-from rest_framework.response import Response
+import typing
 
-from blueflow.celery.tasks import viper_webhook
-from blueflow.models import ViperWebhookJob
-from blueflow.models.viper import ViperWebhookRequest
+import drf_spectacular.utils as drf_spectacular
+from rest_framework import (
+    decorators,
+    parsers,
+    permissions,
+    request,
+    response,
+    serializers,
+    status,
+    viewsets,
+)
+
+from blueflow import models
+from blueflow.celery import tasks
 
 
 class ViperWebhookSerializer(serializers.Serializer):
@@ -31,22 +37,28 @@ class ViperWebhookSerializer(serializers.Serializer):
 class ViperViewSet(viewsets.ViewSet):
     """ViewSet for the Viper integration."""
 
-    # TODO(taylorcochran): review authentication
-    permission_classes = [AllowAny]
-    parser_classes = [JSONParser]
-    serializer_class = ViperWebhookSerializer
+    permission_classes: typing.ClassVar = [permissions.AllowAny]
+    parser_classes: typing.ClassVar = [parsers.JSONParser]
+    serializer_class: typing.ClassVar = ViperWebhookSerializer
 
-    @action(detail=False, methods=["post"])
-    def webhook(self, request: Request) -> Response:
+    @drf_spectacular.extend_schema(
+        request=models.ViperWebhookRequest,
+        responses={"202": response.Response, "400": response.Response},
+        description="Register the viper callback endpoint for asset syncing",
+    )
+    @decorators.action(detail=False, methods=["post"])
+    def webhook(self, request: request.Request) -> response.Response:
         """Register a viper webhook."""
         serializer = self.serializer_class(data=request.data)
-        serializer.is_valid(raise_exception=True)
-        viper_data = ViperWebhookRequest(**serializer.validated_data)
-        job = ViperWebhookJob.objects.create(
+        _ = serializer.is_valid(raise_exception=True)
+        viper_data = models.ViperWebhookRequest(**serializer.validated_data)
+        job = models.ViperWebhookJob.objects.create(
             callback=viper_data.callback,
             since=viper_data.since,
             before=viper_data.before,
             request_body=request.data,
         )
-        viper_webhook.delay(viper_data.to_dict(), str(job.id))
-        return Response({"request_id": str(job.id)}, status=status.HTTP_202_ACCEPTED)
+        tasks.viper_webhook.delay(viper_data.to_dict(), str(job.id))
+        return response.Response(
+            {"request_id": str(job.id)}, status=status.HTTP_202_ACCEPTED
+        )
