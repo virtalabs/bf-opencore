@@ -10,9 +10,7 @@ import uuid
 from datetime import UTC, datetime
 
 from drf_spectacular.utils import extend_schema, extend_schema_field
-from rest_framework import serializers
-from rest_framework.response import Response
-from rest_framework.views import APIView
+from rest_framework import response, serializers, views
 
 from blueflow.models import constants
 
@@ -78,12 +76,12 @@ class TopologySerializer(serializers.Serializer):
         return "0.1.0-minimal"
 
 
-class TopologyView(APIView):
+class TopologyView(views.APIView):
     """Read-only topology snapshot endpoint (stub payload)."""
 
     @extend_schema(responses=TopologySerializer)
-    def get(self, request):  # noqa: ARG002
-        return Response(
+    def get(self, *_, **__) -> response.Response:
+        return response.Response(
             {
                 "schema_version": "0.1.0-minimal",
                 "snapshot_id": str(uuid.uuid4()),
