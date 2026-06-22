@@ -18,3 +18,6 @@ up:
 install:
   uv sync --all-extras
 
+api-docs:
+  DJANGO_SETTINGS_MODULE=project.settings.development ./project/manage.py spectacular --validate
+
