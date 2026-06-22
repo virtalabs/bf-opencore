@@ -93,10 +93,29 @@ class AssetUpsertSerializer(serializers.Serializer):
     services = AssetServiceSerializer(many=True, required=False)
 
     def validate(self, attrs: dict) -> dict:
-        """Map TapirXL ``device_class`` to ``category`` when Vector is bypassed."""
+        """Map ``device_class`` to ``category`` and reject hostname conflicts.
+
+        ``device_class`` is folded into ``category`` when Vector is bypassed
+        (TapirXL). A hostname already owned by a *different* MAC is a conflict;
+        same-MAC reuse and absent/null hostnames fall through (empty strings are
+        blocked at the field level via ``allow_blank=False``).
+        """
         device_class = attrs.pop("device_class", None)
         if device_class and not attrs.get("category"):
             attrs["category"] = device_class
+
+        hostname = attrs.get("hostname")
+        if hostname:
+            conflict = (
+                models.Asset.objects.filter(hostname=hostname)
+                .exclude(mac_address=attrs["mac_address"])
+                .first()
+            )
+            if conflict is not None:
+                msg = (
+                    f"Hostname '{hostname}' is already used by asset id={conflict.id}."
+                )
+                raise serializers.ValidationError({"hostname": [msg]})
         return attrs
 
     def validate_services(
@@ -112,6 +131,43 @@ class AssetUpsertSerializer(serializers.Serializer):
             seen.add(key)
             deduped.append(s)
         return deduped
+
+
+class BulkAssetUpdateListSerializer(serializers.ListSerializer):
+    """Validates the *batch envelope* for ``PATCH /api/assets/bulk_update/``.
+
+    Per-item field validation and the id-to-instance lookup stay in the view;
+    this enforces only the cross-item constraint that ids are unique. Runs after
+    every child item has validated, so ``item["id"]`` is guaranteed present.
+    """
+
+    def validate(self, attrs: list[dict]) -> list[dict]:
+        """Reject a batch containing the same id more than once."""
+        ids = [item["id"] for item in attrs]
+        duplicates = sorted({i for i in ids if ids.count(i) > 1})
+        if duplicates:
+            raise serializers.ValidationError(
+                {"detail": f"Duplicate id in request: {duplicates[0]}."}
+            )
+        return attrs
+
+
+class BulkAssetUpdateSerializer(serializers.Serializer):
+    """One item in a bulk-update batch: requires an ``id`` to target an asset.
+
+    Other asset fields pass through untouched here — they are validated and
+    applied per-item by :class:`AssetSerializer` in the view. This serializer
+    exists only to gate the batch envelope (list shape, id presence, id
+    uniqueness) through DRF's standard ``ValidationError`` pathway, so every
+    asset write endpoint surfaces validation failures uniformly.
+    """
+
+    id = serializers.IntegerField(required=True)
+
+    class Meta:
+        """Route ``many=True`` instances through the duplicate-id check."""
+
+        list_serializer_class = BulkAssetUpdateListSerializer
 
 
 # Usage field schema. Index follows Python's datetime.weekday() / ISO 8601:
@@ -827,29 +883,17 @@ class AssetViewSet(
                 {"id": 2, "ip_address": "10.0.0.5", "os": "Linux"}
             ]
         """
-        if not isinstance(request.data, list):
-            return Response(
-                {"detail": "Expected a list of objects."},
-                status=status.HTTP_400_BAD_REQUEST,
-            )
+        # Validate the batch envelope (list shape, id presence, id uniqueness)
+        # through DRF's standard ValidationError pathway.
+        envelope = BulkAssetUpdateSerializer(data=request.data, many=True)
+        envelope.is_valid(raise_exception=True)
 
-        # Phase 1: normalise and validate every item before touching the DB.
-        validated: list[tuple[models.Asset, AssetSerializer]] = []
-        seen_ids: set[int] = set()
+        # Phase 1: resolve + validate every item before touching the DB. The
+        # id-to-instance lookup is a 404 (a missing resource, not a client-side
+        # validation failure), so it stays here rather than in the serializer.
+        validated: list[AssetSerializer] = []
         for item in request.data:
-            asset_id = item.get("id")
-            if asset_id is None:
-                return Response(
-                    {"detail": "Each item must include an 'id' field."},
-                    status=status.HTTP_400_BAD_REQUEST,
-                )
-            if asset_id in seen_ids:
-                return Response(
-                    {"detail": f"Duplicate id in request: {asset_id}."},
-                    status=status.HTTP_400_BAD_REQUEST,
-                )
-            seen_ids.add(asset_id)
-
+            asset_id = item["id"]
             try:
                 asset = models.Asset.objects.get(pk=asset_id)
             except models.Asset.DoesNotExist:
@@ -861,11 +905,11 @@ class AssetViewSet(
                 asset, data=item, partial=True, context={"request": request}
             )
             serializer.is_valid(raise_exception=True)
-            validated.append((asset, serializer))
+            validated.append(serializer)
 
         # Phase 2: commit all updates atomically — all succeed or none do.
         with transaction.atomic():
-            results = [serializer.save() for _asset, serializer in validated]
+            results = [serializer.save() for serializer in validated]
 
         return Response(
             AssetSerializer(results, many=True, context={"request": request}).data,
@@ -885,32 +929,13 @@ class AssetViewSet(
         For batch partial-updates of assets with known IDs, use
         ``PATCH /api/assets/bulk_update/`` instead.
         """
+        # Field validation plus the hostname-conflict guard both live in
+        # AssetUpsertSerializer.validate(); raise_exception=True routes any
+        # failure through DRF's exception handler for a uniform 400 envelope.
         serializer = AssetUpsertSerializer(data=request.data)
-        if not serializer.is_valid():
-            return Response(serializer.errors, status.HTTP_400_BAD_REQUEST)
+        serializer.is_valid(raise_exception=True)
 
         validated = serializer.validated_data
-
-        # Reject if the proposed hostname is already owned by a different MAC.
-        # Same-MAC reuse (a legitimate update) falls through; missing/null
-        # hostname falls through. Empty strings are blocked by the serializer.
-        proposed_hostname = validated.get("hostname")
-        if proposed_hostname:
-            conflict = (
-                models.Asset.objects.filter(hostname=proposed_hostname)
-                .exclude(mac_address=validated["mac_address"])
-                .first()
-            )
-            if conflict is not None:
-                return Response(
-                    {
-                        "hostname": [
-                            f"Hostname '{proposed_hostname}' is already used by "
-                            f"asset id={conflict.id}.",
-                        ],
-                    },
-                    status=status.HTTP_400_BAD_REQUEST,
-                )
 
         created = False
         mac_address = validated.pop("mac_address")
