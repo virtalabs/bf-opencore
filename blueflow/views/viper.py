@@ -34,6 +34,9 @@ class ViperWebhookSerializer(serializers.Serializer):
     page_size = serializers.IntegerField()
 
 
+class ViperWebhookResponseSerilizer(serializers.Serializer): ...
+
+
 class ViperViewSet(viewsets.ViewSet):
     """ViewSet for the Viper integration."""
 
@@ -42,8 +45,8 @@ class ViperViewSet(viewsets.ViewSet):
     serializer_class: typing.ClassVar = ViperWebhookSerializer
 
     @drf_spectacular.extend_schema(
-        request=models.ViperWebhookRequest,
-        responses={"202": response.Response, "400": response.Response},
+        request=ViperWebhookSerializer,
+        responses={202: ViperWebhookResponseSerilizer, 400: ViperWebhookSerializer},
         description="Register the viper callback endpoint for asset syncing",
     )
     @decorators.action(detail=False, methods=["post"])
