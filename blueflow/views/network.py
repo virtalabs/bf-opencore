@@ -125,18 +125,17 @@ class NetworkViewSet(WaffleSwitchMixin, viewsets.ModelViewSet):
         return Response(data)
 
 
-class CidrSerializer(serializers.HyperlinkedModelSerializer):
+class CidrSerializer(serializers.ModelSerializer):
     """Serializes cidrs.
 
     Teaches the rest_framework (the ViewSet) which fields to expect.
     """
 
-    url = serializers.HyperlinkedIdentityField(view_name="blueflow:cidr-detail")
     network_id = IntegerField()
 
     class Meta:
         model = Cidr
-        fields = ("id", "url", "cidr", "network_id")
+        fields = ("id", "cidr", "network_id")
 
 
 @extend_schema(exclude=True)
@@ -148,20 +147,15 @@ class CidrViewSet(mixins.DestroyModelMixin, viewsets.ReadOnlyModelViewSet):
     serializer_class = CidrSerializer
 
 
-class SavedSearchSerializer(serializers.HyperlinkedModelSerializer):
+class SavedSearchSerializer(serializers.ModelSerializer):
     """Serializes saved searchs.
 
     Teaches the rest_framework (the ViewSet) which fields to expect.
     """
 
-    url = serializers.HyperlinkedIdentityField(
-        view_name="blueflow:savedsearch-detail"
-    )
-
     class Meta:
         model = SavedSearch
         fields = (
-            "url",
             "id",
             "name",
             "search_query",

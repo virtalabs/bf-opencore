@@ -11,10 +11,9 @@ from .tag import TagSerializer
 from .utils import ChangeReasonMixin, HugeLimitOffsetPagination
 
 
-class AssetTagSerializer(serializers.HyperlinkedModelSerializer):
+class AssetTagSerializer(serializers.ModelSerializer):
     """Serializes AssetTag objects."""
 
-    url = serializers.HyperlinkedIdentityField(view_name="blueflow:assettag-detail")
     tag = TagSerializer(read_only=True)
     asset_id = IntegerField()
     tag_id = IntegerField()
@@ -29,7 +28,6 @@ class AssetTagSerializer(serializers.HyperlinkedModelSerializer):
             "provenance",
             # Fields that are created (not stored directly in schema)
             "tag",
-            "url",
         )
 
 

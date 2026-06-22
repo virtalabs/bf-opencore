@@ -10,12 +10,10 @@ from waffle.mixins import WaffleSwitchMixin
 logger = logging.getLogger(__name__)
 
 
-class UserSerializer(serializers.HyperlinkedModelSerializer):
+class UserSerializer(serializers.ModelSerializer):
     """Serialize users."""
 
     # Few public methods; that's just how serializers work
-
-    url = serializers.HyperlinkedIdentityField(view_name="blueflow:user-detail")
 
     class Meta:
         """Wire serializer to the User model."""
@@ -23,7 +21,6 @@ class UserSerializer(serializers.HyperlinkedModelSerializer):
         model = User
         fields = (
             "id",
-            "url",
             "email",
             "first_name",
             "last_name",
