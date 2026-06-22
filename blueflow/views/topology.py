@@ -71,7 +71,7 @@ class TopologySerializer(serializers.Serializer):
     assets = TopologyAssetSerializer(many=True)
     connections = TopologyConnectionSerializer(many=True, required=False)
 
-    @extend_schema_field({"type": "string", "const": "0.1.0-minimal"})
+    @extend_schema_field({"type": "string", "enum": ["0.1.0-minimal"]})
     def get_schema_version(self, _obj):
         return "0.1.0-minimal"
 
