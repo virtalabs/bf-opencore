@@ -5,8 +5,11 @@ Blueflow Django app. Installable package containing the **blueflow** Django appl
 ## Prerequisites
 
 - Python 3.12+
-- PostgreSQL (required — SQLite is not supported)
+- PostgreSQL
 - [uv](https://github.com/astral-sh/uv)
+
+Optional:
+- [just](https://github.com/casey/just), check the justfile for any shorthand versions of the scripts identified below
 
 ## App identity
 
