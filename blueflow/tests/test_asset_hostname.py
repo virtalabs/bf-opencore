@@ -21,6 +21,9 @@ from blueflow.views.asset import AssetUpsertSerializer
 
 MAC_A = "AA:BB:CC:DD:EE:FF"
 MAC_B = "11:22:33:44:55:66"
+# AssetUpsertSerializer.manufacturer is required=True; supply it on every
+# payload that should pass field validation and reach the hostname logic.
+MFR = "Acme"
 
 
 # ---------------------------------------------------------------------------
@@ -41,20 +44,22 @@ def test_upsert_serializer_accepts_null_hostname() -> None:
     The model is nullable on purpose — see test_db_allows_multiple_null_hostnames
     for why. The wire-level acceptance of `null` is part of the upsert contract.
     """
-    serializer = AssetUpsertSerializer(data={"mac_address": MAC_A, "hostname": None})
+    serializer = AssetUpsertSerializer(
+        data={"mac_address": MAC_A, "hostname": None, "manufacturer": MFR}
+    )
     assert serializer.is_valid(), serializer.errors
 
 
 def test_upsert_serializer_accepts_missing_hostname() -> None:
     """Omitting hostname entirely is also 'absent' and must pass validation."""
-    serializer = AssetUpsertSerializer(data={"mac_address": MAC_A})
+    serializer = AssetUpsertSerializer(data={"mac_address": MAC_A, "manufacturer": MFR})
     assert serializer.is_valid(), serializer.errors
 
 
 def test_upsert_serializer_accepts_real_hostname() -> None:
     """A non-empty hostname passes validation."""
     serializer = AssetUpsertSerializer(
-        data={"mac_address": MAC_A, "hostname": "foo.example"},
+        data={"mac_address": MAC_A, "hostname": "foo.example", "manufacturer": MFR},
     )
     assert serializer.is_valid(), serializer.errors
 
@@ -68,7 +73,9 @@ def test_upsert_creates_asset_with_hostname(asset_edit_client: APIClient) -> Non
     """Happy path: new asset with a fresh hostname returns 201."""
     response = asset_edit_client.put(
         "/api/assets/upsert/",
-        json.dumps({"mac_address": MAC_A, "hostname": "foo.example"}),
+        json.dumps(
+            {"mac_address": MAC_A, "hostname": "foo.example", "manufacturer": MFR}
+        ),
         content_type="application/json",
     )
     assert response.status_code == status.HTTP_201_CREATED
@@ -82,7 +89,9 @@ def test_upsert_same_mac_same_hostname_is_legitimate_noop(
     models.Asset.objects.create(mac_address=MAC_A, hostname="foo.example")
     response = asset_edit_client.put(
         "/api/assets/upsert/",
-        json.dumps({"mac_address": MAC_A, "hostname": "foo.example"}),
+        json.dumps(
+            {"mac_address": MAC_A, "hostname": "foo.example", "manufacturer": MFR}
+        ),
         content_type="application/json",
     )
     assert response.status_code == status.HTTP_200_OK
@@ -95,7 +104,9 @@ def test_upsert_same_mac_new_hostname_is_legitimate_update(
     asset = models.Asset.objects.create(mac_address=MAC_A, hostname="old.example")
     response = asset_edit_client.put(
         "/api/assets/upsert/",
-        json.dumps({"mac_address": MAC_A, "hostname": "new.example"}),
+        json.dumps(
+            {"mac_address": MAC_A, "hostname": "new.example", "manufacturer": MFR}
+        ),
         content_type="application/json",
     )
     assert response.status_code == status.HTTP_200_OK
@@ -110,7 +121,9 @@ def test_upsert_different_mac_existing_hostname_is_rejected(
     existing = models.Asset.objects.create(mac_address=MAC_A, hostname="foo.example")
     response = asset_edit_client.put(
         "/api/assets/upsert/",
-        json.dumps({"mac_address": MAC_B, "hostname": "foo.example"}),
+        json.dumps(
+            {"mac_address": MAC_B, "hostname": "foo.example", "manufacturer": MFR}
+        ),
         content_type="application/json",
     )
     assert response.status_code == status.HTTP_400_BAD_REQUEST
@@ -126,7 +139,9 @@ def test_upsert_against_null_mac_owner_is_rejected(
     existing = models.Asset.objects.create(mac_address=None, hostname="foo.example")
     response = asset_edit_client.put(
         "/api/assets/upsert/",
-        json.dumps({"mac_address": MAC_A, "hostname": "foo.example"}),
+        json.dumps(
+            {"mac_address": MAC_A, "hostname": "foo.example", "manufacturer": MFR}
+        ),
         content_type="application/json",
     )
     assert response.status_code == status.HTTP_400_BAD_REQUEST
@@ -140,7 +155,7 @@ def test_upsert_without_hostname_does_not_check_conflicts(
     models.Asset.objects.create(mac_address=MAC_B, hostname="taken.example")
     response = asset_edit_client.put(
         "/api/assets/upsert/",
-        json.dumps({"mac_address": MAC_A}),
+        json.dumps({"mac_address": MAC_A, "manufacturer": MFR}),
         content_type="application/json",
     )
     assert response.status_code == status.HTTP_201_CREATED
