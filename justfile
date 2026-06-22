@@ -10,7 +10,6 @@ test:
   DJANGO_SETTINGS_MODULE=project.settings.test uv run pytest | tee /tmp/blueflow-test-$(date +'%Y%m%d%H%M')
 
 run:
-  i
   DJANGO_SETTINGS_MODULE=project.settings.development ./project/manage.py runserver
 
 up:
