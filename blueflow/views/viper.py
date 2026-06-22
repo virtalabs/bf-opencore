@@ -47,7 +47,12 @@ class ViperViewSet(viewsets.ViewSet):
 
     @drf_spectacular.extend_schema(
         request=ViperWebhookSerializer,
-        responses={202: ViperWebhookResponseSerilizer, 400: ViperWebhookSerializer},
+        responses={
+            202: ViperWebhookResponseSerilizer,
+            400: drf_spectacular.OpenApiResponse(
+                description="Validation error — malformed or incomplete webhook payload"
+            ),
+        },
         description="Register the viper callback endpoint for asset syncing",
     )
     @decorators.action(detail=False, methods=["post"])
