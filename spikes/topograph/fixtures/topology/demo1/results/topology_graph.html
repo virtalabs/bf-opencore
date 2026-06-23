@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Topology Graph</title>
+  <script src="https://unpkg.com/vis-network@9.1.9/standalone/umd/vis-network.min.js"></script>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    html, body { height: 100%; overflow: hidden; }
+    body { font-family: system-ui, sans-serif; display: flex; flex-direction: column; height: 100vh; }
+    header {
+      background: #1e293b; color: #f8fafc; padding: 12px 20px;
+      display: flex; flex-wrap: wrap; align-items: center; gap: 16px;
+    }
+    header h1 { font-size: 1.1rem; font-weight: 600; }
+    .stats { font-size: 0.85rem; color: #94a3b8; }
+    .legend { display: flex; flex-wrap: wrap; gap: 12px; font-size: 0.8rem; }
+    .legend-item { display: flex; align-items: center; gap: 6px; }
+    .swatch { width: 12px; height: 12px; border-radius: 2px; }
+    #network { flex: 1; min-height: 0; overflow: hidden; position: relative; background: #f8fafc; }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>Network Topology</h1>
+    <span class="stats">7 nodes &middot; 13 arrows &middot; 2 subnet(s)</span>
+    <div class="legend"><span class="legend-item"><span class="swatch" style="background:#4e79a7"></span>10.10.0.0/24</span><span class="legend-item"><span class="swatch" style="background:#f28e2b"></span>10.10.1.0/24</span></div>
+  </header>
+  <div id="network"></div>
+  <script>
+    const data = {"nodes": [{"id": "00:1a:b1:10:01:11", "label": "PHILIPS-MX700-01", "group": "10.10.1.0/24", "title": "PHILIPS-MX700-01\nClass: patient_monitor\nIP: 10.10.1.11\nSubnet: 10.10.1.0/24\nVendor: philips intellivue_mx700", "x": 530, "y": 0, "fixed": true}, {"id": "00:1a:b1:10:01:21", "label": "PHILIPS-AFFINITI-01", "group": "10.10.1.0/24", "title": "PHILIPS-AFFINITI-01\nClass: imaging_system\nIP: 10.10.1.21\nSubnet: 10.10.1.0/24\nVendor: philips affiniti_70", "x": 350, "y": 180, "fixed": true}, {"id": "00:1a:b1:10:01:31", "label": "INTRASIGHT-WS-01", "group": "10.10.1.0/24", "title": "INTRASIGHT-WS-01\nClass: clinical_workstation\nIP: 10.10.1.31\nSubnet: 10.10.1.0/24\nVendor: philips intrasight_mobile", "x": 170, "y": 0, "fixed": true}, {"id": "00:1a:b1:10:01:41", "label": "PHILIPS-PACS-01", "group": "10.10.1.0/24", "title": "PHILIPS-PACS-01\nClass: pacs_server\nIP: 10.10.1.41\nSubnet: 10.10.1.0/24\nVendor: philips intellispace_pacs", "x": 350, "y": -180, "fixed": true}, {"id": "00:1a:b1:10:00:01", "label": "PALOALTO-FW-01", "group": "10.10.0.0/24", "title": "PALOALTO-FW-01\nClass: firewall\nIP: 10.10.0.1\nSubnet: 10.10.0.0/24\nVendor: palo_alto pa_400", "x": 165, "y": 0, "fixed": true}, {"id": "00:1a:b1:10:00:02", "label": "CISCO-GW-01", "group": "10.10.0.0/24", "title": "CISCO-GW-01\nClass: gateway\nIP: 10.10.0.2\nSubnet: 10.10.0.0/24\nVendor: cisco asr1001x", "x": -82, "y": 143, "fixed": true}, {"id": "00:50:56:ab:10:05", "label": "EPIC-EMR-EDGE", "group": "10.10.0.0/24", "title": "EPIC-EMR-EDGE\nClass: ehr_server\nIP: 10.10.0.5\nSubnet: 10.10.0.0/24\nVendor: epic_systems epic_hyperspace", "x": -83, "y": -143, "fixed": true}], "edges": [{"from": "00:1a:b1:10:01:11", "to": "00:1a:b1:10:01:31", "label": "hl7:2575", "title": "hl7 (tcp/2575)", "arrows": "to"}, {"from": "00:1a:b1:10:01:21", "to": "00:1a:b1:10:01:31", "label": "dicom:104", "title": "dicom (tcp/104)", "arrows": "to"}, {"from": "00:1a:b1:10:01:21", "to": "00:1a:b1:10:01:41", "label": "dicom:104", "title": "dicom (tcp/104)", "arrows": "to"}, {"from": "00:1a:b1:10:01:31", "to": "00:1a:b1:10:01:21", "label": "dicom:104", "title": "dicom (tcp/104)", "arrows": "to"}, {"from": "00:1a:b1:10:01:31", "to": "00:1a:b1:10:01:41", "label": "{dicom:104, https:443}", "title": "dicom (tcp/104)\nhttps (tcp/443)", "arrows": "to"}, {"from": "00:1a:b1:10:01:41", "to": "00:1a:b1:10:01:21", "label": "dicom:104", "title": "dicom (tcp/104)", "arrows": "to"}, {"from": "00:1a:b1:10:01:41", "to": "00:1a:b1:10:01:31", "label": "dicom:104", "title": "dicom (tcp/104)", "arrows": "to"}, {"from": "00:1a:b1:10:00:01", "to": "00:1a:b1:10:00:02", "label": "{http:80, https:443, ssh:22}", "title": "http (tcp/80)\nhttps (tcp/443)\nssh (tcp/22)", "arrows": "to"}, {"from": "00:1a:b1:10:00:01", "to": "00:50:56:ab:10:05", "label": "{hl7:2575, https:443}", "title": "hl7 (tcp/2575)\nhttps (tcp/443)", "arrows": "to"}, {"from": "00:1a:b1:10:00:02", "to": "00:1a:b1:10:00:01", "label": "{https:443, ssh:22}", "title": "https (tcp/443)\nssh (tcp/22)", "arrows": "to"}, {"from": "00:1a:b1:10:00:02", "to": "00:50:56:ab:10:05", "label": "{hl7:2575, https:443}", "title": "hl7 (tcp/2575)\nhttps (tcp/443)", "arrows": "to"}, {"from": "00:50:56:ab:10:05", "to": "00:1a:b1:10:00:01", "label": "{https:443, ssh:22}", "title": "https (tcp/443)\nssh (tcp/22)", "arrows": "to"}, {"from": "00:50:56:ab:10:05", "to": "00:1a:b1:10:00:02", "label": "{http:80, https:443, ssh:22}", "title": "http (tcp/80)\nhttps (tcp/443)\nssh (tcp/22)", "arrows": "to"}]};
+    const groups = {"10.10.0.0/24": {"color": "#4e79a7", "border": "#4e79a7"}, "10.10.1.0/24": {"color": "#f28e2b", "border": "#f28e2b"}};
+
+    const container = document.getElementById("network");
+    const viz = new vis.Network(container, data, {
+      groups: groups,
+      nodes: {
+        shape: "dot",
+        size: 18,
+        font: { size: 13, color: "#1e293b" },
+        borderWidth: 2,
+      },
+      edges: {
+        width: 1,
+        font: { size: 10, align: "middle", color: "#64748b" },
+        color: { color: "#94a3b8", highlight: "#475569" },
+        smooth: { type: "continuous" },
+      },
+      physics: { enabled: false },
+      interaction: {
+        hover: true,
+        tooltipDelay: 100,
+        navigationButtons: true,
+      },
+    });
+    viz.fit({ animation: false });
+  </script>
+</body>
+</html>

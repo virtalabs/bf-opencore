@@ -1,0 +1,74 @@
+[
+  {
+    "_comment":     "Clinical VLAN — 10.10.1.0/24. Passively observed on clinical LAN segment.",
+    "hostname":     "PHILIPS-MX700-01",
+    "ip_address":   "10.10.1.11",
+    "mac_address":  "00:1A:B1:10:01:11",
+    "vendor":       "philips",
+    "product":      "intellivue_mx700",
+    "version":      "J.10.19",
+    "device_class": "patient_monitor",
+    "open_ports":   [3702]
+  },
+  {
+    "hostname":     "PHILIPS-AFFINITI-01",
+    "ip_address":   "10.10.1.21",
+    "mac_address":  "00:1A:B1:10:01:21",
+    "vendor":       "philips",
+    "product":      "affiniti_70",
+    "version":      "3.0.4",
+    "device_class": "imaging_system",
+    "open_ports":   [104]
+  },
+  {
+    "hostname":     "INTRASIGHT-WS-01",
+    "ip_address":   "10.10.1.31",
+    "mac_address":  "00:1A:B1:10:01:31",
+    "vendor":       "philips",
+    "product":      "intrasight_mobile",
+    "version":      "5.2.1",
+    "device_class": "clinical_workstation",
+    "open_ports":   [104, 2575, 3389]
+  },
+  {
+    "hostname":     "PHILIPS-PACS-01",
+    "ip_address":   "10.10.1.41",
+    "mac_address":  "00:1A:B1:10:01:41",
+    "vendor":       "philips",
+    "product":      "intellispace_pacs",
+    "version":      "4.4.6",
+    "device_class": "pacs_server",
+    "open_ports":   [104, 443]
+  },
+  {
+    "_comment":     "Edge VLAN — 10.10.0.0/24. Passively observed on edge/transit segment.",
+    "hostname":     "PALOALTO-FW-01",
+    "ip_address":   "10.10.0.1",
+    "mac_address":  "00:1A:B1:10:00:01",
+    "vendor":       "palo_alto",
+    "product":      "pa_400",
+    "version":      "11.1.2",
+    "device_class": "firewall",
+    "open_ports":   [443, 22]
+  },
+  {
+    "hostname":     "CISCO-GW-01",
+    "ip_address":   "10.10.0.2",
+    "mac_address":  "00:1A:B1:10:00:02",
+    "vendor":       "cisco",
+    "product":      "asr1001x",
+    "version":      "17.6.4",
+    "device_class": "gateway",
+    "open_ports":   [22, 443, 80]
+  },
+  {
+    "hostname":     "EPIC-EMR-EDGE",
+    "ip_address":   "10.10.0.5",
+    "mac_address":  "00:50:56:AB:10:05",
+    "vendor":       "epic_systems",
+    "product":      "epic_hyperspace",
+    "version":      "2024.1",
+    "device_class": "ehr_server",
+    "open_ports":   [2575, 443]
+  }
+]

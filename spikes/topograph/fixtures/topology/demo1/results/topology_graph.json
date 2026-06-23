@@ -1,0 +1,425 @@
+{
+  "subnets": [
+    "10.10.0.0/24",
+    "10.10.1.0/24"
+  ],
+  "nodes": [
+    {
+      "node_id": "00:1a:b1:10:01:11",
+      "hostname": "PHILIPS-MX700-01",
+      "vendor": "philips",
+      "product": "intellivue_mx700",
+      "version": "J.10.19",
+      "device_class": "patient_monitor",
+      "interfaces": [
+        {
+          "mac": "00:1a:b1:10:01:11",
+          "ip": "10.10.1.11",
+          "subnet": "10.10.1.0/24"
+        }
+      ],
+      "subnets": [
+        "10.10.1.0/24"
+      ],
+      "inbound": [],
+      "outbound": [
+        {
+          "to_node": "00:1a:b1:10:01:31",
+          "port": 2575,
+          "service": "hl7",
+          "protocol": "tcp"
+        }
+      ]
+    },
+    {
+      "node_id": "00:1a:b1:10:01:21",
+      "hostname": "PHILIPS-AFFINITI-01",
+      "vendor": "philips",
+      "product": "affiniti_70",
+      "version": "3.0.4",
+      "device_class": "imaging_system",
+      "interfaces": [
+        {
+          "mac": "00:1a:b1:10:01:21",
+          "ip": "10.10.1.21",
+          "subnet": "10.10.1.0/24"
+        }
+      ],
+      "subnets": [
+        "10.10.1.0/24"
+      ],
+      "inbound": [
+        {
+          "from_node": "00:1a:b1:10:01:31",
+          "port": 104,
+          "service": "dicom",
+          "protocol": "tcp"
+        },
+        {
+          "from_node": "00:1a:b1:10:01:41",
+          "port": 104,
+          "service": "dicom",
+          "protocol": "tcp"
+        }
+      ],
+      "outbound": [
+        {
+          "to_node": "00:1a:b1:10:01:31",
+          "port": 104,
+          "service": "dicom",
+          "protocol": "tcp"
+        },
+        {
+          "to_node": "00:1a:b1:10:01:41",
+          "port": 104,
+          "service": "dicom",
+          "protocol": "tcp"
+        }
+      ]
+    },
+    {
+      "node_id": "00:1a:b1:10:01:31",
+      "hostname": "INTRASIGHT-WS-01",
+      "vendor": "philips",
+      "product": "intrasight_mobile",
+      "version": "5.2.1",
+      "device_class": "clinical_workstation",
+      "interfaces": [
+        {
+          "mac": "00:1a:b1:10:01:31",
+          "ip": "10.10.1.31",
+          "subnet": "10.10.1.0/24"
+        }
+      ],
+      "subnets": [
+        "10.10.1.0/24"
+      ],
+      "inbound": [
+        {
+          "from_node": "00:1a:b1:10:01:11",
+          "port": 2575,
+          "service": "hl7",
+          "protocol": "tcp"
+        },
+        {
+          "from_node": "00:1a:b1:10:01:21",
+          "port": 104,
+          "service": "dicom",
+          "protocol": "tcp"
+        },
+        {
+          "from_node": "00:1a:b1:10:01:41",
+          "port": 104,
+          "service": "dicom",
+          "protocol": "tcp"
+        }
+      ],
+      "outbound": [
+        {
+          "to_node": "00:1a:b1:10:01:21",
+          "port": 104,
+          "service": "dicom",
+          "protocol": "tcp"
+        },
+        {
+          "to_node": "00:1a:b1:10:01:41",
+          "port": 104,
+          "service": "dicom",
+          "protocol": "tcp"
+        },
+        {
+          "to_node": "00:1a:b1:10:01:41",
+          "port": 443,
+          "service": "https",
+          "protocol": "tcp"
+        }
+      ]
+    },
+    {
+      "node_id": "00:1a:b1:10:01:41",
+      "hostname": "PHILIPS-PACS-01",
+      "vendor": "philips",
+      "product": "intellispace_pacs",
+      "version": "4.4.6",
+      "device_class": "pacs_server",
+      "interfaces": [
+        {
+          "mac": "00:1a:b1:10:01:41",
+          "ip": "10.10.1.41",
+          "subnet": "10.10.1.0/24"
+        }
+      ],
+      "subnets": [
+        "10.10.1.0/24"
+      ],
+      "inbound": [
+        {
+          "from_node": "00:1a:b1:10:01:21",
+          "port": 104,
+          "service": "dicom",
+          "protocol": "tcp"
+        },
+        {
+          "from_node": "00:1a:b1:10:01:31",
+          "port": 104,
+          "service": "dicom",
+          "protocol": "tcp"
+        },
+        {
+          "from_node": "00:1a:b1:10:01:31",
+          "port": 443,
+          "service": "https",
+          "protocol": "tcp"
+        }
+      ],
+      "outbound": [
+        {
+          "to_node": "00:1a:b1:10:01:21",
+          "port": 104,
+          "service": "dicom",
+          "protocol": "tcp"
+        },
+        {
+          "to_node": "00:1a:b1:10:01:31",
+          "port": 104,
+          "service": "dicom",
+          "protocol": "tcp"
+        }
+      ]
+    },
+    {
+      "node_id": "00:1a:b1:10:00:01",
+      "hostname": "PALOALTO-FW-01",
+      "vendor": "palo_alto",
+      "product": "pa_400",
+      "version": "11.1.2",
+      "device_class": "firewall",
+      "interfaces": [
+        {
+          "mac": "00:1a:b1:10:00:01",
+          "ip": "10.10.0.1",
+          "subnet": "10.10.0.0/24"
+        }
+      ],
+      "subnets": [
+        "10.10.0.0/24"
+      ],
+      "inbound": [
+        {
+          "from_node": "00:1a:b1:10:00:02",
+          "port": 443,
+          "service": "https",
+          "protocol": "tcp"
+        },
+        {
+          "from_node": "00:1a:b1:10:00:02",
+          "port": 22,
+          "service": "ssh",
+          "protocol": "tcp"
+        },
+        {
+          "from_node": "00:50:56:ab:10:05",
+          "port": 443,
+          "service": "https",
+          "protocol": "tcp"
+        },
+        {
+          "from_node": "00:50:56:ab:10:05",
+          "port": 22,
+          "service": "ssh",
+          "protocol": "tcp"
+        }
+      ],
+      "outbound": [
+        {
+          "to_node": "00:1a:b1:10:00:02",
+          "port": 22,
+          "service": "ssh",
+          "protocol": "tcp"
+        },
+        {
+          "to_node": "00:1a:b1:10:00:02",
+          "port": 443,
+          "service": "https",
+          "protocol": "tcp"
+        },
+        {
+          "to_node": "00:1a:b1:10:00:02",
+          "port": 80,
+          "service": "http",
+          "protocol": "tcp"
+        },
+        {
+          "to_node": "00:50:56:ab:10:05",
+          "port": 2575,
+          "service": "hl7",
+          "protocol": "tcp"
+        },
+        {
+          "to_node": "00:50:56:ab:10:05",
+          "port": 443,
+          "service": "https",
+          "protocol": "tcp"
+        }
+      ]
+    },
+    {
+      "node_id": "00:1a:b1:10:00:02",
+      "hostname": "CISCO-GW-01",
+      "vendor": "cisco",
+      "product": "asr1001x",
+      "version": "17.6.4",
+      "device_class": "gateway",
+      "interfaces": [
+        {
+          "mac": "00:1a:b1:10:00:02",
+          "ip": "10.10.0.2",
+          "subnet": "10.10.0.0/24"
+        }
+      ],
+      "subnets": [
+        "10.10.0.0/24"
+      ],
+      "inbound": [
+        {
+          "from_node": "00:1a:b1:10:00:01",
+          "port": 22,
+          "service": "ssh",
+          "protocol": "tcp"
+        },
+        {
+          "from_node": "00:1a:b1:10:00:01",
+          "port": 443,
+          "service": "https",
+          "protocol": "tcp"
+        },
+        {
+          "from_node": "00:1a:b1:10:00:01",
+          "port": 80,
+          "service": "http",
+          "protocol": "tcp"
+        },
+        {
+          "from_node": "00:50:56:ab:10:05",
+          "port": 22,
+          "service": "ssh",
+          "protocol": "tcp"
+        },
+        {
+          "from_node": "00:50:56:ab:10:05",
+          "port": 443,
+          "service": "https",
+          "protocol": "tcp"
+        },
+        {
+          "from_node": "00:50:56:ab:10:05",
+          "port": 80,
+          "service": "http",
+          "protocol": "tcp"
+        }
+      ],
+      "outbound": [
+        {
+          "to_node": "00:1a:b1:10:00:01",
+          "port": 443,
+          "service": "https",
+          "protocol": "tcp"
+        },
+        {
+          "to_node": "00:1a:b1:10:00:01",
+          "port": 22,
+          "service": "ssh",
+          "protocol": "tcp"
+        },
+        {
+          "to_node": "00:50:56:ab:10:05",
+          "port": 2575,
+          "service": "hl7",
+          "protocol": "tcp"
+        },
+        {
+          "to_node": "00:50:56:ab:10:05",
+          "port": 443,
+          "service": "https",
+          "protocol": "tcp"
+        }
+      ]
+    },
+    {
+      "node_id": "00:50:56:ab:10:05",
+      "hostname": "EPIC-EMR-EDGE",
+      "vendor": "epic_systems",
+      "product": "epic_hyperspace",
+      "version": "2024.1",
+      "device_class": "ehr_server",
+      "interfaces": [
+        {
+          "mac": "00:50:56:ab:10:05",
+          "ip": "10.10.0.5",
+          "subnet": "10.10.0.0/24"
+        }
+      ],
+      "subnets": [
+        "10.10.0.0/24"
+      ],
+      "inbound": [
+        {
+          "from_node": "00:1a:b1:10:00:01",
+          "port": 2575,
+          "service": "hl7",
+          "protocol": "tcp"
+        },
+        {
+          "from_node": "00:1a:b1:10:00:01",
+          "port": 443,
+          "service": "https",
+          "protocol": "tcp"
+        },
+        {
+          "from_node": "00:1a:b1:10:00:02",
+          "port": 2575,
+          "service": "hl7",
+          "protocol": "tcp"
+        },
+        {
+          "from_node": "00:1a:b1:10:00:02",
+          "port": 443,
+          "service": "https",
+          "protocol": "tcp"
+        }
+      ],
+      "outbound": [
+        {
+          "to_node": "00:1a:b1:10:00:01",
+          "port": 443,
+          "service": "https",
+          "protocol": "tcp"
+        },
+        {
+          "to_node": "00:1a:b1:10:00:01",
+          "port": 22,
+          "service": "ssh",
+          "protocol": "tcp"
+        },
+        {
+          "to_node": "00:1a:b1:10:00:02",
+          "port": 22,
+          "service": "ssh",
+          "protocol": "tcp"
+        },
+        {
+          "to_node": "00:1a:b1:10:00:02",
+          "port": 443,
+          "service": "https",
+          "protocol": "tcp"
+        },
+        {
+          "to_node": "00:1a:b1:10:00:02",
+          "port": 80,
+          "service": "http",
+          "protocol": "tcp"
+        }
+      ]
+    }
+  ]
+}
