@@ -143,12 +143,14 @@ class BulkAssetUpdateListSerializer(serializers.ListSerializer):
 
     def validate(self, attrs: list[dict]) -> list[dict]:
         """Reject a batch containing the same id more than once."""
-        ids = [item["id"] for item in attrs]
-        duplicates = sorted({i for i in ids if ids.count(i) > 1})
-        if duplicates:
-            raise serializers.ValidationError(
-                {"detail": f"Duplicate id in request: {duplicates[0]}."}
-            )
+        ids: list[int] = [item["id"] for item in attrs]
+        seen: set[int] = set()
+        for i in ids:
+            if i in seen:
+                raise serializers.ValidationError(
+                    {"detail": f"Duplicate id in request: {i}."}
+                )
+            seen.add(i)
         return attrs
 
 
