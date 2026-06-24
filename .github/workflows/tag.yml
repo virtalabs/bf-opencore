@@ -20,7 +20,7 @@ jobs:
         # https://docs.github.com/en/actions/how-tos/write-workflows/choose-when-workflows-run/trigger-a-workflow#triggering-a-workflow-from-a-workflow
         with:
           token: ${{ secrets.TAG_PAT }}
-          fetch-depth: 2 # allows the git diff to work
+          fetch-depth: 0 # allows the git diff to work
       - uses: actions/setup-python@v6
         with:
           python-version: "3.12"
