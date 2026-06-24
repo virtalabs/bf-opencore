@@ -1,0 +1,47 @@
+name: Tag
+
+on:
+  push:
+    branches: [develop, main]
+    # only run if we updated the versioning
+    paths:
+      - "pyproject.toml"
+
+jobs:
+  tag:
+    runs-on: ubuntu-latest
+    outputs:
+      version_tag: ${{ steps.pull_tag.outputs.version_tag }}
+    steps:
+      - uses: actions/checkout@v4
+        # gh blocks recusrive calls by default
+        # using a PAT we can opt-in
+        # triggering any downstream tag related workflows
+        # https://docs.github.com/en/actions/how-tos/write-workflows/choose-when-workflows-run/trigger-a-workflow#triggering-a-workflow-from-a-workflow
+        with:
+          token: ${{ secrets.TAG_PAT }}
+          fetch-depth: 2 # allows the git diff to work
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.12"
+
+      - name: Ensure Version Bump
+        # gh runs with -eo and will exit on non-zero for us
+        run: |
+          git diff --unified=0 HEAD~1 HEAD -- pyproject.toml | grep -qE '^[+-]version'
+
+      - name: Pull version
+        id: pull_tag
+        # parse and read the pyproject.toml directly
+        # no text wrangling needed :)
+        run: |
+          VERSION=$(python -c 'import tomllib; print(tomllib.load(open("pyproject.toml","rb"))["project"]["version"])')
+          echo "version_tag=$VERSION" >> "$GITHUB_OUTPUT"
+
+      - name: Create git tag
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git tag "${{ steps.pull_tag.outputs.version_tag }}"
+          git push origin --tags
+
