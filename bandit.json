@@ -1,1 +1,13 @@
-{"loc": 0}
+{
+  "CONFIDENCE.HIGH": 684,
+  "CONFIDENCE.LOW": 0,
+  "CONFIDENCE.MEDIUM": 2,
+  "CONFIDENCE.UNDEFINED": 0,
+  "SEVERITY.HIGH": 0,
+  "SEVERITY.LOW": 684,
+  "SEVERITY.MEDIUM": 2,
+  "SEVERITY.UNDEFINED": 0,
+  "loc": 10575,
+  "nosec": 0,
+  "skipped_tests": 0
+}
