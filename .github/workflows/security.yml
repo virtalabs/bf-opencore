@@ -21,7 +21,7 @@ jobs:
         run: uv sync --all-extras
 
       - name: Run Bandit
-        run: uv run bandit --config-file pyproject.toml --exit-zero --severity-level high --confidence-level medium -f json --output /tmp/report.json --recursive blueflow
+        run: uv run bandit --configfile pyproject.toml --exit-zero --severity-level high --confidence-level medium -f json --output /tmp/report.json --recursive blueflow
 
         # del loc to avoid false positive
         # otherwise we exit bc a new baseline needs to be generated
