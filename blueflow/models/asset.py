@@ -44,6 +44,7 @@ class Asset(django_extensions.TimeStampedModel):
 
     UNKNOWN_OUI_MANUFACTURER: str = ""
 
+    merp = models.CharField(max_length=126, blank=True, null=False, default="")
     name = models.CharField(
         max_length=126,
         blank=True,
