@@ -53,6 +53,7 @@ dev = [
     "ruff",
     "pre-commit>=4.5.1",
     "pytest-json-report",
+    "bandit>=1.9.4",
 ]
 
 [project.scripts]
@@ -115,3 +116,7 @@ ignore = [
 
 [tool.ruff.format]
 skip-magic-trailing-comma = false
+
+[tool.bandit]
+exclude = ["conftest.py"]
+exclude_dirs = ["tests", "blueflow/tests"]
