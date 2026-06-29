@@ -22,9 +22,9 @@ api-docs:
   DJANGO_SETTINGS_MODULE=project.settings.development ./project/manage.py spectacular --validate
 
 security-check:
-  uv run bandit --severity-level high --confidence-level medium -f json --output /tmp/report.json --recursive blueflow
+  uv run bandit --config-file pyproject.toml --severity-level high --confidence-level medium -f json --output /tmp/report.json --recursive blueflow
 
 security-report:
-  uv run bandit --exit-zero --severity-level high --confidence-level medium -f json --output /tmp/report.json --recursive blueflow
+  uv run bandit --config-file pyproject.toml --exit-zero --severity-level high --confidence-level medium -f json --output /tmp/report.json --recursive blueflow
   uv run python -c 'import json; totals = json.loads(open("/tmp/report.json").read())["metrics"]["_totals"]; print(json.dumps(totals, indent=2, sort_keys=True))' > bandit.json
 
