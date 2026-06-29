@@ -1,0 +1,38 @@
+name: Security
+
+on:
+  push:
+    branches: [develop]
+  pull_request:
+
+jobs:
+  security:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+
+      - uses: astral-sh/setup-uv@v7
+
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.12"
+
+      - name: Install dependencies
+        run: uv sync --all-extras
+
+      - name: Run Bandit
+        run: uv run bandit --exit-zero --severity-level high --confidence-level medium -f json --output /tmp/report.json --recursive blueflow
+
+        # del loc to avoid false positive
+      - name: Diff Security Report
+        run: |
+          uv run python -c '
+          import json
+          import sys
+          new = json.load(open("/tmp/report.json"))["metrics"]["_totals"]
+          historic = json.load(open("bandit.json"))
+          del new["loc"]
+          del historic["loc"]
+          sys.exit(int(historic != new))'
+
+
