@@ -24,6 +24,7 @@ jobs:
         run: uv run bandit --exit-zero --severity-level high --confidence-level medium -f json --output /tmp/report.json --recursive blueflow
 
         # del loc to avoid false positive
+        # otherwise we exit bc a new baseline needs to be generated
       - name: Diff Security Report
         run: |
           uv run python -c '
