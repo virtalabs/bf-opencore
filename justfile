@@ -28,3 +28,12 @@ security-report:
   uv run bandit --configfile pyproject.toml --exit-zero --severity-level high --confidence-level medium -f json --output /tmp/report.json --recursive blueflow
   uv run python -c 'import json; totals = json.loads(open("/tmp/report.json").read())["metrics"]["_totals"]; print(json.dumps(totals, indent=2, sort_keys=True))' > bandit.json
 
+diff-security:
+  uv run python -c '\
+  import json;\
+  import sys;\
+  new = json.load(open("/tmp/report.json"))["metrics"]["_totals"];\
+  historic = json.load(open("bandit.json"));\
+  del new["loc"];\
+  del historic["loc"];\
+  sys.exit(int(historic != new))'
