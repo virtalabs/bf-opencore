@@ -1,4 +1,5 @@
-
+# avoid squashing failures in pipes
+set shell := ["zsh", "-uc", "-o", "pipefail"]
 
 makemigrations:
   DJANGO_SETTINGS_MODULE=project.settings.development ./project/manage.py makemigrations
@@ -14,6 +15,12 @@ run:
 
 up:
   docker-compose up
+
+build:
+  docker build --target develop .
+
+build-prod:
+  docker build --target prod .
 
 install:
   uv sync --all-extras
