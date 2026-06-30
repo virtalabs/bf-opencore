@@ -2,9 +2,10 @@
 
 import os
 
-from django.core.exceptions import ImproperlyConfigured
+import dj_database_url
+from django.core import exceptions
 
-from .base import *
+from .base import *  # noqa: F403
 
 SECRET_KEY = os.environ["DJANGO_SECRET_KEY"]
 ALLOWED_HOSTS = [
@@ -13,10 +14,11 @@ ALLOWED_HOSTS = [
     if h.strip()
 ]
 if not ALLOWED_HOSTS:
-    raise ImproperlyConfigured("DJANGO_ALLOWED_HOSTS must be set in production.")
+    msg = "DJANGO_ALLOWED_HOSTS must be set in production."
+    raise exceptions.ImproperlyConfigured(msg)
 DEBUG = False
 
-MIDDLEWARE.insert(1, "whitenoise.middleware.WhiteNoiseMiddleware")
+MIDDLEWARE.insert(1, "whitenoise.middleware.WhiteNoiseMiddleware")  # noqa: F405
 
 STORAGES = {
     "default": {
@@ -25,4 +27,17 @@ STORAGES = {
     "staticfiles": {
         "BACKEND": "whitenoise.storage.CompressedManifestStaticFilesStorage",
     },
+}
+
+_database_url = os.environ.get("DATABASE_URL")
+if not _database_url:
+    msg = "DATABASE_URL must be set in production."
+    raise exceptions.ImproperlyConfigured(msg)
+
+DATABASES = {
+    "default": dj_database_url.parse(
+        _database_url,
+        conn_max_age=600,
+        conn_health_checks=True,
+    )
 }

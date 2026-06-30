@@ -2,7 +2,9 @@
 
 import os
 
-from .base import *
+import dj_database_url
+
+from .base import *  # noqa: F403
 
 DEBUG = os.environ.get("DJANGO_DEBUG", "true").lower() in ("1", "true", "yes")
 SECRET_KEY = os.environ.get("DJANGO_SECRET_KEY", "dev-secret-key-not-for-production")
@@ -10,20 +12,17 @@ ALLOWED_HOSTS = os.environ.get("DJANGO_ALLOWED_HOSTS", "localhost,127.0.0.1").sp
 
 CELERY_TASK_ALWAYS_EAGER = True
 
-# Database: prefer DATABASE_URL (e.g. dj-database-url), else DB_* env vars
 _database_url = os.environ.get("DATABASE_URL")
-if _database_url:
-    import dj_database_url
-
-    DATABASES = {
+DATABASES = (
+    {
         "default": dj_database_url.parse(
             _database_url,
             conn_max_age=600,
             conn_health_checks=True,
         ),
     }
-else:
-    DATABASES = {
+    if _database_url
+    else {
         "default": {
             "ENGINE": "django.db.backends.postgresql",
             "NAME": os.environ.get("DB_NAME", "blueflow"),
@@ -33,3 +32,4 @@ else:
             "PORT": os.environ.get("DB_PORT", "5432"),
         },
     }
+)
