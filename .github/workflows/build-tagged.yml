@@ -24,6 +24,7 @@ jobs:
         uses: docker/build-push-action@v7
         with:
           push: true
+          target: develop
           # gh handily gives us the tag that triggered this workflow
           tags: |
             virtalabsinc/blueflow:${{ github.ref_name }}

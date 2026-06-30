@@ -23,6 +23,7 @@ jobs:
         uses: docker/build-push-action@v7
         with:
           push: true
+          target: develop
           tags: |
             virtalabsinc/blueflow:latest
 
