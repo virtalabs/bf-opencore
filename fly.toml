@@ -1,0 +1,30 @@
+app = 'blueflow'
+primary_region = 'iad'
+
+[build]
+  dockerfile = 'Dockerfile'
+
+[env]
+  BASE_URL = 'https://blueflow.fly.dev'
+
+[http_service]
+  internal_port = 8000
+  force_https = true
+  auto_stop_machines = 'stop'
+  auto_start_machines = true
+  min_machines_running = 1
+  processes = ['app']
+
+  [[http_service.checks]]
+    interval = '30s'
+    timeout = '5s'
+    grace_period = '10s'
+    method = 'GET'
+    path = '/api/'
+    [http_service.checks.headers]
+    Host = "blueflow.fly.dev"
+
+[[vm]]
+  memory = '256mb'
+  cpus = 1
+  memory_mb = 256
