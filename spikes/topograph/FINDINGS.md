@@ -2,148 +2,170 @@
 
 ## What the spike accomplishes
 
+The Python graph builder (`models.py`, `builder.py`, `registries.py`) proves that a network topology can be represented as a directed graph. Edges are stored as `outbound` on the initiating node and `inbound` on the receiving node, allowing consumers to traverse either direction independently. Intermediates are not modelled.
+
+**Note:** The spike's internal JSON shape (MAC-anchored `node_id`, embedded `inbound`/`outbound` lists, TapirXL field names) informed API design but is **not** the wire format. The contract lives in [`openapi.yaml`](openapi.yaml) and diverges intentionally. See below.
+
 ### Directed graph model validated
 
-This spike proves that a network topology can be represented as a directed graph of `TopologyNode` objects linked by `ServiceEdge` tuples `(peer_node, port, service, protocol)`. Edges are stored as `outbound` on the initiating node and `inbound` on the receiving node. This is intended to allow consumers to traverse either direction independently. Note that intermediates are not modelled. There should be more discussion with consumers on producer expectations around path analysis. For example, maybe we begin with consumer derived BFS and aim for providing per-hop service paths (See follow-up 4).
+`TopologyNode` objects are linked by `ServiceEdge` tuples `(peer_node, port, service, protocol)`.
 
-### MAC-anchored identity
+### MAC-anchored identity (spike internal only)
 
-Each node's `node_id` is the primary MAC address, giving hardware-stable identity that survives hostname changes. Where no MAC is present, a synthetic one is derived from the IP address so the graph remains a valid keyed dict at the cost of stability.
+Each node's `node_id` is the primary MAC address. Where no MAC is present, a synthetic one is derived from the IP address.
 
 ### Subnet-scoped reachability
 
-The builder groups nodes by `/24` subnet and infers directed edges only within a subnet. This produces a conservative, defensible reachability model: two nodes are considered able to communicate only if they share a broadcast domain. The output for `demo1` correctly isolates `10.10.1.0/24` (clinical VLAN) from `10.10.0.0/24` (edge VLAN).
+The builder groups nodes by `/24` subnet and infers directed edges only within a subnet. The `demo1` fixture isolates `10.10.1.0/24` (clinical VLAN) from `10.10.0.0/24` (edge VLAN).
 
 ### Service inference from device class
 
-`registries.py` encodes two static maps:
+`registries.py` encodes:
 
-- `PORT_SERVICE_MAP` — port → `(service_name, protocol)`, covering IT, OT/ICS, and medical protocol ports (DICOM, HL7, WS-Discovery, Modbus, OPC-UA, BACnet, etc.)
-- `DEVICE_CLASS_INITIATES` — device class → frozenset of services the class initiates outbound
+- `PORT_SERVICE_MAP`: port → `(service_name, protocol)`
+- `DEVICE_CLASS_INITIATES`: device class → frozenset of services the class initiates outbound
 
-Edge inference applies the rule: if node A's class initiates service S, and node B exposes a port that resolves to S, emit `A → B` on S. Wildcard (`"*"`) covers routers, firewalls, and gateways, which can initiate any service. This gives plausible edges from a passive asset inventory without requiring observed connection data.
+Edge inference: if node A's class initiates service S, and node B exposes a port that resolves to S, emit `A → B` on S. Wildcard (`"*"`) covers routers, firewalls, and gateways.
 
 ### Working fixture
 
-`fixtures/topology/demo1/` provides a seven-node, two-VLAN scenario (Philips clinical devices + Palo Alto firewall + Cisco gateway + Epic EHR edge server) with a committed output in `results/topology_graph.json`. The fixture exercises patient monitors, imaging systems, clinical workstations, PACS servers, networking devices, and an EHR server across two subnets. It can serve as the seed for the `0.1.0-minimal` example payload required by #135.
+`fixtures/topology/demo1/` provides a seven-node, two-VLAN scenario with committed output in `results/topology_graph.json`.
 
-### Schema shape established
+---
 
-The `to_dict()` output (`TopologyGraph`, `TopologyNode`, `ServiceEdge`) defines a concrete JSON shape that can be transcribed into a JSON Schema artifact. The shape is:
+## API contract design decisions (`0.1.0-minimal`)
 
-```json
-{
-  "subnets": ["10.10.0.0/24", "10.10.1.0/24"],
-  "nodes": [
-    {
-      "node_id": "<MAC>",
-      "hostname": "...",
-      "vendor": "...",
-      "product": "...",
-      "version": "...",
-      "device_class": "...",
-      "interfaces": [{ "mac": "...", "ip": "...", "subnet": "..." }],
-      "subnets": ["..."],
-      "inbound": [
-        {
-          "from_node": "<MAC>",
-          "port": 0,
-          "service": "...",
-          "protocol": "tcp|udp"
-        }
-      ],
-      "outbound": [
-        {
-          "to_node": "<MAC>",
-          "port": 0,
-          "service": "...",
-          "protocol": "tcp|udp"
-        }
-      ]
-    }
-  ]
-}
+Artifact: [`spikes/topograph/openapi.yaml`](openapi.yaml). Spike-only for now; promote to `blueflow/contracts/topology/` at implementation time.
+
+| Topic                   | Decision                                                                                                                                                                                                             |
+| ----------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Envelope**            | `schema_version`, `snapshot_id`, `timestamp`, `assets[]`; optional `connections[]`, `external_endpoints[]`, `query`, `networks[]`                                                                                    |
+| **Graph shape**         | Canonical flat list: nodes (`assets`) + edges (`connections`), not per-node `inbound`/`outbound`                                                                                                                     |
+| **Asset identity**      | `id` = integer `Asset.id` (PK); `hostname` separate, nullable                                                                                                                                                        |
+| **Asset fields**        | Mirror Blueflow `Asset` API surface: `manufacturer`, `model`, `category`, `app_sw_version` — open strings, trust upstream producer vocabularies (TapirXL `device_class` → `category` at ingest)                      |
+| **Interface**           | No `id`; `mac_address`, `ipv4_address`, `ipv6_address` only                                                                                                                                                          |
+| **Services**            | `(port, protocol, service)` open strings; `cast` enum (`unicast`/`multicast`/`broadcast`); non-unicast excluded from `connections[]`                                                                                 |
+| **Connection**          | Address-only flow tuple: `src_ip`, `dst_ip`, `dst_port`, `protocol`, `response_observed`, `service` — no asset IDs or hostnames on the edge                                                                          |
+| **External peers**      | Off-inventory endpoints in `external_endpoints[]` (`ip_address`, optional `hostname`); referenced by `src_ip`/`dst_ip` in connections                                                                                |
+| **CIDR filtering**      | Query params `cidr` (repeatable), `network`, `edge_scope` (`internal`/`boundary`); response echoes `query`, per-CIDR `networks` rollup, `matched_cidrs` + `in_scope` on assets                                       |
+| **Path**                | `GET /topology` (no trailing slash)                                                                                                                                                                                  |
+| **Auth**                | DRF token auth (`Authorization: Token <key>`)                                                                                                                                                                        |
+| **`response_observed`** | `true` = return traffic seen; `false` = initiation seen, no reply (full visibility); `null` = unknown (partial span, sampling, or inferred edge). Not derivable from TapirXL inventory or current Zeek→Asset ingest. |
+| **Mocking**             | See **Mocking** section below                                                                                                                                                                                        |
+
+Example connection:
+
+```yaml
+- src_ip: 10.10.1.31
+  dst_ip: 10.10.1.41
+  dst_port: 104
+  protocol: tcp
+  response_observed: true
+  service: dicom
 ```
 
 ---
 
-## Gaps and follow-up items for issue #135
+## Gaps and follow-up items
 
-### 1. Identity anchor conflict
+### Resolved (superseded)
 
-The spike uses MAC as `node_id` (primary identity). Issue #135, via the #144 prerequisite, mandates `asset.id = Asset.hostname`. These differ in stability and should be reassessed based on consumer feedback (Hawksbill, Galois, Viper)
+| #   | Original gap                               | Resolution                                                |
+| --- | ------------------------------------------ | --------------------------------------------------------- |
+| 1   | Identity anchor conflict (MAC vs hostname) | Integer `Asset.id` + separate nullable `hostname`         |
+| 2   | No schema artifact                         | OpenAPI 3.1 spec                                          |
+| 3   | API envelope fields absent                 | Defined in spec                                           |
+| 4   | `connections` shape unresolved             | Flat `connections[]` at root                              |
+| 7   | Broadcast/multicast not distinguished      | `Service.cast`; non-unicast excluded from `connections[]` |
 
-**Follow-up:** Before committing the schema artifact, pin which field is the canonical `id` in `0.1.0-minimal`. One resolution is to surface hostname as `id` (satisfying #135's AC) and retain MAC inside `interfaces` for hardware correlation.
+### Open
+
+**# Cross-subnet edges**
+
+`builder._infer_edges` only connects nodes sharing a subnet. CIDR filtering + `edge_scope=boundary` partially addresses consumer needs for multi-segment views. Routing-node inference (firewalls/gateways bridging VLANs) is still TBD for attack-path use cases.
+
+**#6 No mapping from `Asset`/`NetworkEndpoint` to topology wire shape**
+
+Reframed as an implementation task, not a contract blocker. Production must query `Asset` (and interfaces derived from `NetworkEndpoint` or asset IP fields), materialize `connections[]` from observed flows, and optionally fall back to class+port inference with `response_observed: null`.
+
+Open questions:
+
+- Multi-homed devices: aggregate multiple interface IPs per asset.
+- `Asset.hostname` nullability and duplicate-hostname behavior at materialization time.
+
+**#8 `_open_ports` stored via dict mutation**
+
+`builder.py` stashes transient state on dataclass instances via `node.__dict__["_open_ports"]`. If the builder is reused in production inference, move open ports to builder-local state or a proper excluded field.
 
 ---
 
-### 2. No schema artifact committed
+## Implementation next steps
 
-The spike produces JSON output but no `0.1.0-minimal.json` schema file exists. The #135 AC requires a committed artifact at `blueflow/contracts/topology/0.1.0-minimal.json` and an OpenAPI reference to the same version string.
+### Flow table (new persistence)
 
-**Follow-up:** After consumer/stakeholder feedback, author the JSON Schema from the spike's `to_dict()` shape, add the required API envelope fields (see item 3), etc.
+Flows are not asset attributes. Blueflow needs a dedicated **`ObservedFlow`** model (name TBD):
 
----
-
-### 3. API envelope fields are absent
-
-The spike output has no `schema_version`, `snapshot_id`, or `timestamp` at the root level. These are required by the #135 endpoint AC: _"Response includes required root fields (`schema_version`, `snapshot_id`, `timestamp`, `assets`)"_.
-
-**Follow-up:** Wrap `TopologyGraph.to_dict()` in an envelope before it leaves the view:
-
-```json
-{
-  "schema_version": "0.1.0-minimal",
-  "snapshot_id": "<uuid>",
-  "timestamp": "<ISO-8601>",
-  "subnets": [...],
-  "nodes": [...]
-}
+```
+(src_ip, dst_ip, dst_port, protocol)  -- natural key within retention window
+response_observed   bool | null
+visibility          full | partial | egress_only | sampled
+first_seen, last_seen
+evidence            JSON  -- conn_state, history, orig_bytes, resp_bytes
+provenance          zeek | tapirxl | netflow
 ```
 
-### 4. `connections` shape is unresolved
+Snapshot materialization: aggregate flows in a time window → emit `connections[]`; resolve IPs against asset interfaces or `external_endpoints[]`; inferred edges (class+port rules) get `response_observed: null`.
 
-The spike encodes edges as `inbound`/`outbound` lists on each node. The #135 AC references "≥1 connection" as a fixture requirement but does not specify whether the schema exposes a flat top-level `connections` list alongside (or instead of) per-node edge lists.
+### Zeek ingest extension
 
-**Follow-up:** Decide and document the `connections` shape, if at all, before the API is committed and mocked. Suggested options:
+Current [`blueflow/zeek/sidecar.py`](../../blueflow/zeek/sidecar.py) reads `conn.log` but only extracts endpoint identity and responder `open_ports_tcp`. Extend to emit flow records using fields already in Zeek:
 
-- **Per-node only** sufficient for graph traversal, less convenient for consumers doing bulk edge queries.
-- **Flat `connections` list at root** — `[{from_node, to_node, port, service, protocol}]` is a simple example; removes the need to deduplicate symmetric edges.
-- **Both** — flat list for consumers, per-node edges for rendering.
+| Flow field                                 | Zeek source                                                                 |
+| ------------------------------------------ | --------------------------------------------------------------------------- |
+| `src_ip`, `dst_ip`, `dst_port`, `protocol` | `id.orig_h`, `id.resp_h`, `id.resp_p`, `proto`                              |
+| `response_observed`                        | Derive from `history`, `conn_state`, `orig_bytes`, `resp_bytes`             |
+| `evidence`                                 | Store raw conn record subset                                                |
+| `visibility`                               | Set from span metadata when available; default `full` for single-tap ingest |
 
----
+Wire into a new flow ingest path (extend `zeek_ingest` or a separate management command). See [`blueflow/zeek/README.md`](../../blueflow/zeek/README.md) for the current Asset-only field mapping.
 
-### 5. Cross-subnet edges are absent
+### Production promotion checklist
 
-`builder._infer_edges` only connects nodes sharing a subnet (`builder.py:110`). In `demo1`, the firewall (`10.10.0.1`) and the clinical workstation (`10.10.1.31`) are on different VLANs, so no edge exists between them. A multi-hop attack path that traverses the firewall into the clinical VLAN cannot be expressed in the current graph.
+When moving from spike to implementation:
 
-**Follow-up:** Model inter-subnet reachability by treating devices with wildcard initiation (routers, firewalls, gateways) as routing nodes that can bridge subnets. The approach depends on whether `NetworkEndpoint` in blueflow carries interface-level subnet data or only a single IP. This is not a blocker for the minimal endpoint but is a prerequisite for attack path (PoE) use cases to produce meaningful results on real ranges.
-
----
-
-### 6. No mapping from `Asset`/`NetworkEndpoint` to `TopologyNode`
-
-The spike reads flat TapirXL JSON dicts. The production implementation must query Django `Asset` and `NetworkEndpoint` models. No translation layer exists. The #135 AC explicitly requires: _"Reuse existing models (`Asset`, `NetworkEndpoint`); no new topology models"_.
-
-**Follow-up:**
-
-- Is this AC still appropriate?
-- Does `NetworkEndpoint` carry observed open-port data, or only protocol/service assignments? If observed ports are available, the static `DEVICE_CLASS_INITIATES` registry becomes a fallback rather than the primary inference mechanism.
-- How are multi-homed devices (multiple `NetworkEndpoint` rows per `Asset`) represented? The spike builds one `NetworkInterface` per asset; production may need to aggregate.
-- Does `Asset.hostname` uniqueness hold, or can duplicates exist? The #135 AC says assets with null/empty hostnames are excluded; duplicate-hostname behavior needs to be documented.
+1. Promote `openapi.yaml` → `blueflow/contracts/topology/openapi.yaml`
+2. Align [`blueflow/views/topology.py`](../../blueflow/views/topology.py) serializers with contract (currently stale: hostname-as-id, `direction` enum, no `external_endpoints`, interface string ids)
+3. Implement snapshot builder querying `Asset`, `NetworkEndpoint`, `ObservedFlow`
+4. Add contract tests / Spectral lint in CI
 
 ---
 
-### 7. Broadcast and multicast protocols not distinguished from unicast
+## Mocking
 
-The schema's directed edge model assumes point-to-point unicast communication. Broadcast and multicast protocols (device discovery, time sync, group streaming) do not have a single destination node and cannot be accurately represented as a directed `(src, dst)` edge. `PORT_SERVICE_MAP` currently makes no distinction between unicast and non-unicast services, so any port that maps to a multicast/broadcast protocol could produce spurious directed edges if a future device class entry initiates it.
+Run either mock server against [`openapi.yaml`](openapi.yaml) from the repo root. All requests require `Authorization: Token <key>`.
 
-**Follow-up:** Introduce a protocol topology category like `unicast` vs. `non-unicast` flag on `PORT_SERVICE_MAP` entries, and exclude non-unicast services from directed edge inference. Non-unicast services may warrant a separate representation in the schema (e.g., a `broadcasts` list on the node) to preserve the observability data without misrepresenting it as a point-to-point connection.
+### Prism
 
----
+```bash
+npx @stoplight/prism-cli mock spikes/topograph/openapi.yaml -p 4010
+curl -H "Authorization: Token x" http://127.0.0.1:4010/topology
+```
 
-### 8. `_open_ports` stored via dict mutation
+Request a named example:
 
-**Gap:** `builder.py:98` `node.__dict__["_open_ports"] = open_ports` stashes transient builder state on a dataclass instance via direct dict manipulation. This bypasses the dataclass contract and is fragile.
+```bash
+curl -H "Authorization: Token x" \
+  -H "Prefer: example=filtered_multi_cidr" \
+  http://127.0.0.1:4010/topology
+```
 
-**Follow-up:** If the builder pattern is carried forward into production, either add `_open_ports` as a proper (excluded) dataclass field or keep open ports in the builder's own state dict keyed by `node_id` rather than attaching them to the node.
+### Scalar
+
+```bash
+docker run --rm -p 4010:3000 \
+  -v "$(pwd)/spikes/topograph/openapi.yaml:/docs/openapi.yaml:ro" \
+  scalarapi/mock-server:latest
+curl -H "Authorization: Token x" http://127.0.0.1:4010/topology
+```
+
+Scalar UI: `http://localhost:4010/scalar`. Spec: `/openapi.yaml`.

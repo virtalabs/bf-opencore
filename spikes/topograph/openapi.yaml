@@ -1,0 +1,625 @@
+openapi: 3.1.0
+
+info:
+  title: BlueFlow Topology API
+  version: 0.1.0-minimal
+  summary: Read-only network topology snapshot.
+  description: |
+    A network topology snapshot.
+
+    Filter by `cidr`/`network` to scope to specific segments.
+  contact:
+    name: BlueFlow
+
+servers:
+  - url: http://localhost:8000/api
+    description: Local Django development server.
+  - url: http://localhost:4010
+    description: Mock server
+
+tags:
+  - name: topology
+    description: Network topology snapshots.
+
+security:
+  - tokenAuth: []
+
+paths:
+  /topology:
+    get:
+      operationId: getTopologySnapshot
+      tags: [topology]
+      summary: Get the current topology snapshot.
+      description: |
+        Returns the latest topology snapshot.
+
+        Filter with `cidr` entries and `network` to scope to specific segments.
+        An asset matches if any interface IP falls in a supplied CIDR. Multiple CIDRs are unioned.
+        `edge_scope` governs boundary-crossing connections.
+      parameters:
+        - name: cidr
+          in: query
+          required: false
+          style: form
+          explode: true
+          description: Restrict to assets with an interface IP in this CIDR. Repeatable.
+          schema:
+            type: array
+            items:
+              type: string
+              description: IPv4 or IPv6 CIDR block.
+          examples:
+            single:
+              summary: One segment
+              value: ["10.10.1.0/24"]
+            multiple:
+              summary: Two segments (union)
+              value: ["10.10.0.0/24", "10.10.1.0/24"]
+        - name: network
+          in: query
+          required: false
+          description: Named network whose CIDRs are added to the query.
+          schema:
+            type: string
+        - name: edge_scope
+          in: query
+          required: false
+          description: Connection-inclusion policy when filtering by CIDR.
+          schema:
+            $ref: "#/components/schemas/EdgeScope"
+      responses:
+        "200":
+          description: A topology snapshot.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/TopologySnapshot"
+              examples:
+                populated:
+                  summary: A network across two segments
+                  value:
+                    schema_version: 0.1.0-minimal
+                    snapshot_id: 6d3f8b2a-1c4e-4f9a-8b21-9f0c7a1e44d2
+                    timestamp: "2026-06-30T14:05:00Z"
+                    assets:
+                      - id: 4211
+                        hostname: PHILIPS-MX700-01
+                        manufacturer: philips
+                        category: patient_monitor
+                        model: intellivue_mx700
+                        app_sw_version: J.10.19
+                        interfaces:
+                          - mac_address: "00:1a:b1:10:01:11"
+                            ipv4_address: 10.10.1.11
+                            ipv6_address: null
+                        services:
+                          - port: 3702
+                            protocol: udp
+                            cast: multicast
+                            service: ws_discovery
+                      - id: 4212
+                        hostname: PHILIPS-AFFINITI-01
+                        manufacturer: philips
+                        category: imaging_system
+                        model: affiniti_70
+                        app_sw_version: 3.0.4
+                        interfaces:
+                          - mac_address: "00:1a:b1:10:01:21"
+                            ipv4_address: 10.10.1.21
+                            ipv6_address: null
+                        services:
+                          - port: 104
+                            protocol: tcp
+                            service: dicom
+                      - id: 4213
+                        hostname: INTRASIGHT-WS-01
+                        manufacturer: philips
+                        category: clinical_workstation
+                        model: intrasight_mobile
+                        app_sw_version: 5.2.1
+                        interfaces:
+                          - mac_address: "00:1a:b1:10:01:31"
+                            ipv4_address: 10.10.1.31
+                            ipv6_address: null
+                        services:
+                          - port: 104
+                            protocol: tcp
+                            service: dicom
+                          - port: 2575
+                            protocol: tcp
+                            service: hl7
+                          - port: 3389
+                            protocol: tcp
+                            service: rdp
+                      - id: 4214
+                        hostname: PHILIPS-PACS-01
+                        manufacturer: philips
+                        category: pacs_server
+                        model: intellispace_pacs
+                        app_sw_version: 4.4.6
+                        interfaces:
+                          - mac_address: "00:1a:b1:10:01:41"
+                            ipv4_address: 10.10.1.41
+                            ipv6_address: null
+                        services:
+                          - port: 104
+                            protocol: tcp
+                            service: dicom
+                          - port: 443
+                            protocol: tcp
+                            service: https
+                      - id: 4215
+                        hostname: PALOALTO-FW-01
+                        manufacturer: palo_alto
+                        category: firewall
+                        model: pa_400
+                        app_sw_version: 11.1.2
+                        interfaces:
+                          - mac_address: "00:1a:b1:10:00:01"
+                            ipv4_address: 10.10.0.1
+                            ipv6_address: null
+                        services:
+                          - port: 443
+                            protocol: tcp
+                            service: https
+                          - port: 22
+                            protocol: tcp
+                            service: ssh
+                      - id: 4216
+                        hostname: CISCO-GW-01
+                        manufacturer: cisco
+                        category: gateway
+                        model: asr1001x
+                        app_sw_version: 17.6.4
+                        interfaces:
+                          - mac_address: "00:1a:b1:10:00:02"
+                            ipv4_address: 10.10.0.2
+                            ipv6_address: null
+                        services:
+                          - port: 22
+                            protocol: tcp
+                            service: ssh
+                          - port: 443
+                            protocol: tcp
+                            service: https
+                          - port: 80
+                            protocol: tcp
+                            service: http
+                      - id: 4217
+                        hostname: EPIC-EMR-EDGE
+                        manufacturer: epic_systems
+                        category: ehr_server
+                        model: epic_hyperspace
+                        app_sw_version: "2024.1"
+                        interfaces:
+                          - mac_address: "00:50:56:ab:10:05"
+                            ipv4_address: 10.10.0.5
+                            ipv6_address: null
+                        services:
+                          - port: 2575
+                            protocol: tcp
+                            service: hl7
+                          - port: 443
+                            protocol: tcp
+                            service: https
+                    connections:
+                      - src_ip: 10.10.1.11
+                        dst_ip: 10.10.1.31
+                        dst_port: 2575
+                        protocol: tcp
+                        response_observed: true
+                        service: hl7
+                      - src_ip: 10.10.1.21
+                        dst_ip: 10.10.1.41
+                        dst_port: 104
+                        protocol: tcp
+                        response_observed: true
+                        service: dicom
+                      - src_ip: 10.10.1.31
+                        dst_ip: 10.10.1.21
+                        dst_port: 104
+                        protocol: tcp
+                        response_observed: true
+                        service: dicom
+                      - src_ip: 10.10.1.31
+                        dst_ip: 10.10.1.41
+                        dst_port: 104
+                        protocol: tcp
+                        response_observed: true
+                        service: dicom
+                      - src_ip: 10.10.0.2
+                        dst_ip: 10.10.0.5
+                        dst_port: 2575
+                        protocol: tcp
+                        response_observed: true
+                        service: hl7
+                      - src_ip: 10.10.0.1
+                        dst_ip: 10.10.0.5
+                        dst_port: 443
+                        protocol: tcp
+                        response_observed: true
+                        service: https
+                empty:
+                  summary: Empty topology (current stub response)
+                  description: Returned when no assets are known. Still a valid envelope.
+                  value:
+                    schema_version: 0.1.0-minimal
+                    snapshot_id: 00000000-0000-4000-8000-000000000000
+                    timestamp: "2026-06-30T14:05:00Z"
+                    assets: []
+                    connections: []
+                filtered_multi_cidr:
+                  summary: "Filtered: ?cidr=10.10.0.0/24&cidr=10.10.1.0/24&edge_scope=boundary"
+                  value:
+                    schema_version: 0.1.0-minimal
+                    snapshot_id: 1b9c4d77-2e3a-4c10-9f55-3a2b1c0d4e5f
+                    timestamp: "2026-06-30T14:05:00Z"
+                    query:
+                      cidrs: ["10.10.0.0/24", "10.10.1.0/24"]
+                      edge_scope: boundary
+                    networks:
+                      - cidr: "10.10.0.0/24"
+                        asset_count: 2
+                        connection_count: 2
+                      - cidr: "10.10.1.0/24"
+                        asset_count: 2
+                        connection_count: 1
+                    assets:
+                      - id: 4215
+                        hostname: PALOALTO-FW-01
+                        category: firewall
+                        in_scope: true
+                        matched_cidrs: ["10.10.0.0/24", "10.10.1.0/24"]
+                        interfaces:
+                          - ipv4_address: 10.10.0.1
+                          - ipv4_address: 10.10.1.1
+                      - id: 4213
+                        hostname: INTRASIGHT-WS-01
+                        category: clinical_workstation
+                        in_scope: true
+                        matched_cidrs: ["10.10.1.0/24"]
+                        interfaces:
+                          - ipv4_address: 10.10.1.31
+                      - id: 4217
+                        hostname: EPIC-EMR-EDGE
+                        category: ehr_server
+                        in_scope: true
+                        matched_cidrs: ["10.10.0.0/24"]
+                        interfaces:
+                          - ipv4_address: 10.10.0.5
+                    connections:
+                      - src_ip: 10.10.1.31
+                        dst_ip: 10.10.1.1
+                        dst_port: 443
+                        protocol: tcp
+                        response_observed: true
+                        service: https
+                      - src_ip: 10.10.0.1
+                        dst_ip: 10.10.0.5
+                        dst_port: 443
+                        protocol: tcp
+                        response_observed: true
+                        service: https
+                      - src_ip: 10.10.0.5
+                        dst_ip: 203.0.113.10
+                        dst_port: 443
+                        protocol: tcp
+                        response_observed: true
+                        service: https
+                    external_endpoints:
+                      - ip_address: 203.0.113.10
+                        hostname: null
+                disjoint:
+                  summary: "Filtered: ?cidr=10.10.1.0/24&cidr=192.168.50.0/24 (disjoint segments)"
+                  value:
+                    schema_version: 0.1.0-minimal
+                    snapshot_id: 2c8d5e88-3f4b-4d21-8a66-4b3c2d1e5f60
+                    timestamp: "2026-06-30T14:05:00Z"
+                    query:
+                      cidrs: ["10.10.1.0/24", "192.168.50.0/24"]
+                      edge_scope: boundary
+                    networks:
+                      - cidr: "10.10.1.0/24"
+                        asset_count: 2
+                        connection_count: 1
+                      - cidr: "192.168.50.0/24"
+                        asset_count: 1
+                        connection_count: 0
+                    assets:
+                      - id: 4213
+                        hostname: INTRASIGHT-WS-01
+                        category: clinical_workstation
+                        in_scope: true
+                        matched_cidrs: ["10.10.1.0/24"]
+                        interfaces:
+                          - ipv4_address: 10.10.1.31
+                      - id: 4214
+                        hostname: PHILIPS-PACS-01
+                        category: pacs_server
+                        in_scope: true
+                        matched_cidrs: ["10.10.1.0/24"]
+                        interfaces:
+                          - ipv4_address: 10.10.1.41
+                      - id: 4230
+                        hostname: BMS-HVAC-PLC-01
+                        category: plc
+                        in_scope: true
+                        matched_cidrs: ["192.168.50.0/24"]
+                        interfaces:
+                          - ipv4_address: 192.168.50.20
+                    connections:
+                      - src_ip: 10.10.1.31
+                        dst_ip: 10.10.1.41
+                        dst_port: 104
+                        protocol: tcp
+                        response_observed: true
+                        service: dicom
+        "400":
+          description: Invalid query (e.g. malformed CIDR or unknown network).
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+              example:
+                detail: "Invalid CIDR: '10.10.1.0/33'."
+        "401":
+          description: Authentication credentials were not provided or were invalid.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+              example:
+                detail: Authentication credentials were not provided.
+
+components:
+  securitySchemes:
+    tokenAuth:
+      type: apiKey
+      in: header
+      name: Authorization
+      description: "Token auth header: `Authorization: Token <key>`."
+
+  schemas:
+    TopologySnapshot:
+      type: object
+      description: Root topology snapshot envelope.
+      additionalProperties: false
+      required:
+        - schema_version
+        - snapshot_id
+        - timestamp
+        - assets
+      properties:
+        schema_version:
+          const: 0.1.0-minimal
+          description: Contract version. Fixed for this schema revision.
+        snapshot_id:
+          type: string
+          format: uuid
+          description: Opaque identifier for this snapshot instance.
+        timestamp:
+          type: string
+          format: date-time
+          description: ISO-8601 time the snapshot was generated (UTC).
+        assets:
+          type: array
+          description: Devices observed on the network. May be empty.
+          items:
+            $ref: "#/components/schemas/Asset"
+        connections:
+          type: array
+          description: Directed traffic flows between assets (flat edge list).
+          items:
+            $ref: "#/components/schemas/Connection"
+        external_endpoints:
+          type: array
+          description: Off-inventory peers (no BlueFlow asset) referenced by a connection IP.
+          items:
+            $ref: "#/components/schemas/ExternalEndpoint"
+        query:
+          description: Echo of the applied CIDR filter.
+          oneOf:
+            - { $ref: "#/components/schemas/TopologyQuery" }
+            - type: "null"
+        networks:
+          type: array
+          description: Per-CIDR rollup.
+          items:
+            $ref: "#/components/schemas/NetworkSummary"
+
+    Asset:
+      type: object
+      description: A device observed on the network.
+      additionalProperties: false
+      required:
+        - id
+        - interfaces
+      properties:
+        id:
+          type: integer
+          description: BlueFlow asset id (`Asset.id`).
+          examples: [4214]
+        hostname:
+          type: [string, "null"]
+          description: Asset hostname; may be null.
+          examples: [PHILIPS-PACS-01]
+        manufacturer:
+          type: [string, "null"]
+          description: Hardware/software vendor.
+          examples: [philips]
+        model:
+          type: [string, "null"]
+          description: Product name/model.
+          examples: [intellispace_pacs]
+        category:
+          type: [string, "null"]
+          description: Semantic device role.
+          examples: [pacs_server]
+        app_sw_version:
+          type: [string, "null"]
+          description: Firmware/software version.
+          examples: ["4.4.6"]
+        interfaces:
+          type: array
+          minItems: 1
+          description: Network interfaces (NICs) on the device.
+          items:
+            $ref: "#/components/schemas/Interface"
+        services:
+          type: array
+          description: Listening (open) services observed on the device.
+          items:
+            $ref: "#/components/schemas/Service"
+        matched_cidrs:
+          type: array
+          description: Queried CIDRs containing one of this asset's interface IPs.
+          items:
+            type: string
+        in_scope:
+          type: boolean
+          default: true
+          description: false for boundary assets outside the queried CIDRs.
+
+    Interface:
+      type: object
+      description: A network interface observed on a device.
+      additionalProperties: false
+      properties:
+        mac_address:
+          type: [string, "null"]
+          pattern: "^([0-9a-fA-F]{2}:){5}[0-9a-fA-F]{2}$"
+          description: MAC address.
+          examples: ["00:1a:b1:10:01:41"]
+        ipv4_address:
+          type: [string, "null"]
+          format: ipv4
+          examples: [10.10.1.41]
+        ipv6_address:
+          type: [string, "null"]
+          format: ipv6
+          examples: [null]
+
+    Service:
+      type: object
+      description: A port/protocol pair observed listening on an asset.
+      additionalProperties: false
+      required:
+        - port
+        - protocol
+      properties:
+        port:
+          type: integer
+          minimum: 1
+          maximum: 65535
+          examples: [104]
+        protocol:
+          type: string
+          examples: [tcp]
+        cast:
+          type: string
+          enum: [unicast, multicast, broadcast]
+          default: unicast
+          description: Service addressing model. Non-unicast does not appear in `connections`.
+        service:
+          type: [string, "null"]
+          description: Resolved logical service name; null when unknown.
+          examples: [dicom]
+
+    Connection:
+      type: object
+      description: A directed flow between interfaces, initiator to listening endpoint (`src_ip` → `dst_ip:dst_port`).
+      additionalProperties: false
+      required:
+        - src_ip
+        - dst_ip
+        - dst_port
+        - protocol
+      properties:
+        src_ip:
+          type: string
+          description: Initiating interface IP.
+          examples: [10.10.1.31]
+        dst_ip:
+          type: string
+          description: Destination interface IP. Resolves to an asset interface or an `external_endpoints` entry.
+          examples: [10.10.1.41]
+        dst_port:
+          type: integer
+          minimum: 1
+          maximum: 65535
+          description: Destination (listening) port on `dst_ip`.
+          examples: [104]
+        protocol:
+          type: string
+          examples: [tcp]
+        response_observed:
+          type: [boolean, "null"]
+          description: Whether return traffic was observed; null when unknown.
+        service:
+          type: [string, "null"]
+          description: Resolved logical service name for `dst_port`; null when unknown.
+          examples: [dicom]
+
+    ExternalEndpoint:
+      type: object
+      description: An off-inventory peer (no BlueFlow asset) seen as a connection endpoint.
+      additionalProperties: false
+      required:
+        - ip_address
+      properties:
+        ip_address:
+          type: string
+          description: IP of the off-inventory peer.
+          examples: [203.0.113.10]
+        hostname:
+          type: [string, "null"]
+          description: Reverse-DNS or otherwise resolved name; null when unknown.
+          examples: [null]
+
+    EdgeScope:
+      type: string
+      default: boundary
+      enum: [internal, boundary]
+      description: |
+        Connections to include when filtering: `internal` (both endpoints in
+        scope) or `boundary` (also one-endpoint edges; default).
+
+    TopologyQuery:
+      type: object
+      description: Echo of the applied filter.
+      additionalProperties: false
+      properties:
+        cidrs:
+          type: array
+          description: CIDRs applied (normalized).
+          items:
+            type: string
+        edge_scope:
+          $ref: "#/components/schemas/EdgeScope"
+
+    NetworkSummary:
+      type: object
+      description: Per-CIDR rollup for a filtered snapshot.
+      additionalProperties: false
+      required: [cidr]
+      properties:
+        cidr:
+          type: string
+          description: One queried CIDR (normalized).
+        asset_count:
+          type: integer
+          minimum: 0
+          description: In-scope assets with an interface in this CIDR.
+        connection_count:
+          type: integer
+          minimum: 0
+          description: Connections with at least one endpoint in this CIDR.
+
+    Error:
+      type: object
+      description: Standard DRF error envelope.
+      properties:
+        detail:
+          type: string
+      required:
+        - detail
