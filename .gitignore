@@ -1,6 +1,9 @@
 # Virtual environment
 .venv/
 
+# django stuff
+staticfiles/
+
 # Environment
 .env
 .env~

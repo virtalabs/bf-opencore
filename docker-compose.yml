@@ -18,7 +18,9 @@ services:
       - "5432:5432"
 
   web:
-    build: .
+    build:
+      context: .
+      target: ${BUILD_TARGET:-develop}
     command: /app/.venv/bin/python project/manage.py runserver 0.0.0.0:8000
     volumes:
       - .:/app # Mount app for dev workflow
