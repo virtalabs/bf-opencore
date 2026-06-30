@@ -20,7 +20,7 @@ COPY tests/ ./tests/
 # =========================
 #     Development
 # =========================
-FROM base as develop
+FROM base AS develop
 
 RUN uv sync --frozen --extra dev
 
@@ -40,7 +40,7 @@ CMD ["python", "project/manage.py", "runserver", "0.0.0.0:8000"]
 # =========================
 #     Production
 # =========================
-FROM base as prod
+FROM base AS prod
 
 RUN uv sync --frozen --extra prod
 
