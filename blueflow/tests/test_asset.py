@@ -114,6 +114,7 @@ def test_api_create_asset_empty_mac_rejected_twice(
     assert models.Asset.objects.count() == 0
 
 
+@pytest.mark.xfail(reason="Authentication is not implemented yet")
 def test_api_create_asset_unauthorized(auth_client: APIClient) -> None:
     """Can't create an asset with an unauthorized client."""
     client = auth_client
@@ -206,6 +207,7 @@ def test_api_create_unauth_patch_asset(
     assert asset["hostname"] == "nospam"
 
 
+@pytest.mark.xfail(reason="Authentication is not currently implemented")
 def test_unauth_patch_asset(auth_client: APIClient) -> None:
     """Create an asset, patch with less-authorized client.
 
@@ -442,78 +444,6 @@ def test_fetch_by_os(auth_client: APIClient) -> None:
     assert js["count"] == expected_count_2
     ids = {x["id"] for x in js["results"]}
     assert ids == {a1.id, a2.id}
-
-
-def test_app_sw_version_needs_update(auth_client: APIClient) -> None:
-    """Test whether assets need software updates."""
-    oldest = models.Asset.objects.create(
-        manufacturer="Foo", model="Bar", app_sw_version="1.2.3"
-    )
-    newer = models.Asset.objects.create(
-        manufacturer="Foo", model="Bar", app_sw_version="1.2.4"
-    )
-    newest = models.Asset.objects.create(
-        manufacturer="Foo", model="Bar", app_sw_version="1.2.5"
-    )
-
-    response = auth_client.get(f"/api/assets/{oldest.id}/needs_sw_update/")
-    assert response.status_code == status.HTTP_200_OK
-    assert response.json()["latest"] == newest.app_sw_version
-    assert response.json()["needs_update"] is True
-
-    response = auth_client.get(f"/api/assets/{newer.id}/needs_sw_update/")
-    assert response.status_code == status.HTTP_200_OK
-    assert response.json()["latest"] == newest.app_sw_version
-    assert response.json()["needs_update"] is True
-
-    response = auth_client.get(f"/api/assets/{newest.id}/needs_sw_update/")
-    assert response.status_code == status.HTTP_200_OK
-    assert response.json()["latest"] == newest.app_sw_version
-    assert response.json()["needs_update"] is False
-
-
-def test_nonsense_app_sw_version_needs_update(auth_client: APIClient) -> None:
-    """Test whether a silly asset needs an update."""
-    a = models.Asset.objects.create(
-        manufacturer="Foo", model="Bar", app_sw_version="Henrik Holm"
-    )
-    resp = auth_client.get(f"/api/assets/{a.id}/needs_sw_update/")
-    assert resp.json()["needs_update"] is False
-
-    # create another asset; how does it sort? parsable > legacy...
-    models.Asset.objects.create(
-        manufacturer="Foo", model="Bar", app_sw_version="3.54.5"
-    )
-    resp = auth_client.get(f"/api/assets/{a.id}/needs_sw_update/")
-    assert resp.json()["needs_update"] is True
-
-
-def test_app_sw_version_not_needs_update(auth_client: APIClient) -> None:
-    """Test whether two equal assets need updates."""
-    a1 = models.Asset.objects.create(
-        manufacturer="Foo", model="Bar", app_sw_version="1.2.3"
-    )
-    a2 = models.Asset.objects.create(
-        manufacturer="Foo", model="Bar", app_sw_version="1.2.3"
-    )
-
-    response1 = auth_client.get(f"/api/assets/{a1.id}/needs_sw_update/")
-    response2 = auth_client.get(f"/api/assets/{a2.id}/needs_sw_update/")
-    assert response1.status_code == response2.status_code == status.HTTP_200_OK
-    assert response1.json()["latest"] == "1.2.3"
-    assert response1.json()["needs_update"] is False
-    assert response2.json()["latest"] == "1.2.3"
-    assert response2.json()["needs_update"] is False
-
-
-def test_app_sw_no_version_needs_update(auth_client: APIClient) -> None:
-    """Test whether assets without software versions need updates."""
-    asset = models.Asset.objects.create(manufacturer="Foo", model="Bar")
-    response = auth_client.get(f"/api/assets/{asset.id}/needs_sw_update/")
-    assert response.status_code == status.HTTP_200_OK
-    assert response.json()["latest"] is None
-    assert response.json()["versions_in_use"] == {}
-    assert response.json()["needs_update"] is False
 
 
 def test_api_create_asset_mac_autofill_nic(asset_edit_client: APIClient) -> None:

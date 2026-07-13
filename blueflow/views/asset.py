@@ -2,7 +2,7 @@
 
 import importlib
 import logging
-from typing import ClassVar
+import typing
 
 import django_filters
 import django_filters.rest_framework.filters as drf_filters
@@ -197,20 +197,14 @@ _USAGE_FIELD_SCHEMA = {
 }
 
 
-class AssetSerializer(serializers.HyperlinkedModelSerializer):
-    """Serializes assets.
-
-    Teaches the rest_framework (the ViewSet) which fields to expect.
-    """
+class AssetSerializer(serializers.ModelSerializer):
+    """Serializes assets."""
 
     url = serializers.HyperlinkedIdentityField(view_name="blueflow:asset-detail")
     tags_url = serializers.HyperlinkedIdentityField(view_name="blueflow:asset-tags")
     scans_url = serializers.HyperlinkedIdentityField(view_name="blueflow:asset-scans")
-
     asset_tags = assettag.AssetTagSerializer(read_only=True, many=True)
-
     last_updated = serializers.DateTimeField(read_only=True, allow_null=True)
-
     usage = serializers.SerializerMethodField(
         help_text=(
             "Usage pattern: 7-element array of hour-of-day to observation-count "
@@ -225,25 +219,9 @@ class AssetSerializer(serializers.HyperlinkedModelSerializer):
     class Meta:
         """Wire this serializer to a model."""
 
-        model = models.Asset
-
-        # Fields defined in the schema
-        asset_fields = tuple(f.name for f in model._meta.fields)  # noqa: SLF001
-
-        # Fields that are computed (not stored directly in schema)
-        computed_fields = (
-            "url",
-            "tags_url",
-            "scans_url",
-            "last_updated",
-            "asset_tags",
-            "usage",
-            "cpe",
-        )
-
-        fields = asset_fields + computed_fields
-
-        read_only_fields: ClassVar = ["oui_manufacturer"]
+        model: typing.ClassVar = models.Asset
+        fields: typing.ClassVar = "__all__"
+        read_only_fields: typing.ClassVar = ["oui_manufacturer"]
 
     def validate_ip_address(self, ip_string: str) -> str:
         """Reject empty IP address strings."""
@@ -282,7 +260,7 @@ class HistoricalAssetSerializer(serializers.ModelSerializer):
         model = models.Asset.history.model
         # Fields that are unique to the historical model (Should maybe
         # compute these too?  It could be done with a set difference...)
-        historical_fields = (
+        fields = (
             "history_change_reason",
             "history_date",
             "history_id",
@@ -290,60 +268,6 @@ class HistoricalAssetSerializer(serializers.ModelSerializer):
             "history_user",
             "history_user_id",
         )
-        fields = AssetSerializer.Meta.asset_fields + historical_fields
-
-
-# Why does this exist?
-class ChangeLogMetaclass(type(AssetSerializer)):
-    """Metaclass for creating the ChangeLogAssetSerializer.
-
-    NOTE: this is double-plus deep magic, since this metaclass has to
-    inherit from the serializers' metaclass!  (Usually, a metaclass
-    simply inherits from `type`.)  We accomplish this with the
-    type(AssetSerializer) ("what is the metaclass for AssetSerializer").
-    """
-
-    def __new__(mcs, name: str, parents: tuple, dct: dict) -> "ChangeLogMetaclass":
-        """Create the ChangeLogAssetSerializer class."""
-        if "Meta" in dct:
-            # NOTE: the changed fields are supposed to be the same as in
-            #   AssetSerializer.Meta.asset_fields -- except for 'id'
-            #   (which will never change)
-            changed_fields = getattr(dct["Meta"], "changed_fields", ())
-            for field in changed_fields:
-                field_chgd = field + "__changed"
-                if field == "id":
-                    continue
-                if field in ["ip_address", "mac_address"]:
-                    # ip and mac addresses are special: they cannot
-                    # directly be serialized as JSON so we have to treat
-                    # them as if they were strings in order to
-                    # serialize.
-                    dct[field] = serializers.CharField(source=field_chgd)
-                else:
-                    dct[field] = serializers.ReadOnlyField(source=field_chgd)
-        return super().__new__(mcs, name, parents, dct)
-
-
-class ChangeLogAssetSerializer(
-    serializers.HyperlinkedModelSerializer, metaclass=ChangeLogMetaclass
-):
-    """Almost like HistoricalAssetSerializer.
-
-    but used to only return the "changed" fields.
-    """
-
-    history_user = serializers.HyperlinkedRelatedField(
-        view_name="blueflow:user-detail",
-        read_only=True,
-    )
-
-    class Meta:
-        """Wire this serializer to a model."""
-
-        model = models.Asset.history.model
-        changed_fields = AssetSerializer.Meta.asset_fields
-        fields = changed_fields + HistoricalAssetSerializer.Meta.historical_fields
 
 
 class AssetFilter(django_filters.rest_framework.FilterSet):
@@ -462,7 +386,6 @@ class AssetFilter(django_filters.rest_framework.FilterSet):
 
 class AssetViewSet(
     WaffleSwitchMixin,
-    utils.ChangeReasonMixin,
     utils.PaginateRelationsMixin,
     viewsets.ModelViewSet,
 ):
@@ -471,14 +394,11 @@ class AssetViewSet(
     read: Return the given asset.
 
     See additional methods:
-    `/changelog`
     `/fields`
     `/history`
-    `/needs_sw_update`
     `/networks`
     `/scans`
     `/similar`
-    `/tags`
 
     list: Return a list of assets.
 
@@ -583,25 +503,6 @@ class AssetViewSet(
 
     @extend_schema(exclude=True)
     @action(detail=True)
-    def changelog(self, request: Request, _pk: int) -> Response:
-        """Like full history but fields are null except the one that changed.
-
-        NOTE: not paginated, while the history is.
-        """
-        # The lack of pagination is due to the LAG window function that
-        # forms the basis of the ChangeLog -- it may not be used inside
-        # a GROUP BY (which apparently is an ingredient in the
-        # pagination.)
-
-        asset = self.get_object()
-        qset = asset.changelog_qset()
-        serializer = ChangeLogAssetSerializer(
-            qset, many=True, context={"request": request}
-        )
-        return Response(serializer.data)
-
-    @extend_schema(exclude=True)
-    @action(detail=True)
     def fields(self, request: Request, pk: int) -> Response:
         """List fields for an Asset.
 
@@ -700,25 +601,6 @@ class AssetViewSet(
             rqset, many=True, context={"request": request}
         )
         return Response(serializer.data)
-
-    @extend_schema(exclude=True)
-    @action(detail=True)
-    def needs_sw_update(self, _request: Request, _pk: int) -> Response:
-        """Return whether this asset needs a software update.
-
-        @returns:
-            {needs_update: bool  # needs an update
-             latest: string      # latest version number
-             versions_in_use: dict<string -> int>}  # count other versions
-        """
-        asset = self.get_object()
-        needs_update, latest, vcounts = asset.needs_sw_update()
-        resp = {
-            "needs_update": needs_update,
-            "latest": latest,
-            "versions_in_use": vcounts,
-        }
-        return Response(resp)
 
     @extend_schema(exclude=True)
     @action(detail=True)
