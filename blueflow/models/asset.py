@@ -32,12 +32,41 @@ def default_timestamp() -> datetime.datetime:
     return datetime.datetime.now(datetime.UTC)
 
 
-class Asset(django_extensions.TimeStampedModel):
-    """Holds our Assets.
+class System(django_extensions.TimeStampedModel):
+    """System is the parent to all assets and asset like things.
+
+    It's primary role it to provide a centralized query for both
+    internal and external assets and asset like things.
+    """
+
+
+class ExternalSystem(System):
+    """ExternalSystem represents any asset like thing outside of the owned network.
+
+    ExternalSystem instances are intended to be queried and managed by it's parent.
+    ex:
+    s = System.objects.first()
+    external = getattr(s, "external", None)
+    """
+
+    ip_address = netfields.InetAddressField(
+        store_prefix_length=False,
+        null=True,
+        verbose_name="IP address",
+    )
+
+
+class Asset(System):
+    """Asset represents any system internal to the owned network.
+
+    Asset instances are inteded to be queried and managed by it's parent:
+    ex:
+    s = System.objects.first()
+    asset = getattr(s, "asset", None)
 
     Inherits ``created`` and ``modified`` from ``TimeStampedModel``. ``modified``
     is the sync anchor used by the Viper webhook — it updates on every save,
-    including TapirXL upserts. ``last_pinged`` is reserved for the network
+    including upserts. ``last_pinged`` is reserved for the network
     layer and is only set when the asset is observed on the wire (ping,
     fingerprint), so it is not safe to use as a "recently changed" filter.
     """
@@ -183,30 +212,31 @@ class Asset(django_extensions.TimeStampedModel):
     def __str__(self) -> str:
         return f"{self.id}:{self.hostname}:{self.ip_address}"
 
-    def save(self, *args: typing.Any, **kwargs: typing.Any):
+    def save(self, *args: typing.Any, **kwargs: typing.Any) -> None:
         """Intercept save, automatically populating some fields."""
-        if self.mac_address:
-            try:
-                eui = netaddr.EUI(self.mac_address)
-                reg = eui.oui.registration()
-                self.oui_manufacturer = reg.org.strip()
-            except netaddr.core.AddrFormatError:
-                logger.warning("Bad MAC address on asset %s", self)
-                self.oui_manufacturer = self.UNKNOWN_OUI_MANUFACTURER
-            except netaddr.core.NotRegisteredError:
-                logger.info(
-                    "MAC address %s of asset %s lacks NIC vendor",
-                    self.mac_address,
-                    self,
-                )
-                self.oui_manufacturer = self.UNKNOWN_OUI_MANUFACTURER
-            except AttributeError:
-                logger.debug(
-                    "NIC vendor registry lacks org detail for MAC address %s",
-                    self.mac_address,
-                )
-                self.oui_manufacturer = self.UNKNOWN_OUI_MANUFACTURER
-
+        if not self.mac_address:
+            super().save(*args, **kwargs)
+            return
+        try:
+            eui = netaddr.EUI(self.mac_address)
+            reg = eui.oui.registration()
+            self.oui_manufacturer = reg.org.strip()
+        except netaddr.core.AddrFormatError:
+            logger.warning("Bad MAC address on asset %s", self)
+            self.oui_manufacturer = self.UNKNOWN_OUI_MANUFACTURER
+        except netaddr.core.NotRegisteredError:
+            logger.info(
+                "MAC address %s of asset %s lacks NIC vendor",
+                self.mac_address,
+                self,
+            )
+            self.oui_manufacturer = self.UNKNOWN_OUI_MANUFACTURER
+        except AttributeError:
+            logger.debug(
+                "NIC vendor registry lacks org detail for MAC address %s",
+                self.mac_address,
+            )
+            self.oui_manufacturer = self.UNKNOWN_OUI_MANUFACTURER
         super().save(*args, **kwargs)
 
     def add_service(self, port: int, protocol: str) -> bool:
@@ -224,7 +254,7 @@ class Asset(django_extensions.TimeStampedModel):
         )
         return created
 
-    def update_usage(self, timestamp: datetime.datetime):
+    def update_usage(self, timestamp: datetime.datetime) -> None:
         """Record a usage observation for this asset at the given timestamp.
 
         Looks up (or creates) the Usage row for this asset on
