@@ -20,6 +20,15 @@ from blueflow import models
 DAYS_IN_WEEK = 7
 
 
+def _asset_data(
+    *, mac: str = "aa:bb:cc:dd:ee:01", manufacturer: str = "phillips"
+) -> dict[str, str]:
+    return {
+        "mac_address": mac,
+        "manufacturer": manufacturer,
+    }
+
+
 def _fixed(year, month, day, hour, minute):
     return datetime.datetime(
         year,
@@ -61,23 +70,24 @@ def test_usage_default_day_of_week_is_monday():
 
 def test_usage_window_constant_is_five_minutes():
     """The dedup window constant lives on Usage and is 5 minutes."""
-    assert models.Usage.USAGE_WINDOW_MINUTES == 5  # noqa: PLR2004
+    assert models.Usage.USAGE_WINDOW_MINUTES == 5
 
 
 def test_upsert_creates_usage_row_with_correct_hour(auth_client):
     """A single upsert creates one Usage row for the current weekday."""
     # 2026-05-19 is a Tuesday (weekday=1)
+    asset_data = _asset_data()
     with mock.patch(
         "blueflow.views.asset.timezone.now",
         return_value=_fixed(2026, 5, 19, 14, 0),
     ):
         response = auth_client.put(
             "/api/assets/upsert/",
-            data={"mac_address": "aa:bb:cc:dd:ee:01"},
+            data=asset_data,
             format="json",
         )
     assert response.status_code == status.HTTP_201_CREATED
-    asset = models.Asset.objects.get(mac_address="aa:bb:cc:dd:ee:01")
+    asset = models.Asset.objects.get(mac_address=asset_data["mac_address"])
     rows = list(asset.usage.all())
     assert len(rows) == 1
     assert rows[0].day_of_week == 1
@@ -87,6 +97,7 @@ def test_upsert_creates_usage_row_with_correct_hour(auth_client):
 def test_two_upserts_within_same_5min_window_count_as_one(auth_client):
     """14:01 and 14:02 share the 14:00-14:05 window → counts as 1."""
     mac = "aa:bb:cc:dd:ee:02"
+    asset_data = _asset_data(mac=mac)
     with mock.patch(
         "blueflow.views.asset.timezone.now",
         return_value=_fixed(2026, 5, 19, 14, 1),
@@ -98,7 +109,7 @@ def test_two_upserts_within_same_5min_window_count_as_one(auth_client):
     ):
         response = auth_client.put(
             "/api/assets/upsert/",
-            data={"mac_address": mac},
+            data=asset_data,
             format="json",
         )
     assert response.json()["usage"][1] == {"14": 1}
@@ -107,18 +118,19 @@ def test_two_upserts_within_same_5min_window_count_as_one(auth_client):
 def test_upserts_in_different_5min_windows_increment_separately(auth_client):
     """14:01 and 14:06 cross a 5-min boundary → counts as 2 in the same hour."""
     mac = "aa:bb:cc:dd:ee:03"
+    asset_data = _asset_data(mac=mac)
     with mock.patch(
         "blueflow.views.asset.timezone.now",
         return_value=_fixed(2026, 5, 19, 14, 1),
     ):
-        auth_client.put("/api/assets/upsert/", data={"mac_address": mac}, format="json")
+        auth_client.put("/api/assets/upsert/", data=asset_data, format="json")
     with mock.patch(
         "blueflow.views.asset.timezone.now",
         return_value=_fixed(2026, 5, 19, 14, 6),
     ):
         response = auth_client.put(
             "/api/assets/upsert/",
-            data={"mac_address": mac},
+            data=asset_data,
             format="json",
         )
     assert response.json()["usage"][1] == {"14": 2}
@@ -127,6 +139,7 @@ def test_upserts_in_different_5min_windows_increment_separately(auth_client):
 def test_upsert_at_exact_window_boundary_increments(auth_client):
     """14:04:59 and 14:05:00 fall in different windows → counts as 2."""
     mac = "aa:bb:cc:dd:ee:04"
+    asset_data = _asset_data(mac=mac)
     with mock.patch(
         "blueflow.views.asset.timezone.now",
         return_value=datetime.datetime(
@@ -139,14 +152,14 @@ def test_upsert_at_exact_window_boundary_increments(auth_client):
             tzinfo=datetime.UTC,
         ),
     ):
-        auth_client.put("/api/assets/upsert/", data={"mac_address": mac}, format="json")
+        auth_client.put("/api/assets/upsert/", data=asset_data, format="json")
     with mock.patch(
         "blueflow.views.asset.timezone.now",
         return_value=_fixed(2026, 5, 19, 14, 5),
     ):
         response = auth_client.put(
             "/api/assets/upsert/",
-            data={"mac_address": mac},
+            data=asset_data,
             format="json",
         )
     assert response.json()["usage"][1] == {"14": 2}
@@ -155,18 +168,23 @@ def test_upsert_at_exact_window_boundary_increments(auth_client):
 def test_upserts_across_midnight_land_in_different_weekday_rows(auth_client):
     """23:58 Tuesday and 00:03 Wednesday produce two Usage rows."""
     mac = "aa:bb:cc:dd:ee:05"
+    asset_data = _asset_data(mac=mac)
     with mock.patch(
         "blueflow.views.asset.timezone.now",
         return_value=_fixed(2026, 5, 19, 23, 58),  # Tuesday
     ):
-        auth_client.put("/api/assets/upsert/", data={"mac_address": mac}, format="json")
+        auth_client.put(
+            "/api/assets/upsert/",
+            data=asset_data,
+            format="json",
+        )
     with mock.patch(
         "blueflow.views.asset.timezone.now",
         return_value=_fixed(2026, 5, 20, 0, 3),  # Wednesday
     ):
         response = auth_client.put(
             "/api/assets/upsert/",
-            data={"mac_address": mac},
+            data=asset_data,
             format="json",
         )
     asset = models.Asset.objects.get(mac_address=mac)
@@ -180,16 +198,17 @@ def test_upserts_across_midnight_land_in_different_weekday_rows(auth_client):
 
 def test_weekday_index_zero_is_monday(auth_client):
     """2026-05-18 is a Monday — Usage row has day_of_week=0."""
+    asset_data = _asset_data(mac="aa:bb:cc:dd:ee:06")
     with mock.patch(
         "blueflow.views.asset.timezone.now",
         return_value=_fixed(2026, 5, 18, 10, 0),  # Monday
     ):
         auth_client.put(
             "/api/assets/upsert/",
-            data={"mac_address": "aa:bb:cc:dd:ee:06"},
+            data=asset_data,
             format="json",
         )
-    asset = models.Asset.objects.get(mac_address="aa:bb:cc:dd:ee:06")
+    asset = models.Asset.objects.get(mac_address=asset_data["mac_address"])
     row = asset.usage.get()
     assert row.day_of_week == 0
 
@@ -210,6 +229,7 @@ def test_get_response_omits_zero_count_hours(auth_client):
 def test_at_most_one_usage_row_per_asset_per_weekday(auth_client):
     """Repeated upserts on the same weekday reuse the same Usage row."""
     mac = "aa:bb:cc:dd:ee:07"
+    asset_data = _asset_data(mac=mac)
     for minute in (0, 6, 12):
         with mock.patch(
             "blueflow.views.asset.timezone.now",
@@ -217,13 +237,13 @@ def test_at_most_one_usage_row_per_asset_per_weekday(auth_client):
         ):
             auth_client.put(
                 "/api/assets/upsert/",
-                data={"mac_address": mac},
+                data=asset_data,
                 format="json",
             )
-    asset = models.Asset.objects.get(mac_address=mac)
+    asset = models.Asset.objects.get(mac_address=asset_data["mac_address"])
     rows = list(asset.usage.all())
     assert len(rows) == 1
-    assert rows[0].hour_14 == 3  # noqa: PLR2004
+    assert rows[0].hour_14 == 3
 
 
 def _seed_assets_with_usage(prefix, count):
