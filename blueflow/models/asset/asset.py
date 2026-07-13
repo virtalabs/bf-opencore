@@ -1,7 +1,4 @@
-"""Blueflow Asset model / schema.
-
-Note: AssetManager has been moved to its own file asset_manager.py.
-"""
+"""Asset is the core model for tracking all internal systems."""
 
 import datetime
 import logging
@@ -10,7 +7,6 @@ import typing
 import netaddr
 import netfields
 from django.db import models
-from django_extensions.db import models as django_extensions
 from simple_history import models as simple_history
 
 from blueflow.models import (
@@ -21,42 +17,12 @@ from blueflow.models import (
     usage,
 )
 
+from . import system, util
+
 logger = logging.getLogger(__name__)
 
 
-def validate_tcp_port_range(_: list[int]) -> None:
-    """Retained as an import target for historical migrations only."""
-
-
-def default_timestamp() -> datetime.datetime:
-    return datetime.datetime.now(datetime.UTC)
-
-
-class System(django_extensions.TimeStampedModel):
-    """System is the parent to all assets and asset like things.
-
-    It's primary role it to provide a centralized query for both
-    internal and external assets and asset like things.
-    """
-
-
-class ExternalSystem(System):
-    """ExternalSystem represents any asset like thing outside of the owned network.
-
-    ExternalSystem instances are intended to be queried and managed by it's parent.
-    ex:
-    s = System.objects.first()
-    external = getattr(s, "external", None)
-    """
-
-    ip_address = netfields.InetAddressField(
-        store_prefix_length=False,
-        null=True,
-        verbose_name="IP address",
-    )
-
-
-class Asset(System):
+class Asset(system.System):
     """Asset represents any system internal to the owned network.
 
     Asset instances are inteded to be queried and managed by it's parent:
@@ -157,11 +123,11 @@ class Asset(System):
     )
     last_scanned = models.DateTimeField(
         null=False,
-        default=default_timestamp,
+        default=util.default_timestamp,
     )
     last_pinged = models.DateTimeField(
         null=False,
-        default=default_timestamp,
+        default=util.default_timestamp,
     )
     external_keys = models.JSONField(
         blank=True,

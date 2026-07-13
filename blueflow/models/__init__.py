@@ -1,6 +1,6 @@
 """BlueFlow Models / Database schema definitions."""
 
-from .asset import Asset
+from .asset import Asset, ExternalSystem, System
 from .asset_custom_field import AssetCustomField, AssetCustomFieldName
 from .attachment import Attachment
 from .constants import PORT_MAX, PORT_MIN, PROTOCOL_MAX_LENGTH
@@ -27,12 +27,14 @@ __all__ = [
     "Cidr",
     "DayOfWeek",
     "EndpointSuggestion",
+    "ExternalSystem",
     "Group",
     "Network",
     "NetworkEndpoint",
     "PortProtocol",
     "SavedSearch",
     "Scan",
+    "System",
     "Tag",
     "Usage",
     "ViperWebhookJob",
