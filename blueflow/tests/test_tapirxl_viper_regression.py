@@ -80,7 +80,7 @@ def _vrl_transform(record: dict) -> dict:
 
     if record.get("product") is not None:
         slug = record["product"]
-        out["product"] = _PRODUCT_DISPLAY.get(slug, slug)
+        out["model"] = _PRODUCT_DISPLAY.get(slug, slug)
 
     if record.get("version") is not None:
         out["app_sw_version"] = record["version"]
@@ -125,7 +125,7 @@ def test_vrl_transform_maps_device_class_to_category() -> None:
     out = _vrl_transform(record)
     assert out["category"] == "patient_monitor"
     assert out["manufacturer"] == "Philips"
-    assert out["product"] == "IntelliVue MX700"
+    assert out["model"] == "IntelliVue MX700"
     assert out["open_ports_tcp"] == [3702]
     assert "app_sw_version" not in out
 
@@ -258,7 +258,7 @@ _GEHEALTHCARE_RECORDS: list[dict] = [
         "mac_address": "00:1A:2B:3C:51:10",
         "manufacturer": "gehealthcare",
         "product": "centricity_pacs_iw",
-        "version": None,
+        "version": "",
         "device_class": "pacs",
         "open_ports": [5355],
         "confidence": "HIGH",
@@ -291,7 +291,7 @@ def test_upsert_then_get_gehealthcare_records(asset_edit_client) -> None:
         assert asset["hostname"] == record["hostname"]
         assert asset["ip_address"] == record["ip_address"]
         assert asset["manufacturer"] == record["manufacturer"]
-        assert asset["product"] == record["product"]
+        assert asset["model"] == record["product"]
         assert asset["category"] == record["device_class"]
         assert asset["app_sw_version"] == record["version"]
 
@@ -362,16 +362,18 @@ def test_viper_payload_for_gehealthcare_records(asset_edit_client, celery_app) -
     # BRIGHTSPEED01 — CT scanner. role=CT, product reaches Viper via CPE only.
     bs = items_by_ip["10.40.2.20"]
     _check_utilization(bs.pop("utilization"))
-    assert bs == {
+    expected = {
         "ip": "10.40.2.20",
         "upstreamApi": f"{settings.BASE_URL}/api/assets/{asset_ids['10.40.2.20']}/",
-        "vendorId": last_id - 1,
+        "vendorId": str(last_id - 1),
         "status": "Active",
         "hostname": "BRIGHTSPEED01",
         "macAddress": "00:10:18:aa:bb:01",
         "role": "CT",
         "cpe": "cpe:2.3:h:gehealthcare:brightspeed_elite_select:-:*:*:*:*:*:*:*",
     }
+    assert bs.keys() == expected.keys()
+    assert bs == expected
 
     # PACS-CENTRICITY-001 — PACS, role propagates verbatim.
     pacs = items_by_ip["10.40.2.10"]
@@ -379,7 +381,7 @@ def test_viper_payload_for_gehealthcare_records(asset_edit_client, celery_app) -
     assert pacs == {
         "ip": "10.40.2.10",
         "upstreamApi": f"{settings.BASE_URL}/api/assets/{asset_ids['10.40.2.10']}/",
-        "vendorId": last_id,
+        "vendorId": str(last_id),
         "status": "Active",
         "hostname": "PACS-CENTRICITY-001",
         "macAddress": "00:1a:2b:3c:51:10",
@@ -432,6 +434,10 @@ def test_golden_device_class_propagates_to_viper_role(
 
     # Phase 2 — run the Viper webhook, capturing every outbound POST
     with patch("blueflow.celery.tasks.requests.post") as mock_post:
+        return_value = mock_post.return_value
+        return_value.status_code = 200
+        return_value.json = dict
+        return_value.raise_for_status.return_value = None
         tasks.viper_webhook.apply(
             args=[
                 models.ViperWebhookRequest(
@@ -442,7 +448,8 @@ def test_golden_device_class_propagates_to_viper_role(
                     page_size=100,
                 ).to_dict(),
                 str(uuid.uuid4()),
-            ]
+            ],
+            throw=True,
         )
 
     # Flatten all pages into a single IP → role map

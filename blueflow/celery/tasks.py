@@ -1,3 +1,4 @@
+import json
 import logging
 import os
 from typing import Any
@@ -21,7 +22,7 @@ class Task(BaseTask):
     retry_jitter = True
     dont_auto_retry_for = (TypeError,)
 
-    def on_failure(self, exc, task_id, args, kwargs, einfo):
+    def on_failure(self, exc, task_id, args, kwargs, einfo):  # noqa: ARG002
         logger.error("[!!] %s failed: %s", task_id, exc)
 
 
@@ -30,9 +31,7 @@ def callback_host_allowlisted(callback_url: str) -> bool:
     if not host:
         return False
     allowed = os.environ.get("VIPER_CALLBACK_ALLOWED_HOSTS", "")
-    return host.lower() in {
-        h.strip().lower() for h in allowed.split(",") if h.strip()
-    }
+    return host.lower() in {h.strip().lower() for h in allowed.split(",") if h.strip()}
 
 
 def viper_request_headers(callback_url: str) -> dict[str, str]:
@@ -55,8 +54,6 @@ def _send_viper_payload(viper_data: ViperWebhookRequest, request_id: str) -> str
     send the remaining data anyway.
     Wrapping each post in its own celery task would be simple enough.
     """
-    import json
-
     response_list = ViperWebhookResponseList.from_request(
         viper_data, request_id=request_id
     )
@@ -72,7 +69,7 @@ def _send_viper_payload(viper_data: ViperWebhookRequest, request_id: str) -> str
             timeout=timeout,
             allow_redirects=False,
         )
-        if v_res.status_code >= 400:
+        if v_res.status_code >= requests.codes["bad_request"]:
             return json.dumps(v_res.json(), indent=4)
         v_res.raise_for_status()
         viper_responses.append(v_res.json())
@@ -96,10 +93,10 @@ def viper_webhook(data: dict[str, Any], request_id: str = "") -> str:
                 status=ViperWebhookJob.Status.FINISHED
             )
         return res
-    except Exception as e:
+    except Exception:
         if request_id:
             _ = ViperWebhookJob.objects.filter(pk=request_id).update(
                 status=ViperWebhookJob.Status.ERROR
             )
-        logger.warning("Job failed with err: %s", str(e))
-        return str(e)
+        logger.exception("Job failed with err: ")
+        raise

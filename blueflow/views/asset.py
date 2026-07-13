@@ -820,7 +820,6 @@ class AssetViewSet(
         serializer.is_valid(raise_exception=True)
 
         validated = serializer.validated_data
-
         created = False
         mac_address = validated.pop("mac_address")
         new_services = validated.pop("services", [])

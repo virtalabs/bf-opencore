@@ -101,6 +101,7 @@ ignore = [
   "FLY002",
   "RET504",
   "TD003",
+  "TRY300",
 ]
 
 [tool.ruff.lint.per-file-ignores]
@@ -109,12 +110,10 @@ ignore = [
 #         read them (they run for side effects like configuring celery or
 #         loading fixture data), so ruff's "unused argument" check is a
 #         false positive in test contexts.
-# delete these patterns after confirming ruff behaves as expected
-# "**/tests/**" = ["S101", "ARG001", "PLR2004"]
-# "tests/**" = ["S101", "ARG001", "PLR2004"]
 "**test**" = ["S101", "ARG001", "PLR2004"]
 "conftest.py" = ["S101", "PLR2004"]
 "harness/**" = ["T201", "S603", "S607", "PLR0913"]
+"**settings**" = ["LOG015", "SLF001"]
 
 [tool.ruff.format]
 skip-magic-trailing-comma = false
