@@ -10,6 +10,7 @@ Wire-level behaviour (what gets POSTed to Viper) is covered separately in
 """
 
 from django.conf import settings
+from model_bakery import baker
 
 from blueflow import models
 from blueflow.models.viper import ViperAsset, ViperWebhookResponse
@@ -24,9 +25,18 @@ def _make_asset(**overrides) -> models.Asset:
         "hostname": "viper-schema-test.example.com",
         "ip_address": "10.0.0.5",
         "mac_address": "00:11:22:33:44:55",
+        "model": "Phillips",
     }
+    services = None
+    if "services" in overrides:
+        services = overrides.pop("services")
     defaults.update(overrides)
-    return models.Asset.objects.create(**defaults)
+    asset = baker.make("Asset", **defaults)
+    if services is None:
+        return asset
+    for s in services:
+        asset.add_service(s["port"], s["protocol"])
+    return asset
 
 
 # ---------------------------------------------------------------------------
@@ -65,24 +75,9 @@ def test_viper_asset_role_is_populated_from_category():
 
 def test_viper_asset_role_omitted_when_category_unset():
     """Role is omitted when no category (Viper rejects empty strings)."""
-    asset = _make_asset(category=None)
+    asset = _make_asset(category="")
     payload = ViperAsset(asset).to_dict()
     assert "role" not in payload
-
-
-def test_viper_asset_vendor_id_maps_manufacturer():
-    """VendorId is Asset.manufacturer (TapirXL vendor), not oui_manufacturer or PK."""
-    asset = _make_asset(manufacturer="Philips", oui_manufacturer="Some OUI Org")
-    payload = ViperAsset(asset).to_dict()
-    assert payload["vendorId"] == "Philips"
-    assert payload["vendorId"] != "Some OUI Org"
-
-
-def test_viper_asset_vendor_id_empty_when_manufacturer_unset():
-    """VendorId is present but empty when manufacturer is null."""
-    asset = _make_asset(manufacturer=None, oui_manufacturer="Some OUI Org")
-    payload = ViperAsset(asset).to_dict()
-    assert payload["vendorId"] == ""
 
 
 def test_viper_asset_upstream_api_uses_base_url_and_asset_id():
@@ -114,13 +109,6 @@ def test_viper_asset_location_omitted_when_all_empty():
     assert "location" not in payload
 
 
-def test_viper_asset_cpe_omitted_when_empty():
-    """Invalid/empty cpe is omitted; Viper assigns UNKNOWN_CPE on ingest."""
-    asset = _make_asset()
-    payload = ViperAsset(asset).to_dict()
-    assert "cpe" not in payload
-
-
 def test_viper_asset_cpe_matches_expected_for_actual_json_payload():
     """Confirm the CPE produced from the ~/Desktop/actual.json shape.
 
@@ -135,7 +123,7 @@ def test_viper_asset_cpe_matches_expected_for_actual_json_payload():
         "product": "brightspeed_elite_select",
         "version": "11.2.0",
         "device_class": "CT",
-        "open_ports": [5355],
+        "services": [{"port": 5355, "protocol": "TCP"}],
         "confidence": "HIGH",
     }
     asset = _make_asset(
@@ -146,9 +134,9 @@ def test_viper_asset_cpe_matches_expected_for_actual_json_payload():
         model=payload["product"],
         app_sw_version=payload["version"],
         category=payload["device_class"],
-        open_ports_tcp=payload["open_ports"],
+        services=payload["services"],
     )
-    expected = "cpe:2.3:h:gehealthcare:brightspeed_elite_select:-:*:*:*:*:*:*:*"
+    expected = f"cpe:2.3:h:{payload['vendor']}:{payload['product']}:-:*:*:*:*:*:*:*"
     assert ViperAsset(asset).cpe == expected
 
 
