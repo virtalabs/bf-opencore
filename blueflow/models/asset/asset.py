@@ -25,7 +25,7 @@ logger = logging.getLogger(__name__)
 class Asset(system.System):
     """Asset represents any system internal to the owned network.
 
-    Asset instances are inteded to be queried and managed by it's parent:
+    Asset instances are intended to be queried and managed by its parent:
     ex:
     s = System.objects.first()
     asset = getattr(s, "asset", None)
