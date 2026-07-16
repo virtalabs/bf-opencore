@@ -43,7 +43,7 @@ def make_assets(data: list[AssetJson]) -> abc.Generator[dict[str, str], None, No
         }
 
 
-def insert_assets(assets: abc.Iterable[dict[str, str]]) -> None:
+def insert_assets(raw_assets: abc.Iterable[dict[str, str]]) -> None:
     """Bulk create assets.
 
     Asset is a child of the concreate model System. Thus django's
@@ -56,9 +56,10 @@ def insert_assets(assets: abc.Iterable[dict[str, str]]) -> None:
     and lets PostgreSQL handle the IDs itself. These can be obtained from the
     System.objects.bulk_create() response.
     """
-    System = apps.get_model("blueflow", "Asset")  # noqa: N806
+    System = apps.get_model("blueflow", "System")
     Asset = apps.get_model("blueflow", "Asset")
     with transaction.atomic():
+        assets = list(raw_assets)
         _ = System.objects.bulk_create([System(id=a["id"]) for a in assets])
         asset_table = Asset._meta.db_table  # noqa: SLF001
         system_link = Asset._meta.parents[System].column  # noqa: SLF001
@@ -66,12 +67,12 @@ def insert_assets(assets: abc.Iterable[dict[str, str]]) -> None:
             cursor.executemany(
                 f"INSERT INTO {asset_table} "  # nosec B608 # noqa: S608
                 f"({system_link}, name, hostname, "
-                f"ip_address, mac_address, oui_manufacturer "
-                f"manufacturer, model, serial_number "
-                f"udi, tag_number, category "
-                f"owner, os, app_sw_version "
+                f"ip_address, mac_address, oui_manufacturer, "
+                f"manufacturer, model, serial_number, "
+                f"udi, tag_number, category, "
+                f"owner, os, app_sw_version, "
                 f"last_scanned, last_pinged, external_keys) "
-                f"VALUES (%s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s)",
+                f"VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)",  # noqa: E501
                 [
                     (
                         a["id"],
@@ -118,6 +119,4 @@ class Command(base.BaseCommand):
             assets = make_assets(data)
             insert_assets(assets)
         Asset = apps.get_model("blueflow", "Asset")
-        self.stdout.write(
-            self.style.SUCCESS(f"Loaded {len(Asset.objects.all())} assets")
-        )
+        self.stdout.write(self.style.SUCCESS(f"Loaded {Asset.objects.count()} assets"))
