@@ -46,14 +46,14 @@ def make_assets(data: list[AssetJson]) -> abc.Generator[dict[str, str], None, No
 def insert_assets(raw_assets: abc.Iterable[dict[str, str]]) -> None:
     """Bulk create assets.
 
-    Asset is a child of the concreate model System. Thus django's
+    Asset is a child of the concrete model System. Thus django's
     bulk_create method wont work on Asset directly. The workaround below
-    is to first bulk_create the parent using the ID's from the json file.
+    is to first bulk_create the parent using the IDs from the json file.
     Then drop into a manual bulk create SQL using `executemany` while
     providing the link to the parent column containing the ID.
 
     Alternatively it is also possible to forgo the manual insertion of IDs
-    and lets PostgreSQL handle the IDs itself. These can be obtained from the
+    and let PostgreSQL handle the IDs itself. These can be obtained from the
     System.objects.bulk_create() response.
     """
     System = apps.get_model("blueflow", "System")
