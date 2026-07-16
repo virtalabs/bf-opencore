@@ -7,13 +7,19 @@ from collections import abc
 
 from django.apps import apps
 from django.core.management import base
+from django.db import connection, transaction
 
 
-def _get_field(asset: dict, key: str, parent: str = "fields") -> typing.Any:
-    return asset.get(parent, {})[key]
+class AssetJson(typing.TypedDict):
+    pk: str
+    fields: dict[str, str]
 
 
-def make_assets(data: list[dict]) -> abc.Generator[dict, None, None]:
+def _get_field(asset: AssetJson, key: str, parent: str = "fields") -> str:
+    return asset[parent][key]
+
+
+def make_assets(data: list[AssetJson]) -> abc.Generator[dict[str, str], None, None]:
     for asset in data:
         yield {
             "id": asset["pk"],
@@ -37,6 +43,61 @@ def make_assets(data: list[dict]) -> abc.Generator[dict, None, None]:
         }
 
 
+def insert_assets(assets: abc.Iterable[dict[str, str]]) -> None:
+    """Bulk create assets.
+
+    Asset is a child of the concreate model System. Thus django's
+    bulk_create method wont work on Asset directly. The workaround below
+    is to first bulk_create the parent using the ID's from the json file.
+    Then drop into a manual bulk create SQL using `executemany` while
+    providing the link to the parent column containing the ID.
+
+    Alternatively it is also possible to forgo the manual insertion of IDs
+    and lets PostgreSQL handle the IDs itself. These can be obtained from the
+    System.objects.bulk_create() response.
+    """
+    System = apps.get_model("blueflow", "Asset")  # noqa: N806
+    Asset = apps.get_model("blueflow", "Asset")
+    with transaction.atomic():
+        _ = System.objects.bulk_create([System(id=a["id"]) for a in assets])
+        asset_table = Asset._meta.db_table  # noqa: SLF001
+        system_link = Asset._meta.parents[System].column  # noqa: SLF001
+        with connection.cursor() as cursor:
+            cursor.executemany(
+                f"INSERT INTO {asset_table} "  # nosec B608 # noqa: S608
+                f"({system_link}, name, hostname, "
+                f"ip_address, mac_address, oui_manufacturer "
+                f"manufacturer, model, serial_number "
+                f"udi, tag_number, category "
+                f"owner, os, app_sw_version "
+                f"last_scanned, last_pinged, external_keys) "
+                f"VALUES (%s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s)",
+                [
+                    (
+                        a["id"],
+                        a["name"],
+                        a["hostname"],
+                        a["ip_address"],
+                        a["mac_address"],
+                        a["oui_manufacturer"],
+                        a["manufacturer"],
+                        a["model"],
+                        a["serial_number"],
+                        a["udi"],
+                        a["tag_number"],
+                        a["category"],
+                        a["owner"],
+                        a["os"],
+                        a["app_sw_version"],
+                        a["last_scanned"],
+                        a["last_pinged"],
+                        a["external_keys"],
+                    )
+                    for a in assets
+                ],
+            )
+
+
 class Command(base.BaseCommand):
     """Django manage.py sub command loads assets from a json file."""
 
@@ -48,12 +109,15 @@ class Command(base.BaseCommand):
         )
 
     def handle(self, *_, **options) -> None:
-        Asset = apps.get_model("blueflow", "Asset")
         file_path = options.get("filepath")
+        if not file_path:
+            msg = "Filepath can't be falsey"
+            raise TypeError(msg)
         with pathlib.Path(file_path).open(encoding="utf-8") as file:
             data = json.load(file)
             assets = make_assets(data)
-            Asset.objects.bulk_create([Asset(**asset) for asset in assets])
+            insert_assets(assets)
+        Asset = apps.get_model("blueflow", "Asset")
         self.stdout.write(
             self.style.SUCCESS(f"Loaded {len(Asset.objects.all())} assets")
         )
