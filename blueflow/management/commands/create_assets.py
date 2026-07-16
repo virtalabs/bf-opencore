@@ -113,7 +113,7 @@ class Command(base.BaseCommand):
         file_path = options.get("filepath")
         if not file_path:
             msg = "Filepath can't be falsey"
-            raise TypeError(msg)
+            raise base.CommandError(msg)
         with pathlib.Path(file_path).open(encoding="utf-8") as file:
             data = json.load(file)
             assets = make_assets(data)
