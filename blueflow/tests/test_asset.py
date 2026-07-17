@@ -6,6 +6,7 @@ http://pytest-django.readthedocs.io/en/latest/helpers.html
 
 import json
 
+import netaddr
 import pytest
 from freezegun import freeze_time
 from model_bakery import baker
@@ -466,8 +467,8 @@ def test_api_create_asset_mac_autofill_nic(asset_edit_client: APIClient) -> None
 def test_api_create_asset_mac_reject_nic(asset_edit_client: APIClient) -> None:
     """Provided NIC vendor will be silently ignored."""
     client = asset_edit_client
-    response = client.post(
-        "/api/assets/",
+    response = client.put(
+        "/api/assets/upsert/",
         json.dumps(
             {
                 "mac_address": "34:36:3b:c4:7d:ec",
@@ -480,30 +481,31 @@ def test_api_create_asset_mac_reject_nic(asset_edit_client: APIClient) -> None:
     assert response.status_code == status.HTTP_201_CREATED
     assets = client.get("/api/assets/")
     assert assets.data["count"] == 1
-    asset = assets.data["results"].pop()
-    assert asset["mac_address"] == "34:36:3b:c4:7d:ec"
+    asset = assets.data["results"][0]
+    assert asset["interface"]["mac_address"] == "34:36:3b:c4:7d:ec"
     assert asset["oui_manufacturer"] == "Apple, Inc."
 
 
 def test_upsert_create(asset_edit_client: APIClient) -> None:
     """Create a new asset via upsert endpoint."""
-    macaddr = "00:03:b1:b5:b6:48"
+    _mac = "00:03:B1:B5:B6:48"
+    mac = netaddr.EUI(_mac)
     response = asset_edit_client.put(
         "/api/assets/upsert/",
         json.dumps(
             {
-                "mac_address": macaddr,
+                "mac_address": str(mac),
                 "manufacturer": "Acme",
             }
         ),
         content_type="application/json",
     )
     assert response.status_code == status.HTTP_201_CREATED
-    assert response.data["mac_address"] == macaddr
+    assert response.data["interface"]["mac_address"] == mac
     assert response.data["oui_manufacturer"] is not None
     assert models.Asset.objects.count() == 1
     asset = models.Asset.objects.get()
-    assert asset.mac_address == macaddr
+    assert asset.interface.mac_address == mac
 
 
 def test_external_key_non_connector(db) -> None:
@@ -516,7 +518,8 @@ def test_external_key_non_connector(db) -> None:
 
 def test_upsert_update(asset_edit_client: APIClient) -> None:
     """Update an existing asset via upsert endpoint."""
-    mac = "11:22:33:44:55:66"
+    _mac = "11:22:33:44:55:66"
+    mac = netaddr.EUI(_mac)
     manufacturer = "Acme"
     ip = "10.0.0.1"
 
@@ -526,7 +529,7 @@ def test_upsert_update(asset_edit_client: APIClient) -> None:
         "/api/assets/upsert/",
         json.dumps(
             {
-                "mac_address": mac,
+                "mac_address": str(mac),
                 "manufacturer": manufacturer,
                 "ip_address": ip,
             }

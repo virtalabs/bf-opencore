@@ -1,6 +1,6 @@
 """API Views."""
 
-from .asset import AssetSerializer, AssetViewSet, HistoricalAssetSerializer
+from .asset import AssetRequestSerializer, AssetViewSet
 from .assetgroup import AssetGroupSerializer, AssetGroupViewSet
 from .assettag import AssetTagSerializer, AssetTagViewSet
 from .group import GroupSerializer, GroupViewSet
@@ -21,7 +21,7 @@ from .viper import ViperViewSet
 __all__ = [
     "AssetGroupSerializer",
     "AssetGroupViewSet",
-    "AssetSerializer",
+    "AssetRequestSerializer",
     "AssetTagSerializer",
     "AssetTagViewSet",
     "AssetViewSet",
@@ -30,7 +30,6 @@ __all__ = [
     "CrontabScheduleViewSet",
     "GroupSerializer",
     "GroupViewSet",
-    "HistoricalAssetSerializer",
     "IntervalScheduleSerializer",
     "IntervalScheduleViewSet",
     "NetworkSerializer",
