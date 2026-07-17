@@ -46,10 +46,7 @@ class JSONChild(Func):
 
 
 class AssetServiceSerializer(serializers.Serializer):
-    """A single ``(port, protocol)`` observation on an asset.
-
-    Wire shape matches the topology schema's ``services[]`` element.
-    """
+    """A single ``(port, protocol)`` observation on an asset."""
 
     port = serializers.IntegerField(
         min_value=models.PORT_MIN, max_value=models.PORT_MAX
