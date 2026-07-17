@@ -337,16 +337,7 @@ class AssetFilter(django_filters.rest_framework.FilterSet):
             "hostname": ["icontains"],
             "oui_manufacturer": ["icontains"],
             "category": ["icontains", "exact"],
-            # TODO(taylorcochran): Add risk score filters
             "id": ["in"],
-            "ip_address": [
-                "istartswith",
-                "exact",
-                "net_contained",
-                "net_contained_or_equal",
-                "isnull",
-            ],
-            "mac_address": ["istartswith", "lt", "lte", "gte", "gt", "isnull"],
             "serial_number": ["istartswith", "iexact", "isnull"],
             "name": ["icontains", "exact"],
             "os": ["istartswith", "icontains", "iexact", "exact", "isnull"],
