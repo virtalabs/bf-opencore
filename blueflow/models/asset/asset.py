@@ -5,7 +5,6 @@ import logging
 import typing
 
 import netaddr
-import netfields
 from django.db import models
 from simple_history import models as simple_history
 
@@ -51,16 +50,6 @@ class Asset(system.System):
         blank=False,
         null=True,
         unique=True,
-    )
-    ip_address = netfields.InetAddressField(
-        store_prefix_length=False,
-        null=True,
-        verbose_name="IP address",
-    )
-    mac_address = netfields.MACAddressField(
-        null=True,
-        unique=True,
-        verbose_name="MAC address",
     )
     oui_manufacturer = models.CharField(
         max_length=256,
