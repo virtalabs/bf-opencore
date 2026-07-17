@@ -167,33 +167,6 @@ class Asset(system.System):
     def __str__(self) -> str:
         return f"{self.id}:{self.hostname}:{self.ip_address}"
 
-    def save(self, *args: typing.Any, **kwargs: typing.Any) -> None:
-        """Intercept save, automatically populating some fields."""
-        if not self.mac_address:
-            super().save(*args, **kwargs)
-            return
-        try:
-            eui = netaddr.EUI(self.mac_address)
-            reg = eui.oui.registration()
-            self.oui_manufacturer = reg.org.strip()
-        except netaddr.core.AddrFormatError:
-            logger.warning("Bad MAC address on asset %s", self)
-            self.oui_manufacturer = self.UNKNOWN_OUI_MANUFACTURER
-        except netaddr.core.NotRegisteredError:
-            logger.info(
-                "MAC address %s of asset %s lacks NIC vendor",
-                self.mac_address,
-                self,
-            )
-            self.oui_manufacturer = self.UNKNOWN_OUI_MANUFACTURER
-        except AttributeError:
-            logger.debug(
-                "NIC vendor registry lacks org detail for MAC address %s",
-                self.mac_address,
-            )
-            self.oui_manufacturer = self.UNKNOWN_OUI_MANUFACTURER
-        super().save(*args, **kwargs)
-
     def add_service(self, port: int, protocol: str) -> bool:
         """Idempotently link this asset to a ``(port, protocol)`` observation.
 
@@ -208,6 +181,32 @@ class Asset(system.System):
             asset=self, port_protocol=port_protocol
         )
         return created
+
+    def add_interface(self, **kwargs):
+        interface = super().add_interface(**kwargs)
+        if not self.interface.mac_address:
+            return interface
+        mac = self.interface.mac_address
+        try:
+            reg = mac.oui.registration()
+            self.oui_manufacturer = reg.org.strip()
+        except netaddr.core.AddrFormatError:
+            logger.warning("Bad MAC address on asset %s", self)
+            self.oui_manufacturer = self.UNKNOWN_OUI_MANUFACTURER
+        except netaddr.core.NotRegisteredError:
+            logger.info(
+                "MAC address %s of asset %s lacks NIC vendor",
+                mac,
+                self,
+            )
+            self.oui_manufacturer = self.UNKNOWN_OUI_MANUFACTURER
+        except AttributeError:
+            logger.debug(
+                "NIC vendor registry lacks org detail for MAC address %s",
+                mac,
+            )
+            self.oui_manufacturer = self.UNKNOWN_OUI_MANUFACTURER
+        return interface
 
     def update_usage(self, timestamp: datetime.datetime) -> None:
         """Record a usage observation for this asset at the given timestamp.
