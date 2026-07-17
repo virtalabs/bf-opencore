@@ -15,7 +15,6 @@ from .periodic_task import (
 )
 from .scan import ScanSerializer, ScanViewSet
 from .tag import TagSerializer, TagViewSet
-from .topology import TopologySerializer, TopologyView
 from .user import UserSerializer, UserViewSet
 from .viper import ViperViewSet
 
@@ -43,8 +42,6 @@ __all__ = [
     "ScanViewSet",
     "TagSerializer",
     "TagViewSet",
-    "TopologySerializer",
-    "TopologyView",
     "UserSerializer",
     "UserViewSet",
     "ViperViewSet",
