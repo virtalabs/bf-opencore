@@ -5,6 +5,7 @@ from .asset_custom_field import AssetCustomField, AssetCustomFieldName
 from .attachment import Attachment
 from .constants import PORT_MAX, PORT_MIN, PROTOCOL_MAX_LENGTH
 from .group import AssetGroup, Group
+from .interface import NetworkInterface
 from .network import Cidr, Network, SavedSearch
 from .network_endpoint import EndpointSuggestion, NetworkEndpoint
 from .ports_protocol import AssetPortProtocol, PortProtocol
@@ -31,6 +32,7 @@ __all__ = [
     "Group",
     "Network",
     "NetworkEndpoint",
+    "NetworkInterface",
     "PortProtocol",
     "SavedSearch",
     "Scan",
