@@ -8,6 +8,7 @@ import json
 
 import pytest
 from freezegun import freeze_time
+from model_bakery import baker
 from rest_framework import status
 from rest_framework.test import APIClient
 
@@ -515,26 +516,31 @@ def test_external_key_non_connector(db) -> None:
 
 def test_upsert_update(asset_edit_client: APIClient) -> None:
     """Update an existing asset via upsert endpoint."""
-    # Create existing asset in database
-    models.Asset.objects.create(mac_address="11:22:33:44:55:66")
+    mac = "11:22:33:44:55:66"
+    manufacturer = "Acme"
+    ip = "10.0.0.1"
+
+    asset = baker.make("Asset")
+    baker.make("NetworkInterface", system=asset, mac_address=mac)
     response = asset_edit_client.put(
         "/api/assets/upsert/",
         json.dumps(
             {
-                "mac_address": "11:22:33:44:55:66",
-                "manufacturer": "Acme",
-                "ip_address": "10.0.0.1",
+                "mac_address": mac,
+                "manufacturer": manufacturer,
+                "ip_address": ip,
             }
         ),
         content_type="application/json",
     )
     assert response.status_code == status.HTTP_200_OK
-    assert response.data["mac_address"] == "11:22:33:44:55:66"
-    assert response.data["ip_address"] == "10.0.0.1"
+    response_interface = response.data["interface"]
+    assert response_interface["mac_address"] == mac
+    assert response_interface["ipv4"] == ip
     assert models.Asset.objects.count() == 1
     asset = models.Asset.objects.get()
-    assert asset.mac_address == "11:22:33:44:55:66"
-    assert str(asset.ip_address) == "10.0.0.1"
+    assert asset.interface.mac_address == mac
+    assert str(asset.interface.ipv4) == ip
 
 
 def test_upsert_no_mac_address(asset_edit_client: APIClient) -> None:
