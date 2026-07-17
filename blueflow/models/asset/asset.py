@@ -198,6 +198,8 @@ class Asset(system.System):
         try:
             reg = mac.oui.registration()
             self.oui_manufacturer = reg.org.strip()
+            self.save()
+            # assert 0
         except netaddr.core.AddrFormatError:
             logger.warning("Bad MAC address on asset %s", self)
             self.oui_manufacturer = self.UNKNOWN_OUI_MANUFACTURER

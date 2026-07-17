@@ -1,19 +1,16 @@
 """ViewSet for assets."""
 
-import importlib
 import logging
 import typing
 
 import django_filters
 import django_filters.rest_framework.filters as drf_filters
 import netfields
-from django.core import exceptions as d_ex
 from django.db import transaction
-from django.db.models import Case, Count, QuerySet, When
+from django.db.models import QuerySet
 from django.db.models.aggregates import Func
-from django.db.utils import IntegrityError
 from django.utils import timezone
-from drf_spectacular.utils import extend_schema, extend_schema_field
+from drf_spectacular.utils import extend_schema_field
 from rest_framework import serializers, status, viewsets
 from rest_framework.decorators import action
 from rest_framework.request import Request
@@ -200,10 +197,9 @@ class NetworkInterfaceSerializer(serializers.ModelSerializer):
         fields = ("mac_address", "ipv4", "ipv6")
 
 
-class AssetSerializer(serializers.ModelSerializer):
+class AssetRequestSerializer(serializers.ModelSerializer):
     """Serializes assets."""
 
-    interface = NetworkInterfaceSerializer(allow_null=False)
     last_updated = serializers.DateTimeField(read_only=True, allow_null=True)
     usage = serializers.SerializerMethodField(
         help_text=(
@@ -235,25 +231,40 @@ class AssetSerializer(serializers.ModelSerializer):
         return days
 
 
-class HistoricalAssetSerializer(serializers.ModelSerializer):
-    """Serializes asset history."""
+class AssetResponseSerializer(serializers.ModelSerializer):
+    """Serializes assets."""
 
-    history_user = serializers.PrimaryKeyRelatedField(read_only=True)
+    interface = NetworkInterfaceSerializer(allow_null=False)
+    last_updated = serializers.DateTimeField(read_only=True, allow_null=True)
+    usage = serializers.SerializerMethodField(
+        help_text=(
+            "Usage pattern: 7-element array of hour-of-day to observation-count "
+            "maps. Index is 0-based with Monday first — 0=Monday, 1=Tuesday, "
+            "2=Wednesday, 3=Thursday, 4=Friday, 5=Saturday, 6=Sunday. Hour keys "
+            "are JSON-string-coerced integers 0-23; counts are non-negative; "
+            "hours with zero observations are omitted from the response."
+        ),
+    )
+    manufacturer = serializers.CharField()
+    oui_manufacturer = serializers.CharField()
 
     class Meta:
         """Wire this serializer to a model."""
 
-        model = models.Asset.history.model
-        # Fields that are unique to the historical model (Should maybe
-        # compute these too?  It could be done with a set difference...)
-        fields = (
-            "history_change_reason",
-            "history_date",
-            "history_id",
-            "history_type",
-            "history_user",
-            "history_user_id",
-        )
+        model: typing.ClassVar = models.Asset
+        fields: typing.ClassVar = "__all__"
+        read_only_fields: typing.ClassVar = ["oui_manufacturer"]
+
+    @extend_schema_field(_USAGE_FIELD_SCHEMA)
+    def get_usage(self, obj):
+        days = [{} for _ in range(7)]
+        for usage in obj.usage.all():
+            bucket = days[usage.day_of_week]
+            for hour in range(24):
+                count = getattr(usage, f"hour_{hour:02d}")
+                if count > 0:
+                    bucket[str(hour)] = count
+        return days
 
 
 class AssetFilter(django_filters.rest_framework.FilterSet):
@@ -417,7 +428,7 @@ class AssetViewSet(
     queryset = models.Asset.objects.prefetch_related("usage").prefetch_related(
         "port_protocols__port_protocol"
     )
-    serializer_class = AssetSerializer
+    serializer_class = AssetRequestSerializer
 
     # Documentation on search filters:
     # http://www.django-rest-framework.org/api-guide/filtering/
@@ -445,286 +456,18 @@ class AssetViewSet(
     )
     filterset_class = AssetFilter
 
-    def get_renderer_context(self) -> dict:
-        """If caller specifies fields, then set the CSV header accordingly.
+    def retrieve(self, *args, **kwargs) -> Response:
+        self.serializer_class = AssetResponseSerializer
+        response = super().retrieve(*args, **kwargs)
+        return response
 
-        If not, use a default set.
-        """
-        default_headers = [
-            "id",
-            "name",
-            "hostname",
-            "owner",
-            "ip_address",
-            "mac_address",
-            "oui_manufacturer",
-            "manufacturer",
-            "model",
-            "os",
-            "app_sw_version",
-            "serial_number",
-            "tag_number",
-            "category",
-            "created",
-            "udi",
-        ]
-        context = super().get_renderer_context()
-        if "fields" in self.request.GET:
-            context["header"] = self.request.GET["fields"].split(",")
-        else:
-            context["header"] = default_headers
-        return context
+    def list(self, *args, **kwargs) -> Response:
+        self.serializer_class = AssetResponseSerializer
+        response = super().list(*args, **kwargs)
+        return response
 
-    ################################
-    # Detail methods/actions
-
-    @extend_schema(exclude=True)
-    @action(detail=True)
-    def fields(self, request: Request, pk: int) -> Response:
-        """List fields for an Asset.
-
-        Technically all assets will have the same fields.  But there's
-        some info about fields that may be individual (e.g., is the
-        field populated.)  Thus we display it via the individual asset
-        route, not the 'list' route.
-
-        To include "related fields", pass the query parameter 'relations'.
-        """
-        # NOTE: according to Django documentation & code/implementation,
-        #   _meta.fields is unsupported.  We should use _meta.get_fields()
-
-        # Default behaviour: Don't include relations/related fields, as these
-        # incur joins.
-        relations = request.query_params.get("relations", "false")
-        include_relations = relations.lower()[:1] in ["", "1", "t"]
-
-        fields = []
-        for f in models.Asset._meta.get_fields():  # noqa: SLF001
-            if f.is_relation and not include_relations:
-                continue
-            if hasattr(f, "deconstruct"):
-                dec = f.deconstruct()
-            else:
-                dec = (f.name, f.__class__.__name__, [], {})
-            name = dec[0]
-            verbose_name = dec[3].get("verbose_name")
-
-            fields.append(
-                {
-                    "name": name,
-                    "display_name": (
-                        verbose_name
-                        if verbose_name is not None
-                        else name.replace("_", " ").capitalize()
-                    ),
-                    "field_type": dec[1],
-                    "is_relation": f.is_relation,  # Foreign keys, reverses, etc.
-                    "is_custom": False,
-                }
-            )
-
-        for f in models.AssetCustomFieldName.objects.all():
-            name = f.field_name
-            cfv = models.AssetCustomField.objects.filter(asset_id=pk, field=f).first()
-            fields.append(
-                {
-                    "name": name,
-                    "display_name": name.replace("_", " ").capitalize(),
-                    "field_type": f.display_type,
-                    "is_relation": False,
-                    "is_custom": True,
-                    "custom_field_id": cfv.pk if cfv else None,
-                }
-            )
-
-        return Response(
-            {
-                "count": len(fields),
-                "results": fields,
-            }
-        )
-
-    @extend_schema(exclude=True)
-    @action(detail=True)
-    def history(self, request: Request, _pk: int) -> Response:
-        """Full history of asset (paginated).
-
-        Or, if a `field=<field_name>` query argument is given, returns
-        only the history records where that field changed.  (In this
-        case it's not paginated.)
-        """
-        if not request.query_params:
-            # Full history
-            qset = self.get_object().history_qset()
-            return self.paginate_relations(request, qset, "HistoricalAssetSerializer")
-        # History for a single field
-        field_name = request.query_params.get("field")
-        if field_name is None:
-            raise serializers.ValidationError(
-                {
-                    "field": (
-                        f"User supplied query parameters '{request.query_params}'"
-                        " that did not include a field value"
-                    )
-                }
-            )
-        try:
-            rqset = self.get_object().field_history_rqset(field_name, newest_first=True)
-        except d_ex.FieldDoesNotExist as err:
-            raise serializers.ValidationError(
-                {"field": f"User tried to query for nonexistent field '{field_name}'"}
-            ) from err
-        serializer = HistoricalAssetSerializer(
-            rqset, many=True, context={"request": request}
-        )
-        return Response(serializer.data)
-
-    @extend_schema(exclude=True)
-    @action(detail=True)
-    def networks(self, request: Request, _pk: int) -> Response:
-        """Networks that this asset belongs to."""
-        # FUTURE: Replace with /api/networks/?asset=<pk>
-
-        qset = self.get_object().network_qset()
-        return self.paginate_relations(request, qset, "NetworkSerializer")
-
-    @extend_schema(exclude=True)
-    @action(detail=True)
-    def scans(self, request: Request, _pk: int) -> Response:
-        """Return scans of the asset."""
-        # FUTURE: Replace with /api/scans/?asset=<pk>
-
-        scan_qset = self.get_object().scan_qset()
-        return self.paginate_relations(request, scan_qset, "ScanSerializer")
-
-    @extend_schema(exclude=True)
-    @action(detail=True)
-    def similar(self, request: Request, _pk: int) -> Response:
-        """Similar assets."""
-        exclude_self = True
-        if request.query_params.get("exclude_self") in ("false", "0"):
-            exclude_self = False
-
-        # This stuff might not be necessary.  The DRF pagination system
-        # might take care of it (since it's the same serializer etc.
-        qset = self.get_object().similar_qset(exclude_self=exclude_self)
-        # TODO(taylorcochran): Add risk score ordering
-        return self.paginate_relations(request, qset, "AssetSerializer")
-
-    @extend_schema(exclude=True)
-    @action(detail=True, methods=["GET", "POST"])
-    def tags(self, request: Request, _pk: int) -> Response | None:
-        """Tags attached to the asset."""
-        asset = self.get_object()
-        if request.method == "GET":
-            # FUTURE: Replace with /api/tags/?asset=<pk>
-            tag_qset = asset.tag_qset()
-            return self.paginate_relations(request, tag_qset, "TagSerializer")
-        if request.method == "POST":
-            tag_id = request.data.get("tag_id")
-            if tag_id is None:
-                raise serializers.ValidationError(
-                    {
-                        "tag_id": ["'tag_id' is required"],
-                    }
-                )
-            try:
-                tag = models.Tag.objects.get(pk=tag_id)
-            except d_ex.ObjectDoesNotExist as err:
-                raise serializers.ValidationError(
-                    {
-                        "tag_id": [f"Tag does not exist: id={tag_id}"],
-                    }
-                ) from err
-            asset_tag = models.AssetTag(asset=asset, tag=tag, provenance="API")
-            try:
-                asset_tag.save()
-                response_status = status.HTTP_201_CREATED
-                logger.debug(
-                    "Created new asset-tag link between %s and %s: %s",
-                    asset,
-                    tag,
-                    asset_tag,
-                )
-            except IntegrityError:
-                asset_tag = models.AssetTag.objects.get(asset=asset, tag=tag)
-                response_status = status.HTTP_200_OK
-                logger.debug(
-                    "Asset-tag link between %s and %s already existed: %s",
-                    asset,
-                    tag,
-                    asset_tag,
-                )
-            views = importlib.import_module("blueflow.views")
-            serializer = views.TagSerializer(tag, context={"request": request})
-            return Response(serializer.data, status=response_status)
-
-        return None
-
-    ################################
-    # List methods/actions
-
-    @extend_schema(exclude=True)
-    @action(detail=False)
-    def duplicate_ips(self, _request: Request) -> Response:
-        """Return set of duplicate IP addresses and their counts."""
-        assets = self.filter_queryset(self.get_queryset())
-        qset = (
-            assets.values("ip_address")
-            .annotate(howmany=Count("ip_address"))
-            .filter(howmany__gte=2)
-            .order_by("-howmany")
-        )
-        resp = [(str(x["ip_address"]), x["howmany"]) for x in qset]
-        return Response(resp)
-
-    @extend_schema(exclude=True)
-    @action(detail=False)
-    def histogram(self, request: Request) -> Response:
-        """Return an optionally filtered histogram over an asset field.
-
-        Returns a list of {field_name: xxx, count: N} objects.
-        """
-        field_name = request.query_params.get("field")
-        if field_name is None:
-            raise serializers.ValidationError({"field": "Missing field name"})
-
-        try:
-            limit = int(request.query_params.get("limit", 0))
-        except ValueError as err:
-            raise serializers.ValidationError({"limit": "Invalid limit"}) from err
-
-        include_null = request.query_params.get("nulls", "").lower() in (
-            "true",
-            "yes",
-            "1",
-        )
-
-        # apply any asset filters such as 'manufacturer__iexact'
-        assets = self.filter_queryset(self.get_queryset())
-
-        try:
-            if include_null:
-                # by default django won't count nulls; this one weird trick
-                # makes it do so.  basically, count 1 if field is not null, and
-                # 1 otherwise.
-                params = {field_name + "__isnull": False, "then": 1}
-                results = assets.values(field_name).annotate(
-                    count=Count(Case(When(**params), default=1))
-                )
-            else:
-                params = {field_name + "__isnull": True, field_name: ""}
-                assets = assets.exclude(**params)
-                results = assets.values(field_name).annotate(count=Count(field_name))
-
-        except d_ex.FieldError as err:
-            raise serializers.ValidationError(
-                {"field": f"Invalid field name '{field_name}'"}
-            ) from err
-        results = results.order_by("-count")
-        if limit > 0:
-            results = results[:limit]
-        return Response(results)
+    def create(self, *_, **__) -> Response:
+        return Response(status=status.HTTP_404_NOT_FOUND)
 
     @action(detail=False, methods=["PATCH"])
     def bulk_update(self, request: Request) -> Response:
@@ -752,7 +495,7 @@ class AssetViewSet(
         # Phase 1: resolve + validate every item before touching the DB. The
         # id-to-instance lookup is a 404 (a missing resource, not a client-side
         # validation failure), so it stays here rather than in the serializer.
-        validated: list[AssetSerializer] = []
+        validated: list[AssetRequestSerializer] = []
         for item in request.data:
             asset_id = item["id"]
             try:
@@ -762,7 +505,7 @@ class AssetViewSet(
                     {"detail": f"Asset with id={asset_id} not found."},
                     status=status.HTTP_404_NOT_FOUND,
                 )
-            serializer = AssetSerializer(
+            serializer = self.get_serializer_class(
                 asset, data=item, partial=True, context={"request": request}
             )
             serializer.is_valid(raise_exception=True)
@@ -773,7 +516,9 @@ class AssetViewSet(
             results = [serializer.save() for serializer in validated]
 
         return Response(
-            AssetSerializer(results, many=True, context={"request": request}).data,
+            AssetResponseSerializer(
+                results, many=True, context={"request": request}
+            ).data,
             status=status.HTTP_200_OK,
         )
 
@@ -837,9 +582,10 @@ class AssetViewSet(
                 logger.debug(
                     "Could not set history_change_reason for asset pk=%s", asset.pk
                 )
-        serializer = AssetSerializer(asset, context={"request": request})
+        serializer = AssetResponseSerializer(asset, context={"request": request})
         response = Response(
             serializer.data,
             status=status.HTTP_201_CREATED if created else status.HTTP_200_OK,
         )
+        # assert 0
         return response
