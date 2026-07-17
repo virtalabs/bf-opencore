@@ -13,7 +13,7 @@ class System(django_extensions.TimeStampedModel):
     internal and external assets and asset like things.
     """
 
-    def add_interface(
+    def add_or_update_interface(
         self, *, mac_address: str | None = None, ips: list[str] | None = None
     ) -> NetworkInterface:
         kwargs = {}
@@ -31,4 +31,7 @@ class System(django_extensions.TimeStampedModel):
                     case _:
                         msg = "Unable to determine ip address type"
                         raise ValueError(msg)
-        return NetworkInterface.objects.create(system=self, **kwargs)
+        interface, _ = NetworkInterface.objects.update_or_create(
+            system=self, defaults=kwargs
+        )
+        return interface

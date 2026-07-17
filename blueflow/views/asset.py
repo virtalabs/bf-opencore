@@ -23,7 +23,7 @@ from waffle.mixins import WaffleSwitchMixin
 
 from blueflow import models
 
-from . import assettag, utils
+from . import utils
 
 logger = logging.getLogger(__name__)
 
@@ -194,13 +194,16 @@ _USAGE_FIELD_SCHEMA = {
 }
 
 
+class NetworkInterfaceSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = models.NetworkInterface
+        fields = ("mac_address", "ipv4", "ipv6")
+
+
 class AssetSerializer(serializers.ModelSerializer):
     """Serializes assets."""
 
-    url = serializers.HyperlinkedIdentityField(view_name="blueflow:asset-detail")
-    tags_url = serializers.HyperlinkedIdentityField(view_name="blueflow:asset-tags")
-    scans_url = serializers.HyperlinkedIdentityField(view_name="blueflow:asset-scans")
-    asset_tags = assettag.AssetTagSerializer(read_only=True, many=True)
+    interface = NetworkInterfaceSerializer(allow_null=False)
     last_updated = serializers.DateTimeField(read_only=True, allow_null=True)
     usage = serializers.SerializerMethodField(
         help_text=(
@@ -219,20 +222,6 @@ class AssetSerializer(serializers.ModelSerializer):
         model: typing.ClassVar = models.Asset
         fields: typing.ClassVar = "__all__"
         read_only_fields: typing.ClassVar = ["oui_manufacturer"]
-
-    def validate_ip_address(self, ip_string: str) -> str:
-        """Reject empty IP address strings."""
-        if ip_string == "":
-            msg = "ip_address must not be empty."
-            raise serializers.ValidationError(msg)
-        return ip_string
-
-    def validate_mac_address(self, mac_string: str) -> str:
-        """Reject empty MAC address strings."""
-        if mac_string == "":
-            msg = "mac_address must not be empty."
-            raise serializers.ValidationError(msg)
-        return mac_string
 
     @extend_schema_field(_USAGE_FIELD_SCHEMA)
     def get_usage(self, obj):
@@ -811,17 +800,18 @@ class AssetViewSet(
         created = False
         mac_address = validated.pop("mac_address")
         new_services = validated.pop("services", [])
+        ip = validated.pop("ip_address", None)
         with transaction.atomic():
             try:
-                asset = models.Asset.objects.get(mac_address=mac_address)
+                asset = models.Asset.objects.get(interface__mac_address=mac_address)
                 for k, v in validated.items():
                     setattr(asset, k, v)
                 asset.save()
             except models.Asset.DoesNotExist:
                 created = True
-                asset = models.Asset.objects.create(
-                    mac_address=mac_address, **validated
-                )
+                asset = models.Asset.objects.create(**validated)
+            ips = [ip] if ip is not None else None
+            asset.add_or_update_interface(mac_address=mac_address, ips=ips)
             for service in new_services:
                 asset.add_service(service["port"], service["protocol"])
 
