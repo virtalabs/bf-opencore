@@ -27,9 +27,12 @@ class NetworkInterface(django_extensions.TimeStampedModel):
 
     @property
     def ip_address(self) -> str:
+        """Provide the ipv4 or ipv6 address.
+
+        Empty string is the fallback when both other options are falsey.
+        """
         if self.ipv4:
             return str(self.ipv4)
         if self.ipv6:
             return str(self.ipv6)
-        msg = "Unable to determine ip address for interface"
-        raise TypeError(msg)
+        return ""
