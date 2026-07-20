@@ -171,6 +171,14 @@ class Asset(system.System):
             services[port] = _list
         return services
 
+    @property
+    def ip_address(self) -> str:
+        return self.interface.ip_address
+
+    @property
+    def mac_address(self) -> str:
+        return self.interface.mac_address
+
     def __str__(self) -> str:
         ip = self.interface.ipv4 or self.interface.ipv6
         return f"{self.id}:{self.hostname}:{ip}"
