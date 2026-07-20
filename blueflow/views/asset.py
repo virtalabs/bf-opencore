@@ -16,7 +16,6 @@ from rest_framework.decorators import action
 from rest_framework.request import Request
 from rest_framework.response import Response
 from simple_history import utils as hist_utils
-from waffle.mixins import WaffleSwitchMixin
 
 from blueflow import models
 
@@ -85,32 +84,6 @@ class AssetUpsertSerializer(serializers.Serializer):
     )
     external_keys = serializers.JSONField(required=False, allow_null=True)
     services = AssetServiceSerializer(many=True, required=False)
-
-    def validate(self, attrs: dict) -> dict:
-        """Map ``device_class`` to ``category`` and reject hostname conflicts.
-
-        ``device_class`` is folded into ``category`` when Vector is bypassed
-        (TapirXL). A hostname already owned by a *different* MAC is a conflict;
-        same-MAC reuse and absent/null hostnames fall through (empty strings are
-        blocked at the field level via ``allow_blank=False``).
-        """
-        device_class = attrs.pop("device_class", None)
-        if device_class and not attrs.get("category"):
-            attrs["category"] = device_class
-
-        hostname = attrs.get("hostname")
-        if hostname:
-            conflict = (
-                models.Asset.objects.filter(hostname=hostname)
-                .exclude(mac_address=attrs["mac_address"])
-                .first()
-            )
-            if conflict is not None:
-                msg = (
-                    f"Hostname '{hostname}' is already used by asset id={conflict.id}."
-                )
-                raise serializers.ValidationError({"hostname": [msg]})
-        return attrs
 
     def validate_services(
         self, services: list[dict[str, int | str]]
@@ -373,7 +346,6 @@ class AssetFilter(django_filters.rest_framework.FilterSet):
 
 
 class AssetViewSet(
-    WaffleSwitchMixin,
     utils.PaginateRelationsMixin,
     viewsets.ModelViewSet,
 ):
@@ -403,8 +375,6 @@ class AssetViewSet(
     update: Modify the given asset
     partial_update: Modify the given asset
     """
-
-    waffle_switch = "core"
 
     # NOTE: Order of mixins/base class is important!  Mixins that override
     #   methods *must come first* in order to properly override.  This is
@@ -440,8 +410,6 @@ class AssetViewSet(
     # are matched, in other words, 'AND'.
     search_fields = (
         "hostname",
-        "ip_address",
-        "mac_address",
         "manufacturer",
         "model",
         "name",
@@ -451,7 +419,6 @@ class AssetViewSet(
         "serial_number",
         "tag_number",
         "tags__name",
-        # The following field would enable search on custom field *name*
         "udi",
     )
     filterset_class = AssetFilter
@@ -505,7 +472,7 @@ class AssetViewSet(
                     {"detail": f"Asset with id={asset_id} not found."},
                     status=status.HTTP_404_NOT_FOUND,
                 )
-            serializer = self.get_serializer_class(
+            serializer = self.get_serializer_class()(
                 asset, data=item, partial=True, context={"request": request}
             )
             serializer.is_valid(raise_exception=True)
@@ -535,9 +502,6 @@ class AssetViewSet(
         For batch partial-updates of assets with known IDs, use
         ``PATCH /api/assets/bulk_update/`` instead.
         """
-        # Field validation plus the hostname-conflict guard both live in
-        # AssetUpsertSerializer.validate(); raise_exception=True routes any
-        # failure through DRF's exception handler for a uniform 400 envelope.
         serializer = AssetUpsertSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
 
