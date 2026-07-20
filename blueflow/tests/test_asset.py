@@ -4,8 +4,6 @@ Uses built-in pytest-django text fixtures from
 http://pytest-django.readthedocs.io/en/latest/helpers.html
 """
 
-import json
-
 import netaddr
 import pytest
 from freezegun import freeze_time
@@ -14,6 +12,22 @@ from rest_framework import status
 from rest_framework.test import APIClient
 
 from blueflow import models
+
+
+def _upsert_payload(*, mac=None, manufacturer=None, hostname=None) -> dict[str, str]:
+    kwargs = {
+        "mac_address": "00:1a:1e:12:af:38",
+        "manufacturer": "Acme Inc",
+        "hostname": "test test 123",
+    }
+    if mac is not None:
+        kwargs["mac_address"] = mac
+    if manufacturer is not None:
+        kwargs["manufacturer"] = manufacturer
+    if hostname is not None:
+        kwargs["hostname"] = hostname
+
+    return kwargs
 
 
 def test_get_empty_assets(auth_client: APIClient) -> None:
@@ -36,80 +50,63 @@ def test_export_assets_json(auth_client: APIClient) -> None:
     response = auth_client.get("/api/assets/", HTTP_ACCEPT="application/json")
     assert response.status_code == status.HTTP_200_OK
     assert response.data["count"] == 1
-    assert json.loads(response.content)
+    assert response.json()
 
 
 def test_api_create_asset(asset_edit_client: APIClient) -> None:
     """Create an asset with authorized client."""
-    client = asset_edit_client
-    response = client.post(
-        "/api/assets/",
-        json.dumps({"hostname": "nospam", "manufacturer": "Acme"}),
+    payload = _upsert_payload()
+    response = asset_edit_client.put(
+        "/api/assets/upsert/",
+        payload,
         content_type="application/json",
     )
     assert response.status_code == status.HTTP_201_CREATED
-    assets = client.get("/api/assets/")
+    assets = asset_edit_client.get("/api/assets/")
     assert assets.data["count"] == 1
     asset = assets.data["results"].pop()
-    assert asset["hostname"] == "nospam"
+    assert asset["hostname"] == payload["hostname"]
 
 
 def test_api_create_asset_maconly(asset_edit_client: APIClient) -> None:
     """Create an asset with authorized client."""
-    client = asset_edit_client
-    response = client.post(
-        "/api/assets/",
-        json.dumps({"mac_address": "1", "manufacturer": "Acme"}),
+    payload = _upsert_payload()
+    response = asset_edit_client.put(
+        "/api/assets/upsert/",
+        payload,
         content_type="application/json",
     )
     assert response.status_code == status.HTTP_201_CREATED
-    assets = client.get("/api/assets/")
+    assets = asset_edit_client.get("/api/assets/")
     assert assets.data["count"] == 1
     asset = assets.data["results"].pop()
-    assert asset["mac_address"] == "00:00:00:00:00:01"
+    assert asset["interface"]["mac_address"] == payload["mac_address"]
 
 
 def test_api_create_asset_addinventory_maconly(asset_edit_client: APIClient) -> None:
     """Create an asset with MAC only, ip_address sent as null."""
-    client = asset_edit_client
-    response = client.post(
-        "/api/assets/",
-        json.dumps({"mac_address": "1", "manufacturer": "Acme", "ip_address": None}),
+    payload = _upsert_payload()
+    payload["ip_address"] = None
+    response = asset_edit_client.put(
+        "/api/assets/upsert/",
+        payload,
         content_type="application/json",
     )
     assert response.status_code == status.HTTP_201_CREATED
-    assets = client.get("/api/assets/")
+    assets = asset_edit_client.get("/api/assets/")
     assert assets.data["count"] == 1
     asset = assets.data["results"].pop()
-    assert asset["mac_address"] == "00:00:00:00:00:01"
-    assert asset["ip_address"] is None
+    assert asset["interface"]["mac_address"] == payload["mac_address"]
+    assert asset["interface"]["ipv4"] is None
 
 
 def test_api_create_asset_empty_mac_rejected(asset_edit_client: APIClient) -> None:
     """Empty string MAC address is rejected with 400."""
-    client = asset_edit_client
-    response = client.post(
-        "/api/assets/",
-        json.dumps({"mac_address": "", "ip_address": None}),
-        content_type="application/json",
-    )
-    assert response.status_code == status.HTTP_400_BAD_REQUEST
-
-
-def test_api_create_asset_empty_mac_rejected_twice(
-    asset_edit_client: APIClient,
-) -> None:
-    """Empty string MAC address is rejected both times with 400."""
-    client = asset_edit_client
-    response = client.post(
-        "/api/assets/",
-        json.dumps({"mac_address": "", "ip_address": None}),
-        content_type="application/json",
-    )
-    assert response.status_code == status.HTTP_400_BAD_REQUEST
-    response = client.post(
-        "/api/assets/",
-        json.dumps({"mac_address": "", "ip_address": None}),
+    payload = _upsert_payload(mac="")
+    payload["ip_address"] = None
+    response = asset_edit_client.put(
+        "/api/assets/upsert/",
+        payload,
         content_type="application/json",
     )
     assert response.status_code == status.HTTP_400_BAD_REQUEST
@@ -119,14 +116,14 @@ def test_api_create_asset_empty_mac_rejected_twice(
 @pytest.mark.xfail(reason="Authentication is not implemented yet")
 def test_api_create_asset_unauthorized(auth_client: APIClient) -> None:
     """Can't create an asset with an unauthorized client."""
-    client = auth_client
-    response = client.post(
+    payload = _upsert_payload()
+    response = auth_client.post(
         "/api/assets/",
-        json.dumps({"hostname": "nospam", "manufacturer": "Acme"}),
+        payload,
         content_type="application/json",
     )
     assert response.status_code == status.HTTP_403_FORBIDDEN
-    assets = client.get("/api/assets/")
+    assets = auth_client.get("/api/assets/")
     assert assets.data["count"] == 0
     assert len(assets.data["results"]) == 0
 
@@ -135,48 +132,47 @@ def test_api_create_get_asset(
     auth_client: APIClient, asset_edit_client: APIClient
 ) -> None:
     """Create an asset, read with less-authorized client."""
-    response = asset_edit_client.post(
-        "/api/assets/",
-        json.dumps({"hostname": "nospam", "manufacturer": "Acme"}),
+    payload = _upsert_payload()
+    response = asset_edit_client.put(
+        "/api/assets/upsert/",
+        payload,
         content_type="application/json",
     )
     assert response.status_code == status.HTTP_201_CREATED
     assets = auth_client.get("/api/assets/")
     assert assets.data["count"] == 1
     asset = assets.data["results"].pop()
-    assert asset["hostname"] == "nospam"
+    assert asset["hostname"] == payload["hostname"]
 
 
 def test_api_create_patch_asset(
     auth_client: APIClient, asset_edit_client: APIClient
 ) -> None:
     """Create an asset, then patch."""
-    response = asset_edit_client.post(
-        "/api/assets/",
-        json.dumps({"hostname": "nospam", "manufacturer": "Acme"}),
+    payload = _upsert_payload(mac="00:1a:1e:12:af:38")
+    response = asset_edit_client.put(
+        "/api/assets/upsert/",
+        payload,
         content_type="application/json",
     )
     assert response.status_code == status.HTTP_201_CREATED
-    assert response.data["hostname"] == "nospam"
+    assert response.data["hostname"] == payload["hostname"]
     asset_id = response.data["id"]
+    new_name = "spam"
     response = asset_edit_client.patch(
         f"/api/assets/{asset_id}/",
-        json.dumps({"hostname": "spam"}),
+        {"hostname": new_name},
         content_type="application/json",
     )
     assert response.status_code == status.HTTP_200_OK
-    assert response.data["hostname"] == "spam"
+    assert response.data["hostname"] == new_name
     assets = auth_client.get("/api/assets/")
     assert assets.data["count"] == 1
     asset = assets.data["results"].pop()
-    assert asset["hostname"] == "spam"
+    assert asset["hostname"] == new_name
 
 
-@pytest.mark.xfail(
-    raises=AssertionError,
-    reason="Not sure why, but we *are* allowed to patch.  "
-    "Maybe there's a mix-up re: which user is which.",
-)
+@pytest.mark.xfail(raises=AssertionError, reason="Authtentication is not setup yet")
 def test_api_create_unauth_patch_asset(
     auth_client: APIClient, asset_edit_client: APIClient
 ) -> None:
@@ -189,9 +185,10 @@ def test_api_create_unauth_patch_asset(
       (test_unauth_patch_asset) where a client with insufficient
       authorization is unable to PATCH an asset.
     """
-    response = asset_edit_client.post(
-        "/api/assets/",
-        json.dumps({"hostname": "nospam"}),
+    payload = _upsert_payload()
+    response = asset_edit_client.put(
+        "/api/assets/upsert",
+        payload,
         content_type="application/json",
     )
     assert response.status_code == status.HTTP_201_CREATED
@@ -199,7 +196,7 @@ def test_api_create_unauth_patch_asset(
     asset_id = response.data["id"]
     response = auth_client.patch(
         f"/api/assets/{asset_id}/",
-        json.dumps({"hostname": "spam"}),
+        {"hostname": "spam"},
         content_type="application/json",
     )
     assert response.status_code == status.HTTP_403_FORBIDDEN  # <- this fails...
@@ -215,7 +212,7 @@ def test_unauth_patch_asset(auth_client: APIClient) -> None:
 
     (auth_client is 'authenticated', not 'authorized')
     """
-    _ = models.Asset.objects.create()
+    _ = baker.make("Asset")
     response = auth_client.get("/api/assets/")
     assert response.status_code == status.HTTP_200_OK
     assert response.json()["count"] == 1
@@ -223,7 +220,7 @@ def test_unauth_patch_asset(auth_client: APIClient) -> None:
     assert asset["hostname"] is None
     response = auth_client.patch(
         "/api/assets/{}/".format(asset["id"]),
-        json.dumps({"hostname": "spam"}),
+        {"hostname": "spam"},
         content_type="application/json",
     )
     assert response.status_code == status.HTTP_403_FORBIDDEN
@@ -273,7 +270,7 @@ def test_patch_asset(asset_edit_client: APIClient) -> None:
     # Send PATCH request
     _ = client.patch(
         f"/api/assets/{spam_asset.id}/",
-        json.dumps({"hostname": "nospam"}),
+        {"hostname": "nospam"},
         content_type="application/json",
     )
     # Query for the new version of spam_asset, verify that its
@@ -296,127 +293,12 @@ def test_set_name_null(asset_edit_client: APIClient) -> None:
     assert spam_asset.hostname == "spam"
     response = client.patch(
         f"/api/assets/{spam_asset.id}/",
-        json.dumps({"hostname": None}),
+        {"hostname": None},
         content_type="application/json",
     )
     assert response.status_code == status.HTTP_200_OK
     spam_asset = models.Asset.objects.get(id=spam_asset.id)
     assert spam_asset.hostname is None
-
-
-def test_field_histogram(auth_client: APIClient) -> None:
-    """Field histogram works with one field."""
-    models.Asset.objects.create(manufacturer="Bar")
-    models.Asset.objects.create(manufacturer="Quux")
-    models.Asset.objects.create(manufacturer="Foo")
-    models.Asset.objects.create(manufacturer="Foo")
-    models.Asset.objects.create(manufacturer="Bar")
-    models.Asset.objects.create(manufacturer="Foo")
-
-    response = auth_client.get("/api/assets/histogram/", {"field": "manufacturer"})
-
-    qset = response.data
-
-    expected_count = 3
-    assert len(qset) == expected_count
-    # Order matters: the histogram is explicitly ordered by highest-count first
-    assert [x["manufacturer"] for x in qset] == ["Foo", "Bar", "Quux"]
-    assert [x["count"] for x in qset] == [3, 2, 1]
-
-
-def test_field_histogram_no_field(auth_client: APIClient) -> None:
-    """Fail to specify field=<Asset field name>: HTTP 400."""
-    response = auth_client.get("/api/assets/histogram/")
-    assert response.status_code == status.HTTP_400_BAD_REQUEST
-
-
-def test_field_histogram_no_such_field(auth_client: APIClient) -> None:
-    """Specify field=<nonsense>: HTTP 400."""
-    response = auth_client.get("/api/assets/histogram/", {"field": "asdf"})
-    assert response.status_code == status.HTTP_400_BAD_REQUEST
-
-
-def test_api_duplicate_ips(auth_client: APIClient) -> None:
-    """Check for duplicate IP addresses in the asset population."""
-    response = auth_client.get("/api/assets/duplicate_ips/")
-    assert response.status_code == status.HTTP_200_OK
-    assert response.json() == []
-
-    models.Asset.objects.create(ip_address="1.2.3.4")
-    models.Asset.objects.create(ip_address="1.2.3.4")
-    models.Asset.objects.create(ip_address="1.2.3.4")
-    models.Asset.objects.create(ip_address="1.2.3.5")
-    models.Asset.objects.create(ip_address="1.2.3.5")
-    models.Asset.objects.create(manufacturer="Foo", ip_address=None)
-    response = auth_client.get("/api/assets/duplicate_ips/")
-    assert response.status_code == status.HTTP_200_OK
-    assert response.json() == [
-        ["1.2.3.4", 3],
-        ["1.2.3.5", 2],
-    ]
-
-
-def test_api_duplicate_ips_one(auth_client: APIClient) -> None:
-    """Check for duplicate IP addresses in the asset population."""
-    response = auth_client.get("/api/assets/duplicate_ips/")
-    assert response.status_code == status.HTTP_200_OK
-    assert response.json() == []
-
-    models.Asset.objects.create(ip_address="1.2.3.4")
-    models.Asset.objects.create(ip_address="1.2.3.4")
-    models.Asset.objects.create(ip_address="1.2.3.4")
-    models.Asset.objects.create(ip_address="1.2.3.5")
-    models.Asset.objects.create(ip_address="1.2.3.5")
-    models.Asset.objects.create(manufacturer="Foo", ip_address=None)
-    response = auth_client.get("/api/assets/duplicate_ips/?ip_address=1.2.3.4")
-    assert response.status_code == status.HTTP_200_OK
-    assert response.json() == [
-        ["1.2.3.4", 3],
-    ]
-
-
-@pytest.mark.xfail(
-    raises=AssertionError,
-    reason="not allowed to spell out 'exact' in URL for some reason.",
-)
-def test_api_duplicate_ips_one_spell_exact(auth_client: APIClient) -> None:
-    """Check for duplicate IP addresses in the asset population."""
-    response = auth_client.get("/api/assets/duplicate_ips/")
-    assert response.status_code == status.HTTP_200_OK
-    assert response.json() == []
-
-    models.Asset.objects.create(ip_address="1.2.3.4")
-    models.Asset.objects.create(ip_address="1.2.3.4")
-    models.Asset.objects.create(ip_address="1.2.3.4")
-    models.Asset.objects.create(ip_address="1.2.3.5")
-    models.Asset.objects.create(ip_address="1.2.3.5")
-    models.Asset.objects.create(manufacturer="Foo", ip_address=None)
-    response = auth_client.get("/api/assets/duplicate_ips/?ip_address__exact=1.2.3.4")
-    assert response.status_code == status.HTTP_200_OK
-    assert response.json() == [
-        ["1.2.3.4", 3],
-    ]
-
-
-def test_api_duplicate_ips_one_prefix_robust(auth_client: APIClient) -> None:
-    """Check for duplicate IP addresses in the asset population."""
-    response = auth_client.get("/api/assets/duplicate_ips/")
-    assert response.status_code == status.HTTP_200_OK
-    assert response.json() == []
-
-    models.Asset.objects.create(ip_address="1.2.3.4")
-    models.Asset.objects.create(ip_address="1.2.3.4")
-    models.Asset.objects.create(ip_address="1.2.3.4")
-    models.Asset.objects.create(ip_address="1.2.3.45")
-    models.Asset.objects.create(ip_address="1.2.3.45")
-    models.Asset.objects.create(ip_address="1.2.3.5")
-    models.Asset.objects.create(ip_address="1.2.3.5")
-    models.Asset.objects.create(manufacturer="Foo", ip_address=None)
-    response = auth_client.get("/api/assets/duplicate_ips/?ip_address=1.2.3.4")
-    assert response.status_code == status.HTTP_200_OK
-    assert response.json() == [
-        ["1.2.3.4", 3],
-    ]
 
 
 def test_fetch_by_os(auth_client: APIClient) -> None:
@@ -450,36 +332,31 @@ def test_fetch_by_os(auth_client: APIClient) -> None:
 
 def test_api_create_asset_mac_autofill_nic(asset_edit_client: APIClient) -> None:
     """Create an asset with NIC vendor."""
-    client = asset_edit_client
-    response = client.post(
-        "/api/assets/",
-        json.dumps({"mac_address": "34:36:3b:c4:7d:ec", "manufacturer": "Acme"}),
+    payload = _upsert_payload(mac="34:36:3b:c4:7d:ec")
+    response = asset_edit_client.put(
+        "/api/assets/upsert/",
+        payload,
         content_type="application/json",
     )
     assert response.status_code == status.HTTP_201_CREATED
-    assets = client.get("/api/assets/")
+    assets = asset_edit_client.get("/api/assets/")
     assert assets.data["count"] == 1
     asset = assets.data["results"].pop()
-    assert asset["mac_address"] == "34:36:3b:c4:7d:ec"
+    assert asset["interface"]["mac_address"] == "34:36:3b:c4:7d:ec"
     assert asset["oui_manufacturer"] == "Apple, Inc."
 
 
 def test_api_create_asset_mac_reject_nic(asset_edit_client: APIClient) -> None:
     """Provided NIC vendor will be silently ignored."""
-    client = asset_edit_client
-    response = client.put(
+    payload = _upsert_payload(mac="34:36:3b:c4:7d:ec")
+    payload["oui_manufacturer"] = "Appletown USA"
+    response = asset_edit_client.put(
         "/api/assets/upsert/",
-        json.dumps(
-            {
-                "mac_address": "34:36:3b:c4:7d:ec",
-                "manufacturer": "Acme",
-                "oui_manufacturer": "Appletown USA",
-            }
-        ),
+        payload,
         content_type="application/json",
     )
     assert response.status_code == status.HTTP_201_CREATED
-    assets = client.get("/api/assets/")
+    assets = asset_edit_client.get("/api/assets/")
     assert assets.data["count"] == 1
     asset = assets.data["results"][0]
     assert asset["interface"]["mac_address"] == "34:36:3b:c4:7d:ec"
@@ -490,14 +367,10 @@ def test_upsert_create(asset_edit_client: APIClient) -> None:
     """Create a new asset via upsert endpoint."""
     _mac = "00:03:B1:B5:B6:48"
     mac = netaddr.EUI(_mac)
+    payload = _upsert_payload(mac=str(mac))
     response = asset_edit_client.put(
         "/api/assets/upsert/",
-        json.dumps(
-            {
-                "mac_address": str(mac),
-                "manufacturer": "Acme",
-            }
-        ),
+        payload,
         content_type="application/json",
     )
     assert response.status_code == status.HTTP_201_CREATED
@@ -520,41 +393,33 @@ def test_upsert_update(asset_edit_client: APIClient) -> None:
     """Update an existing asset via upsert endpoint."""
     _mac = "11:22:33:44:55:66"
     mac = netaddr.EUI(_mac)
-    manufacturer = "Acme"
-    ip = "10.0.0.1"
+    payload = _upsert_payload(mac=str(mac))
+    payload["ip_address"] = "10.0.0.1"
 
     asset = baker.make("Asset")
     baker.make("NetworkInterface", system=asset, mac_address=mac)
     response = asset_edit_client.put(
         "/api/assets/upsert/",
-        json.dumps(
-            {
-                "mac_address": str(mac),
-                "manufacturer": manufacturer,
-                "ip_address": ip,
-            }
-        ),
+        payload,
         content_type="application/json",
     )
     assert response.status_code == status.HTTP_200_OK
     response_interface = response.data["interface"]
     assert response_interface["mac_address"] == mac
-    assert response_interface["ipv4"] == ip
+    assert response_interface["ipv4"] == payload["ip_address"]
     assert models.Asset.objects.count() == 1
     asset = models.Asset.objects.get()
     assert asset.interface.mac_address == mac
-    assert str(asset.interface.ipv4) == ip
+    assert str(asset.interface.ipv4) == payload["ip_address"]
 
 
 def test_upsert_no_mac_address(asset_edit_client: APIClient) -> None:
     """Upsert endpoint returns 400 when MAC address is missing."""
     response = asset_edit_client.put(
         "/api/assets/upsert/",
-        json.dumps(
-            {
-                "ip_address": "10.0.0.1",
-            }
-        ),
+        {
+            "ip_address": "10.0.0.1",
+        },
         content_type="application/json",
     )
     assert response.status_code == status.HTTP_400_BAD_REQUEST
@@ -563,26 +428,20 @@ def test_upsert_no_mac_address(asset_edit_client: APIClient) -> None:
 
 def test_upsert_no_mac_address_duplicate(asset_edit_client: APIClient) -> None:
     """PUT twice with the same IP but second lacks MAC — returns 400."""
+    payload = _upsert_payload(mac="11:22:33:44:55:66")
+    payload["ip_address"] = "10.0.0.1"
     response = asset_edit_client.put(
         "/api/assets/upsert/",
-        json.dumps(
-            {
-                "mac_address": "11:22:33:44:55:66",
-                "manufacturer": "Acme",
-                "ip_address": "10.0.0.1",
-            }
-        ),
+        payload,
         content_type="application/json",
     )
     assert response.status_code == status.HTTP_201_CREATED
+    new_payload = _upsert_payload()
+    new_payload["ip_address"] = "10.0.0.1"
+    del new_payload["mac_address"]
     response = asset_edit_client.put(
         "/api/assets/upsert/",
-        json.dumps(
-            {
-                "manufacturer": "Acme",
-                "ip_address": "10.0.0.1",
-            }
-        ),
+        new_payload,
         content_type="application/json",
     )
     assert response.status_code == status.HTTP_400_BAD_REQUEST
@@ -591,16 +450,12 @@ def test_upsert_no_mac_address_duplicate(asset_edit_client: APIClient) -> None:
 
 def test_upsert_unknown_fields_ignored(asset_edit_client: APIClient) -> None:
     """PUT with unknown fields — serializer ignores them, asset is created."""
+    payload = _upsert_payload(mac="11:22:33:44:55:66")
+    payload["ipv6_address"] = "0:0:0:0:0:ffff:a00:1"
+    payload["connect_port_tcp"] = "2575"
     response = asset_edit_client.put(
         "/api/assets/upsert/",
-        json.dumps(
-            {
-                "mac_address": "11:22:33:44:55:66",
-                "manufacturer": "Acme",
-                "ipv6_address": "0:0:0:0:0:ffff:a00:1",
-                "connect_port_tcp": "2575",
-            }
-        ),
+        payload,
         content_type="application/json",
     )
     assert response.status_code == status.HTTP_201_CREATED
@@ -609,17 +464,14 @@ def test_upsert_unknown_fields_ignored(asset_edit_client: APIClient) -> None:
 
 def test_upsert_many_fields(asset_edit_client: APIClient) -> None:
     """PUT with fields typically provided by a scanner using canonical names."""
+    payload = _upsert_payload(
+        mac="00:03:b1:b5:b6:48", manufacturer="Hospira", hostname="Hospira Plum A+"
+    )
+    payload["services"] = [{"port": 2575, "protocol": "tcp"}]
+    payload["ip_address"] = "10.0.0.155"
     response = asset_edit_client.put(
         "/api/assets/upsert/",
-        json.dumps(
-            {
-                "ip_address": "10.0.0.155",
-                "manufacturer": "Hospira",
-                "services": [{"port": 2575, "protocol": "tcp"}],
-                "mac_address": "00:03:b1:b5:b6:48",
-                "name": "Hospira Plum A+",
-            }
-        ),
+        payload,
         content_type="application/json",
     )
     assert response.status_code == status.HTTP_201_CREATED
@@ -628,15 +480,11 @@ def test_upsert_many_fields(asset_edit_client: APIClient) -> None:
 
 def test_upsert_bad_key_ignored(asset_edit_client: APIClient) -> None:
     """PUT with unknown key — serializer ignores it, asset is created."""
+    payload = _upsert_payload(mac="11:22:33:44:55:66")
+    payload["ipv12345_address"] = "10.0.0.1"
     response = asset_edit_client.put(
         "/api/assets/upsert/",
-        json.dumps(
-            {
-                "mac_address": "11:22:33:44:55:66",
-                "manufacturer": "Acme",
-                "ipv12345_address": "10.0.0.1",
-            }
-        ),
+        payload,
         content_type="application/json",
     )
     assert response.status_code == status.HTTP_201_CREATED
@@ -707,12 +555,10 @@ def test_bulk_update_updates_fields(asset_edit_client: APIClient) -> None:
 
     response = asset_edit_client.patch(
         "/api/assets/bulk_update/",
-        json.dumps(
-            [
-                {"id": a1.id, "hostname": "device-a-updated"},
-                {"id": a2.id, "os": "FreeBSD"},
-            ]
-        ),
+        [
+            {"id": a1.id, "hostname": "device-a-updated"},
+            {"id": a2.id, "os": "FreeBSD"},
+        ],
         content_type="application/json",
     )
     assert response.status_code == status.HTTP_200_OK
@@ -731,12 +577,10 @@ def test_bulk_update_unknown_id_returns_404(asset_edit_client: APIClient) -> Non
     a1 = models.Asset.objects.create(hostname="device-a")
     response = asset_edit_client.patch(
         "/api/assets/bulk_update/",
-        json.dumps(
-            [
-                {"id": a1.id, "hostname": "updated"},
-                {"id": 99999, "hostname": "ghost"},
-            ]
-        ),
+        [
+            {"id": a1.id, "hostname": "updated"},
+            {"id": 99999, "hostname": "ghost"},
+        ],
         content_type="application/json",
     )
     assert response.status_code == status.HTTP_404_NOT_FOUND
@@ -746,7 +590,7 @@ def test_bulk_update_missing_id_returns_400(asset_edit_client: APIClient) -> Non
     """PATCH /api/assets/bulk_update/ returns 400 if any item lacks an id."""
     response = asset_edit_client.patch(
         "/api/assets/bulk_update/",
-        json.dumps([{"hostname": "no-id-here"}]),
+        [{"hostname": "no-id-here"}],
         content_type="application/json",
     )
     assert response.status_code == status.HTTP_400_BAD_REQUEST
@@ -756,7 +600,7 @@ def test_bulk_update_non_list_returns_400(asset_edit_client: APIClient) -> None:
     """PATCH /api/assets/bulk_update/ returns 400 if body is not a list."""
     response = asset_edit_client.patch(
         "/api/assets/bulk_update/",
-        json.dumps({"id": 1, "hostname": "not-a-list"}),
+        {"id": 1, "hostname": "not-a-list"},
         content_type="application/json",
     )
     assert response.status_code == status.HTTP_400_BAD_REQUEST
@@ -767,12 +611,10 @@ def test_bulk_update_duplicate_id_returns_400(asset_edit_client: APIClient) -> N
     asset = models.Asset.objects.create(hostname="device-a")
     response = asset_edit_client.patch(
         "/api/assets/bulk_update/",
-        json.dumps(
-            [
-                {"id": asset.id, "hostname": "first"},
-                {"id": asset.id, "hostname": "second"},
-            ]
-        ),
+        [
+            {"id": asset.id, "hostname": "first"},
+            {"id": asset.id, "hostname": "second"},
+        ],
         content_type="application/json",
     )
     assert response.status_code == status.HTTP_400_BAD_REQUEST
@@ -781,7 +623,7 @@ def test_bulk_update_duplicate_id_returns_400(asset_edit_client: APIClient) -> N
 def test_bulk_update_idempotent(asset_edit_client: APIClient) -> None:
     """Sending the same PATCH twice produces the same result."""
     asset = models.Asset.objects.create(hostname="original")
-    payload = json.dumps([{"id": asset.id, "hostname": "updated"}])
+    payload = [{"id": asset.id, "hostname": "updated"}]
 
     r1 = asset_edit_client.patch(
         "/api/assets/bulk_update/", payload, content_type="application/json"

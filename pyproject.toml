@@ -22,7 +22,6 @@ dependencies = [
     "django-jsx",
     "django-netfields",
     "django-simple-history",
-    "django-waffle>=4.0",
     "dj-database-url",
     "psycopg[binary]>=3",
     "click>=8.3.1",
@@ -32,6 +31,7 @@ dependencies = [
     "python-json-logger>=3.0",
     "redis>=7.4.0",
     "django-extensions>=4.1",
+    "django-waffle>=5.0.0",
 ]
 
 [project.optional-dependencies]
