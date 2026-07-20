@@ -20,4 +20,6 @@ def celery_app():
 def setup_assets(django_db_setup, django_db_blocker):
     """Set up the assets in the database."""
     with django_db_blocker.unblock():
-        django.core.management.call_command("loaddata", "data/assets.json")
+        django.core.management.call_command(
+            "create_assets", "--filepath", "data/assets.json"
+        )
