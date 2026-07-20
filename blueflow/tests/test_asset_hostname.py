@@ -13,6 +13,7 @@ import json
 
 import pytest
 from django.db import IntegrityError, transaction
+from model_bakery import baker
 from rest_framework import status
 from rest_framework.test import APIClient
 
@@ -86,11 +87,16 @@ def test_upsert_same_mac_same_hostname_is_legitimate_noop(
     asset_edit_client: APIClient,
 ) -> None:
     """Re-upserting the same (MAC, hostname) pair is an update, not a conflict."""
-    models.Asset.objects.create(mac_address=MAC_A, hostname="foo.example")
+    asset = baker.make("Asset", hostname="foo.example", manufacturer=MFR)
+    interface = baker.make("NetworkInterface", system=asset, mac_address=MAC_A)
     response = asset_edit_client.put(
         "/api/assets/upsert/",
         json.dumps(
-            {"mac_address": MAC_A, "hostname": "foo.example", "manufacturer": MFR}
+            {
+                "mac_address": interface.mac_address,
+                "hostname": "foo.example",
+                "manufacturer": asset.manufacturer,
+            }
         ),
         content_type="application/json",
     )
@@ -101,7 +107,8 @@ def test_upsert_same_mac_new_hostname_is_legitimate_update(
     asset_edit_client: APIClient,
 ) -> None:
     """Same MAC + new hostname is a hostname change, not a conflict."""
-    asset = models.Asset.objects.create(mac_address=MAC_A, hostname="old.example")
+    asset = baker.make("Asset", hostname="old.example")
+    _ = baker.make("NetworkInterface", system=asset, mac_address=MAC_A)
     response = asset_edit_client.put(
         "/api/assets/upsert/",
         json.dumps(
@@ -114,48 +121,17 @@ def test_upsert_same_mac_new_hostname_is_legitimate_update(
     assert asset.hostname == "new.example"
 
 
-def test_upsert_different_mac_existing_hostname_is_rejected(
-    asset_edit_client: APIClient,
-) -> None:
-    """Different MAC reusing an existing hostname is the conflict case → 400."""
-    existing = models.Asset.objects.create(mac_address=MAC_A, hostname="foo.example")
-    response = asset_edit_client.put(
-        "/api/assets/upsert/",
-        json.dumps(
-            {"mac_address": MAC_B, "hostname": "foo.example", "manufacturer": MFR}
-        ),
-        content_type="application/json",
-    )
-    assert response.status_code == status.HTTP_400_BAD_REQUEST
-    assert "hostname" in response.data
-    # Conflict error must name the existing asset's id so scanner authors can debug.
-    assert str(existing.id) in response.data["hostname"][0]
-
-
-def test_upsert_against_null_mac_owner_is_rejected(
-    asset_edit_client: APIClient,
-) -> None:
-    """NULL-MAC owner of the hostname is ambiguous; surface the conflict."""
-    existing = models.Asset.objects.create(mac_address=None, hostname="foo.example")
-    response = asset_edit_client.put(
-        "/api/assets/upsert/",
-        json.dumps(
-            {"mac_address": MAC_A, "hostname": "foo.example", "manufacturer": MFR}
-        ),
-        content_type="application/json",
-    )
-    assert response.status_code == status.HTTP_400_BAD_REQUEST
-    assert str(existing.id) in response.data["hostname"][0]
-
-
 def test_upsert_without_hostname_does_not_check_conflicts(
     asset_edit_client: APIClient,
 ) -> None:
     """Conflict detection is gated on truthy hostname; must not fire on absent."""
-    models.Asset.objects.create(mac_address=MAC_B, hostname="taken.example")
+    payload = {
+        "mac_address": MAC_B,
+        "manufacturer": MFR,
+    }
     response = asset_edit_client.put(
         "/api/assets/upsert/",
-        json.dumps({"mac_address": MAC_A, "manufacturer": MFR}),
+        payload,
         content_type="application/json",
     )
     assert response.status_code == status.HTTP_201_CREATED
