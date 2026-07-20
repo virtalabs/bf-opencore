@@ -87,7 +87,7 @@ def test_upsert_creates_usage_row_with_correct_hour(auth_client):
             format="json",
         )
     assert response.status_code == status.HTTP_201_CREATED
-    asset = models.Asset.objects.get(mac_address=asset_data["mac_address"])
+    asset = models.Asset.objects.get(interface__mac_address=asset_data["mac_address"])
     rows = list(asset.usage.all())
     assert len(rows) == 1
     assert rows[0].day_of_week == 1
@@ -187,7 +187,7 @@ def test_upserts_across_midnight_land_in_different_weekday_rows(auth_client):
             data=asset_data,
             format="json",
         )
-    asset = models.Asset.objects.get(mac_address=mac)
+    asset = models.Asset.objects.get(interface__mac_address=mac)
     rows = {u.day_of_week: u for u in asset.usage.all()}
     assert rows[1].hour_23 == 1
     assert rows[2].hour_00 == 1
@@ -208,7 +208,7 @@ def test_weekday_index_zero_is_monday(auth_client):
             data=asset_data,
             format="json",
         )
-    asset = models.Asset.objects.get(mac_address=asset_data["mac_address"])
+    asset = models.Asset.objects.get(interface__mac_address=asset_data["mac_address"])
     row = asset.usage.get()
     assert row.day_of_week == 0
 
@@ -240,7 +240,7 @@ def test_at_most_one_usage_row_per_asset_per_weekday(auth_client):
                 data=asset_data,
                 format="json",
             )
-    asset = models.Asset.objects.get(mac_address=asset_data["mac_address"])
+    asset = models.Asset.objects.get(interface__mac_address=asset_data["mac_address"])
     rows = list(asset.usage.all())
     assert len(rows) == 1
     assert rows[0].hour_14 == 3
