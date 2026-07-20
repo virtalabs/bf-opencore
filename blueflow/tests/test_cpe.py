@@ -7,6 +7,7 @@ those cases stay pure; the ``ViperAsset`` arm requires a saved asset.
 """
 
 import pytest
+from model_bakery import baker
 
 from blueflow.models import Asset
 from blueflow.models.cpe import UNKNOWN_CPE_VALUE, build_cpe
@@ -60,12 +61,13 @@ def test_build_cpe_dispatch_diverges_by_type(db):
     Proves the type-based dispatch picks the right field set — ``ViperAsset``
     lowercases and de-spaces vendor/product in ``__init__``, ``Asset`` does not.
     """
-    asset = Asset.objects.create(
+    asset = baker.make(
+        "Asset",
         hostname="cpe-dispatch.example.com",
-        ip_address="10.0.0.9",
         manufacturer="ACME Corp",
         model="Smart Pump 3000",
     )
+    _ = baker.make("NetworkInterface", ipv4="10.0.0.9", system=asset)
     raw = "cpe:2.3:h:ACME Corp:Smart Pump 3000:-:*:*:*:*:*:*:*"
     normalized = "cpe:2.3:h:acmecorp:smart_pump_3000:-:*:*:*:*:*:*:*"
     assert build_cpe(asset) == raw

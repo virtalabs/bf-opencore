@@ -24,3 +24,12 @@ class NetworkInterface(django_extensions.TimeStampedModel):
         verbose_name="IP address",
         max_length=36,
     )
+
+    @property
+    def ip_address(self) -> str:
+        if self.ipv4:
+            return str(self.ipv4)
+        if self.ipv6:
+            return str(self.ipv6)
+        msg = "Unable to determine ip address for interface"
+        raise TypeError(msg)
