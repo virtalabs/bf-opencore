@@ -53,7 +53,7 @@ def test_upsert_create_full_payload(asset_edit_client: APIClient) -> None:
     """PUT full scanner payload, assert 201, verify ip_address, name, services."""
     response = _put_upsert(asset_edit_client, SCANNER_FULL_PAYLOAD)
     assert response.status_code == status.HTTP_201_CREATED
-    assert response.data["ip_address"] == "10.0.0.155"
+    assert response.data["interface"]["ipv4"] == "10.0.0.155"
     assert response.data["name"] == "Infuse-O-Matic Peach B+"
     assert models.Asset.objects.count() == 1
     asset = models.Asset.objects.get()
@@ -79,7 +79,7 @@ def test_upsert_update_by_mac(asset_edit_client: APIClient) -> None:
     }
     response2 = _put_upsert(asset_edit_client, payload2)
     assert response2.status_code == status.HTTP_200_OK
-    assert response2.data["ip_address"] == "10.0.0.2"
+    assert response2.data["interface"]["ipv4"] == "10.0.0.2"
     assert response2.data["name"] == "Updated Name"
     assert models.Asset.objects.count() == 1
 
@@ -91,7 +91,7 @@ def test_upsert_minimal(asset_edit_client: APIClient) -> None:
         {"mac_address": "00:03:b1:b5:b6:48", "manufacturer": "Acme"},
     )
     assert response.status_code == status.HTTP_201_CREATED
-    assert response.data["mac_address"] == "00:03:b1:b5:b6:48"
+    assert response.data["interface"]["mac_address"] == "00:03:b1:b5:b6:48"
     assert models.Asset.objects.count() == 1
 
 
@@ -109,7 +109,7 @@ def test_upsert_token_auth(token_auth_client: APIClient) -> None:
     """PUT with Token auth header, assert 201."""
     response = _put_upsert(token_auth_client, SCANNER_FULL_PAYLOAD)
     assert response.status_code == status.HTTP_201_CREATED
-    assert response.data["mac_address"] == "00:03:b1:b5:b6:48"
+    assert response.data["interface"]["mac_address"] == "00:03:b1:b5:b6:48"
     assert models.Asset.objects.count() == 1
 
 
@@ -166,7 +166,7 @@ def test_upsert_services_merge(asset_edit_client: APIClient) -> None:
     response2 = _put_upsert(asset_edit_client, payload2)
     assert response2.status_code == status.HTTP_200_OK
 
-    asset = models.Asset.objects.get(mac_address="11:22:33:44:55:66")
+    asset = models.Asset.objects.get(interface__mac_address="11:22:33:44:55:66")
     assert _service_pairs(asset) == {
         (80, "tcp"),
         (443, "tcp"),
@@ -199,7 +199,7 @@ def test_upsert_services_cross_protocol_merge(asset_edit_client: APIClient) -> N
     )
     assert response2.status_code == status.HTTP_200_OK
 
-    asset = models.Asset.objects.get(mac_address="11:22:33:44:55:66")
+    asset = models.Asset.objects.get(interface__mac_address="11:22:33:44:55:66")
     assert _service_pairs(asset) == {(80, "tcp"), (80, "udp"), (53, "udp")}
 
 
@@ -217,7 +217,7 @@ def test_upsert_services_tcp_and_udp_coexist(asset_edit_client: APIClient) -> No
         },
     )
     assert response.status_code == status.HTTP_201_CREATED
-    asset = models.Asset.objects.get(mac_address="11:22:33:44:55:66")
+    asset = models.Asset.objects.get(interface__mac_address="11:22:33:44:55:66")
     assert _service_pairs(asset) == {(53, "tcp"), (53, "udp")}
 
 
@@ -234,9 +234,9 @@ def test_get_asset_by_id_after_upsert(asset_edit_client: APIClient) -> None:
     get_response = asset_edit_client.get(f"/api/assets/{asset_id}/")
     assert get_response.status_code == status.HTTP_200_OK
     assert get_response.data["id"] == asset_id
-    assert get_response.data["ip_address"] == "10.0.0.155"
+    assert get_response.data["interface"]["ipv4"] == "10.0.0.155"
     assert get_response.data["name"] == "Infuse-O-Matic Peach B+"
-    assert get_response.data["mac_address"] == "00:03:b1:b5:b6:48"
+    assert get_response.data["interface"]["mac_address"] == "00:03:b1:b5:b6:48"
 
 
 def test_get_asset_after_upsert_404(asset_edit_client: APIClient) -> None:
@@ -303,7 +303,7 @@ def test_upsert_then_list(asset_edit_client: APIClient) -> None:
     assert list_response.data["count"] == 1
     results = list_response.data["results"]
     assert len(results) == 1
-    assert results[0]["mac_address"] == "00:03:b1:b5:b6:48"
+    assert results[0]["interface"]["mac_address"] == "00:03:b1:b5:b6:48"
 
 
 @pytest.mark.skip(
@@ -382,7 +382,7 @@ def test_upsert_legacy_field_names_ignored(
     # Legacy fields are unknown to the serializer and silently dropped.
     # The asset is created with only mac_address.
     assert response.status_code == status.HTTP_201_CREATED
-    assert response.data["ip_address"] is None
+    assert response.data["interface"]["ipv4"] is None
     assert response.data["name"] is None
 
 
@@ -396,7 +396,7 @@ def test_upsert_modern_field_names(asset_edit_client: APIClient) -> None:
     }
     response = _put_upsert(asset_edit_client, payload)
     assert response.status_code == status.HTTP_201_CREATED
-    assert response.data["ip_address"] == "10.0.0.1"
+    assert response.data["interface"]["ipv4"] == "10.0.0.1"
     assert response.data["name"] == "Modern Device"
 
 
@@ -489,5 +489,5 @@ def test_upsert_services_deduped(asset_edit_client: APIClient) -> None:
         },
     )
     assert response.status_code == status.HTTP_201_CREATED
-    asset = models.Asset.objects.get(mac_address="11:22:33:44:55:66")
+    asset = models.Asset.objects.get(interface__mac_address="11:22:33:44:55:66")
     assert _service_pairs(asset) == {(80, "tcp"), (443, "tcp"), (8080, "tcp")}

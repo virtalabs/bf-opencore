@@ -7,6 +7,7 @@ http://pytest-django.readthedocs.io/en/latest/helpers.html
 import json
 
 import pytest
+from model_bakery import baker
 from rest_framework import status
 
 from blueflow import models
@@ -16,7 +17,8 @@ from blueflow import models
 
 def test_tag_asset_via_model(auth_client):
     """Tagging an asset adds tag info to an asset record."""
-    asset_obj = models.Asset.objects.create(hostname="foo.com")
+    asset_obj = baker.make("Asset", hostname="foo.com")
+    baker.make("NetworkInterface", system=asset_obj)
     asset = auth_client.get(f"/api/assets/{asset_obj.id}/").json()
     assert asset["hostname"] == "foo.com"
     assert asset["asset_tags"] == []
@@ -33,7 +35,8 @@ def test_tag_asset_via_model(auth_client):
 
 def test_tag_asset_via_api(biomed_client):
     """Admin can tag assets through assets/N/tags."""
-    asset_obj = models.Asset.objects.create(hostname="foo.com")
+    asset_obj = baker.make("Asset", hostname="foo.com")
+    baker.make("NetworkInterface", system=asset_obj)
     tag = models.Tag.objects.create(name="red", color="red")
     resp = biomed_client.post(
         f"/api/assets/{asset_obj.id}/tags/",
@@ -66,7 +69,7 @@ def test_get_assettag_via_api(biomed_client):
     """Admin can tag assets through assets/N/tags."""
     asset_obj = models.Asset.objects.create(hostname="foo.com")
     tag = models.Tag.objects.create(name="red", color="red")
-    dummy_asset_tag = models.AssetTag.objects.create(tag=tag, asset=asset_obj)
+    _ = models.AssetTag.objects.create(tag=tag, asset=asset_obj)
     resp = biomed_client.get("/api/assettags/")
     asset_tags = resp.json()["results"]
     assert len(asset_tags) == 1

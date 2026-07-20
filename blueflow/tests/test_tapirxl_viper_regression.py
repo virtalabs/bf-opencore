@@ -181,7 +181,7 @@ def test_device_class_alias_persisted_through_upsert(asset_edit_client) -> None:
         content_type="application/json",
     )
     assert resp.status_code == 201
-    asset = models.Asset.objects.get(mac_address="de:ad:be:ef:00:01")
+    asset = models.Asset.objects.get(interface__mac_address="de:ad:be:ef:00:01")
     assert asset.category == "patient_monitor"
 
 
@@ -207,7 +207,7 @@ def test_device_class_persisted_through_upsert(asset_edit_client) -> None:
         content_type="application/json",
     )
     assert resp.status_code == 201
-    asset = models.Asset.objects.get(mac_address="00:09:fb:bd:75:6d")
+    asset = models.Asset.objects.get(interface__mac_address="00:09:fb:bd:75:6d")
     assert asset.category == "patient_monitor"
 
 
@@ -236,7 +236,7 @@ def test_version_persisted_through_upsert(asset_edit_client) -> None:
         content_type="application/json",
     )
     assert resp.status_code == 201
-    asset = models.Asset.objects.get(mac_address="aa:bb:cc:dd:ee:ff")
+    asset = models.Asset.objects.get(interface__mac_address="aa:bb:cc:dd:ee:ff")
     assert asset.app_sw_version == "1.2.3"
 
 
@@ -282,14 +282,14 @@ def test_upsert_then_get_gehealthcare_records(asset_edit_client) -> None:
 
     list_resp = asset_edit_client.get("/api/assets/")
     assert list_resp.status_code == 200
-    by_mac = {a["mac_address"]: a for a in list_resp.data["results"]}
+    by_mac = {a["interface"]["mac_address"]: a for a in list_resp.data["results"]}
 
     for record in records:
         mac = record["mac_address"].lower()
         assert mac in by_mac, f"{record['hostname']} ({mac}) not in list response"
         asset = by_mac[mac]
         assert asset["hostname"] == record["hostname"]
-        assert asset["ip_address"] == record["ip_address"]
+        assert asset["interface"]["ipv4"] == record["ip_address"]
         assert asset["manufacturer"] == record["manufacturer"]
         assert asset["model"] == record["product"]
         assert asset["category"] == record["device_class"]

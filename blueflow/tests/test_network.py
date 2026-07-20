@@ -3,18 +3,17 @@
 import json
 
 import pytest
+from model_bakery import baker
 from rest_framework import status
 
 from blueflow import models
-
-# models do have 'objects' member, but it's being lazy loaded
 
 
 def test_create_empty_network(nwk_authorized_client):
     """Creating a network without a name is not allowed."""
     response = nwk_authorized_client.post(
         "/api/networks/",
-        # json.dumps({'name': None}),
+        {"name": None},
         content_type="application/json",
     )
     assert response.status_code == status.HTTP_400_BAD_REQUEST
@@ -77,7 +76,6 @@ def test_create_network_then_cidr(supplied_cidr, resulting_cidr, nwk_authorized_
         json.dumps({"cidr": supplied_cidr}),
         content_type="application/json",
     )
-    # assert response.content == '{}'
     assert response.status_code == status.HTTP_200_OK
     network = models.Network.objects.first()
     assert network.name == "spam"
@@ -87,7 +85,6 @@ def test_create_network_then_cidr(supplied_cidr, resulting_cidr, nwk_authorized_
 @pytest.mark.parametrize(("supplied_cidr", "resulting_cidr"), CIDR_TEST_DATA)
 def test_get_cidr(supplied_cidr, resulting_cidr, nwk_authorized_client):
     """Create a network + CIDR, then get CIDR."""
-    # using same test data, ignoring result
     response = nwk_authorized_client.post(
         "/api/networks/", json.dumps({"name": "spam"}), content_type="application/json"
     )
@@ -197,11 +194,7 @@ def test_create_cidr_network(nwk_authorized_client):
         json.dumps({"name": "spam", "cidr": "10.0.1.2"}),
         content_type="application/json",
     )
-    # Don't expect this create to work
     assert response.status_code == status.HTTP_201_CREATED
-    # network = models.Network.objects.first()
-    # assert network.name == 'spam'
-    # assert network.cidr == ['10.0.1.2']
 
 
 @pytest.mark.xfail(
@@ -210,7 +203,6 @@ def test_create_cidr_network(nwk_authorized_client):
 )
 def test_patch_bad_cidr(nwk_authorized_client):
     """Modify the CIDR in an existing network."""
-    # Create a network
     response = nwk_authorized_client.post(
         "/api/networks/", json.dumps({"name": "spam"}), content_type="application/json"
     )
@@ -222,24 +214,21 @@ def test_patch_bad_cidr(nwk_authorized_client):
         json.dumps({"cidr": "spam"}),
         content_type="application/json",
     )
-    assert response.status_code == status.HTTP_400_BAD_REQUEST  # This should fail
+    assert response.status_code == status.HTTP_400_BAD_REQUEST
 
 
 def test_cidr_bad_json(nwk_authorized_client):
     """Verify list of CIDRs is valid JSON."""
-    # Create a network
     response = nwk_authorized_client.post(
         "/api/networks/", json.dumps({"name": "spam"}), content_type="application/json"
     )
     assert response.status_code == status.HTTP_201_CREATED
-    # Add CIDR
     response = nwk_authorized_client.patch(
         response.data["url"],
         json.dumps({"cidr": "192.168.0.0/16"}),
         content_type="application/json",
     )
     assert response.status_code == status.HTTP_200_OK
-    # Parse list of CIDRs, should work without throwing an exception
     cidr_list = response.data["cidr"]
     assert cidr_list[0] == "192.168.0.0/16"
 
@@ -250,7 +239,8 @@ def test_cidr_bad_json(nwk_authorized_client):
 
 def test_asset_in_network_old_api(nwk_authorized_client):
     """Ensure we can determine network membership."""
-    dummy_asset = models.Asset.objects.create(ip_address="10.0.0.1")
+    asset = baker.make("Asset")
+    baker.make("NetworkInterface", system=asset, ipv4="10.0.0.1")
     network = models.Network.objects.create()
     network.cidr = ["10.0.0.0/24"]
     response = nwk_authorized_client.get(f"/api/networks/{network.id}/assets/")
@@ -259,8 +249,10 @@ def test_asset_in_network_old_api(nwk_authorized_client):
 
 def test_asset_in_network_new_api(nwk_authorized_client):
     """Ensure we can determine network membership."""
-    asset = models.Asset.objects.create(ip_address="10.0.0.1")
-    dummy_asset_out_of_network = models.Asset.objects.create(ip_address="10.0.1.1")
+    asset = baker.make("Asset")
+    baker.make("NetworkInterface", system=asset, ipv4="10.0.0.1")
+    out_of_network = baker.make("Asset")
+    baker.make("NetworkInterface", system=out_of_network, ipv4="10.0.1.1")
     network = models.Network.objects.create()
     network.cidr = ["10.0.0.0/24"]
     response = nwk_authorized_client.get(f"/api/assets/?network={network.id}")
@@ -284,7 +276,9 @@ def test_asset_big_network(nwk_authorized_client):
     ]
     asset = {}
     for ip_address in asset_ips:
-        asset[ip_address] = models.Asset.objects.create(ip_address=ip_address)
+        current = baker.make("Asset")
+        baker.make("NetworkInterface", system=current, ipv4=ip_address)
+        asset[ip_address] = current
     network_big = models.Network.objects.create(name="big")
     network_big.cidr = ["192.168.218.0/24"]
     network_small = models.Network.objects.create(name="small")
@@ -293,9 +287,12 @@ def test_asset_big_network(nwk_authorized_client):
         f"/api/assets/?network={network_small.id}"
     )
     assets = response_small.data["results"]
-    assert len(assets) == 2  # noqa: PLR2004
-    assert {a["ip_address"] for a in assets} == {"192.168.218.101", "192.168.218.102"}
+    assert len(assets) == 2
+    assert {a["interface"]["ipv4"] for a in assets} == {
+        "192.168.218.101",
+        "192.168.218.102",
+    }
     response_big = nwk_authorized_client.get(f"/api/assets/?network={network_big.id}")
     assets = response_big.data["results"]
-    assert len(assets) == 9  # noqa: PLR2004
-    assert {a["ip_address"] for a in assets} == set(asset_ips)
+    assert len(assets) == 9
+    assert {a["interface"]["ipv4"] for a in assets} == set(asset_ips)
