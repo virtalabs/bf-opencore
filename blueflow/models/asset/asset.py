@@ -21,12 +21,6 @@ from . import system, util
 logger = logging.getLogger(__name__)
 
 
-class AssetManager(models.Manager):
-    def create(self, *args, **kwargs):
-        # assert 0
-        return super().create(*args, **kwargs)
-
-
 class Asset(system.System):
     """Asset represents any system internal to the owned network.
 
@@ -137,7 +131,6 @@ class Asset(system.System):
         through=tag.AssetTag,
     )
     history = simple_history.HistoricalRecords()
-    objects = AssetManager()
 
     class Meta:
         constraints: typing.ClassVar = (
