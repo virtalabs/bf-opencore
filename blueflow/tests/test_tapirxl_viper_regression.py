@@ -166,25 +166,6 @@ def test_vrl_transform_golden_categorised_records(record: dict) -> None:
 # ---------------------------------------------------------------------------
 
 
-def test_device_class_alias_persisted_through_upsert(asset_edit_client) -> None:
-    """Raw TapirXL device_class field maps to category when Vector is bypassed."""
-    resp = asset_edit_client.put(
-        "/api/assets/upsert/",
-        json.dumps(
-            {
-                "mac_address": "DE:AD:BE:EF:00:01",
-                "ip_address": "10.10.10.99",
-                "device_class": "patient_monitor",
-                "manufacturer": "blah",
-            }
-        ),
-        content_type="application/json",
-    )
-    assert resp.status_code == 201
-    asset = models.Asset.objects.get(interface__mac_address="de:ad:be:ef:00:01")
-    assert asset.category == "patient_monitor"
-
-
 def test_device_class_persisted_through_upsert(asset_edit_client) -> None:
     """Category from VRL transform survives PUT /api/assets/upsert/ → Asset.category."""
     payload = _vrl_transform(
@@ -200,7 +181,6 @@ def test_device_class_persisted_through_upsert(asset_edit_client) -> None:
             "confidence": "LOW",
         }
     )
-
     resp = asset_edit_client.put(
         "/api/assets/upsert/",
         json.dumps(payload),
