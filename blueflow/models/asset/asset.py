@@ -173,8 +173,7 @@ class Asset(system.System):
         return self.interface.mac_address
 
     def __str__(self) -> str:
-        ip = self.interface.ipv4 or self.interface.ipv6
-        return f"{self.id}:{self.hostname}:{ip}"
+        return f"{self.id}:{self.hostname}:{self.ip_address}"
 
     def add_service(self, port: int, protocol: str) -> bool:
         """Idempotently link this asset to a ``(port, protocol)`` observation.
