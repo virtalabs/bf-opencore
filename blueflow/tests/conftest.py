@@ -7,6 +7,7 @@ from dataclasses import dataclass
 
 import pytest
 from django.test import override_settings
+from model_bakery import baker
 from rest_framework.authtoken.models import Token
 from rest_framework.test import APIClient
 
@@ -88,7 +89,8 @@ def cleandb(db):
 @pytest.fixture
 def cfield(cleandb):
     """Prepare fixtures: an asset, custom field names, and a custom field value."""
-    asset = models.Asset.objects.create(hostname="foo.com")
+    asset = baker.make("Asset", hostname="foo.com")
+    baker.make("NetworkInterface", system=asset)
     _ = models.AssetCustomFieldName.objects.create(field_name="sparkliness")
     shiny_field = models.AssetCustomFieldName.objects.create(field_name="shinyness")
     _ = models.AssetCustomField.objects.create(

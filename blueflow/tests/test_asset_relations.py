@@ -4,6 +4,8 @@ Uses built-in pytest-django text fixtures from
 http://pytest-django.readthedocs.io/en/latest/helpers.html
 """
 
+from model_bakery import baker
+
 from blueflow import models
 
 ################################################################
@@ -24,7 +26,8 @@ def test_get_asset_tags_obsolete(auth_client):
     NOTE: will remove this route; then change assertion to
           assert response.status_code == status.HTTP_404_NOT_FOUND (or 405)
     """
-    asset = models.Asset.objects.create(hostname="foo.com")
+    asset = baker.make("Asset", hostname="foo.com")
+    baker.make("NetworkInterface", system=asset)
     tag_red = models.Tag.objects.create(name="red", color="red")
     tag_green = models.Tag.objects.create(name="green", color="green")
     _ = models.Tag.objects.create(name="blue", color="blue")
@@ -60,7 +63,8 @@ def test_get_asset_network_old_api(admin_client):
     NOTE: will remove this route; then change assertion to
           assert response.status_code == status.HTTP_404_NOT_FOUND
     """
-    asset = models.Asset.objects.create(ip_address="10.0.0.1")
+    asset = baker.make("Asset")
+    baker.make("NetworkInterface", system=asset, ipv4="10.0.0.1")
     network = models.Network.objects.create()
     network.cidr = ["10.0.0.0/24"]
     response = admin_client.get(f"/api/assets/{asset.pk}/networks/")
@@ -71,8 +75,10 @@ def test_get_asset_network_old_api(admin_client):
 
 def test_get_asset_network_new_api(admin_client):
     """Ensure we can determine which assets belong in network."""
-    asset = models.Asset.objects.create(ip_address="10.0.0.1")
-    _ = models.Asset.objects.create(ip_address="10.0.1.1")
+    asset = baker.make("Asset")
+    baker.make("NetworkInterface", system=asset, ipv4="10.0.0.1")
+    other = baker.make("Asset")
+    baker.make("NetworkInterface", system=other, ipv4="10.0.1.1")
     network_blue = models.Network.objects.create(name="blue")
     network_blue.cidr = ["10.0.0.0/24"]
     network_red = models.Network.objects.create(name="red")

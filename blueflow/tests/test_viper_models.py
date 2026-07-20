@@ -31,7 +31,10 @@ def _make_asset(**overrides) -> models.Asset:
     if "services" in overrides:
         services = overrides.pop("services")
     defaults.update(overrides)
+    ipv4 = defaults.pop("ip_address")
+    mac_address = defaults.pop("mac_address")
     asset = baker.make("Asset", **defaults)
+    baker.make("NetworkInterface", system=asset, ipv4=ipv4, mac_address=mac_address)
     if services is None:
         return asset
     for s in services:
