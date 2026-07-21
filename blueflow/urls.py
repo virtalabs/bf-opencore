@@ -18,11 +18,11 @@ router.register(r"assetgroups", views.AssetGroupViewSet)
 router.register(r"assettags", views.AssetTagViewSet)
 router.register(r"cidrs", views.CidrViewSet)
 router.register(r"groups", views.GroupViewSet)
-router.register(r"networks", views.NetworkViewSet)
 router.register(r"tags", views.TagViewSet)
 router.register(r"savedsearches", views.SavedSearchViewSet)
 router.register(r"scans", views.ScanViewSet)
 router.register(r"users", views.UserViewSet)
+
 # Celery Beat (periodic tasks) models
 router.register(r"crontabs", views.CrontabScheduleViewSet)
 router.register(r"intervals", views.IntervalScheduleViewSet)
