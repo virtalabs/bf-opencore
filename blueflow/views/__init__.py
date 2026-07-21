@@ -12,7 +12,6 @@ from .periodic_task import (
     PeriodicTaskSerializer,
     PeriodicTaskViewSet,
 )
-from .scan import ScanSerializer, ScanViewSet
 from .tag import TagSerializer, TagViewSet
 from .user import UserSerializer, UserViewSet
 from .viper import ViperViewSet
@@ -32,8 +31,6 @@ __all__ = [
     "IntervalScheduleViewSet",
     "PeriodicTaskSerializer",
     "PeriodicTaskViewSet",
-    "ScanSerializer",
-    "ScanViewSet",
     "TagSerializer",
     "TagViewSet",
     "UserSerializer",

@@ -7,7 +7,6 @@ from .constants import PORT_MAX, PORT_MIN, PROTOCOL_MAX_LENGTH
 from .group import AssetGroup, Group
 from .interface import NetworkInterface
 from .ports_protocol import AssetPortProtocol, PortProtocol
-from .scan import Scan
 from .tag import AssetTag, Tag
 from .usage import DayOfWeek, Usage
 from .viper import ViperWebhookJob, ViperWebhookRequest
@@ -28,7 +27,6 @@ __all__ = [
     "Group",
     "NetworkInterface",
     "PortProtocol",
-    "Scan",
     "System",
     "Tag",
     "Usage",
