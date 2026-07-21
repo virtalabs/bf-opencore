@@ -18,7 +18,6 @@ router.register(r"assetgroups", views.AssetGroupViewSet)
 router.register(r"assettags", views.AssetTagViewSet)
 router.register(r"groups", views.GroupViewSet)
 router.register(r"tags", views.TagViewSet)
-router.register(r"scans", views.ScanViewSet)
 router.register(r"users", views.UserViewSet)
 
 # Celery Beat (periodic tasks) models
