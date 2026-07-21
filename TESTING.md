@@ -138,8 +138,6 @@ In blueflow, all role-scoped clients are aliases to `auth_client` (adds per-reso
 - **`media_root`** — Uses `tmp_path` for `MEDIA_ROOT` so attachment tests don't touch the project filesystem. Use for any test that uploads files.
 - **`cleandb`** — Removes migration-seeded custom field names so tests start with a clean slate.
 - **`cfield`** — Depends on `cleandb`. Creates an asset, custom field names (`sparkliness`, `shinyness`), and a custom field value.
-- **`completables`** — Sample assets, tags, vulnerabilities, groups, and networks for autocomplete/search tests.
-- **`acme_assets`** — Alias for `completables`.
 - **`asset_groups`** — Two assets, three groups, and three asset-group links (named tuple `AssetGroups`).
 - **`asset_vulnerabilities`** — Two assets, four vulnerabilities, and linking records.
 - **`complete_us`** — Six assets (manufacturer/model pairs) for autocomplete field tests.
