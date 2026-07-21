@@ -8,13 +8,8 @@ import pytest
 from django.apps import apps
 
 from blueflow.celery.tasks import viper_webhook
-from blueflow.models import ViperWebhookJob
+from blueflow.models import Asset, ViperWebhookJob
 from blueflow.models.viper import ViperWebhookRequest
-
-
-def get_asset_count():
-    Asset = apps.get_model("blueflow", "Asset")
-    return Asset.objects.count()
 
 
 def test_viper_webhook_output_no_assets(celery_app):
@@ -53,7 +48,7 @@ def test_viper_webhook_output_with_all_assets(celery_app, setup_assets):
     Ensure it's the same as the expected output.
     """
     page_size = 10
-    total_assets = get_asset_count()
+    total_assets = Asset.objects.count()
     total_pages = math.ceil(total_assets / page_size)
     request_id = str(uuid.uuid4())
     with patch("blueflow.celery.tasks.requests.post") as mock_post:
