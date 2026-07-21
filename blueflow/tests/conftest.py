@@ -100,44 +100,6 @@ def cfield(cleandb):
     )
 
 
-@pytest.fixture
-def completables(db):
-    """Sample assets and other items to be completed."""
-    models.Asset.objects.create(mac_address="88:aa:bb:cc:dd:ee")
-    models.Asset.objects.create(
-        manufacturer="ACME Inc.", model="Instant Tunnel", serial_number="WILE-E-1234"
-    )
-    models.Asset.objects.create(
-        manufacturer="ACME", model="Instant Tunnel", serial_number="RR-6789"
-    )
-    w95 = models.Asset.objects.create(os="Windows 95", ip_address="10.2.3.5")
-    models.Tag.objects.create(name="ACME products")
-    models.Tag.objects.create(name="FooTag")
-    barv = models.Vulnerability.objects.create(name="foo", synopsis="Bar Baz Quux")
-    models.AssetVulnerability.objects.create(asset=w95, vulnerability=barv)
-    grp = models.Group.objects.create(name="Bargle")
-    models.AssetGroup.objects.create(asset=w95, group=grp)
-    blorp = models.Network.objects.create(name="BlorpNet")
-    blorp.cidr = ["10.2.3.0/24"]
-    blorp.save()
-
-
-@pytest.fixture
-def complete_us(db):
-    """Sample assets for autocomplete field tests."""
-    mfmods = {
-        "Foo": ["One", "Two", "Three"],
-        "Bar": ["Four", "Five", "Six"],
-    }
-    assets = []
-    for manuf, model_list in mfmods.items():
-        assets.extend(
-            models.Asset(manufacturer=manuf, model=model_name)
-            for model_name in model_list
-        )
-    models.Asset.objects.bulk_create(assets)
-
-
 @dataclass(frozen=True)
 class AssetGroupsFixture:
     """Bundle of two assets, three groups, and the three join rows linking them.
@@ -173,10 +135,3 @@ def asset_groups(db):
         link_green_a=models.AssetGroup.objects.create(group=group_green, asset=asset_a),
         link_green_b=models.AssetGroup.objects.create(group=group_green, asset=asset_b),
     )
-
-
-# Alias for tests that refer to completables as "acme_assets" (e.g. test_saved_search)
-@pytest.fixture
-def acme_assets(completables):
-    """Alias for completables (same fixture data)."""
-    return completables
