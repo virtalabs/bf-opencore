@@ -7,12 +7,7 @@ from .models import (
     AssetGroup,
     AssetTag,
     Attachment,
-    Cidr,
-    EndpointSuggestion,
     Group,
-    Network,
-    NetworkEndpoint,
-    SavedSearch,
     Scan,
     Tag,
     ViperWebhookJob,
@@ -49,33 +44,8 @@ class AttachmentAdmin(admin.ModelAdmin):
     pass
 
 
-@admin.register(Cidr)
-class CidrAdmin(admin.ModelAdmin):
-    pass
-
-
-@admin.register(EndpointSuggestion)
-class EndpointSuggestionAdmin(admin.ModelAdmin):
-    pass
-
-
 @admin.register(Group)
 class GroupAdmin(admin.ModelAdmin):
-    pass
-
-
-@admin.register(Network)
-class NetworkAdmin(admin.ModelAdmin):
-    pass
-
-
-@admin.register(NetworkEndpoint)
-class NetworkEndpointAdmin(admin.ModelAdmin):
-    pass
-
-
-@admin.register(SavedSearch)
-class SavedSearchAdmin(admin.ModelAdmin):
     pass
 
 
