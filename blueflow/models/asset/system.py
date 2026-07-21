@@ -14,11 +14,18 @@ class System(django_extensions.TimeStampedModel):
     """
 
     def add_or_update_interface(
-        self, *, mac_address: str | None = None, ips: list[str] | None = None
+        self,
+        *,
+        mac_address: netaddr.EUI | str | None = None,
+        ips: list[str] | None = None,
     ) -> NetworkInterface:
         kwargs = {}
         if mac_address is not None:
-            mac = netaddr.EUI(mac_address)
+            mac = (
+                netaddr.EUI(mac_address)
+                if isinstance(mac_address, str)
+                else mac_address
+            )
             kwargs["mac_address"] = mac
         if ips is not None:
             for ip in ips:

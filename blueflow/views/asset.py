@@ -5,6 +5,7 @@ import typing
 
 import django_filters
 import django_filters.rest_framework.filters as drf_filters
+import netaddr
 import netfields
 from django.db import transaction
 from django.db.models import QuerySet
@@ -79,11 +80,17 @@ class AssetUpsertSerializer(serializers.Serializer):
         required=False, allow_blank=True, allow_null=True
     )
     category = serializers.CharField(required=False, allow_blank=True, allow_null=True)
-    device_class = serializers.CharField(
-        required=False, allow_blank=True, allow_null=True
-    )
     external_keys = serializers.JSONField(required=False, allow_null=True)
     services = AssetServiceSerializer(many=True, required=False)
+
+    def validate_mac_address(self, mac_address: str) -> netaddr.EUI:
+        try:
+            mac = netaddr.EUI(mac_address)
+            return mac
+        except netaddr.AddrConversionError as e:
+            raise serializers.ValidationError from e
+        except netaddr.AddrFormatError as e:
+            raise serializers.ValidationError from e
 
     def validate_services(
         self, services: list[dict[str, int | str]]
@@ -395,8 +402,10 @@ class AssetViewSet(
     #
     # Only `usage` is currently prefetched (see test_asset_list_usage_does_
     # not_n_plus_one). The remaining relations above are unaddressed.
-    queryset = models.Asset.objects.prefetch_related("usage").prefetch_related(
-        "port_protocols__port_protocol"
+    queryset = (
+        models.Asset.objects.prefetch_related("usage")
+        .prefetch_related("port_protocols__port_protocol")
+        .prefetch_related("interface")
     )
     serializer_class = AssetRequestSerializer
 
@@ -551,5 +560,4 @@ class AssetViewSet(
             serializer.data,
             status=status.HTTP_201_CREATED if created else status.HTTP_200_OK,
         )
-        # assert 0
         return response
