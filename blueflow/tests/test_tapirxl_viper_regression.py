@@ -20,7 +20,6 @@ below must be updated to match.
 import json
 import uuid
 from pathlib import Path
-from unittest.mock import patch
 
 import pytest
 from django.conf import settings
@@ -276,7 +275,9 @@ def test_upsert_then_get_gehealthcare_records(asset_edit_client) -> None:
         assert asset["app_sw_version"] == record["version"]
 
 
-def test_viper_payload_for_gehealthcare_records(asset_edit_client, celery_app) -> None:
+def test_viper_payload_for_gehealthcare_records(
+    asset_edit_client, celery_app, mock_post
+) -> None:
     """Upsert two TapirXL GE Healthcare records and assert what Viper receives."""
     records = _GEHEALTHCARE_RECORDS
 
@@ -290,19 +291,18 @@ def test_viper_payload_for_gehealthcare_records(asset_edit_client, celery_app) -
             f"Upsert failed for {record['hostname']}: {resp.data}"
         )
 
-    with patch("blueflow.celery.tasks.requests.post") as mock_post:
-        tasks.viper_webhook.apply(
-            args=[
-                models.ViperWebhookRequest(
-                    callback="https://viper.example.com/integration/",
-                    since="1800-01-01T00:00:00Z",
-                    before=None,
-                    max_pages=100,
-                    page_size=100,
-                ).to_dict(),
-                str(uuid.uuid4()),
-            ]
-        )
+    tasks.viper_webhook.apply(
+        args=[
+            models.ViperWebhookRequest(
+                callback="https://viper.example.com/integration/",
+                since="1800-01-01T00:00:00Z",
+                before=None,
+                max_pages=100,
+                page_size=100,
+            ).to_dict(),
+            str(uuid.uuid4()),
+        ]
+    )
 
     # Both records fit one page → exactly one outbound POST.
     assert mock_post.call_count == 1
@@ -386,7 +386,9 @@ def test_viper_payload_for_gehealthcare_records(asset_edit_client, celery_app) -
 
 
 def test_golden_device_class_propagates_to_viper_role(
-    asset_edit_client, celery_app
+    asset_edit_client,
+    celery_app,
+    mock_post,
 ) -> None:
     """All 8 golden TapirXL records: device_class reaches Viper as role.
 
@@ -412,25 +414,19 @@ def test_golden_device_class_propagates_to_viper_role(
             f"Upsert failed for {record['ip_address']}: {resp.data}"
         )
 
-    # Phase 2 — run the Viper webhook, capturing every outbound POST
-    with patch("blueflow.celery.tasks.requests.post") as mock_post:
-        return_value = mock_post.return_value
-        return_value.status_code = 200
-        return_value.json = dict
-        return_value.raise_for_status.return_value = None
-        tasks.viper_webhook.apply(
-            args=[
-                models.ViperWebhookRequest(
-                    callback="https://viper.example.com/integration/",
-                    since="1800-01-01T00:00:00Z",
-                    before=None,
-                    max_pages=100,
-                    page_size=100,
-                ).to_dict(),
-                str(uuid.uuid4()),
-            ],
-            throw=True,
-        )
+    tasks.viper_webhook.apply(
+        args=[
+            models.ViperWebhookRequest(
+                callback="https://viper.example.com/integration/",
+                since="1800-01-01T00:00:00Z",
+                before=None,
+                max_pages=100,
+                page_size=100,
+            ).to_dict(),
+            str(uuid.uuid4()),
+        ],
+        throw=True,
+    )
 
     # Flatten all pages into a single IP → role map
     all_items = [
