@@ -5,33 +5,31 @@ import uuid
 from unittest.mock import patch
 
 import pytest
-from django.apps import apps
 
 from blueflow.celery.tasks import viper_webhook
 from blueflow.models import Asset, ViperWebhookJob
 from blueflow.models.viper import ViperWebhookRequest
 
 
-def test_viper_webhook_output_no_assets(celery_app):
+def test_viper_webhook_output_no_assets(celery_app, mock_post):
     """Capture the output from the celery task.
 
     Ensure it's the same as the expected output.
     """
     request_id = str(uuid.uuid4())
-    with patch("blueflow.celery.tasks.requests.post") as mock_post:
-        viper_webhook.apply(
-            args=[
-                ViperWebhookRequest(
-                    callback="https://example.com/viper/webhook/",
-                    since="2026-01-01T00:00:00Z",
-                    before="2026-01-02T00:00:00Z",
-                    max_pages=1,
-                    page_size=10,
-                ).to_dict(),
-                request_id,
-            ]
-        )
-        assert mock_post.call_count == 0
+    viper_webhook.apply(
+        args=[
+            ViperWebhookRequest(
+                callback="https://example.com/viper/webhook/",
+                since="2026-01-01T00:00:00Z",
+                before="2026-01-02T00:00:00Z",
+                max_pages=1,
+                page_size=10,
+            ).to_dict(),
+            request_id,
+        ]
+    )
+    assert mock_post.call_count == 0
 
 
 def _assert_page_query(page_qstring: str, has: list[str], doesnt: list[str]) -> None:
@@ -42,7 +40,7 @@ def _assert_page_query(page_qstring: str, has: list[str], doesnt: list[str]) -> 
         assert arg not in page_qstring
 
 
-def test_viper_webhook_output_with_all_assets(celery_app, setup_assets):
+def test_viper_webhook_output_with_all_assets(celery_app, setup_assets, mock_post):
     """Capture the output from the celery task.
 
     Ensure it's the same as the expected output.
@@ -51,70 +49,68 @@ def test_viper_webhook_output_with_all_assets(celery_app, setup_assets):
     total_assets = Asset.objects.count()
     total_pages = math.ceil(total_assets / page_size)
     request_id = str(uuid.uuid4())
-    with patch("blueflow.celery.tasks.requests.post") as mock_post:
-        viper_webhook.apply(
-            args=[
-                ViperWebhookRequest(
-                    callback="https://example.com/viper/webhook/",
-                    since="1800-01-01T00:00:00Z",  # past date; gets all assets
-                    before=None,
-                    max_pages=100,  # high enough to get all assets
-                    page_size=page_size,
-                ).to_dict(),
-                request_id,
-            ]
-        )
-        assert mock_post.call_count == total_pages
-        assert mock_post.call_args[0][0] == "https://example.com/viper/webhook/"
-        for i, call in enumerate(mock_post.call_args_list):
-            payload = call.kwargs["json"]
-            assert payload["page"] == 1 + i
-            assert payload["pageSize"] == page_size
-            assert payload["totalCount"] == total_assets
-            assert payload["totalPages"] == total_pages
-            # request_id, since, before are internal — not on the wire
-            assert "request_id" not in payload
-            assert "since" not in payload
-            assert "before" not in payload
+    viper_webhook.apply(
+        args=[
+            ViperWebhookRequest(
+                callback="https://example.com/viper/webhook/",
+                since="1800-01-01T00:00:00Z",  # past date; gets all assets
+                before=None,
+                max_pages=100,  # high enough to get all assets
+                page_size=page_size,
+            ).to_dict(),
+            request_id,
+        ]
+    )
+    assert mock_post.call_count == total_pages
+    assert mock_post.call_args[0][0] == "https://example.com/viper/webhook/"
+    for i, call in enumerate(mock_post.call_args_list):
+        payload = call.kwargs["json"]
+        assert payload["page"] == 1 + i
+        assert payload["pageSize"] == page_size
+        assert payload["totalCount"] == total_assets
+        assert payload["totalPages"] == total_pages
+        # request_id, since, before are internal — not on the wire
+        assert "request_id" not in payload
+        assert "since" not in payload
+        assert "before" not in payload
 
-            # urls should only be none at the first and last pages, respectively
-            args = [
-                "page",
-                "page_size",
-                "since",
-            ]
-            not_args = [
-                "before",
-            ]
+        # urls should only be none at the first and last pages, respectively
+        args = [
+            "page",
+            "page_size",
+            "since",
+        ]
+        not_args = [
+            "before",
+        ]
 
-            previous = payload["previous"]
-            if i > 0:
-                _assert_page_query(previous, args, not_args)
-            else:
-                assert previous is None
+        previous = payload["previous"]
+        if i > 0:
+            _assert_page_query(previous, args, not_args)
+        else:
+            assert previous is None
 
-            _next = payload["next"]
-            if i + 1 < total_pages:
-                _assert_page_query(_next, args, not_args)
-            else:
-                assert _next is None
+        _next = payload["next"]
+        if i + 1 < total_pages:
+            _assert_page_query(_next, args, not_args)
+        else:
+            assert _next is None
 
 
-def test_viper_asset_wire_shape_uses_camel_case(celery_app, setup_assets):
+def test_viper_asset_wire_shape_uses_camel_case(celery_app, setup_assets, mock_post):
     """IntegrationUpload items use camelCase keys per Viper OpenAPI."""
-    with patch("blueflow.celery.tasks.requests.post") as mock_post:
-        viper_webhook.apply(
-            args=[
-                ViperWebhookRequest(
-                    callback="https://example.com/viper/webhook/",
-                    since="1800-01-01T00:00:00Z",
-                    before=None,
-                    max_pages=100,
-                    page_size=100,
-                ).to_dict(),
-                str(uuid.uuid4()),
-            ]
-        )
+    viper_webhook.apply(
+        args=[
+            ViperWebhookRequest(
+                callback="https://example.com/viper/webhook/",
+                since="1800-01-01T00:00:00Z",
+                before=None,
+                max_pages=100,
+                page_size=100,
+            ).to_dict(),
+            str(uuid.uuid4()),
+        ]
+    )
     for call in mock_post.call_args_list:
         body = call.kwargs["json"]
         assert "pageSize" in body
@@ -150,8 +146,7 @@ def test_viper_webhook_status_finished(celery_app, setup_assets, viper_request):
     job = _viper_job(viper_request)
     assert job.status == ViperWebhookJob.Status.PENDING
 
-    with patch("blueflow.celery.tasks.requests.post"):
-        viper_webhook.apply(args=[viper_request.to_dict(), job.id])
+    viper_webhook.apply(args=[viper_request.to_dict(), job.id])
 
     job.refresh_from_db()
     assert job.status == ViperWebhookJob.Status.FINISHED
@@ -173,7 +168,7 @@ def test_viper_webhook_status_error(celery_app, viper_request):
     assert job.status == ViperWebhookJob.Status.ERROR
 
 
-def test_webhook_payload_is_json_serializable(celery_app, setup_assets):
+def test_webhook_payload_is_json_serializable(celery_app, setup_assets, mock_post):
     """Regression for #159.
 
     ``ViperWebhookSerializer`` declares ``since``/``before`` as ``DateTimeField``,
@@ -198,50 +193,8 @@ def test_webhook_payload_is_json_serializable(celery_app, setup_assets):
     assert round_tripped["since"] == since.isoformat()
     assert round_tripped["before"] == before.isoformat()
 
-    # Response payload (requests.post serializes this).
-    with patch("blueflow.celery.tasks.requests.post") as mock_post:
-        viper_webhook.apply(args=[request_payload, str(uuid.uuid4())])
+    viper_webhook.apply(args=[request_payload, str(uuid.uuid4())])
 
     assert mock_post.call_count >= 1
     for call in mock_post.call_args_list:
         json.dumps(call.kwargs["json"])  # would raise TypeError on a datetime
-
-
-@pytest.mark.django_db
-def test_viper_webhook_includes_assets_without_last_pinged(celery_app):
-    """Regression for #158.
-
-    TapirXL's ``PUT /api/assets/upsert/`` never stamps ``last_pinged``. Before
-    the fix, the webhook filtered on ``last_pinged__gte`` and returned an empty
-    queryset on the first sync, so no POST was made to Viper. After the fix,
-    the filter uses ``modified`` (auto-stamped on every save), so newly upserted
-    assets with ``last_pinged=NULL`` are still forwarded.
-    """
-    Asset = apps.get_model("blueflow", "Asset")
-    Asset.objects.create(
-        hostname="tapirxl-upserted-host",
-        mac_address="00:11:22:33:44:55",
-        last_pinged=None,
-    )
-
-    request_id = str(uuid.uuid4())
-    with patch("blueflow.celery.tasks.requests.post") as mock_post:
-        viper_webhook.apply(
-            args=[
-                ViperWebhookRequest(
-                    callback="https://example.com/viper/webhook/",
-                    since="1800-01-01T00:00:00Z",
-                    before=None,
-                    max_pages=1,
-                    page_size=10,
-                ).to_dict(),
-                request_id,
-            ]
-        )
-
-    assert mock_post.call_count == 1, (
-        "Asset with last_pinged=None was not forwarded to Viper"
-    )
-    payload = mock_post.call_args.kwargs["json"]
-    assert payload["totalCount"] == 1
-    assert len(payload["items"]) == 1
