@@ -9,6 +9,9 @@ from django.apps import apps
 from django.core.management import base
 from django.db import connection, transaction
 
+if typing.TYPE_CHECKING:
+    from blueflow.models import NetworkInterface, System
+
 
 class AssetJson(typing.TypedDict):
     pk: str
@@ -43,6 +46,24 @@ def make_assets(data: list[AssetJson]) -> abc.Generator[dict[str, str], None, No
         }
 
 
+def _build_systems_and_networks(
+    assets: abc.Iterable[dict[str, str]],
+) -> tuple[list["System"], list["NetworkInterface"]]:
+    System = apps.get_model("blueflow", "System")
+    NetworkInterface = apps.get_model("blueflow", "NetworkInterface")
+    systems = []
+    interfaces = []
+    for a in assets:
+        _id = a["id"]
+        ipv4 = a["ip_address"]
+        mac_address = a["mac_address"]
+        systems.append(System(id=_id))
+        interfaces.append(
+            NetworkInterface(system_id=_id, ipv4=ipv4, mac_address=mac_address)
+        )
+    return (systems, interfaces)
+
+
 def insert_assets(raw_assets: abc.Iterable[dict[str, str]]) -> None:
     """Bulk create assets.
 
@@ -56,22 +77,14 @@ def insert_assets(raw_assets: abc.Iterable[dict[str, str]]) -> None:
     and let PostgreSQL handle the IDs itself. These can be obtained from the
     System.objects.bulk_create() response.
     """
-    System = apps.get_model("blueflow", "System")
     Asset = apps.get_model("blueflow", "Asset")
+    System = apps.get_model("blueflow", "System")
     NetworkInterface = apps.get_model("blueflow", "NetworkInterface")
     with transaction.atomic():
         assets = list(raw_assets)
-        _ = System.objects.bulk_create([System(id=a["id"]) for a in assets])
-        _ = NetworkInterface.objects.bulk_create(
-            [
-                NetworkInterface(
-                    system_id=a["id"],
-                    ipv4=a["ip_address"],
-                    mac_address=a["mac_address"],
-                )
-                for a in assets
-            ]
-        )
+        systems, interfaces = _build_systems_and_networks(assets)
+        _ = System.objects.bulk_create(systems)
+        _ = NetworkInterface.objects.bulk_create(interfaces)
         asset_table = Asset._meta.db_table  # noqa: SLF001
         system_link = Asset._meta.parents[System].column  # noqa: SLF001
         with connection.cursor() as cursor:
