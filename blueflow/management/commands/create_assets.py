@@ -58,28 +58,37 @@ def insert_assets(raw_assets: abc.Iterable[dict[str, str]]) -> None:
     """
     System = apps.get_model("blueflow", "System")
     Asset = apps.get_model("blueflow", "Asset")
+    NetworkInterface = apps.get_model("blueflow", "NetworkInterface")
     with transaction.atomic():
         assets = list(raw_assets)
         _ = System.objects.bulk_create([System(id=a["id"]) for a in assets])
+        _ = NetworkInterface.objects.bulk_create(
+            [
+                NetworkInterface(
+                    system_id=a["id"],
+                    ipv4=a["ip_address"],
+                    mac_address=a["mac_address"],
+                )
+                for a in assets
+            ]
+        )
         asset_table = Asset._meta.db_table  # noqa: SLF001
         system_link = Asset._meta.parents[System].column  # noqa: SLF001
         with connection.cursor() as cursor:
             cursor.executemany(
                 f"INSERT INTO {asset_table} "  # nosec B608 # noqa: S608
                 f"({system_link}, name, hostname, "
-                f"ip_address, mac_address, oui_manufacturer, "
+                f"oui_manufacturer, "
                 f"manufacturer, model, serial_number, "
                 f"udi, tag_number, category, "
                 f"owner, os, app_sw_version, "
                 f"last_scanned, last_pinged, external_keys) "
-                f"VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)",  # noqa: E501
+                f"VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)",  # noqa: E501
                 [
                     (
                         a["id"],
                         a["name"],
                         a["hostname"],
-                        a["ip_address"],
-                        a["mac_address"],
                         a["oui_manufacturer"],
                         a["manufacturer"],
                         a["model"],
