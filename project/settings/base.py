@@ -105,4 +105,6 @@ REST_FRAMEWORK = {
     ],
 }
 
-CELERY_TASK_ALWAYS_EAGER = os.environ["CELERY_TASK_ALWAYS_EAGER"].lower() == "true"
+CELERY_TASK_ALWAYS_EAGER = (
+    os.environ.get("CELERY_TASK_ALWAYS_EAGER", "true").lower() == "true"
+)
