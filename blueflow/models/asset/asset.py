@@ -192,9 +192,9 @@ class Asset(system.System):
 
     def add_or_update_interface(self, **kwargs):
         interface = super().add_or_update_interface(**kwargs)
-        if not self.interface.mac_address:
+        if not interface.mac_address:
             return interface
-        mac = self.interface.mac_address
+        mac = interface.mac_address
         try:
             reg = mac.oui.registration()
             self.oui_manufacturer = reg.org.strip()
