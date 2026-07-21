@@ -8,7 +8,6 @@ from .models import (
     AssetTag,
     Attachment,
     Group,
-    Scan,
     Tag,
     ViperWebhookJob,
 )
@@ -46,11 +45,6 @@ class AttachmentAdmin(admin.ModelAdmin):
 
 @admin.register(Group)
 class GroupAdmin(admin.ModelAdmin):
-    pass
-
-
-@admin.register(Scan)
-class ScanAdmin(admin.ModelAdmin):
     pass
 
 
