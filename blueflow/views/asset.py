@@ -404,7 +404,7 @@ class AssetViewSet(
     # not_n_plus_one). The remaining relations above are unaddressed.
     queryset = (
         models.Asset.objects.prefetch_related("usage")
-        .prefetch_related("port_protocols__port_protocol")
+        .prefetch_related("requests__request")
         .prefetch_related("interface")
     )
     serializer_class = AssetRequestSerializer

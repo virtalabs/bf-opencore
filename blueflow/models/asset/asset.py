@@ -11,7 +11,7 @@ from simple_history import models as simple_history
 from blueflow.models import (
     cpe,
     group,
-    ports_protocol,
+    request,
     tag,
     usage,
 )
@@ -153,12 +153,12 @@ class Asset(system.System):
     def services(self) -> dict[int, list[str]]:
         """A list of services associated with this asset.
 
-        Assumes you'd prefetched as needed
+        Assumes prefetched as needed
         """
         services = {}
-        for pp in self.port_protocols.all():
-            port = int(pp.port_protocol.port)
-            protocol = str(pp.port_protocol.protocol)
+        for r in self.requests.all():
+            port = int(r.port_protocol.port)
+            protocol = str(r.port_protocol.protocol)
             _list: list[str] = services.setdefault(port, [])
             _list.append(protocol)
             services[port] = _list
@@ -178,16 +178,12 @@ class Asset(system.System):
     def add_service(self, port: int, protocol: str) -> bool:
         """Idempotently link this asset to a ``(port, protocol)`` observation.
 
-        The shared ``PortProtocol`` lookup row is created on first use; the
+        The shared ``Request`` lookup row is created on first use; the
         per-asset through row is created on first reference. Returns True if a
         new link was created, False if it already existed.
         """
-        port_protocol, _ = ports_protocol.PortProtocol.objects.get_or_create(
-            port=port, protocol=protocol
-        )
-        _, created = ports_protocol.AssetPortProtocol.objects.get_or_create(
-            asset=self, port_protocol=port_protocol
-        )
+        r, _ = request.Request.objects.get_or_create(port=port, protocol=protocol)
+        _, created = request.AssetRequest.objects.get_or_create(asset=self, request=r)
         return created
 
     def add_or_update_interface(self, **kwargs):
