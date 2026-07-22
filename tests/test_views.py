@@ -15,5 +15,5 @@ def test_api_assets_empty(auth_client):
 
 def test_api_schema(client):
     """OpenAPI schema endpoint is reachable."""
-    response = client.get("/schema/")
+    response = client.get("/api/schema/")
     assert response.status_code == status.HTTP_200_OK
