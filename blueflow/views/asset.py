@@ -28,8 +28,6 @@ class AssetFilter(django_filters.rest_framework.FilterSet):
     datetime_range = django_filters.DateTimeFromToRangeFilter(field_name="created")
     network = django_filters.NumberFilter(method="filter_network")
     no_network = drf_filters.BooleanFilter(method="filter_no_network")
-    unassessed = drf_filters.BooleanFilter(method="filter_unassessed")
-    assessed_factor = drf_filters.NumberFilter(method="filter_assessed_factor")
     group = django_filters.NumberFilter(field_name="groups")
     tag = django_filters.NumberFilter(field_name="tags")
 
