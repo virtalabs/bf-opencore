@@ -30,6 +30,7 @@ class Request(models.Model):
     cast_type = models.CharField(
         choices=CastChoices, null=False, default=CastChoices.unicast
     )
+    service = models.CharField(null=False, blank=True, default="")
     response_seen = models.BooleanField(default=False, null=False)
 
     class Meta:
