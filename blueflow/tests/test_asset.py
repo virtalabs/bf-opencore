@@ -646,7 +646,7 @@ def test_asset_add_service_idempotent(db: None) -> None:
     asset = models.Asset.objects.create(manufacturer="Acme")
     assert asset.add_service(80, "tcp") is True
     assert asset.add_service(80, "tcp") is False
-    assert asset.port_protocols.count() == 1
+    assert asset.requests.count() == 1
 
 
 def test_port_protocol_lookup_shared_across_assets(db: None) -> None:
@@ -655,8 +655,8 @@ def test_port_protocol_lookup_shared_across_assets(db: None) -> None:
     a2 = models.Asset.objects.create(manufacturer="Acme")
     a1.add_service(80, "tcp")
     a2.add_service(80, "tcp")
-    assert models.PortProtocol.objects.filter(port=80, protocol="tcp").count() == 1
-    assert models.AssetPortProtocol.objects.count() == 2
+    assert models.Request.objects.filter(port=80, protocol="tcp").count() == 1
+    assert models.AssetRequest.objects.count() == 2
 
 
 def test_asset_delete_cascades_through_rows_keeps_lookup(
@@ -667,8 +667,8 @@ def test_asset_delete_cascades_through_rows_keeps_lookup(
     a2 = models.Asset.objects.create(manufacturer="Acme")
     a1.add_service(80, "tcp")
     a2.add_service(80, "tcp")
-    assert models.AssetPortProtocol.objects.count() == 2
+    assert models.AssetRequest.objects.count() == 2
 
     a1.delete()
-    assert models.AssetPortProtocol.objects.count() == 1
-    assert models.PortProtocol.objects.filter(port=80, protocol="tcp").exists()
+    assert models.AssetRequest.objects.count() == 1
+    assert models.Request.objects.filter(port=80, protocol="tcp").exists()

@@ -7,12 +7,17 @@ from django.db.models import Q
 from . import constants
 
 
-class PortProtocol(models.Model):
-    """A mapping of Ports <-> protocol.
+class Request(models.Model):
+    """Records a network request observation.
 
     ``protocol`` is a free-form string (e.g. ``tcp``, ``udp``, ``sctp``,
     ``udplite``); callers are responsible for picking sensible values.
     """
+
+    class CastChoices(models.TextChoices):
+        unicast = "unicast"
+        multicast = "multicast"
+        broadcast = "broadcast"
 
     # https://en.wikipedia.org/wiki/List_of_TCP_and_UDP_port_numbers
     port = models.PositiveSmallIntegerField(
@@ -22,15 +27,19 @@ class PortProtocol(models.Model):
         ]
     )
     protocol = models.CharField(max_length=constants.PROTOCOL_MAX_LENGTH)
+    cast_type = models.CharField(
+        choices=CastChoices, null=False, default=CastChoices.unicast
+    )
+    response_seen = models.BooleanField(default=False, null=False)
 
     class Meta:
         constraints: typing.ClassVar = [
             models.UniqueConstraint(
-                fields=("port", "protocol"), name="unique_port_protocol"
+                fields=("port", "protocol"), name="unique_request_port_protocol"
             ),
             models.CheckConstraint(
                 condition=~Q(protocol=""),
-                name="port_protocol_protocol_not_empty",
+                name="request_protocol_not_empty",
             ),
         ]
 
@@ -38,21 +47,22 @@ class PortProtocol(models.Model):
         return f"{self.port}: {self.protocol}"
 
 
-class AssetPortProtocol(models.Model):
-    """Maps an asset to any number of port_protocols."""
+class AssetRequest(models.Model):
+    """Maps an asset to any number of requests."""
 
     asset = models.ForeignKey(
-        "blueflow.Asset", related_name="port_protocols", on_delete=models.CASCADE
+        "blueflow.Asset", related_name="requests", on_delete=models.CASCADE
     )
-    port_protocol = models.ForeignKey(PortProtocol, on_delete=models.CASCADE)
+    request = models.ForeignKey(Request, on_delete=models.CASCADE)
+    sender = models.BooleanField(default=True, null=False)
 
     class Meta:
         constraints: typing.ClassVar = [
             models.UniqueConstraint(
-                fields=("asset", "port_protocol"),
-                name="unique_asset_port_protocol",
+                fields=("asset", "request"),
+                name="unique_asset_request",
             )
         ]
 
     def __str__(self) -> str:
-        return f"{self.asset}: {self.port_protocol}"
+        return f"{self.asset}: {self.request}"

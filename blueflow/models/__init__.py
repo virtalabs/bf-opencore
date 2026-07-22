@@ -6,7 +6,7 @@ from .attachment import Attachment
 from .constants import PORT_MAX, PORT_MIN, PROTOCOL_MAX_LENGTH
 from .group import AssetGroup, Group
 from .interface import NetworkInterface
-from .ports_protocol import AssetPortProtocol, PortProtocol
+from .request import AssetRequest, Request
 from .tag import AssetTag, Tag
 from .usage import DayOfWeek, Usage
 from .viper import ViperWebhookJob, ViperWebhookRequest
@@ -19,14 +19,14 @@ __all__ = [
     "AssetCustomField",
     "AssetCustomFieldName",
     "AssetGroup",
-    "AssetPortProtocol",
+    "AssetRequest",
     "AssetTag",
     "Attachment",
     "DayOfWeek",
     "ExternalSystem",
     "Group",
     "NetworkInterface",
-    "PortProtocol",
+    "Request",
     "System",
     "Tag",
     "Usage",
