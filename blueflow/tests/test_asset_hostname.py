@@ -18,7 +18,7 @@ from rest_framework import status
 from rest_framework.test import APIClient
 
 from blueflow import models
-from blueflow.views.asset import AssetUpsertSerializer
+from blueflow.serializers import AssetUpsertSerializer
 
 MAC_A = "AA:BB:CC:DD:EE:FF"
 MAC_B = "11:22:33:44:55:66"

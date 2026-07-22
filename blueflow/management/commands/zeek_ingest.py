@@ -19,7 +19,7 @@ from django.apps import apps
 from django.core.management.base import BaseCommand, CommandError
 from django.db import transaction
 
-from blueflow.views.asset import AssetUpsertSerializer
+from blueflow.serializers import AssetUpsertSerializer
 from blueflow.zeek.sidecar import payloads_from_logdir
 
 

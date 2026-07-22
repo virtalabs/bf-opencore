@@ -1,6 +1,8 @@
 """API Views."""
 
-from .asset import AssetRequestSerializer, AssetViewSet
+from blueflow.serializers import AssetRequestSerializer
+
+from .asset import AssetViewSet
 from .assetgroup import AssetGroupSerializer, AssetGroupViewSet
 from .assettag import AssetTagSerializer, AssetTagViewSet
 from .group import GroupSerializer, GroupViewSet
