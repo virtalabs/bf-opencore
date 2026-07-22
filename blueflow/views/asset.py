@@ -9,7 +9,6 @@ import netaddr
 import netfields
 from django.db import transaction
 from django.db.models import QuerySet
-from django.db.models.aggregates import Func
 from django.utils import timezone
 from drf_spectacular.utils import extend_schema_field
 from rest_framework import serializers, status, viewsets
@@ -25,23 +24,6 @@ from . import utils
 logger = logging.getLogger(__name__)
 
 
-class JSONChild(Func):
-    """Extract a named child of a JSONField.
-
-    Because this is a Func, its result can be used for order_by, as opposed
-    to specifying '-jsonfieldname__field' or similar, which doesn't work.
-    """
-
-    # not bothering to override __and__, __or__, __rand__, __ror__
-    function = "#>"
-    template = "%(expressions)s%(function)s'{%(path)s}'"
-    arity = 1
-
-    def __init__(self, expression: str, path: str) -> None:
-        """Form an expression and plug the path argument into the template."""
-        super().__init__(expression, path=path)
-
-
 class AssetServiceSerializer(serializers.Serializer):
     """A single ``(port, protocol)`` observation on an asset."""
 
@@ -53,7 +35,7 @@ class AssetServiceSerializer(serializers.Serializer):
         max_length=models.PROTOCOL_MAX_LENGTH,
         allow_blank=False,
     )
-    name = serializers.CharField(allow_blank=True, optional=True, default="")
+    name = serializers.CharField(allow_blank=True, required=False, default="")
 
 
 class AssetUpsertSerializer(serializers.Serializer):
