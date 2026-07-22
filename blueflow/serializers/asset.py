@@ -96,12 +96,10 @@ class AssetUpdateListSerializer(serializers.ListSerializer):
         return attrs
 
 
-class AssetUpdateSerializer(serializers.ModelSerializer):
-    id = serializers.IntegerField(min_value=0)
+class AssetUpdateSerializer(serializers.Serializer):
+    id = serializers.IntegerField()
 
     class Meta:
-        model = models.Asset
-        fields = "__all__"
         list_serializer_class = AssetUpdateListSerializer
 
 

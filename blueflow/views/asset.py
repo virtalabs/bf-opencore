@@ -219,8 +219,12 @@ class AssetViewSet(
         # Phase 1: resolve + validate every item before touching the DB. The
         # id-to-instance lookup is a 404 (a missing resource, not a client-side
         # validation failure), so it stays here rather than in the serializer.
+
+        # Further, trying to tie this to a ModelSerializer bumps into DRF's
+        # uniquenessserializer. The work around is to validate through
+        # the list serializer and ignore the validated fields
         validated: list[serializers.AssetRequestSerializer] = []
-        for item in envelope.validated_data:
+        for item in request.data:
             asset_id = item["id"]
             try:
                 asset = models.Asset.objects.get(pk=asset_id)
