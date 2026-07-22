@@ -213,7 +213,7 @@ class AssetViewSet(
         """
         # Validate the batch envelope (list shape, id presence, id uniqueness)
         # through DRF's standard ValidationError pathway.
-        envelope = serializers.BulkAssetUpdateSerializer(data=request.data, many=True)
+        envelope = serializers.AssetUpdateSerializer(data=request.data, many=True)
         envelope.is_valid(raise_exception=True)
 
         # Phase 1: resolve + validate every item before touching the DB. The
