@@ -550,15 +550,28 @@ def test_asset_date_range(
 
 def test_bulk_update_updates_fields(asset_edit_client: APIClient) -> None:
     """PATCH /api/assets/bulk_update/ updates only the provided fields."""
-    a1 = models.Asset.objects.create(hostname="device-a", os="Windows")
-    a2 = models.Asset.objects.create(hostname="device-b", os="Linux")
+    a1_data = {
+        "hostname": "device-a",
+        "os": "Windows",
+    }
+    a1 = baker.make("Asset", **a1_data)
+    baker.make("NetworkInterface", system=a1)
+    a2_data = {
+        "hostname": "device-b",
+        "os": "Linux",
+    }
+    a2 = baker.make("Asset", **a2_data)
+    baker.make("NetworkInterface", system=a2)
 
+    new_hostname = "device-a-updated"
+    new_os = "FreeBSD"
+    payload = [
+        {"id": a1.id, "hostname": new_hostname},
+        {"id": a2.id, "os": new_os},
+    ]
     response = asset_edit_client.patch(
         "/api/assets/bulk_update/",
-        [
-            {"id": a1.id, "hostname": "device-a-updated"},
-            {"id": a2.id, "os": "FreeBSD"},
-        ],
+        payload,
         content_type="application/json",
     )
     assert response.status_code == status.HTTP_200_OK
@@ -566,10 +579,12 @@ def test_bulk_update_updates_fields(asset_edit_client: APIClient) -> None:
 
     a1.refresh_from_db()
     a2.refresh_from_db()
-    assert a1.hostname == "device-a-updated"
-    assert a1.os == "Windows"  # untouched
-    assert a2.os == "FreeBSD"
-    assert a2.hostname == "device-b"  # untouched
+    assert a1.hostname == new_hostname, "Asset 1's hostname did not update"
+    assert a1.os == a1_data["os"], "Asset 1' os should NOT have updated"
+    assert a2.hostname == a2_data["hostname"], (
+        "Asset 2's hostname should NOT have updated"
+    )
+    assert a2.os == new_os, "Assets 2's os did not update"
 
 
 def test_bulk_update_unknown_id_returns_404(asset_edit_client: APIClient) -> None:

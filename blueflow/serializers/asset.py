@@ -75,7 +75,7 @@ class AssetUpsertSerializer(serializers.Serializer):
         return deduped
 
 
-class BulkAssetUpdateListSerializer(serializers.ListSerializer):
+class AssetUpdateListSerializer(serializers.ListSerializer):
     """Validates the *batch envelope* for ``PATCH /api/assets/bulk_update/``.
 
     Per-item field validation and the id-to-instance lookup stay in the view;
@@ -85,33 +85,24 @@ class BulkAssetUpdateListSerializer(serializers.ListSerializer):
 
     def validate(self, attrs: list[dict]) -> list[dict]:
         """Reject a batch containing the same id more than once."""
-        ids: list[int] = [item["id"] for item in attrs]
         seen: set[int] = set()
-        for i in ids:
-            if i in seen:
+        for a in attrs:
+            id_ = a["id"]
+            if id_ in seen:
                 raise serializers.ValidationError(
-                    {"detail": f"Duplicate id in request: {i}."}
+                    {"detail": f"Duplicate id in request: {id_}."}
                 )
-            seen.add(i)
+            seen.add(id_)
         return attrs
 
 
-class BulkAssetUpdateSerializer(serializers.Serializer):
-    """One item in a bulk-update batch: requires an ``id`` to target an asset.
-
-    Other asset fields pass through untouched here — they are validated and
-    applied per-item by :class:`AssetSerializer` in the view. This serializer
-    exists only to gate the batch envelope (list shape, id presence, id
-    uniqueness) through DRF's standard ``ValidationError`` pathway, so every
-    asset write endpoint surfaces validation failures uniformly.
-    """
-
-    id = serializers.IntegerField(required=True)
+class AssetUpdateSerializer(serializers.ModelSerializer):
+    id = serializers.IntegerField(min_value=0)
 
     class Meta:
-        """Route ``many=True`` instances through the duplicate-id check."""
-
-        list_serializer_class = BulkAssetUpdateListSerializer
+        model = models.Asset
+        fields = "__all__"
+        list_serializer_class = AssetUpdateListSerializer
 
 
 # Usage field schema. Index follows Python's datetime.weekday() / ISO 8601:
