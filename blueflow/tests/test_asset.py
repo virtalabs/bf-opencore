@@ -637,18 +637,20 @@ def test_bulk_update_duplicate_id_returns_400(asset_edit_client: APIClient) -> N
 
 def test_bulk_update_idempotent(asset_edit_client: APIClient) -> None:
     """Sending the same PATCH twice produces the same result."""
-    asset = models.Asset.objects.create(hostname="original")
-    payload = [{"id": asset.id, "hostname": "updated"}]
+    asset = baker.make("Asset", hostname="original")
+    baker.make("NetworkInterface", system=asset)
+    new_hostname = "updated"
+    payload = [{"id": asset.id, "hostname": new_hostname}]
 
     r1 = asset_edit_client.patch(
         "/api/assets/bulk_update/", payload, content_type="application/json"
     )
+    assert r1.status_code == status.HTTP_200_OK
     r2 = asset_edit_client.patch(
         "/api/assets/bulk_update/", payload, content_type="application/json"
     )
-    assert r1.status_code == status.HTTP_200_OK
     assert r2.status_code == status.HTTP_200_OK
-    assert r1.data[0]["hostname"] == r2.data[0]["hostname"] == "updated"
+    assert r1.data[0]["hostname"] == r2.data[0]["hostname"] == new_hostname
 
 
 # ---------------------------------------------------------------------------
