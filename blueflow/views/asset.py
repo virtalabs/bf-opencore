@@ -53,6 +53,7 @@ class AssetServiceSerializer(serializers.Serializer):
         max_length=models.PROTOCOL_MAX_LENGTH,
         allow_blank=False,
     )
+    name = serializers.CharField(allow_blank=True)
 
 
 class AssetUpsertSerializer(serializers.Serializer):
