@@ -157,11 +157,14 @@ class Asset(system.System):
         """
         services = {}
         for r in self.requests.all():
-            port = int(r.port_protocol.port)
-            protocol = str(r.port_protocol.protocol)
-            _list: list[str] = services.setdefault(port, [])
-            _list.append(protocol)
-            services[port] = _list
+            port = int(r.request.port)
+            protocol = str(r.request.protocol)
+            name = str(r.request.service)
+            s: dict[str, str | list[str]] = services.setdefault(port, {})
+            p = s.setdefault("protocols", [])
+            p.append(protocol)
+            s["name"] = name
+            services[port] = s
         return services
 
     @property
