@@ -35,9 +35,6 @@ class Request(models.Model):
 
     class Meta:
         constraints: typing.ClassVar = [
-            models.UniqueConstraint(
-                fields=("port", "protocol"), name="unique_request_port_protocol"
-            ),
             models.CheckConstraint(
                 condition=~Q(protocol=""),
                 name="request_protocol_not_empty",
