@@ -57,13 +57,5 @@ class AssetRequest(models.Model):
     request = models.ForeignKey(Request, on_delete=models.CASCADE)
     sender = models.BooleanField(default=True, null=False)
 
-    class Meta:
-        constraints: typing.ClassVar = [
-            models.UniqueConstraint(
-                fields=("asset", "request"),
-                name="unique_asset_request",
-            )
-        ]
-
     def __str__(self) -> str:
         return f"{self.asset}: {self.request}"
