@@ -51,13 +51,23 @@ class Request(models.Model):
 class SystemRequest(models.Model):
     """Maps an asset to any number of requests."""
 
-    system = models.ForeignKey(
-        "blueflow.System", related_name="requests", on_delete=models.CASCADE
+    sender = models.ForeignKey(
+        "blueflow.System", related_name="request_senders", on_delete=models.CASCADE
+    )
+    receiver = models.ForeignKey(
+        "blueflow.System", related_name="request_receivers", on_delete=models.CASCADE
     )
     request = models.ForeignKey(
         Request, related_name="system_requests", on_delete=models.CASCADE
     )
-    sender = models.BooleanField(default=True, null=False)
+
+    class Meta:
+        constraints: typing.ClassVar = [
+            models.UniqueConstraint(
+                fields=("sender", "receiver", "request"),
+                name="unique_sender_receiver_request",
+            )
+        ]
 
     def __str__(self) -> str:
-        return f"{self.asset}: {self.request}"
+        return f"{self.sender}: {self.request}"
