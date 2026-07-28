@@ -663,7 +663,7 @@ def test_asset_add_service_idempotent(db: None) -> None:
     asset = models.Asset.objects.create(manufacturer="Acme")
     assert asset.add_service(80, "tcp") is True
     assert asset.add_service(80, "tcp") is False
-    assert asset.requests.count() == 1
+    assert asset.request_senders.count() == 1
 
 
 def test_port_protocol_lookup_shared_across_assets(db: None) -> None:

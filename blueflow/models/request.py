@@ -55,7 +55,10 @@ class SystemRequest(models.Model):
         "blueflow.System", related_name="request_senders", on_delete=models.CASCADE
     )
     receiver = models.ForeignKey(
-        "blueflow.System", related_name="request_receivers", on_delete=models.CASCADE
+        "blueflow.System",
+        null=True,
+        related_name="request_receivers",
+        on_delete=models.CASCADE,
     )
     request = models.ForeignKey(
         Request, related_name="system_requests", on_delete=models.CASCADE
