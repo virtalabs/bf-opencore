@@ -29,7 +29,7 @@ SCANNER_FULL_PAYLOAD = {
 
 def _service_pairs(asset: "models.Asset") -> set[tuple[int, str]]:
     """``{(port, protocol), ...}`` for an asset's through-table rows."""
-    return set(asset.requests.values_list("request__port", "request__protocol"))
+    return set(asset.request_senders.values_list("request__port", "request__protocol"))
 
 
 def _put_upsert(client: APIClient, payload: dict) -> object:
