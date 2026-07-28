@@ -48,13 +48,15 @@ class Request(models.Model):
         return f"{self.port}: {self.protocol}"
 
 
-class AssetRequest(models.Model):
+class SystemRequest(models.Model):
     """Maps an asset to any number of requests."""
 
-    asset = models.ForeignKey(
-        "blueflow.Asset", related_name="requests", on_delete=models.CASCADE
+    system = models.ForeignKey(
+        "blueflow.System", related_name="requests", on_delete=models.CASCADE
     )
-    request = models.ForeignKey(Request, on_delete=models.CASCADE)
+    request = models.ForeignKey(
+        Request, related_name="system_requests", on_delete=models.CASCADE
+    )
     sender = models.BooleanField(default=True, null=False)
 
     def __str__(self) -> str:
