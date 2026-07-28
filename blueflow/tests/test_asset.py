@@ -673,7 +673,7 @@ def test_port_protocol_lookup_shared_across_assets(db: None) -> None:
     a1.add_service(80, "tcp")
     a2.add_service(80, "tcp")
     assert models.Request.objects.filter(port=80, protocol="tcp").count() == 1
-    assert models.AssetRequest.objects.count() == 2
+    assert models.SystemRequest.objects.count() == 2
 
 
 def test_asset_delete_cascades_through_rows_keeps_lookup(
@@ -684,8 +684,8 @@ def test_asset_delete_cascades_through_rows_keeps_lookup(
     a2 = models.Asset.objects.create(manufacturer="Acme")
     a1.add_service(80, "tcp")
     a2.add_service(80, "tcp")
-    assert models.AssetRequest.objects.count() == 2
+    assert models.SystemRequest.objects.count() == 2
 
     a1.delete()
-    assert models.AssetRequest.objects.count() == 1
+    assert models.SystemRequest.objects.count() == 1
     assert models.Request.objects.filter(port=80, protocol="tcp").exists()

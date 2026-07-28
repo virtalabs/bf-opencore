@@ -186,7 +186,7 @@ class Asset(system.System):
         new link was created, False if it already existed.
         """
         r, _ = request.Request.objects.get_or_create(port=port, protocol=protocol)
-        _, created = request.AssetRequest.objects.get_or_create(asset=self, request=r)
+        _, created = request.SystemRequest.objects.get_or_create(system=self, request=r)
         return created
 
     def add_or_update_interface(self, **kwargs):
