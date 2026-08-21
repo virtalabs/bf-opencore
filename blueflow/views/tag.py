@@ -1,6 +1,7 @@
 """ViewSet for tags."""
 
 import logging
+import typing
 
 import django_filters
 from django.core.exceptions import ObjectDoesNotExist
@@ -40,7 +41,7 @@ class TagSerializer(serializers.HyperlinkedModelSerializer):
         model = Tag
 
         # Fields defined in the schema
-        tag_fields = tuple(f.name for f in model._meta.fields)
+        tag_fields = tuple(f.name for f in model._meta.fields)  # noqa: SLF001
 
         # Fields that are computed (not stored directly in schema)
         computed_fields = (
@@ -59,19 +60,16 @@ class TagSerializer(serializers.HyperlinkedModelSerializer):
         - Ensure '#' prefix
         - Ensure valid hex
         """
-        # logger.debug("Validating color '%s'", color)
         if len(color) < HEX_COLOR_LENGTH and color[0] != "#":
             color = "#" + color
-        if not color[0] == "#":
-            raise serializers.ValidationError(
-                f"{color} is not a valid color, must start with '#'"
-            )
+        if color[0] != "#":
+            msg = f"{color} is not a valid color, must start with '#'"
+            raise serializers.ValidationError(msg)
         try:
-            dummy_int = int(color[1:], 16)
+            _ = int(color[1:], 16)
         except ValueError as e:
-            raise serializers.ValidationError(
-                f"{color} is not a valid RGB color"
-            ) from e
+            msg = f"{color} is not a valid RGB color"
+            raise serializers.ValidationError(msg) from e
         return color
 
 
@@ -83,7 +81,7 @@ class TagFilter(django_filters.rest_framework.FilterSet):
 
         # Documentation about lookups is here:
         # https://docs.djangoproject.com/en/1.11/ref/models/querysets/#field-lookups
-        fields = {
+        fields: typing.ClassVar = {
             "asset": ["exact"],
         }
 
@@ -101,7 +99,7 @@ class TagViewSet(WaffleSwitchMixin, ChangeReasonMixin, viewsets.ModelViewSet):
     pagination_class = HugeLimitOffsetPagination
 
     @action(detail=True, methods=["POST"])
-    def assets(self, request, pk):
+    def assets(self, request, *_):
         """Add several assets to this Tag."""
         tag = self.get_object()
 
