@@ -88,11 +88,11 @@ class NessusBrowseViewSet(WaffleSwitchMixin, viewsets.ViewSet):
         # history = request.query_params.get('history')
         try:
             action = request.query_params["action"]
-        except KeyError:
+        except KeyError as e:
             raise serializers.ValidationError(
                 f"No 'action' in query params '{request.query_params}',"
                 " don't know what to do"
-            )
+            ) from e
         try:
             nc = NessusConnection()
         except exceptions.ConnectorConfigError as err:
@@ -104,26 +104,26 @@ class NessusBrowseViewSet(WaffleSwitchMixin, viewsets.ViewSet):
             try:
                 scans = nc.scans()
             except exceptions.ConnectorRemoteError as err:
-                raise serializers.ValidationError(err)
+                raise serializers.ValidationError(err) from err
             response["nessus_response"] = {"scans": scans}
         elif action == "history":
             try:
                 scan_id = request.query_params["scan_id"]
-            except KeyError:
+            except KeyError as e:
                 raise serializers.ValidationError(
                     f"No 'scan_id' in query params '{request.query_params}',"
                     " cannot get history"
-                )
+                ) from e
             try:
                 scan_id = int(scan_id)
-            except ValueError:
+            except ValueError as e:
                 raise serializers.ValidationError(
                     f"Invalid parameter scan_id='{scan_id}'"
-                )
+                ) from e
             try:
                 history = nc.history(scan_id)
             except exceptions.ConnectorRemoteError as err:
-                raise serializers.ValidationError(err)
+                raise serializers.ValidationError(err) from err
             response["nessus_response"] = {"history": history}
         elif action == "details":
             # response['nessus_response'] = {'details': 'not yet implemented'}

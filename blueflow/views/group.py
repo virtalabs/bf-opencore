@@ -103,12 +103,12 @@ class GroupViewSet(WaffleSwitchMixin, viewsets.ModelViewSet):
         for asset_id in asset_ids:
             try:
                 asset = Asset.objects.get(pk=asset_id)
-            except (ObjectDoesNotExist, ValueError):
+            except (ObjectDoesNotExist, ValueError) as e:
                 raise serializers.ValidationError(
                     {
                         "asset_ids": [f"Asset does not exist: id={asset_id}"],
                     }
-                )
+                ) from e
             asset_group = AssetGroup(
                 asset=asset, group=group, provenance="Bulk Add via API"
             )
