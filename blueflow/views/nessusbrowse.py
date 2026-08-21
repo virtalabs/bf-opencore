@@ -2,7 +2,7 @@
 
 import logging
 
-from rest_framework import permissions, serializers, status, viewsets
+from rest_framework import permissions, request, serializers, status, viewsets
 from rest_framework.response import Response
 from waffle.mixins import WaffleSwitchMixin
 
@@ -22,13 +22,15 @@ class NessusBrowseSerializer(serializers.Serializer):
 
     nessus_response = serializers.JSONField(read_only=True)
 
-    def create(self, validated_data):
+    def create(self, *_, **__):
         """Raise validation error."""
-        raise serializers.ValidationError("Cannot create.")
+        msg = "Cannot create."
+        raise serializers.ValidationError(msg)
 
-    def update(self, instance, validated_data):
+    def update(self, *_, **__):
         """Raise validation error."""
-        raise serializers.ValidationError("Cannot update.")
+        msg = "Cannot update."
+        raise serializers.ValidationError(msg)
 
 
 class NessusBrowseViewSet(WaffleSwitchMixin, viewsets.ViewSet):
@@ -53,6 +55,29 @@ class NessusBrowseViewSet(WaffleSwitchMixin, viewsets.ViewSet):
     #   standard DjangoModelPermissions class and sticking with the
     #   simple IsAuthenticated class.
     permission_classes = (permissions.IsAuthenticated,)
+
+    def _action_history(
+        self, nc, response: dict[str, str | None], request: request.Request
+    ) -> dict[str, str | None]:
+        try:
+            scan_id = request.query_params["scan_id"]
+        except KeyError as e:
+            msg = (
+                f"No 'scan_id' in query params '{request.query_params}', "
+                "cannot get history"
+            )
+            raise serializers.ValidationError(msg) from e
+        try:
+            scan_id = int(scan_id)
+        except ValueError as e:
+            msg = f"Invalid parameter scan_id='{scan_id}'"
+            raise serializers.ValidationError(msg) from e
+        try:
+            history = nc.history(scan_id)
+        except exceptions.ConnectorRemoteError as err:
+            raise serializers.ValidationError(err) from err
+        response["nessus_response"] = {"history": history}
+        return response
 
     def list(self, request):
         """Send request to Nessus, return data.
@@ -85,51 +110,37 @@ class NessusBrowseViewSet(WaffleSwitchMixin, viewsets.ViewSet):
                 {"detail": "Connectors not available."},
                 status=status.HTTP_503_SERVICE_UNAVAILABLE,
             )
-        # history = request.query_params.get('history')
         try:
             action = request.query_params["action"]
         except KeyError as e:
-            raise serializers.ValidationError(
-                f"No 'action' in query params '{request.query_params}',"
-                " don't know what to do"
-            ) from e
+            msg = (
+                f"No 'action' in query params '{request.query_params}', "
+                "don't know what to do"
+            )
+            raise serializers.ValidationError(msg) from e
         try:
             nc = NessusConnection()
         except exceptions.ConnectorConfigError as err:
             response = {"detail": f"Bad configuration: {err}"}
             return Response(response, status=status.HTTP_400_BAD_REQUEST)
+
         response = {"nessus_response": None}
+
         if action == "scans":
-            # Get list of scans
             try:
                 scans = nc.scans()
             except exceptions.ConnectorRemoteError as err:
                 raise serializers.ValidationError(err) from err
             response["nessus_response"] = {"scans": scans}
-        elif action == "history":
-            try:
-                scan_id = request.query_params["scan_id"]
-            except KeyError as e:
-                raise serializers.ValidationError(
-                    f"No 'scan_id' in query params '{request.query_params}',"
-                    " cannot get history"
-                ) from e
-            try:
-                scan_id = int(scan_id)
-            except ValueError as e:
-                raise serializers.ValidationError(
-                    f"Invalid parameter scan_id='{scan_id}'"
-                ) from e
-            try:
-                history = nc.history(scan_id)
-            except exceptions.ConnectorRemoteError as err:
-                raise serializers.ValidationError(err) from err
-            response["nessus_response"] = {"history": history}
-        elif action == "details":
-            # response['nessus_response'] = {'details': 'not yet implemented'}
-            raise serializers.ValidationError("details: not yet implemented")
-        else:
-            raise serializers.ValidationError(
-                f"No response for query params '{request.query_params}'"
-            )
-        return Response(response)
+            return Response(response)
+
+        if action == "history":
+            response = self._action_history(nc, response, request)
+            return Response(response)
+
+        if action == "details":
+            msg = "details: not yet implemented"
+            raise serializers.ValidationError(msg)
+
+        msg = f"No response for query params '{request.query_params}'"
+        raise serializers.ValidationError(msg)

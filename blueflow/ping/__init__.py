@@ -17,20 +17,6 @@ logger = celery.utils.log.get_task_logger(__name__)
 logging.getLogger("sh").setLevel(logging.WARNING)
 
 
-# TODO(legacy): review this when we are ready to setup the ping integration
-# CONNECTOR_SPEC = {
-#     "display_name": "Ping",
-#     "description": "Ping an asset via ICMP ping.",
-#     "kwargs": OrderedDict([
-#         ("hostname", {
-#             "default": None,
-#             "type": str,
-#             "help": "network host",
-#         }),
-#     ]),
-#     'settings': OrderedDict(),
-# }
-
 PING_OPTS = [
     "-c 3",  # number of ping packets to send
 ]
@@ -52,7 +38,8 @@ def main(ctx, hostname):
 
     host_or_ip_matcher = re.compile(PING_TARGET_RE)
     if not host_or_ip_matcher.match(hostname):
-        raise IntegrationTaskError("Invalid target: '%s'" % hostname)
+        msg = f"Invalid target: '{hostname}'"
+        raise IntegrationTaskError(msg)
 
     # Try to resolve the hostname into an IP address so that we can create an
     # Asset for this host.  Caveats:
@@ -64,7 +51,8 @@ def main(ctx, hostname):
     try:
         ipv4addr = socket.gethostbyname(hostname)
     except socket.gaierror as e:
-        raise IntegrationTaskError("Cannot resolve hostname '%s'" % hostname) from e
+        msg = f"Cannot resolve hostname {hostname}"
+        raise IntegrationTaskError(msg) from e
 
     args = PING_OPTS
     args.append(hostname)
@@ -74,7 +62,7 @@ def main(ctx, hostname):
     try:
         output = ping_cmd()
     except sh.ErrorReturnCode as err:
-        ctx.ct.print("Host '%s' is offline" % hostname)
+        ctx.ct.print(f"Host '{hostname}' is offline")
         ctx.ct.print(err.stderr.decode("utf-8"))
         return err.exit_code
 
@@ -84,7 +72,7 @@ def main(ctx, hostname):
         ctx.ct.print(stdout)
     if stderr:
         ctx.ct.print(stderr)
-    ctx.ct.print("Host '%s' is online" % hostname)
+    ctx.ct.print(f"Host '{hostname}' is online")
 
     Asset = apps.get_model("blueflow", "Asset")
     asset, _ = Asset.objects.all().get_or_create(ip_address=ipv4addr)
