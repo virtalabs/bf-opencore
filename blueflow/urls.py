@@ -1,7 +1,6 @@
 """Blueflow Django app URLs."""
 
-from django.conf.urls import include
-from django.urls import path
+from django.urls import include, path
 from drf_spectacular.views import SpectacularAPIView
 from rest_framework.authtoken import views as authview
 from rest_framework.routers import DefaultRouter

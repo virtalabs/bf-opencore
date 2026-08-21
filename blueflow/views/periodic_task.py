@@ -88,9 +88,7 @@ class PeriodicTaskSerializer(serializers.HyperlinkedModelSerializer):
     Teaches the rest_framework (the ViewSet) which fields to expect.
     """
 
-    url = serializers.HyperlinkedIdentityField(
-        view_name="blueflow:periodictask-detail"
-    )
+    url = serializers.HyperlinkedIdentityField(view_name="blueflow:periodictask-detail")
     display_name = serializers.SerializerMethodField("do_display_name")
     display_schedule = serializers.SerializerMethodField("do_display_schedule")
 

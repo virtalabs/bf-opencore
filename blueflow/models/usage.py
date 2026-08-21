@@ -34,7 +34,7 @@ class Usage(models.Model):
         related_name="usage",
     )
     day_of_week = models.IntegerField(
-        choices=DayOfWeek.choices,
+        choices=DayOfWeek,
         default=DayOfWeek.MONDAY,
     )
 

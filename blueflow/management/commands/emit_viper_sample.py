@@ -54,7 +54,9 @@ class Command(BaseCommand):
         for fields in _GEHEALTHCARE_ASSETS:
             mac = fields["mac_address"]
             defaults = {k: v for k, v in fields.items() if k != "mac_address"}
-            asset, _ = Asset.objects.update_or_create(mac_address=mac, defaults=defaults)
+            asset, _ = Asset.objects.update_or_create(
+                mac_address=mac, defaults=defaults
+            )
             asset.update_usage(timezone.now())
 
         assets = Asset.objects.filter(mac_address__in=macs).prefetch_related("usage")
