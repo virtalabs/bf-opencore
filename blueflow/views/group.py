@@ -1,6 +1,7 @@
 """ViewSet for groups."""
 
 import logging
+import typing
 
 import django_filters
 from django.core.exceptions import ObjectDoesNotExist
@@ -29,11 +30,6 @@ class GroupSerializer(serializers.HyperlinkedModelSerializer):
     add_assets_url = serializers.HyperlinkedIdentityField(
         view_name="blueflow:group-assets"
     )
-    # assets = serializers.HyperlinkedRelatedField(
-    #     many=True,
-    #     read_only=True,
-    #     view_name='blueflow:asset-detail'
-    # )
 
     class Meta:
         """Wire this serializer to a model."""
@@ -41,7 +37,7 @@ class GroupSerializer(serializers.HyperlinkedModelSerializer):
         model = Group
 
         # Fields defined in the schema
-        group_fields = tuple(f.name for f in model._meta.fields)
+        group_fields = tuple(f.name for f in model._meta.fields)  # noqa: SLF001
 
         # Fields that are computed (not stored directly in schema)
         computed_fields = (
@@ -62,7 +58,7 @@ class GroupFilter(django_filters.rest_framework.FilterSet):
 
         # Documentation about lookups is here:
         # https://docs.djangoproject.com/en/1.11/ref/models/querysets/#field-lookups
-        fields = {
+        fields: typing.ClassVar = {
             "asset": ["exact"],
         }
 
@@ -80,7 +76,7 @@ class GroupViewSet(WaffleSwitchMixin, viewsets.ModelViewSet):
     pagination_class = HugeLimitOffsetPagination
 
     @action(detail=True, methods=["POST"])
-    def assets(self, request, pk):
+    def assets(self, request, *_):
         """Add several assets to this Group."""
         group = self.get_object()
 

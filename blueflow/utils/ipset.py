@@ -76,7 +76,6 @@ def _ipset_from_simple_network(network):
 
     if netaddr.valid_nmap_range(network):
         # This will handle nmap ranges and CIDRs (and individual hosts)
-        # return netaddr.IPSet(netaddr.iter_nmap_range(network))
         return netaddr.IPSet(netaddr.IPNetwork(network).cidr)
 
     logger.error("Not a valid network: '%s'", network)
