@@ -43,11 +43,11 @@ def main():
     count = 0
 
     for line in sys.stdin:
-        line = line.strip()
-        if not line:
+        aline = line.strip()
+        if not aline:
             continue
 
-        record = json.loads(line)
+        record = json.loads(aline)
         asset = map_to_asset(record)
 
         count += 1

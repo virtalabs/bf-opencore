@@ -116,6 +116,7 @@ ignore = [
 "harness/**" = ["T201", "S603", "S607", "PLR0913"]
 "**settings**" = ["LOG015", "SLF001"]
 "spikes/**" = ["T201", "PLR2004", "S607", "S603"]
+"scripts/**" = ["S101"]
 
 [tool.ruff.format]
 skip-magic-trailing-comma = false

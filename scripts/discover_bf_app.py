@@ -15,7 +15,7 @@ global_settings.INSTALLED_APPS = [
 
 django.setup()
 
-from django.apps import apps
+from django.apps import apps  # noqa: E402
 
 config = apps.get_app_config("blueflow")
 assert config.__class__.__name__ == "BlueflowConfig"
