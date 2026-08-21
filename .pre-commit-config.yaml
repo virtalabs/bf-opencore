@@ -1,4 +1,8 @@
 repos:
+  - repo: https://github.com/adamchainz/django-upgrade
+    rev: "1.32.0"
+    hooks:
+      - id: django-upgrade
   - repo: https://github.com/astral-sh/ruff-pre-commit
     rev: v0.16.4
     hooks:
@@ -15,7 +19,3 @@ repos:
       - id: bandit
         args: ["-c", "pyproject.toml"]
         additional_dependencies: ["bandit[toml]"]
-  - repo: https://github.com/adamchainz/django-upgrade
-    rev: "1.32.0"
-    hooks:
-      - id: django-upgrade
