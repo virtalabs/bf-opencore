@@ -112,5 +112,3 @@ def _auto_db(db):
     Should replace with module level enablement when:
         https://github.com/virtalabs/blueflow/issues/36
     """
-
-

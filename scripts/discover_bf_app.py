@@ -8,7 +8,10 @@ import django
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "django.conf.global_settings")
 from django.conf import global_settings
 
-global_settings.INSTALLED_APPS = [*global_settings.INSTALLED_APPS, "blueflow.apps.BlueflowConfig"]
+global_settings.INSTALLED_APPS = [
+    *global_settings.INSTALLED_APPS,
+    "blueflow.apps.BlueflowConfig",
+]
 
 django.setup()
 

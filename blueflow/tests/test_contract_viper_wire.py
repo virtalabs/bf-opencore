@@ -85,7 +85,9 @@ def seed_ge_assets(django_db_blocker) -> None:
 
 def test_prism_callback_url_matches_integration_upload_path() -> None:
     url = build_prism_callback_url("http://127.0.0.1:4010")
-    expected_path = INTEGRATION_UPLOAD_PATH.replace("{token}", DEFAULT_INTEGRATION_TOKEN)
+    expected_path = INTEGRATION_UPLOAD_PATH.replace(
+        "{token}", DEFAULT_INTEGRATION_TOKEN
+    )
     assert url == f"http://127.0.0.1:4010{expected_path}"
     assert "{token}" not in url
 
@@ -95,9 +97,7 @@ def test_prism_callback_url_encodes_reserved_path_chars() -> None:
         "http://127.0.0.1:4010",
         integration_token="foo/bar?x#y",
     )
-    assert url == (
-        "http://127.0.0.1:4010/assets/integrationUpload/foo%2Fbar%3Fx%23y"
-    )
+    assert url == ("http://127.0.0.1:4010/assets/integrationUpload/foo%2Fbar%3Fx%23y")
 
 
 def test_send_viper_payload_post_accepted_by_prism(

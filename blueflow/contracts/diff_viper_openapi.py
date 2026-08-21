@@ -124,8 +124,7 @@ def _classify_with_oasdiff(
             return 2
         if breaking.returncode != 0:
             sys.stderr.write(
-                "::warning::Breaking Viper OpenAPI changes detected "
-                f"for {operation}\n"
+                f"::warning::Breaking Viper OpenAPI changes detected for {operation}\n"
             )
             return 1
 
@@ -188,9 +187,7 @@ def diff_viper_openapi(
         )
         live_sliced.write_text(json.dumps(live_spec, indent=2), encoding="utf-8")
 
-        result = _classify_with_oasdiff(
-            binary, baseline_sliced, live_sliced, operation
-        )
+        result = _classify_with_oasdiff(binary, baseline_sliced, live_sliced, operation)
         if result != 0:
             return result
 

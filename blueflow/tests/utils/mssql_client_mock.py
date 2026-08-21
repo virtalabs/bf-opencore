@@ -30,7 +30,7 @@ def configure_mock_mssqlclient(mock_mssqlclient, data, fieldnames):
     mock_mssqlclient.return_value.get_server_version.return_value = "Version 14"
 
     # Mock get_num_pages() return value, assumes pagination size = 1000
-    assert len(data) <= 1000, "Assuming pagination size == 1000"  # noqa: PLR2004
+    assert len(data) <= 1000, "Assuming pagination size == 1000"
     mock_mssqlclient.return_value.get_num_pages.return_value = 1
 
     # Mock get_num_assets() return value

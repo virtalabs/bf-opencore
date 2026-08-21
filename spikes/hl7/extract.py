@@ -38,7 +38,19 @@ def run_tcpflow(pcap: str, outdir: str) -> None:
 def build_mac_map(pcap: str) -> dict[str, str]:
     """Run tshark and return {ip: mac} from Ethernet headers."""
     result = subprocess.run(
-        ["tshark", "-r", pcap, "-T", "fields", "-e", "eth.src", "-e", "ip.src", "-Y", "ip.src"],
+        [
+            "tshark",
+            "-r",
+            pcap,
+            "-T",
+            "fields",
+            "-e",
+            "eth.src",
+            "-e",
+            "ip.src",
+            "-Y",
+            "ip.src",
+        ],
         check=True,
         capture_output=True,
         text=True,

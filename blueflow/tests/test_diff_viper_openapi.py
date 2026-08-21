@@ -203,8 +203,11 @@ def test_diff_integration_with_oasdiff_binary() -> None:
     baseline = _VIPER_FIXTURES / "baseline_openapi.json"
     live = _VIPER_FIXTURES / "live_breaking_openapi.json"
 
-    assert diff_viper_openapi(
-        baseline=baseline,
-        live=live,
-        operation=DEFAULT_OPERATION_ID,
-    ) == 1
+    assert (
+        diff_viper_openapi(
+            baseline=baseline,
+            live=live,
+            operation=DEFAULT_OPERATION_ID,
+        )
+        == 1
+    )
