@@ -68,8 +68,10 @@ class TagSerializer(serializers.HyperlinkedModelSerializer):
             )
         try:
             dummy_int = int(color[1:], 16)
-        except ValueError:
-            raise serializers.ValidationError(f"{color} is not a valid RGB color")
+        except ValueError as e:
+            raise serializers.ValidationError(
+                f"{color} is not a valid RGB color"
+            ) from e
         return color
 
 
@@ -122,12 +124,12 @@ class TagViewSet(WaffleSwitchMixin, ChangeReasonMixin, viewsets.ModelViewSet):
         for asset_id in asset_ids:
             try:
                 asset = Asset.objects.get(pk=asset_id)
-            except (ObjectDoesNotExist, ValueError):
+            except (ObjectDoesNotExist, ValueError) as e:
                 raise serializers.ValidationError(
                     {
                         "asset_ids": [f"Asset does not exist: id={asset_id}"],
                     }
-                )
+                ) from e
             reason = "Bulk Add via API"
             asset_tag = AssetTag(asset=asset, tag=tag, provenance=reason)
             try:

@@ -63,8 +63,8 @@ def main(ctx, hostname):
     ipv4addr = None
     try:
         ipv4addr = socket.gethostbyname(hostname)
-    except socket.gaierror:
-        raise IntegrationTaskError("Cannot resolve hostname '%s'" % hostname)
+    except socket.gaierror as e:
+        raise IntegrationTaskError("Cannot resolve hostname '%s'" % hostname) from e
 
     args = PING_OPTS
     args.append(hostname)
