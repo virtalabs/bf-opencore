@@ -42,3 +42,11 @@ class System(django_extensions.TimeStampedModel):
             system=self, defaults=kwargs
         )
         return interface
+
+    @property
+    def ip_address(self) -> str:
+        return self.interface.ip_address
+
+    @property
+    def mac_address(self) -> str:
+        return self.interface.mac_address

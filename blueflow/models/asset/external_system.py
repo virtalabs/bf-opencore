@@ -1,4 +1,3 @@
-import netfields
 from django.db import models
 
 from . import system
@@ -14,8 +13,3 @@ class ExternalSystem(system.System):
     """
 
     hostname = models.CharField(null=True, unique=True)  # noqa: DJ001
-    ip_address = netfields.InetAddressField(
-        store_prefix_length=False,
-        null=True,
-        verbose_name="IP address",
-    )
