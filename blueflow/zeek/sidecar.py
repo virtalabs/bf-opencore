@@ -153,6 +153,7 @@ def aggregate(conn_entries: list[dict], arp_entries: list[dict]) -> list[dict]:
 def _build_payload(dev: dict) -> dict:
     payload = {
         "mac_address": dev["mac_address"],
+        "manufacturer": "Unknown",
         "open_ports_tcp": sorted(dev["open_ports_tcp"]),
     }
     if dev["ip_address"]:

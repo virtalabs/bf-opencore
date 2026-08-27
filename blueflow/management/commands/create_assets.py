@@ -9,9 +9,6 @@ from django.apps import apps
 from django.core.management import base
 from django.db import connection, transaction
 
-if typing.TYPE_CHECKING:
-    from blueflow.models import NetworkInterface, System
-
 
 class AssetJson(typing.TypedDict):
     pk: str
@@ -25,7 +22,6 @@ def _get_field(asset: AssetJson, key: str, parent: str = "fields") -> str:
 def make_assets(data: list[AssetJson]) -> abc.Generator[dict[str, str], None, None]:
     for asset in data:
         yield {
-            "id": asset["pk"],
             "name": _get_field(asset, "name"),
             "hostname": _get_field(asset, "hostname"),
             "ip_address": _get_field(asset, "ip_address"),
@@ -46,45 +42,32 @@ def make_assets(data: list[AssetJson]) -> abc.Generator[dict[str, str], None, No
         }
 
 
-def _build_systems_and_networks(
-    assets: abc.Iterable[dict[str, str]],
-) -> tuple[list["System"], list["NetworkInterface"]]:
-    System = apps.get_model("blueflow", "System")
-    NetworkInterface = apps.get_model("blueflow", "NetworkInterface")
-    systems = []
-    interfaces = []
-    for a in assets:
-        _id = a["id"]
-        ipv4 = a["ip_address"]
-        mac_address = a["mac_address"]
-        systems.append(System(id=_id))
-        interfaces.append(
-            NetworkInterface(system_id=_id, ipv4=ipv4, mac_address=mac_address)
-        )
-    return (systems, interfaces)
-
-
 def insert_assets(raw_assets: abc.Iterable[dict[str, str]]) -> None:
     """Bulk create assets.
 
     Asset is a child of the concrete model System. Thus django's
     bulk_create method wont work on Asset directly. The workaround below
-    is to first bulk_create the parent using the IDs from the json file.
-    Then drop into a manual bulk create SQL using `executemany` while
-    providing the link to the parent column containing the ID.
-
-    Alternatively it is also possible to forgo the manual insertion of IDs
-    and let PostgreSQL handle the IDs itself. These can be obtained from the
-    System.objects.bulk_create() response.
+    is to first bulk_create the parent — letting PostgreSQL assign each
+    System its id — then drop into a manual bulk create SQL using
+    `executemany` while providing the link to the parent column containing
+    the id.
     """
     Asset = apps.get_model("blueflow", "Asset")
     System = apps.get_model("blueflow", "System")
     NetworkInterface = apps.get_model("blueflow", "NetworkInterface")
     with transaction.atomic():
         assets = list(raw_assets)
-        systems, interfaces = _build_systems_and_networks(assets)
-        _ = System.objects.bulk_create(systems)
-        _ = NetworkInterface.objects.bulk_create(interfaces)
+        systems = System.objects.bulk_create([System() for _ in assets])
+        _ = NetworkInterface.objects.bulk_create(
+            [
+                NetworkInterface(
+                    system_id=system.id,
+                    ipv4=a["ip_address"],
+                    mac_address=a["mac_address"],
+                )
+                for system, a in zip(systems, assets, strict=True)
+            ]
+        )
         asset_table = Asset._meta.db_table  # noqa: SLF001
         system_link = Asset._meta.parents[System].column  # noqa: SLF001
         with connection.cursor() as cursor:
@@ -99,7 +82,7 @@ def insert_assets(raw_assets: abc.Iterable[dict[str, str]]) -> None:
                 f"VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)",  # noqa: E501
                 [
                     (
-                        a["id"],
+                        system.id,
                         a["name"],
                         a["hostname"],
                         a["oui_manufacturer"],
@@ -116,7 +99,7 @@ def insert_assets(raw_assets: abc.Iterable[dict[str, str]]) -> None:
                         a["last_pinged"],
                         a["external_keys"],
                     )
-                    for a in assets
+                    for system, a in zip(systems, assets, strict=True)
                 ],
             )
 
